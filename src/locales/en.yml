@@ -1,6 +1,59 @@
-$site-name: "Station Sign Generator"
-$site-description: "Let's create a your new station sign!"
-$og-image-path: "/images/en/ogp.png"
-page-title: "Station Sign Generator"
-greeting: ""
-description: ""
+meta:
+  title: Railway Sign Generator | Blue Triangle Edition (JR East style)
+  description: A free and useful tool for generating railway station name signs.
+  pwa: 
+    name: Station Sign Generator Blue Triangle Edition
+    short-name: Station Sign
+
+header:
+  title: "Railway Sign Generator (Blue Triangle Edition)"
+  tooltip:
+    lang: Change Locale
+    share: Share This Tool
+    share-options:
+      twitter: "Twitter (Formerly X)"
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      copy: Copy URL
+    copy: Copied URL to your clipboard.
+    share-message: Use {{name}} to generate great railway signs!
+
+input:
+  save: Save as Image
+  image-size: Image Size
+  direct:
+    swaplr: "Swap left and right"
+    lstation: "Left Station Name"
+    lread: "Left Station Subtext"
+    len: "Left Station Alternative Name"
+    lnum: "Left Station Number (Primary)"
+    lnum2: "Left Station Number (Secondary)"
+    station: "Station Name"
+    read: "Station Subtext"
+    en: "Station Name Second Language (English)"
+    ch: "Station Name Third Language (Chinese)"
+    kp: "Station Name Fourth Language (Korean)"
+    num: "Station Number (Primary)"
+    num2: "Station Number (Secondary)"
+    trc: "Station Code"
+    note: "Station Note (Larger Text Below Station Name)"
+    rstation: "Right Station Name"
+    rread: "Right Station Subtext"
+    ren: "Right Station Subtext"
+    rnum: "Right Station Number (Primary)"
+    rnum2: "Right Station Number (Secondary)"
+    input-left: "Left Station Info"
+    input-current: "Current Station Info"
+    input-right: "Right Station Info"
+    area: Station Fare Area
+    area-name: Area Name
+
+common:
+  add: Add
+
+error:
+  on-save: "Function handleSave failed. This is completely unexpected behavior as the canvas is always rendered."
