@@ -1,5 +1,3 @@
-import { useTranslation } from "react-i18next"
-import { navigate } from "vike/client/router";
 import { AppBar, Container, IconButton, Tooltip, Box, Menu, Typography, MenuItem, Alert, Snackbar } from "@mui/material";
 import { Share } from "@mui/icons-material";
 import TrainIcon from '@mui/icons-material/Train';
@@ -7,12 +5,13 @@ import { JP, US } from "country-flag-icons/react/3x2";
 import { ReactElement, useEffect, useState } from "react";
 import { BsTwitter, BsCopy } from "react-icons/bs";
 import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from "react-icons/si";
-import Link from "next/link";
 import { useRouter } from "next/router";
+import { useTranslations } from "next-intl";
 
 const Header = () => {
   const router = useRouter()
-  const { t, i18n } = useTranslation();
+  const i18n = {language: "en"} // TODO: migrate to locale
+  const t = useTranslations("");
   type lang = {
     langName: string,
     lang: string,
