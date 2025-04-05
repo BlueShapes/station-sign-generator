@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Button, Grid, Toolbar, Box, Select, InputLabel, FormControl, MenuItem, SelectChangeEvent } from '@mui/material'
+import { Button, Grid, Toolbar, Box, Select, InputLabel, FormControl, MenuItem, SelectChangeEvent, Typography } from '@mui/material'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { Download } from '@mui/icons-material';
@@ -8,6 +8,7 @@ import DirectInputStationProps from '@/components/signs/DirectInputStationProps'
 import DirectInput from '@/components/inputs/DirectInput';
 import InputStationInfo from '@/components/InputStationInfo';
 import { v7 as uuidv7 } from 'uuid'
+import PreviewIcon from '@mui/icons-material/Preview';
 
 // You have to import height and scale for every child station sign component!!!
 import JrEastSign, { height as JrEastSignHeight, scale as JrEastSignBaseScale } from '@/components/signs/JrEastSign'
@@ -166,6 +167,19 @@ const App = () => {
       <MyDefaultSeo />
       <Header />
       <Toolbar />
+      <Typography variant="h2"
+        style={{
+          fontSize: "1.2em",
+          padding: "10px 0 5px 5px",
+          fontWeight: "bold",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+        }}
+      >
+        <PreviewIcon style={{ fontSize: '1.6em' }} />
+        {t("common.preview")}
+      </Typography >
       <JrEastSign
         {...currentData}
         ref={ref}

@@ -57,6 +57,7 @@ input:
     area-name: 区域名称
 
 common:
+  preview: プレビュー
   add: 追加
 
 error:

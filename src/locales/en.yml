@@ -57,6 +57,7 @@ input:
     area-name: Area Name
 
 common:
+  preview: Preview
   add: Add
 
 error:
