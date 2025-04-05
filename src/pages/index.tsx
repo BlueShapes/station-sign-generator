@@ -1,28 +1,32 @@
 import { readFileSync } from 'node:fs';
 import { GetStaticPropsContext } from 'next';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
 import { parse } from 'yaml';
 import path from 'node:path';
-import { MyDefaultSeo } from '@/components/seo';
-import { NextSeo } from 'next-seo';
+import React from 'react';
+import App from './App.tsx'
+import '@/styles/index.css'
+import "react-color-palette/css";
+import { ThemeProvider } from '@mui/material/styles';
+import { CssBaseline, createTheme } from '@mui/material';
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
+
 
 export default function Home() {
   const t = useTranslations("");
-  const title = t("page-title")
 
   return (
-    <div>
-      <MyDefaultSeo />
-      <NextSeo title={title} openGraph={{ title }} />
-      <h1>{t('greeting')}</h1>
-      <p>{t('description')}</p>
-
-      <div>
-        <Link href="/" locale="en">English</Link> |
-        <Link href="/" locale="ja">日本語</Link>
-      </div>
-    </div>
+    <React.StrictMode>
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
+    </React.StrictMode>
   );
 }
 

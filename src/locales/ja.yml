@@ -1,3 +1,7 @@
+$site-name: "駅名標ジェネレーター"
+$site-description: "さぁ、あたらしい駅名標をあなたの手で。"
+$og-image-path: "/images/ja/ogp.png"
+
 meta:
   title: 駅名標ジェネレーター 青三角版 JR東日本風
   description: お好きなスタイル・駅名からできた駅名標の画像を、Webでサクッと生成できます。今後どんどん他の種類の駅名標の作成にも対応予定です。

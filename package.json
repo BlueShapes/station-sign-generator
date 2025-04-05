@@ -9,9 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.8",
     "@mui/material": "^6.4.8",
     "@mui/styled-engine-sc": "^6.4.6",
+    "canvas": "^3.1.0",
     "country-flag-icons": "^1.5.18",
     "konva": "^9.3.20",
     "next": "15.2.4",
@@ -35,5 +38,10 @@
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "canvas"
+    ]
   }
 }

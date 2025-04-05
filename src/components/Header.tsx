@@ -7,6 +7,7 @@ import { BsTwitter, BsCopy } from "react-icons/bs";
 import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from "react-icons/si";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 const Header = () => {
   const router = useRouter()
@@ -35,7 +36,7 @@ const Header = () => {
     const { URL } = document
     setUrl(URL)
   })
-  const shareText = t("header.tooltip.share-message", { name: t("header.title") })
+  const shareText = t("header.tooltip.share-message")
   const encodedShareText = encodeURIComponent(shareText);
   type shareOption = {
     name: string,
@@ -164,10 +165,9 @@ const Header = () => {
           >
             {langs.map((e) => (
               <MenuItem key={e.lang} style={{ display: 'flex', gap: '10px' }} onClick={() => {
-                router.push(`/${e.lang}`) // TODO: check this
                 handleCloseLangMenu();
               }}>
-                {e.flag}<Typography textAlign="center">{e.langName}</Typography>
+                <Link href="/" locale={e.lang}>{e.flag}<Typography textAlign="center">{e.langName}</Typography></Link>
               </MenuItem>
             ))}
           </Menu>
