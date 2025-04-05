@@ -11,7 +11,6 @@ import Link from "next/link";
 
 const Header = () => {
   const router = useRouter()
-  const i18n = {language: "en"} // TODO: migrate to locale
   const t = useTranslations("");
   type lang = {
     langName: string,
@@ -120,7 +119,7 @@ const Header = () => {
   };
 
   interface FlagProps {
-    country: 'ja' | 'en';
+    country: string;
   }
 
   const Flag: React.FC<FlagProps> = ({ country }) => {
@@ -143,7 +142,7 @@ const Header = () => {
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Tooltip title={t("header.tooltip.lang")}>
             <IconButton sx={{ width: { xs: '40px', sm: '2em' } }} onClick={handleOpenLangMenu}>
-              <Flag country={(i18n.language === 'ja' || i18n.language === 'en') ? i18n.language : 'en'} />
+              <Flag country={router.locale ?? 'en'} />
             </IconButton>
           </Tooltip>
           <Menu
