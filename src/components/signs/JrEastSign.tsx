@@ -129,7 +129,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>((props, ref: React.Ref<
     <>
       <CanvasImage
         src={canvasImage}
-        style={canvasImage === "" ? { aspectRatio: `${ratio} / 1` } : {}}
+        style={{ width: "100%" }}
         onContextMenu={(e) => e.preventDefault()}
       />
       <StageWrapper hidden>
