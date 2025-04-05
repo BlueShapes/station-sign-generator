@@ -6,7 +6,6 @@ import processStationNumber from "@/functions/processStationNumber"
 import { v7 as uuidv7 } from "uuid"
 import { isMobile } from "react-device-detect"
 
-import '../../assets/css/fonts.css'
 import styled from "styled-components"
 
 export const height = 140;

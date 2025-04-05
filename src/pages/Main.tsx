@@ -1,8 +1,6 @@
 import React from 'react';
 import App from './App.tsx'
-import '../../index.css'
 import "react-color-palette/css";
-import "../../i18n/configs"
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 

@@ -1,11 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { GetStaticPropsContext } from 'next';
-import { useTranslations } from 'next-intl';
 import { parse } from 'yaml';
 import path from 'node:path';
 import React from 'react';
 import App from './App.tsx'
-import '@/styles/index.css'
 import "react-color-palette/css";
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, createTheme } from '@mui/material';
@@ -18,8 +16,6 @@ const darkTheme = createTheme({
 
 
 export default function Home() {
-  const t = useTranslations("");
-
   return (
     <React.StrictMode>
       <ThemeProvider theme={darkTheme}>
