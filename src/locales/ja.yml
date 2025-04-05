@@ -13,7 +13,7 @@ header:
   title: 駅名標ジェネレーター 青三角版
   tooltip:
     lang: 言語を変更
-    share: ツールを共有
+    share: このツールを共有
     share-options:
       twitter: "Twitter (旧X)"
       x: X
@@ -24,7 +24,7 @@ header:
       line: LINE
       copy: URLをコピー
     copy: URLをクリップボードにコピーしました！
-    share-message: 「{{name}}」で駅名標をサクッと作ろう！
+    share-message: 「{name}」で駅名標をサクッと作ろう！
 
 input:
   save: 画像として保存

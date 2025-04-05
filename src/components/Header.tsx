@@ -35,7 +35,7 @@ const Header = () => {
     const { URL } = document
     setUrl(URL)
   })
-  const shareText = t("header.tooltip.share-message")
+  const shareText = t("header.tooltip.share-message", { name: t("header.title") })
   const encodedShareText = encodeURIComponent(shareText);
   type shareOption = {
     name: string,
