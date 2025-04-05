@@ -141,7 +141,10 @@ const Header = () => {
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Tooltip title={t("header.tooltip.lang")}>
-            <IconButton sx={{ width: { xs: '40px', sm: '2em' } }} onClick={handleOpenLangMenu}>
+            <IconButton
+              sx={{ width: { xs: '40px', sm: '2em' } }}
+              onClick={handleOpenLangMenu}
+            >
               <Flag country={router.locale ?? 'en'} />
             </IconButton>
           </Tooltip>
@@ -163,10 +166,28 @@ const Header = () => {
             disableScrollLock={true}
           >
             {langs.map((e) => (
-              <MenuItem key={e.lang} style={{ display: 'flex', gap: '10px' }} onClick={() => {
-                handleCloseLangMenu();
-              }}>
-                <Link href="/" locale={e.lang}>{e.flag}<Typography textAlign="center">{e.langName}</Typography></Link>
+              <MenuItem
+                key={e.lang}
+                onClick={() => {
+                  handleCloseLangMenu();
+                }}
+              >
+                <Link href="/" locale={e.lang}
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    alignItems: "center",
+                    textDecoration: "none",
+                    color: "#ffffff"
+                  }}
+                >
+                  {e.flag}
+                  <div>
+                    <Typography textAlign="center">
+                      {e.langName}
+                    </Typography>
+                  </div>
+                </Link>
               </MenuItem>
             ))}
           </Menu>
