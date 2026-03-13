@@ -1,0 +1,64 @@
+erDiagram
+    companies {
+        TEXT id PK
+        TEXT name
+        TEXT company_color "hex default #36ab33"
+    }
+
+    lines {
+        TEXT id PK
+        TEXT name "NOT NULL"
+        TEXT line_color "NOT NULL - hex default #89ff12"
+        TEXT prefix "NOT NULL - e.g. JY"
+        INTEGER priority
+    }
+
+    stations {
+        TEXT id PK
+        TEXT primary_name "NOT NULL DEFAULT empty"
+        TEXT primary_name_furigana "For furigana"
+        TEXT secondary_name "For English in default"
+        TEXT tertiary_name "For Korean in default"
+        TEXT quaternary_name "For Chinese in default"
+        TEXT quinary_name
+        TEXT note
+        TEXT three_letter_code
+        INTEGER sort_order
+    }
+
+    station_lines {
+        TEXT id PK
+        TEXT station_id FK "NOT NULL - stations.id CASCADE"
+        TEXT line_id FK "NOT NULL - lines.id CASCADE"
+        INTEGER sort_order "display order default 0"
+    }
+
+    station_numbers {
+        TEXT id PK
+        TEXT station_id FK "NOT NULL - CASCADE"
+        TEXT line_id FK "NOT NULL"
+        TEXT value "NOT NULL - e.g. 26, 5A"
+    }
+
+    station_areas {
+        TEXT id PK
+        TEXT station_id FK "NOT NULL - CASCADE"
+        TEXT name "NOT NULL - kanji e.g. 山"
+        INTEGER is_white "0 or 1 default 0"
+        INTEGER sort_order "display order default 0"
+    }
+
+    current_sign_configurations {
+        TEXT id PK
+        TEXT station_id FK "NOT NULL - stations.id"
+        REAL ratio "canvas ratio default 4.5"
+        TEXT direction "left right both default left"
+        TEXT sign_style "e.g. jreast"
+    }
+
+    companies |o--o{ lines : "has lines"
+    lines ||--o{ station_lines : "belongs to"
+    stations ||--o{ station_lines : "serves"
+    station_lines ||--o{ station_numbers : "has numbers"
+    stations ||--o{ station_areas : "has area badges"
+    stations ||--o| current_sign_configurations : "is configured as"

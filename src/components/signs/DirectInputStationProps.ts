@@ -1,39 +1,38 @@
-import { RefObject } from "react";
+import { type RefObject } from "react";
 import Konva from "konva";
 
 type StationArea = {
   id: string;
   name: string;
   isWhite?: boolean;
-}
+};
 
-export type Direction = 'left' | 'right' | 'both';
-
+export type Direction = "left" | "right" | "both";
 
 interface DirectInputStationProps {
   //main
-  stationName: string;
-  stationNameFurigana: string;
-  stationNote?: string;
-  stationNameEnglish: string;
-  stationNameKorean?: string;
-  stationNameChinese?: string;
-  stationNumberPrimary?: string;
-  stationNumberSecondary?: string;
-  stationThreeLetterCode?: string;
-  stationArea?: StationArea[];
+  primaryName: string;
+  primaryNameFurigana: string;
+  note?: string;
+  secondaryName: string;
+  tertiaryName?: string;
+  quaternaryName?: string;
+  numberPrimary?: string;
+  numberSecondary?: string;
+  threeLetterCode?: string;
+  stationAreas?: StationArea[];
   //right
-  rightStationName: string;
-  rightStationNameEnglish: string;
-  rightStationNameFurigana?: string;
-  rightStationNumberPrimary?: string;
-  rightStationNumberSecondary?: string;
+  rightPrimaryName: string;
+  rightSecondaryName: string;
+  rightPrimaryNameFurigana?: string;
+  rightNumberPrimary?: string;
+  rightNumberSecondary?: string;
   //left
-  leftStationName: string;
-  leftStationNameEnglish: string;
-  leftStationNameFurigana?: string;
-  leftStationNumberPrimary?: string;
-  leftStationNumberSecondary?: string;
+  leftPrimaryName: string;
+  leftSecondaryName: string;
+  leftPrimaryNameFurigana?: string;
+  leftNumberPrimary?: string;
+  leftNumberSecondary?: string;
   //misc
   lineColor: string;
   baseColor: string;
@@ -42,4 +41,4 @@ interface DirectInputStationProps {
   ref?: RefObject<Konva.Stage>;
 }
 
-export default DirectInputStationProps
+export type { DirectInputStationProps as default };

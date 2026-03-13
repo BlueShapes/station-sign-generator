@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bun install:*)"
+      "Bash(bun install:*)",
+      "Bash(bun run:*)",
+      "Bash(curl -s http://192.168.1.45:4321/ | grep -i \"favicon\\\\|icon\")"
     ]
   }
 }
