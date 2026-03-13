@@ -1,246 +1,206 @@
-import { AppBar, Container, IconButton, Tooltip, Box, Menu, Typography, MenuItem, Alert, Snackbar } from "@mui/material";
-import { Share } from "@mui/icons-material";
-import TrainIcon from '@mui/icons-material/Train';
-import { JP, US } from "country-flag-icons/react/3x2";
-import { ReactElement, useEffect, useState } from "react";
-import { BsTwitter, BsCopy } from "react-icons/bs";
-import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from "react-icons/si";
-import { useRouter } from "next/router";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Box, Container, ActionIcon, Tooltip, Text, Menu, Notification } from '@mantine/core';
+import { IconShare } from '@tabler/icons-react';
+import { IconTrain } from '@tabler/icons-react';
+import { JP, US } from 'country-flag-icons/react/3x2';
+import { ReactElement, useEffect, useState } from 'react';
+import { BsTwitter, BsCopy } from 'react-icons/bs';
+import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from 'react-icons/si';
+import { useTranslations } from '@/i18n/useTranslation';
 
-const Header = () => {
-  const router = useRouter()
-  const t = useTranslations("");
-  type lang = {
-    langName: string,
-    lang: string,
-    flag: ReactElement,
-  }
-  const langs: lang[] = [
-    {
-      langName: '日本語',
-      lang: 'ja',
-      flag: <JP style={{ width: '2em' }} />
-    },
-    {
-      langName: 'English',
-      lang: 'en',
-      flag: <US style={{ width: '2em' }} />
-    },
+interface HeaderProps {
+  locale: string;
+}
+
+const Header = ({ locale }: HeaderProps) => {
+  const t = useTranslations('');
+
+  type Lang = { langName: string; lang: string; flag: ReactElement };
+  const langs: Lang[] = [
+    { langName: '日本語', lang: 'ja', flag: <JP style={{ width: '2em' }} /> },
+    { langName: 'English', lang: 'en', flag: <US style={{ width: '2em' }} /> },
   ];
 
-  const [url, setUrl] = useState("https://example.com");
+  const [url, setUrl] = useState('https://example.com');
   useEffect(() => {
-    const { URL } = document
-    setUrl(URL)
-  })
-  const shareText = t("header.tooltip.share-message", { name: t("header.title") })
+    setUrl(document.URL);
+  });
+
+  const shareText = t('header.tooltip.share-message', { name: t('header.title') });
   const encodedShareText = encodeURIComponent(shareText);
-  type shareOption = {
-    name: string,
-    link: string | Function,
-    icon: ReactElement,
-    id: number,
-    // message?: string,
-  }
-  const shareOptions: shareOption[] = [
+
+  type ShareOption = { name: string; link: string | (() => void); icon: ReactElement; id: number };
+  const shareOptions: ShareOption[] = [
     {
-      name: t("header.tooltip.share-options.copy"),
+      name: t('header.tooltip.share-options.copy'),
       link: () => navigator.clipboard.writeText(`${shareText}\n${url}`),
       icon: <BsCopy />,
       id: 201,
-      // message: t("header.tooltip.copy"),
     },
     {
-      name: t("header.tooltip.share-options.twitter"),
+      name: t('header.tooltip.share-options.twitter'),
       link: `https://x.com/share?text=${encodedShareText}&url=${url}`,
       icon: <BsTwitter />,
       id: 1,
     },
     {
-      name: t("header.tooltip.share-options.x"),
+      name: t('header.tooltip.share-options.x'),
       link: `https://x.com/share?text=${encodedShareText}&url=${url}`,
       icon: <SiX />,
       id: 2,
     },
     {
-      name: t("header.tooltip.share-options.reddit"),
+      name: t('header.tooltip.share-options.reddit'),
       link: `https://www.reddit.com/submit?text=${encodedShareText}&url=${url}`,
       icon: <SiReddit />,
       id: 12,
     },
     {
-      name: t("header.tooltip.share-options.misskey"),
+      name: t('header.tooltip.share-options.misskey'),
       link: `https://misskey-hub.net/share/?text=${encodedShareText}&url=${url}&visibility=public&localOnly=0`,
       icon: <SiMisskey />,
       id: 21,
     },
     {
-      name: t("header.tooltip.share-options.mastodon"),
+      name: t('header.tooltip.share-options.mastodon'),
       link: `https://donshare.net/share.html?text=${encodedShareText}&url=${url}`,
       icon: <SiMastodon />,
       id: 22,
     },
     {
-      name: t("header.tooltip.share-options.line"),
+      name: t('header.tooltip.share-options.line'),
       link: `https://social-plugins.line.me/lineit/share?text=${encodedShareText}&url=${url}`,
       icon: <SiLine />,
       id: 101,
     },
-  ]
+  ];
 
-  const [isCopyMessageOpen, setIsCopyMessageOpen] = useState(false)
-  const openCopyMessage = () => {
-    setIsCopyMessageOpen(true);
-  }
-  const handleCopyMessageClose = () => {
-    setIsCopyMessageOpen(false);
-  };
+  const [isCopyMessageOpen, setIsCopyMessageOpen] = useState(false);
 
-  // For menu
-  const [anchorElLang, setAnchorElLang] = useState<null | HTMLElement>(null);
-  const [anchorElShare, setAnchorElShare] = useState<null | HTMLElement>(null);
-
-  const handleOpenLangMenu = (e: React.MouseEvent<HTMLElement>) => {
-    setAnchorElLang(e.currentTarget);
-  }
-
-  const handleOpenShareMenu = (e: React.MouseEvent<HTMLElement>) => {
-    setAnchorElShare(e.currentTarget);
-  }
-
-  const handleCloseLangMenu = () => {
-    setAnchorElLang(null);
-  };
-
-  const handleCloseShareMenu = () => {
-    setAnchorElShare(null);
-  };
-
-  interface FlagProps {
-    country: string;
-  }
-
-  const Flag: React.FC<FlagProps> = ({ country }) => {
+  const Flag = ({ country }: { country: string }) => {
     switch (country) {
-      case 'ja': return <JP />;
-      case 'en': return <US />;
-      default: throw new Error("Language not recognized... how did you invoke this error?");
+      case 'ja': return <JP style={{ width: '1.5em' }} />;
+      case 'en': return <US style={{ width: '1.5em' }} />;
+      default: return <US style={{ width: '1.5em' }} />;
     }
-  }
+  };
 
   return (
-    <AppBar>
-      <Container maxWidth="xl" style={{ display: 'flex', alignItems: 'center', height: '64px' }} sx={{ padding: { xs: '0', sm: '0 24px' } }}>
-        <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', padding: { xs: '8px', sm: '0' } }}>
-          <TrainIcon sx={{ display: 'flex', mr: 1 }} />
-          <Typography variant="h1" sx={{ fontSize: { xs: '14px', sm: '16px' }, padding: { xs: '4px', sm: '10px' }, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
-            {t("header.title")}
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <Tooltip title={t("header.tooltip.lang")}>
-            <IconButton
-              sx={{ width: { xs: '40px', sm: '2em' } }}
-              onClick={handleOpenLangMenu}
-            >
-              <Flag country={router.locale ?? 'en'} />
-            </IconButton>
-          </Tooltip>
-          <Menu
-            sx={{ mt: '45px' }}
-            id="menu-appbar"
-            anchorEl={anchorElLang}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            open={Boolean(anchorElLang)}
-            onClose={handleCloseLangMenu}
-            disableScrollLock={true}
-          >
-            {langs.map((e) => (
-              <MenuItem
-                key={e.lang}
-                onClick={() => {
-                  handleCloseLangMenu();
-                }}
-              >
-                <Link href="/" locale={e.lang}
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    alignItems: "center",
-                    textDecoration: "none",
-                    color: "#ffffff"
-                  }}
-                >
-                  {e.flag}
-                  <div>
-                    <Typography textAlign="center">
-                      {e.langName}
-                    </Typography>
-                  </div>
-                </Link>
-              </MenuItem>
-            ))}
-          </Menu>
-          <Tooltip title={t("header.tooltip.share")}>
-            <IconButton sx={{ width: { xs: '40px', sm: '2em' } }} onClick={handleOpenShareMenu}>
-              <Share />
-            </IconButton>
-          </Tooltip>
-          <Menu
-            sx={{ mt: '45px' }}
-            id="menu-appbar"
-            anchorEl={anchorElShare}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            open={Boolean(anchorElShare)}
-            onClose={handleCloseShareMenu}
-            disableScrollLock={true}
-          >
-            {shareOptions.map((e) => (
-              <MenuItem key={e.id} style={{ display: 'flex', gap: '10px' }} onClick={() => {
-                handleCloseShareMenu();
-                if (typeof (e.link) === 'string') {
-                  window.open(e.link, '_blank');
-                } else {
-                  openCopyMessage();
-                  e.link()
-                }
-              }}>
-                {e.icon}<Typography textAlign="center">{e.name}</Typography>
-              </MenuItem>
-            ))}
-          </Menu>
-        </Box>
-      </Container>
-      <Snackbar open={isCopyMessageOpen} autoHideDuration={6000} onClose={handleCopyMessageClose}>
-        <Alert
-          onClose={handleCopyMessageClose}
-          severity="success"
-          variant="filled"
-          sx={{ width: '100%' }}
+    <>
+      <Box
+        component="header"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '64px',
+          zIndex: 200,
+          backgroundColor: 'var(--mantine-color-dark-7)',
+          borderBottom: '1px solid var(--mantine-color-dark-5)',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+        }}
+      >
+        <Container
+          size="xl"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '100%',
+            padding: '0 16px',
+          }}
         >
-          {t("header.tooltip.copy")}
-        </Alert>
-      </Snackbar>
-    </AppBar>
-  )
-}
+          {/* Title */}
+          <Box style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconTrain size={20} />
+            <Text
+              component="h1"
+              style={{
+                fontSize: 'clamp(13px, 2vw, 16px)',
+                fontWeight: 700,
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'keep-all',
+              }}
+            >
+              {t('header.title')}
+            </Text>
+          </Box>
 
-export default Header
+          {/* Right actions */}
+          <Box style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {/* Language Menu */}
+            <Menu shadow="md" position="bottom-end" offset={12}>
+              <Tooltip label={t('header.tooltip.lang')}>
+                <Menu.Target>
+                  <ActionIcon variant="transparent" size="lg" aria-label={t('header.tooltip.lang')}>
+                    <Flag country={locale} />
+                  </ActionIcon>
+                </Menu.Target>
+              </Tooltip>
+              <Menu.Dropdown>
+                {langs.map((e) => (
+                  <Menu.Item
+                    key={e.lang}
+                    component="a"
+                    href={`/${e.lang}/`}
+                    style={{ display: 'flex', gap: '10px', alignItems: 'center', textDecoration: 'none' }}
+                    leftSection={e.flag}
+                  >
+                    {e.langName}
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
+
+            {/* Share Menu */}
+            <Menu shadow="md" position="bottom-end" offset={12}>
+              <Tooltip label={t('header.tooltip.share')}>
+                <Menu.Target>
+                  <ActionIcon variant="transparent" size="lg" aria-label={t('header.tooltip.share')}>
+                    <IconShare size={20} />
+                  </ActionIcon>
+                </Menu.Target>
+              </Tooltip>
+              <Menu.Dropdown>
+                {shareOptions.map((e) => (
+                  <Menu.Item
+                    key={e.id}
+                    leftSection={e.icon}
+                    onClick={() => {
+                      if (typeof e.link === 'string') {
+                        window.open(e.link, '_blank');
+                      } else {
+                        setIsCopyMessageOpen(true);
+                        e.link();
+                      }
+                    }}
+                  >
+                    {e.name}
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Copy toast */}
+      {isCopyMessageOpen && (
+        <Notification
+          color="green"
+          onClose={() => setIsCopyMessageOpen(false)}
+          style={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            zIndex: 1000,
+          }}
+        >
+          {t('header.tooltip.copy')}
+        </Notification>
+      )}
+    </>
+  );
+};
+
+export default Header;

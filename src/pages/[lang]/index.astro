@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HeadSeo from '../../components/HeadSeo.astro';
+import StationSignApp from '../../components/StationSignApp';
+import { loadTranslations } from '../../i18n/translations';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'ja' } },
+  ];
+}
+
+const { lang } = Astro.params;
+const messages = loadTranslations(lang);
+
+const siteOrigin = import.meta.env.SITE ?? 'https://blueshapes.github.io';
+const title = (messages as Record<string, Record<string, string>>)?.meta?.title ?? 'Station Sign Generator';
+const description = (messages as Record<string, Record<string, string>>)?.meta?.description ?? '';
+const ogImagePath = (messages as Record<string, string>)?.['$og-image-path'] ?? '/images/en/ogp.png';
+const ogImageUrl = `${siteOrigin}${ogImagePath}`;
+const canonical = `${siteOrigin}/${lang}/`;
+const locales = ['en', 'ja'];
+---
+<BaseLayout title={title} description={description} locale={lang}>
+  <Fragment slot="head">
+    <HeadSeo
+      title={title}
+      description={description}
+      locale={lang}
+      ogImageUrl={ogImageUrl}
+      canonical={canonical}
+      locales={locales}
+    />
+  </Fragment>
+  <StationSignApp client:only="react" locale={lang} messages={messages} />
+</BaseLayout>
