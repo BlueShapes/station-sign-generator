@@ -6,8 +6,9 @@ import {
   Text,
   Menu,
   Notification,
+  useMantineColorScheme,
 } from "@mantine/core";
-import { IconShare } from "@tabler/icons-react";
+import { IconShare, IconSun, IconMoon } from "@tabler/icons-react";
 import { IconTrain } from "@tabler/icons-react";
 import { JP, US } from "country-flag-icons/react/3x2";
 import { type ReactElement, useEffect, useState } from "react";
@@ -18,10 +19,12 @@ import { APP_VERSION } from "@/config";
 
 interface HeaderProps {
   locale: string;
+  onSwitchLocale: (locale: string) => void;
 }
 
-const Header = ({ locale }: HeaderProps) => {
+const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
   const t = useTranslations("");
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
   type Lang = { langName: string; lang: string; flag: ReactElement };
   const langs: Lang[] = [
@@ -114,8 +117,8 @@ const Header = ({ locale }: HeaderProps) => {
           right: 0,
           height: "64px",
           zIndex: 200,
-          backgroundColor: "var(--mantine-color-dark-7)",
-          borderBottom: "1px solid var(--mantine-color-dark-5)",
+          backgroundColor: "var(--mantine-color-body)",
+          borderBottom: "1px solid var(--mantine-color-default-border)",
           boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
         }}
       >
@@ -163,6 +166,32 @@ const Header = ({ locale }: HeaderProps) => {
 
           {/* Right actions */}
           <Box style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            {/* Theme toggle */}
+            <Tooltip
+              label={
+                colorScheme === "dark"
+                  ? t("common.theme-light")
+                  : t("common.theme-dark")
+              }
+            >
+              <ActionIcon
+                variant="transparent"
+                size="lg"
+                onClick={() => toggleColorScheme()}
+                aria-label={
+                  colorScheme === "dark"
+                    ? t("common.theme-light")
+                    : t("common.theme-dark")
+                }
+              >
+                {colorScheme === "dark" ? (
+                  <IconSun size={20} />
+                ) : (
+                  <IconMoon size={20} />
+                )}
+              </ActionIcon>
+            </Tooltip>
+
             {/* Language Menu */}
             <Menu shadow="md" position="bottom-end" offset={12}>
               <Tooltip label={t("header.tooltip.lang")}>
@@ -180,13 +209,12 @@ const Header = ({ locale }: HeaderProps) => {
                 {langs.map((e) => (
                   <Menu.Item
                     key={e.lang}
-                    component="a"
-                    href={`/${e.lang}/`}
+                    onClick={() => onSwitchLocale(e.lang)}
                     style={{
                       display: "flex",
                       gap: "10px",
                       alignItems: "center",
-                      textDecoration: "none",
+                      fontWeight: e.lang === locale ? 700 : undefined,
                     }}
                     leftSection={e.flag}
                   >

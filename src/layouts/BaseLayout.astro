@@ -2,6 +2,7 @@
 import '@mantine/core/styles.css';
 import '../styles/global.css';
 import faviconUrl from '../assets/favicon.ico';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
   title: string;
@@ -17,6 +18,25 @@ const { locale } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href={faviconUrl} />
+    <!-- Resolve color scheme before first paint to prevent flash, then enable transitions -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('ssg-color-scheme');
+          var scheme = (!stored || stored === 'auto')
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : stored;
+          document.documentElement.setAttribute('data-mantine-color-scheme', scheme);
+        } catch (e) {}
+        // Enable transitions after initial paint to avoid flash-of-transition
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            document.documentElement.classList.add('theme-ready');
+          });
+        });
+      })();
+    </script>
+    <ClientRouter />
     <slot name="head" />
   </head>
   <body>

@@ -1,4 +1,4 @@
-import { type ChangeEvent } from "react";
+import { type ChangeEvent, useState } from "react";
 import {
   Button,
   TextInput,
@@ -12,6 +12,8 @@ import {
   Group,
   Text,
   Textarea,
+  ColorInput,
+  Modal,
 } from "@mantine/core";
 import {
   IconTrash,
@@ -26,7 +28,6 @@ import {
   IconTypography,
   IconTypographyOff,
 } from "@tabler/icons-react";
-import { ColorPicker, ColorService } from "react-color-palette";
 import type DirectInputStationProps from "../signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "../signs/signStyles";
 import type { SignStyleFieldSpec } from "../signs/signStyles";
@@ -36,6 +37,7 @@ import { useTranslations } from "@/i18n/useTranslation";
 
 interface DirectInputStationPropsWithHandleChange extends DirectInputStationProps {
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onReset?: () => void;
   signStyle?: string;
 }
 
@@ -47,6 +49,8 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
     SIGN_STYLE_FIELDS[props.signStyle ?? "jreast"] ??
     SIGN_STYLE_FIELDS["jreast"];
   const show = (f: keyof SignStyleFieldSpec) => fields[f] !== "hidden";
+
+  const [resetModalOpen, setResetModalOpen] = useState(false);
 
   const handleSwap = () => {
     const target = {
@@ -83,6 +87,30 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
 
   return (
     <>
+      {/* Reset confirmation modal */}
+      <Modal
+        opened={resetModalOpen}
+        onClose={() => setResetModalOpen(false)}
+        title={t("input.direct.reset-title")}
+        centered
+      >
+        <Text size="sm">{t("input.direct.reset-confirm")}</Text>
+        <Group mt="lg" justify="flex-end">
+          <Button variant="default" onClick={() => setResetModalOpen(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            color="red"
+            onClick={() => {
+              props.onReset?.();
+              setResetModalOpen(false);
+            }}
+          >
+            {t("common.confirm")}
+          </Button>
+        </Group>
+      </Modal>
+
       <Box style={{ width: "100%", padding: "25px" }}>
         <Grid gutter="md">
           <Grid.Col
@@ -109,6 +137,14 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
               leftSection={<IconRefresh size={16} />}
             >
               {t("input.direct.swaplr")}
+            </Button>
+            <Button
+              variant="outline"
+              color="red"
+              onClick={() => setResetModalOpen(true)}
+              leftSection={<IconTrash size={16} />}
+            >
+              {t("input.direct.reset")}
             </Button>
           </Grid.Col>
           <Grid.Col
@@ -338,6 +374,24 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 {t("common.add")}
               </Button>
             </Box>
+
+            {/* Color pickers */}
+            <Stack gap="sm" mt="lg" style={{ maxWidth: 220 }}>
+              <ColorInput
+                label={t("input.direct.base-color")}
+                value={props.baseColor}
+                onChange={(color) => handleColorChange("baseColor", color)}
+                format="hex"
+                swatches={["#36ab33", "#005bac", "#e60012", "#f97f00", "#000000", "#ffffff"]}
+              />
+              <ColorInput
+                label={t("input.direct.line-color")}
+                value={props.lineColor}
+                onChange={(color) => handleColorChange("lineColor", color)}
+                format="hex"
+                swatches={["#89ff12", "#ffffff", "#000000", "#ffdd00", "#f97f00"]}
+              />
+            </Stack>
           </Grid.Col>
 
           {/* Right station */}
@@ -392,17 +446,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
         </Grid>
       </Box>
 
-      <ColorPicker
-        color={ColorService.convert("hex", props.baseColor)}
-        onChange={(color) => handleColorChange("baseColor", color.hex)}
-        hideAlpha
-      />
-      <ColorPicker
-        color={ColorService.convert("hex", props.lineColor)}
-        onChange={(color) => handleColorChange("lineColor", color.hex)}
-        hideAlpha
-      />
-      <Textarea autosize value={JSON.stringify(props, null, 2)} readOnly />
+      <Box style={{ width: "100%", padding: "25px" }}>
+        <Textarea autosize value={JSON.stringify(props, null, 2)} readOnly />
+      </Box>
     </>
   );
 };

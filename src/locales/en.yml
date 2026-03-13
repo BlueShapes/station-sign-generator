@@ -31,6 +31,11 @@ input:
   image-size: Image Size
   direct:
     swaplr: "Swap left and right"
+    reset: "Reset inputs"
+    reset-title: "Reset all inputs"
+    reset-confirm: "Are you sure you want to reset all inputs? This action cannot be undone."
+    base-color: "Base Color"
+    line-color: "Line Color"
     lstation: "Left Station Name"
     lread: "Left Station Subtext"
     len: "Left Station Alternative Name"
@@ -59,6 +64,12 @@ input:
 common:
   preview: Preview
   add: Add
+  cancel: Cancel
+  confirm: Reset
+  theme-dark: Switch to dark mode
+  theme-light: Switch to light mode
+  loading: Loading...
+  loading-fonts: Loading fonts...
 
 error:
   on-save: "Function handleSave failed. This is completely unexpected behavior as the canvas is always rendered."

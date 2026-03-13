@@ -5,8 +5,6 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -14,8 +12,30 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+[data-mantine-color-scheme="light"] {
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #f8f9fa;
+}
+
+[data-mantine-color-scheme="dark"] {
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+}
+
 body {
   overflow-x: hidden;
+}
+
+/* Theme transition — applied only after initial load via .theme-ready class */
+html.theme-ready,
+html.theme-ready *,
+html.theme-ready *::before,
+html.theme-ready *::after {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease !important;
 }
 
 /* ==================== Custom Fonts (for Konva canvas) ==================== */

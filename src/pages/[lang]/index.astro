@@ -11,7 +11,11 @@ export function getStaticPaths() {
 }
 
 const { lang } = Astro.params;
-const messages = loadTranslations(lang);
+const allMessages = {
+  ja: loadTranslations('ja'),
+  en: loadTranslations('en'),
+};
+const messages = allMessages[lang as keyof typeof allMessages];
 
 const siteOrigin = import.meta.env.SITE ?? 'https://blueshapes.github.io';
 const title = (messages as Record<string, Record<string, string>>)?.meta?.title ?? 'Station Sign Generator';
@@ -37,5 +41,5 @@ const alternates = [
       alternates={alternates}
     />
   </Fragment>
-  <StationSignApp client:only="react" locale={lang} messages={messages} />
+  <StationSignApp client:only="react" locale={lang} allMessages={allMessages} />
 </BaseLayout>

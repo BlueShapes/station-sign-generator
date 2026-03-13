@@ -2,7 +2,7 @@ import type { Database } from "sql.js";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import { saveSignConfig } from "@/db/repositories/stations";
 
-const DEFAULT_DATA: DirectInputStationProps = {
+export const DEFAULT_DATA: DirectInputStationProps = {
   leftPrimaryName: "品川",
   leftPrimaryNameFurigana: "しながわ",
   leftSecondaryName: "Shinagawa",

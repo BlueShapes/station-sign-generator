@@ -5,7 +5,11 @@ import StationSignApp from '../components/StationSignApp';
 import { loadTranslations } from '../i18n/translations';
 
 const lang = 'ja';
-const messages = loadTranslations(lang);
+const allMessages = {
+  ja: loadTranslations('ja'),
+  en: loadTranslations('en'),
+};
+const messages = allMessages[lang];
 
 const siteOrigin = import.meta.env.SITE ?? 'https://blueshapes.github.io';
 const title = (messages as Record<string, Record<string, string>>)?.meta?.title ?? '駅名標ジェネレーター';
@@ -31,5 +35,5 @@ const alternates = [
       alternates={alternates}
     />
   </Fragment>
-  <StationSignApp client:only="react" locale={lang} messages={messages} />
+  <StationSignApp client:only="react" locale={lang} allMessages={allMessages} />
 </BaseLayout>

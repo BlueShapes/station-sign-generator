@@ -3,12 +3,40 @@ import type { Database } from 'sql.js';
 import type DirectInputStationProps from '@/components/signs/DirectInputStationProps';
 import { getDatabase, persistDatabase } from '@/db/init';
 import { getSignConfig, saveSignConfig } from '@/db/repositories/stations';
-import { seedDefaultData } from '@/db/seed';
+import { seedDefaultData, DEFAULT_DATA } from '@/db/seed';
+
+const SESSION_KEY = 'sign-config-v1';
+
+function loadFromSession(): DirectInputStationProps | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as DirectInputStationProps) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveToSession(data: DirectInputStationProps): void {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  } catch {
+    // ignore quota errors
+  }
+}
+
+function clearSession(): void {
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 interface UseDatabaseResult {
   data: DirectInputStationProps | null;
   loading: boolean;
   update: (newData: DirectInputStationProps) => void;
+  reset: () => void;
 }
 
 export function useDatabase(): UseDatabaseResult {
@@ -18,6 +46,13 @@ export function useDatabase(): UseDatabaseResult {
 
   useEffect(() => {
     let cancelled = false;
+
+    // Restore from sessionStorage immediately for instant display
+    const cached = loadFromSession();
+    if (cached && !cancelled) {
+      setData(cached);
+      setLoading(false);
+    }
 
     getDatabase()
       .then((db) => {
@@ -31,8 +66,9 @@ export function useDatabase(): UseDatabaseResult {
           persistDatabase(db);
         }
 
-        if (!cancelled) {
+        if (!cancelled && config) {
           setData(config);
+          saveToSession(config);
           setLoading(false);
         }
       })
@@ -48,11 +84,22 @@ export function useDatabase(): UseDatabaseResult {
 
   const update = useCallback((newData: DirectInputStationProps) => {
     setData(newData);
+    saveToSession(newData);
     if (dbRef.current) {
       saveSignConfig(dbRef.current, newData);
       persistDatabase(dbRef.current);
     }
   }, []);
 
-  return { data, loading, update };
+  const reset = useCallback(() => {
+    clearSession();
+    if (dbRef.current) {
+      seedDefaultData(dbRef.current);
+      persistDatabase(dbRef.current);
+    }
+    setData(DEFAULT_DATA);
+    saveToSession(DEFAULT_DATA);
+  }, []);
+
+  return { data, loading, update, reset };
 }

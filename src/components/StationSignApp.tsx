@@ -1,10 +1,10 @@
-import "react-color-palette/css";
 import "@mantine/core/styles.css";
 
 import { useState, useEffect, useRef } from "react";
 import {
   MantineProvider,
   createTheme,
+  localStorageColorSchemeManager,
   Button,
   Grid,
   Box,
@@ -12,11 +12,12 @@ import {
   Title,
   Loader,
   Center,
+  Stack,
+  Text,
 } from "@mantine/core";
 import { IconDownload, IconEye } from "@tabler/icons-react";
 import Konva from "konva";
 import DirectInput from "@/components/inputs/DirectInput";
-import InputStationInfo from "@/components/InputStationInfo";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { TranslationProvider } from "@/i18n/TranslationProvider";
@@ -30,13 +31,27 @@ import JrEastSign, {
 } from "@/components/signs/JrEastSign";
 
 const theme = createTheme({});
+const colorSchemeManager = localStorageColorSchemeManager({
+  key: "ssg-color-scheme",
+});
+
+const LOCALE_URLS: Record<string, string> = {
+  ja: "/",
+  en: "/en/",
+};
 
 interface StationSignAppProps {
   locale: string;
-  messages: Record<string, unknown>;
+  allMessages: Record<string, Record<string, unknown>>;
 }
 
-function AppContent({ locale }: { locale: string }) {
+function AppContent({
+  locale,
+  onSwitchLocale,
+}: {
+  locale: string;
+  onSwitchLocale: (l: string) => void;
+}) {
   const ref = useRef<Konva.Stage>(null);
   const t = useTranslations();
 
@@ -44,7 +59,14 @@ function AppContent({ locale }: { locale: string }) {
     data: currentData,
     loading: dbLoading,
     update: setCurrentData,
+    reset: resetData,
   } = useDatabase();
+
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    document.fonts.ready.then(() => setFontsLoaded(true));
+  }, []);
 
   type ImageSize = { label: string; value: number };
 
@@ -106,23 +128,20 @@ function AppContent({ locale }: { locale: string }) {
     });
   };
 
-  // =====test=====
-  const [test, setTest] = useState({ text: "あいうえお", text2: "かきくけこ" });
-
-  const handleChangeTest = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setTest({ ...test, [name]: value });
-  };
-  // ===============
-
-  if (dbLoading || !currentData) {
+  if (!fontsLoaded || dbLoading || !currentData) {
+    const loadingText = !fontsLoaded
+      ? t("common.loading-fonts")
+      : t("common.loading");
     return (
       <>
-        <Header locale={locale} />
+        <Header locale={locale} onSwitchLocale={onSwitchLocale} />
         <Center style={{ height: "100vh" }}>
-          <Loader size="lg" />
+          <Stack align="center" gap="md">
+            <Loader size="lg" />
+            <Text size="sm" c="dimmed">
+              {loadingText}
+            </Text>
+          </Stack>
         </Center>
       </>
     );
@@ -130,7 +149,7 @@ function AppContent({ locale }: { locale: string }) {
 
   return (
     <>
-      <Header locale={locale} />
+      <Header locale={locale} onSwitchLocale={onSwitchLocale} />
       {/* Toolbar spacer */}
       <div style={{ height: "64px" }} />
       <Title
@@ -178,11 +197,10 @@ function AppContent({ locale }: { locale: string }) {
           </Grid.Col>
         </Grid>
       </Box>
-      <DirectInput {...currentData} onChange={handleChangeDirect} />
-      <InputStationInfo
-        text={test.text}
-        text2={test.text2}
-        onChange={handleChangeTest}
+      <DirectInput
+        {...currentData}
+        onChange={handleChangeDirect}
+        onReset={resetData}
       />
       <Footer />
     </>
@@ -191,12 +209,30 @@ function AppContent({ locale }: { locale: string }) {
 
 export default function StationSignApp({
   locale,
-  messages,
+  allMessages,
 }: StationSignAppProps) {
+  const [currentLocale, setCurrentLocale] = useState(locale);
+
+  const handleSwitchLocale = (newLocale: string) => {
+    setCurrentLocale(newLocale);
+    const url = LOCALE_URLS[newLocale] ?? `/${newLocale}/`;
+    history.pushState({}, "", url);
+    document.documentElement.lang = newLocale;
+  };
+
+  const messages = allMessages[currentLocale] ?? allMessages[locale] ?? {};
+
   return (
-    <TranslationProvider messages={messages} locale={locale}>
-      <MantineProvider theme={theme} forceColorScheme="dark">
-        <AppContent locale={locale} />
+    <TranslationProvider messages={messages} locale={currentLocale}>
+      <MantineProvider
+        theme={theme}
+        colorSchemeManager={colorSchemeManager}
+        defaultColorScheme="auto"
+      >
+        <AppContent
+          locale={currentLocale}
+          onSwitchLocale={handleSwitchLocale}
+        />
       </MantineProvider>
     </TranslationProvider>
   );
