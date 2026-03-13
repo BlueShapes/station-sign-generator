@@ -18,31 +18,31 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     //const stageRef = useRef<Konva.Stage>(null)
 
     const {
-      stationName,
-      stationNameEnglish,
-      stationNameFurigana,
-      stationNameChinese,
-      stationNameKorean,
-      stationNote,
-      stationArea,
-      leftStationName,
-      leftStationNameEnglish,
-      leftStationNumberPrimary,
-      leftStationNumberSecondary,
-      rightStationName,
-      rightStationNameEnglish,
-      rightStationNumberPrimary,
-      rightStationNumberSecondary,
-      stationNumberPrimary,
-      stationNumberSecondary,
-      stationThreeLetterCode,
+      primaryName,
+      secondaryName,
+      primaryNameFurigana,
+      quaternaryName,
+      tertiaryName,
+      note,
+      stationAreas,
+      leftPrimaryName,
+      leftSecondaryName,
+      leftNumberPrimary,
+      leftNumberSecondary,
+      rightPrimaryName,
+      rightSecondaryName,
+      rightNumberPrimary,
+      rightNumberSecondary,
+      numberPrimary,
+      numberSecondary,
+      threeLetterCode,
       baseColor,
       lineColor,
       direction,
       ratio,
     } = props;
     const spacedStationName = (() => {
-      const str = stationName;
+      const str = primaryName;
       switch (str.length) {
         case 2:
           return str.split("").join("　");
@@ -58,28 +58,28 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     const startingPoint = 40;
     const lineHeight = 24;
     const linePosY = 70 + yOffset;
-    const processedStationNumberPrimary = stationNumberPrimary
-      ? processStationNumber(stationNumberPrimary)
+    const processedStationNumberPrimary = numberPrimary
+      ? processStationNumber(numberPrimary)
       : {};
-    const processedStationNumberSecondary = stationNumberSecondary
-      ? processStationNumber(stationNumberSecondary)
+    const processedStationNumberSecondary = numberSecondary
+      ? processStationNumber(numberSecondary)
       : {};
-    const processedLeftStationNumberPrimary = leftStationNumberPrimary
-      ? processStationNumber(leftStationNumberPrimary)
+    const processedLeftStationNumberPrimary = leftNumberPrimary
+      ? processStationNumber(leftNumberPrimary)
       : {};
-    const processedLeftStationNumberSecondary = leftStationNumberSecondary
-      ? processStationNumber(leftStationNumberSecondary)
+    const processedLeftStationNumberSecondary = leftNumberSecondary
+      ? processStationNumber(leftNumberSecondary)
       : {};
-    const processedRightStationNumberPrimary = rightStationNumberPrimary
-      ? processStationNumber(rightStationNumberPrimary)
+    const processedRightStationNumberPrimary = rightNumberPrimary
+      ? processStationNumber(rightNumberPrimary)
       : {};
-    const processedRightStationNumberSecondary = rightStationNumberSecondary
-      ? processStationNumber(rightStationNumberSecondary)
+    const processedRightStationNumberSecondary = rightNumberSecondary
+      ? processStationNumber(rightNumberSecondary)
       : {};
     // const [isFontLoaded, setIsFontLoaded] = useState(false)
     const [stageKey, setStageKey] = useState(0);
-    const reversedStationArea = stationArea
-      ? [...stationArea].reverse()
+    const reversedStationArea = stationAreas
+      ? [...stationAreas].reverse()
       : undefined;
 
     useEffect(() => {
@@ -124,12 +124,8 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       return tempText.getWidth();
     })();
 
-    const xOffsetWithNote = stationNote ? -38 : -45;
-    const yOffsetWithNote = stationNote
-      ? stationThreeLetterCode
-        ? -14
-        : -9
-      : 0;
+    const xOffsetWithNote = note ? -38 : -45;
+    const yOffsetWithNote = note ? (threeLetterCode ? -14 : -9) : 0;
 
     const [canvasImage, setCanvasImage] = useState("");
     useEffect(() => {
@@ -216,7 +212,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     stroke={baseColor}
                   />
                   <Text
-                    text={autoSpace(rightStationName)}
+                    text={autoSpace(rightPrimaryName)}
                     width={width}
                     x={-30}
                     y={yOffset + 74}
@@ -227,7 +223,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     align="right"
                   />
                   <Text
-                    text={rightStationNameEnglish}
+                    text={rightSecondaryName}
                     width={width}
                     x={-30}
                     y={yOffset + 98}
@@ -250,7 +246,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     stroke={baseColor}
                   />
                   <Text
-                    text={autoSpace(leftStationName)}
+                    text={autoSpace(leftPrimaryName)}
                     width={width}
                     x={30}
                     y={yOffset + 74}
@@ -261,7 +257,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     align="left"
                   />
                   <Text
-                    text={leftStationNameEnglish}
+                    text={leftSecondaryName}
                     width={width}
                     x={30}
                     y={yOffset + 98}
@@ -275,7 +271,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               {(direction == "left" || direction == "both") && (
                 <>
                   <Text
-                    text={leftStationNameEnglish}
+                    text={leftSecondaryName}
                     width={width}
                     x={64}
                     y={yOffset + 98}
@@ -285,7 +281,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     align="left"
                   />
                   <Text
-                    text={autoSpace(leftStationName)}
+                    text={autoSpace(leftPrimaryName)}
                     width={width}
                     x={60}
                     y={yOffset + 72}
@@ -295,7 +291,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="white"
                     align="left"
                   />
-                  {leftStationNumberPrimary && (
+                  {leftNumberPrimary && (
                     <>
                       <Rect
                         stroke={lineColor}
@@ -332,7 +328,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       />
                     </>
                   )}
-                  {leftStationNumberSecondary && (
+                  {leftNumberSecondary && (
                     <>
                       <Rect
                         stroke={lineColor}
@@ -374,7 +370,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               {(direction == "both" || direction == "right") && (
                 <>
                   <Text
-                    text={autoSpace(rightStationName)}
+                    text={autoSpace(rightPrimaryName)}
                     width={width}
                     x={-60}
                     y={yOffset + 72}
@@ -385,7 +381,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     align="right"
                   />
                   <Text
-                    text={rightStationNameEnglish}
+                    text={rightSecondaryName}
                     width={width}
                     x={-66}
                     y={yOffset + 98}
@@ -394,7 +390,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="black"
                     align="right"
                   />
-                  {rightStationNumberPrimary && (
+                  {rightNumberPrimary && (
                     <>
                       <Rect
                         stroke={lineColor}
@@ -431,7 +427,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       />
                     </>
                   )}
-                  {rightStationNumberSecondary && (
+                  {rightNumberSecondary && (
                     <>
                       <Rect
                         stroke={lineColor}
@@ -490,11 +486,11 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                 height={25}
               />
 
-              {stationNote ? (
+              {note ? (
                 <>
-                  {/* With stationNote (smaller station name, medium station note) */}
+                  {/* With note (smaller station name, medium station note) */}
                   <Text
-                    text={stationNote}
+                    text={note}
                     width={width}
                     x={0}
                     y={yOffset + 40}
@@ -516,9 +512,9 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                 </>
               ) : (
                 <>
-                  {/* Without stationNote (large station name, small furigana) */}
+                  {/* Without note (large station name, small furigana) */}
                   <Text
-                    text={stationNameFurigana}
+                    text={primaryNameFurigana}
                     width={width}
                     x={0}
                     y={yOffset + 52}
@@ -542,7 +538,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
 
               {/* If station number exists */}
               {processedStationNumberPrimary.prefix &&
-                (stationThreeLetterCode ? (
+                (threeLetterCode ? (
                   <>
                     <Rect
                       stroke={lineColor}
@@ -721,7 +717,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           cornerRadius={4}
                         />
                         <Text
-                          text={stationThreeLetterCode}
+                          text={threeLetterCode}
                           fill="white"
                           x={
                             xOffsetWithNote -
@@ -772,7 +768,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     ) : (
                       <>
                         <Text
-                          text={stationThreeLetterCode}
+                          text={threeLetterCode}
                           fill="white"
                           x={xOffsetWithNote + (width - stationNameWidth) / 2}
                           fontSize={12.2}
@@ -899,7 +895,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               {stationNote ? (
                 <>
                   <Text
-                    text={stationNameChinese}
+                    text={quaternaryName}
                     x={8 + (width + smallStationNameWidth) / 2}
                     y={yOffset + 18 - 8}
                     fontSize={10}
@@ -909,7 +905,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     align="center"
                   />
                   <Text
-                    text={stationNameKorean}
+                    text={tertiaryName}
                     x={8 + (width + smallStationNameWidth) / 2}
                     y={yOffset + 35 - 9}
                     fontSize={10}
@@ -922,7 +918,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               ) : (
                 <>
                   <Text
-                    text={stationNameChinese}
+                    text={quaternaryName}
                     x={8 + (width + stationNameWidth) / 2}
                     y={yOffset + 18}
                     fontSize={10}
@@ -932,7 +928,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     align="center"
                   />
                   <Text
-                    text={stationNameKorean}
+                    text={tertiaryName}
                     x={8 + (width + stationNameWidth) / 2}
                     y={yOffset + 35}
                     fontSize={10}
@@ -944,7 +940,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                 </>
               )}
               <Text
-                text={stationNameEnglish}
+                text={secondaryName}
                 width={width}
                 x={0}
                 y={yOffset + 98}

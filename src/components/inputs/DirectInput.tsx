@@ -1,4 +1,4 @@
-import { ChangeEvent } from "react";
+import { type ChangeEvent } from "react";
 import {
   Button,
   TextInput,
@@ -28,31 +28,38 @@ import {
 } from "@tabler/icons-react";
 import { ColorPicker, ColorService } from "react-color-palette";
 import type DirectInputStationProps from "../signs/DirectInputStationProps";
+import { SIGN_STYLE_FIELDS } from "../signs/signStyles";
+import type { SignStyleFieldSpec } from "../signs/signStyles";
 import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
 
 interface DirectInputStationPropsWithHandleChange extends DirectInputStationProps {
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  signStyle?: string;
 }
 
 const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
   props,
 ) => {
   const t = useTranslations();
+  const fields: SignStyleFieldSpec =
+    SIGN_STYLE_FIELDS[props.signStyle ?? "jreast"] ??
+    SIGN_STYLE_FIELDS["jreast"];
+  const show = (f: keyof SignStyleFieldSpec) => fields[f] !== "hidden";
 
   const handleSwap = () => {
     const target = {
-      leftStationName: props.rightStationName,
-      leftStationNameFurigana: props.rightStationNameFurigana,
-      leftStationNameEnglish: props.rightStationNameEnglish,
-      leftStationNumberPrimary: props.rightStationNumberPrimary,
-      leftStationNumberSecondary: props.rightStationNumberSecondary,
-      rightStationName: props.leftStationName,
-      rightStationNameFurigana: props.leftStationNameFurigana,
-      rightStationNameEnglish: props.leftStationNameEnglish,
-      rightStationNumberPrimary: props.leftStationNumberPrimary,
-      rightStationNumberSecondary: props.leftStationNumberSecondary,
+      leftPrimaryName: props.rightPrimaryName,
+      leftPrimaryNameFurigana: props.rightPrimaryNameFurigana,
+      leftSecondaryName: props.rightSecondaryName,
+      leftNumberPrimary: props.rightNumberPrimary,
+      leftNumberSecondary: props.rightNumberSecondary,
+      rightPrimaryName: props.leftPrimaryName,
+      rightPrimaryNameFurigana: props.leftPrimaryNameFurigana,
+      rightSecondaryName: props.leftSecondaryName,
+      rightNumberPrimary: props.leftNumberPrimary,
+      rightNumberSecondary: props.leftNumberSecondary,
     };
 
     Object.entries(target).forEach(([key, value]) => {
@@ -123,227 +130,267 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
         </Grid>
       </Box>
 
-      <Grid gutter="md" justify="center">
-        {/* Left station */}
-        <Grid.Col span={{ base: 10, md: 3 }}>
-          <Stack gap="md">
-            <InputHead>
-              <IconChevronsLeft size={20} />
-              {t("input.direct.input-left")}
-            </InputHead>
-            <TextInput
-              name="leftStationName"
-              label={t("input.direct.lstation")}
-              value={props.leftStationName}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="leftStationNameFurigana"
-              label={t("input.direct.lread")}
-              value={props.leftStationNameFurigana}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="leftStationNameEnglish"
-              label={t("input.direct.len")}
-              value={props.leftStationNameEnglish}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="leftStationNumberPrimary"
-              label={t("input.direct.lnum")}
-              value={props.leftStationNumberPrimary}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="leftStationNumberSecondary"
-              label={t("input.direct.lnum2")}
-              value={props.leftStationNumberSecondary}
-              onChange={props.onChange}
-            />
-          </Stack>
-        </Grid.Col>
-
-        {/* Current station */}
-        <Grid.Col span={{ base: 10, md: 3 }}>
-          <Stack gap="md">
-            <InputHead>
-              <IconTrain size={20} />
-              {t("input.direct.input-current")}
-            </InputHead>
-            <TextInput
-              name="stationName"
-              label={t("input.direct.station")}
-              value={props.stationName}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="stationNameFurigana"
-              label={t("input.direct.read")}
-              value={props.stationNameFurigana}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="stationNameEnglish"
-              label={t("input.direct.en")}
-              value={props.stationNameEnglish}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="stationNameChinese"
-              label={t("input.direct.ch")}
-              value={props.stationNameChinese}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="stationNameKorean"
-              label={t("input.direct.kp")}
-              value={props.stationNameKorean}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="stationNumberPrimary"
-              label={t("input.direct.num")}
-              value={props.stationNumberPrimary}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="stationNumberSecondary"
-              label={t("input.direct.num2")}
-              value={props.stationNumberSecondary}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="stationThreeLetterCode"
-              label={t("input.direct.trc")}
-              value={props.stationThreeLetterCode}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="stationNote"
-              label={t("input.direct.note")}
-              value={props.stationNote}
-              onChange={props.onChange}
-            />
-          </Stack>
-
-          {/* Station area list */}
-          <Box style={{ maxWidth: 220, marginTop: "16px" }}>
-            <Text size="sm" fw={500} mb="xs">
-              {t("input.direct.area")}
-            </Text>
-            <Stack gap="xs">
-              {props.stationArea?.map((e) => (
-                <Group key={e.id} gap="xs" align="center" wrap="nowrap">
-                  <TextInput
-                    style={{ minWidth: "68px", flex: 1 }}
-                    placeholder={t("input.direct.area-name")}
-                    value={e.name}
-                    onChange={(i) => {
-                      const nextStationArea = props.stationArea?.map((c) =>
-                        e.id === c.id
-                          ? {
-                              id: c.id,
-                              name: i.target.value,
-                              isWhite: c.isWhite,
-                            }
-                          : c,
-                      );
-                      updateCurrentData("stationArea", nextStationArea);
-                    }}
-                  />
-                  {e.isWhite ? (
-                    <IconTypographyOff size={18} />
-                  ) : (
-                    <IconTypography size={18} />
-                  )}
-                  <Switch
-                    checked={e.isWhite}
-                    onChange={() => {
-                      const nextStationArea = props.stationArea?.map((c) =>
-                        e.id === c.id
-                          ? { id: c.id, name: c.name, isWhite: !c.isWhite }
-                          : c,
-                      );
-                      updateCurrentData("stationArea", nextStationArea);
-                    }}
-                  />
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    aria-label="delete"
-                    onClick={() => {
-                      updateCurrentData(
-                        "stationArea",
-                        props.stationArea?.filter((c) => c.id !== e.id),
-                      );
-                    }}
-                  >
-                    <IconTrash size={16} />
-                  </ActionIcon>
-                </Group>
-              ))}
+      <Box style={{ width: "100%", overflowX: "hidden" }}>
+        <Grid gutter="md" justify="center">
+          {/* Left station */}
+          <Grid.Col span={{ base: 10, md: 3 }}>
+            <Stack gap="md">
+              <InputHead>
+                <IconChevronsLeft size={20} />
+                {t("input.direct.input-left")}
+              </InputHead>
+              {show("leftPrimaryName") && (
+                <TextInput
+                  name="leftPrimaryName"
+                  label={t("input.direct.lstation")}
+                  value={props.leftPrimaryName}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("leftPrimaryNameFurigana") && (
+                <TextInput
+                  name="leftPrimaryNameFurigana"
+                  label={t("input.direct.lread")}
+                  value={props.leftPrimaryNameFurigana}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("leftSecondaryName") && (
+                <TextInput
+                  name="leftSecondaryName"
+                  label={t("input.direct.len")}
+                  value={props.leftSecondaryName}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("leftNumberPrimary") && (
+                <TextInput
+                  name="leftNumberPrimary"
+                  label={t("input.direct.lnum")}
+                  value={props.leftNumberPrimary}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("leftNumberSecondary") && (
+                <TextInput
+                  name="leftNumberSecondary"
+                  label={t("input.direct.lnum2")}
+                  value={props.leftNumberSecondary}
+                  onChange={props.onChange}
+                />
+              )}
             </Stack>
-            <Button
-              variant="filled"
-              mt="xs"
-              onClick={() => {
-                updateCurrentData(
-                  "stationArea",
-                  props.stationArea
-                    ? [
-                        ...props.stationArea,
-                        { id: uuidv7(), name: "", isWhite: true },
-                      ]
-                    : undefined,
-                );
-              }}
-            >
-              {t("common.add")}
-            </Button>
-          </Box>
-        </Grid.Col>
+          </Grid.Col>
 
-        {/* Right station */}
-        <Grid.Col span={{ base: 10, md: 3 }}>
-          <Stack gap="md">
-            <InputHead>
-              {t("input.direct.input-right")}
-              <IconChevronsRight size={20} />
-            </InputHead>
-            <TextInput
-              name="rightStationName"
-              label={t("input.direct.rstation")}
-              value={props.rightStationName}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="rightStationNameFurigana"
-              label={t("input.direct.rread")}
-              value={props.rightStationNameFurigana}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="rightStationNameEnglish"
-              label={t("input.direct.ren")}
-              value={props.rightStationNameEnglish}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="rightStationNumberPrimary"
-              label={t("input.direct.rnum")}
-              value={props.rightStationNumberPrimary}
-              onChange={props.onChange}
-            />
-            <TextInput
-              name="rightStationNumberSecondary"
-              label={t("input.direct.rnum2")}
-              value={props.rightStationNumberSecondary}
-              onChange={props.onChange}
-            />
-          </Stack>
-        </Grid.Col>
-      </Grid>
+          {/* Current station */}
+          <Grid.Col span={{ base: 10, md: 3 }}>
+            <Stack gap="md">
+              <InputHead>
+                <IconTrain size={20} />
+                {t("input.direct.input-current")}
+              </InputHead>
+              {show("primaryName") && (
+                <TextInput
+                  name="primaryName"
+                  label={t("input.direct.station")}
+                  value={props.primaryName}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("primaryNameFurigana") && (
+                <TextInput
+                  name="primaryNameFurigana"
+                  label={t("input.direct.read")}
+                  value={props.primaryNameFurigana}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("secondaryName") && (
+                <TextInput
+                  name="secondaryName"
+                  label={t("input.direct.en")}
+                  value={props.secondaryName}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("quaternaryName") && (
+                <TextInput
+                  name="quaternaryName"
+                  label={t("input.direct.ch")}
+                  value={props.quaternaryName}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("tertiaryName") && (
+                <TextInput
+                  name="tertiaryName"
+                  label={t("input.direct.kp")}
+                  value={props.tertiaryName}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("numberPrimary") && (
+                <TextInput
+                  name="numberPrimary"
+                  label={t("input.direct.num")}
+                  value={props.numberPrimary}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("numberSecondary") && (
+                <TextInput
+                  name="numberSecondary"
+                  label={t("input.direct.num2")}
+                  value={props.numberSecondary}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("threeLetterCode") && (
+                <TextInput
+                  name="threeLetterCode"
+                  label={t("input.direct.trc")}
+                  value={props.threeLetterCode}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("note") && (
+                <TextInput
+                  name="note"
+                  label={t("input.direct.note")}
+                  value={props.note}
+                  onChange={props.onChange}
+                />
+              )}
+            </Stack>
+
+            {/* Station area list */}
+            <Box style={{ maxWidth: 220, marginTop: "16px" }}>
+              <Text size="sm" fw={500} mb="xs">
+                {t("input.direct.area")}
+              </Text>
+              <Stack gap="xs">
+                {props.stationAreas?.map((e) => (
+                  <Group key={e.id} gap="xs" align="center" wrap="nowrap">
+                    <TextInput
+                      style={{ minWidth: "68px", flex: 1 }}
+                      placeholder={t("input.direct.area-name")}
+                      value={e.name}
+                      onChange={(i) => {
+                        const nextAreas = props.stationAreas?.map((c) =>
+                          e.id === c.id
+                            ? {
+                                id: c.id,
+                                name: i.target.value,
+                                isWhite: c.isWhite,
+                              }
+                            : c,
+                        );
+                        updateCurrentData("stationAreas", nextAreas);
+                      }}
+                    />
+                    {e.isWhite ? (
+                      <IconTypographyOff size={18} />
+                    ) : (
+                      <IconTypography size={18} />
+                    )}
+                    <Switch
+                      checked={e.isWhite}
+                      onChange={() => {
+                        const nextAreas = props.stationAreas?.map((c) =>
+                          e.id === c.id
+                            ? { id: c.id, name: c.name, isWhite: !c.isWhite }
+                            : c,
+                        );
+                        updateCurrentData("stationAreas", nextAreas);
+                      }}
+                    />
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      aria-label="delete"
+                      onClick={() => {
+                        updateCurrentData(
+                          "stationAreas",
+                          props.stationAreas?.filter((c) => c.id !== e.id),
+                        );
+                      }}
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+                ))}
+              </Stack>
+              <Button
+                variant="filled"
+                mt="xs"
+                onClick={() => {
+                  updateCurrentData(
+                    "stationAreas",
+                    props.stationAreas
+                      ? [
+                          ...props.stationAreas,
+                          { id: uuidv7(), name: "", isWhite: true },
+                        ]
+                      : undefined,
+                  );
+                }}
+              >
+                {t("common.add")}
+              </Button>
+            </Box>
+          </Grid.Col>
+
+          {/* Right station */}
+          <Grid.Col span={{ base: 10, md: 3 }}>
+            <Stack gap="md">
+              <InputHead>
+                {t("input.direct.input-right")}
+                <IconChevronsRight size={20} />
+              </InputHead>
+              {show("rightPrimaryName") && (
+                <TextInput
+                  name="rightPrimaryName"
+                  label={t("input.direct.rstation")}
+                  value={props.rightPrimaryName}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("rightPrimaryNameFurigana") && (
+                <TextInput
+                  name="rightPrimaryNameFurigana"
+                  label={t("input.direct.rread")}
+                  value={props.rightPrimaryNameFurigana}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("rightSecondaryName") && (
+                <TextInput
+                  name="rightSecondaryName"
+                  label={t("input.direct.ren")}
+                  value={props.rightSecondaryName}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("rightNumberPrimary") && (
+                <TextInput
+                  name="rightNumberPrimary"
+                  label={t("input.direct.rnum")}
+                  value={props.rightNumberPrimary}
+                  onChange={props.onChange}
+                />
+              )}
+              {show("rightNumberSecondary") && (
+                <TextInput
+                  name="rightNumberSecondary"
+                  label={t("input.direct.rnum2")}
+                  value={props.rightNumberSecondary}
+                  onChange={props.onChange}
+                />
+              )}
+            </Stack>
+          </Grid.Col>
+        </Grid>
+      </Box>
 
       <ColorPicker
         color={ColorService.convert("hex", props.baseColor)}

@@ -2,14 +2,14 @@ type StationArea = {
   id: number;
   name: string;
   isWhite?: boolean;
-}
+};
 
 // inside of station
 type Platform = {
   id: string;
   number: number;
   lineColor: string[];
-}
+};
 
 interface StationProps {
   //main
@@ -26,4 +26,4 @@ interface StationProps {
   platforms?: Platform[];
 }
 
-export default StationProps
+export type { StationProps as default };

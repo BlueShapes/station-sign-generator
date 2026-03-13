@@ -1,73 +1,88 @@
-import { Box, Container, ActionIcon, Tooltip, Text, Menu, Notification } from '@mantine/core';
-import { IconShare } from '@tabler/icons-react';
-import { IconTrain } from '@tabler/icons-react';
-import { JP, US } from 'country-flag-icons/react/3x2';
-import { ReactElement, useEffect, useState } from 'react';
-import { BsTwitter, BsCopy } from 'react-icons/bs';
-import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from 'react-icons/si';
-import { useTranslations } from '@/i18n/useTranslation';
+import {
+  Box,
+  Container,
+  ActionIcon,
+  Tooltip,
+  Text,
+  Menu,
+  Notification,
+} from "@mantine/core";
+import { IconShare } from "@tabler/icons-react";
+import { IconTrain } from "@tabler/icons-react";
+import { JP, US } from "country-flag-icons/react/3x2";
+import { type ReactElement, useEffect, useState } from "react";
+import { BsTwitter, BsCopy } from "react-icons/bs";
+import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from "react-icons/si";
+import { useTranslations } from "@/i18n/useTranslation";
 
 interface HeaderProps {
   locale: string;
 }
 
 const Header = ({ locale }: HeaderProps) => {
-  const t = useTranslations('');
+  const t = useTranslations("");
 
   type Lang = { langName: string; lang: string; flag: ReactElement };
   const langs: Lang[] = [
-    { langName: '日本語', lang: 'ja', flag: <JP style={{ width: '2em' }} /> },
-    { langName: 'English', lang: 'en', flag: <US style={{ width: '2em' }} /> },
+    { langName: "日本語", lang: "ja", flag: <JP style={{ width: "2em" }} /> },
+    { langName: "English", lang: "en", flag: <US style={{ width: "2em" }} /> },
   ];
 
-  const [url, setUrl] = useState('https://example.com');
+  const [url, setUrl] = useState("https://example.com");
   useEffect(() => {
     setUrl(document.URL);
   });
 
-  const shareText = t('header.tooltip.share-message', { name: t('header.title') });
+  const shareText = t("header.tooltip.share-message", {
+    name: t("header.title"),
+  });
   const encodedShareText = encodeURIComponent(shareText);
 
-  type ShareOption = { name: string; link: string | (() => void); icon: ReactElement; id: number };
+  type ShareOption = {
+    name: string;
+    link: string | (() => void);
+    icon: ReactElement;
+    id: number;
+  };
   const shareOptions: ShareOption[] = [
     {
-      name: t('header.tooltip.share-options.copy'),
+      name: t("header.tooltip.share-options.copy"),
       link: () => navigator.clipboard.writeText(`${shareText}\n${url}`),
       icon: <BsCopy />,
       id: 201,
     },
     {
-      name: t('header.tooltip.share-options.twitter'),
+      name: t("header.tooltip.share-options.twitter"),
       link: `https://x.com/share?text=${encodedShareText}&url=${url}`,
       icon: <BsTwitter />,
       id: 1,
     },
     {
-      name: t('header.tooltip.share-options.x'),
+      name: t("header.tooltip.share-options.x"),
       link: `https://x.com/share?text=${encodedShareText}&url=${url}`,
       icon: <SiX />,
       id: 2,
     },
     {
-      name: t('header.tooltip.share-options.reddit'),
+      name: t("header.tooltip.share-options.reddit"),
       link: `https://www.reddit.com/submit?text=${encodedShareText}&url=${url}`,
       icon: <SiReddit />,
       id: 12,
     },
     {
-      name: t('header.tooltip.share-options.misskey'),
+      name: t("header.tooltip.share-options.misskey"),
       link: `https://misskey-hub.net/share/?text=${encodedShareText}&url=${url}&visibility=public&localOnly=0`,
       icon: <SiMisskey />,
       id: 21,
     },
     {
-      name: t('header.tooltip.share-options.mastodon'),
+      name: t("header.tooltip.share-options.mastodon"),
       link: `https://donshare.net/share.html?text=${encodedShareText}&url=${url}`,
       icon: <SiMastodon />,
       id: 22,
     },
     {
-      name: t('header.tooltip.share-options.line'),
+      name: t("header.tooltip.share-options.line"),
       link: `https://social-plugins.line.me/lineit/share?text=${encodedShareText}&url=${url}`,
       icon: <SiLine />,
       id: 101,
@@ -78,9 +93,12 @@ const Header = ({ locale }: HeaderProps) => {
 
   const Flag = ({ country }: { country: string }) => {
     switch (country) {
-      case 'ja': return <JP style={{ width: '1.5em' }} />;
-      case 'en': return <US style={{ width: '1.5em' }} />;
-      default: return <US style={{ width: '1.5em' }} />;
+      case "ja":
+        return <JP style={{ width: "1.5em" }} />;
+      case "en":
+        return <US style={{ width: "1.5em" }} />;
+      default:
+        return <US style={{ width: "1.5em" }} />;
     }
   };
 
@@ -89,50 +107,61 @@ const Header = ({ locale }: HeaderProps) => {
       <Box
         component="header"
         style={{
-          position: 'fixed',
+          position: "fixed",
           top: 0,
           left: 0,
           right: 0,
-          height: '64px',
+          height: "64px",
           zIndex: 200,
-          backgroundColor: 'var(--mantine-color-dark-7)',
-          borderBottom: '1px solid var(--mantine-color-dark-5)',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+          backgroundColor: "var(--mantine-color-dark-7)",
+          borderBottom: "1px solid var(--mantine-color-dark-5)",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
         }}
       >
         <Container
           size="xl"
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            height: '100%',
-            padding: '0 16px',
+            display: "flex",
+            alignItems: "center",
+            height: "100%",
+            padding: "0 16px",
           }}
         >
           {/* Title */}
-          <Box style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Box
+            style={{
+              flexGrow: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
             <IconTrain size={20} />
             <Text
               component="h1"
               style={{
-                fontSize: 'clamp(13px, 2vw, 16px)',
+                fontSize: "clamp(13px, 2vw, 16px)",
                 fontWeight: 700,
                 margin: 0,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'keep-all',
+                whiteSpace: "pre-wrap",
+                wordBreak: "keep-all",
               }}
             >
-              {t('header.title')}
+              {t("header.title")}
             </Text>
           </Box>
 
           {/* Right actions */}
-          <Box style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Box style={{ display: "flex", alignItems: "center", gap: "4px" }}>
             {/* Language Menu */}
             <Menu shadow="md" position="bottom-end" offset={12}>
-              <Tooltip label={t('header.tooltip.lang')}>
+              <Tooltip label={t("header.tooltip.lang")}>
                 <Menu.Target>
-                  <ActionIcon variant="transparent" size="lg" aria-label={t('header.tooltip.lang')}>
+                  <ActionIcon
+                    variant="transparent"
+                    size="lg"
+                    aria-label={t("header.tooltip.lang")}
+                  >
                     <Flag country={locale} />
                   </ActionIcon>
                 </Menu.Target>
@@ -143,7 +172,12 @@ const Header = ({ locale }: HeaderProps) => {
                     key={e.lang}
                     component="a"
                     href={`/${e.lang}/`}
-                    style={{ display: 'flex', gap: '10px', alignItems: 'center', textDecoration: 'none' }}
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      alignItems: "center",
+                      textDecoration: "none",
+                    }}
                     leftSection={e.flag}
                   >
                     {e.langName}
@@ -154,9 +188,13 @@ const Header = ({ locale }: HeaderProps) => {
 
             {/* Share Menu */}
             <Menu shadow="md" position="bottom-end" offset={12}>
-              <Tooltip label={t('header.tooltip.share')}>
+              <Tooltip label={t("header.tooltip.share")}>
                 <Menu.Target>
-                  <ActionIcon variant="transparent" size="lg" aria-label={t('header.tooltip.share')}>
+                  <ActionIcon
+                    variant="transparent"
+                    size="lg"
+                    aria-label={t("header.tooltip.share")}
+                  >
                     <IconShare size={20} />
                   </ActionIcon>
                 </Menu.Target>
@@ -167,8 +205,8 @@ const Header = ({ locale }: HeaderProps) => {
                     key={e.id}
                     leftSection={e.icon}
                     onClick={() => {
-                      if (typeof e.link === 'string') {
-                        window.open(e.link, '_blank');
+                      if (typeof e.link === "string") {
+                        window.open(e.link, "_blank");
                       } else {
                         setIsCopyMessageOpen(true);
                         e.link();
@@ -190,13 +228,13 @@ const Header = ({ locale }: HeaderProps) => {
           color="green"
           onClose={() => setIsCopyMessageOpen(false)}
           style={{
-            position: 'fixed',
+            position: "fixed",
             bottom: 16,
             right: 16,
             zIndex: 1000,
           }}
         >
-          {t('header.tooltip.copy')}
+          {t("header.tooltip.copy")}
         </Notification>
       )}
     </>

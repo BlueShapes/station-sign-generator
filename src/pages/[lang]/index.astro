@@ -7,7 +7,6 @@ import { loadTranslations } from '../../i18n/translations';
 export function getStaticPaths() {
   return [
     { params: { lang: 'en' } },
-    { params: { lang: 'ja' } },
   ];
 }
 
@@ -20,7 +19,12 @@ const description = (messages as Record<string, Record<string, string>>)?.meta?.
 const ogImagePath = (messages as Record<string, string>)?.['$og-image-path'] ?? '/images/en/ogp.png';
 const ogImageUrl = `${siteOrigin}${ogImagePath}`;
 const canonical = `${siteOrigin}/${lang}/`;
-const locales = ['en', 'ja'];
+
+const alternates = [
+  { lang: 'ja',       href: `${siteOrigin}/` },
+  { lang: 'en',       href: `${siteOrigin}/en/` },
+  { lang: 'x-default', href: `${siteOrigin}/` },
+];
 ---
 <BaseLayout title={title} description={description} locale={lang}>
   <Fragment slot="head">
@@ -30,7 +34,7 @@ const locales = ['en', 'ja'];
       locale={lang}
       ogImageUrl={ogImageUrl}
       canonical={canonical}
-      locales={locales}
+      alternates={alternates}
     />
   </Fragment>
   <StationSignApp client:only="react" locale={lang} messages={messages} />

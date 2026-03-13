@@ -1,14 +1,19 @@
 ---
+interface Alternate {
+  lang: string;
+  href: string;
+}
+
 interface Props {
   title: string;
   description: string;
   locale: string;
   ogImageUrl: string;
   canonical: string;
-  locales: string[];
+  alternates: Alternate[];
 }
 
-const { title, description, locale, ogImageUrl, canonical, locales } = Astro.props;
+const { title, description, locale, ogImageUrl, canonical, alternates } = Astro.props;
 ---
 <title>{title}</title>
 <meta name="description" content={description} />
@@ -23,8 +28,6 @@ const { title, description, locale, ogImageUrl, canonical, locales } = Astro.pro
 <meta property="og:image:alt" content={title} />
 <meta property="og:locale" content={locale} />
 <meta property="og:site_name" content={title} />
-{locales.map((l) => (
-  <link rel="alternate" hreflang={l} href={`${canonical.replace(`/${locale}/`, `/${l}/`)}`} />
+{alternates.map(({ lang, href }) => (
+  <link rel="alternate" hreflang={lang} href={href} />
 ))}
-<link rel="alternate" hreflang="x-default" href={canonical.replace(`/${locale}/`, '/en/')} />
-<link rel="icon" href="/favicon.ico" />

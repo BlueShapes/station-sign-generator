@@ -1,5 +1,5 @@
-import { TextInput, Button } from '@mantine/core';
-import { useState, ChangeEvent } from 'react';
+import { TextInput, Button } from "@mantine/core";
+import { useState, type ChangeEvent } from "react";
 
 type Test = {
   text: string;
@@ -11,9 +11,9 @@ const InputStationInfo: React.FC<Test> = (props) => {
   const [text2, setText2] = useState(props.text2);
 
   const handleReset = () => {
-    setText2('');
+    setText2("");
     const event = {
-      target: { name: 'text2', value: '' },
+      target: { name: "text2", value: "" },
     } as ChangeEvent<HTMLInputElement>;
     props.onChange(event);
   };
@@ -29,7 +29,9 @@ const InputStationInfo: React.FC<Test> = (props) => {
           setText2(e.target.value);
         }}
       />
-      <Button variant="filled" onClick={handleReset}>Reset Text2</Button>
+      <Button variant="filled" onClick={handleReset}>
+        Reset Text2
+      </Button>
     </>
   );
 };

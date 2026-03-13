@@ -1,10 +1,10 @@
-import Platform from "@/types/StationProps"
+import type Platform from "@/types/StationProps";
 
 interface Line {
   name: string;
   color: string;
   prefix: string;
-  stations: Platform[]
+  stations: Platform[];
 }
 
-export default Line
+export type { Line as default };

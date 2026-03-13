@@ -10,17 +10,18 @@ import {
   Box,
   Select,
   Title,
+  Loader,
+  Center,
 } from "@mantine/core";
 import { IconDownload, IconEye } from "@tabler/icons-react";
 import Konva from "konva";
-import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import DirectInput from "@/components/inputs/DirectInput";
 import InputStationInfo from "@/components/InputStationInfo";
-import { v7 as uuidv7 } from "uuid";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { TranslationProvider } from "@/i18n/TranslationProvider";
 import { useTranslations } from "@/i18n/useTranslation";
+import { useDatabase } from "@/db/useDatabase";
 
 // You have to import height and scale for every child station sign component!!!
 import JrEastSign, {
@@ -39,35 +40,11 @@ function AppContent({ locale }: { locale: string }) {
   const ref = useRef<Konva.Stage>(null);
   const t = useTranslations();
 
-  const [currentData, setCurrentData] = useState<DirectInputStationProps>({
-    leftStationName: "品川",
-    leftStationNameFurigana: "しながわ",
-    leftStationNameEnglish: "Shinagawa",
-    leftStationNumberPrimary: "JY25",
-    leftStationNumberSecondary: "",
-    stationName: "高輪ゲートウェイ",
-    stationNameFurigana: "たかなわげーとうぇい",
-    stationNameEnglish: "Takanawa Gateway",
-    stationNameChinese: "高轮Gateway",
-    stationNameKorean: "다카나와 게이트웨이",
-    stationNumberPrimary: "JY26",
-    stationNumberSecondary: "",
-    stationThreeLetterCode: "TGW",
-    stationArea: [
-      { id: uuidv7(), name: "山", isWhite: true },
-      { id: uuidv7(), name: "区", isWhite: false },
-    ],
-    stationNote: "",
-    rightStationName: "田町",
-    rightStationNameFurigana: "たまち",
-    rightStationNameEnglish: "Tamachi",
-    rightStationNumberPrimary: "JY27",
-    rightStationNumberSecondary: "",
-    ratio: 4.5,
-    direction: "left",
-    baseColor: "#36ab33",
-    lineColor: "#89ff12",
-  });
+  const {
+    data: currentData,
+    loading: dbLoading,
+    update: setCurrentData,
+  } = useDatabase();
 
   type ImageSize = { label: string; value: number };
 
@@ -88,7 +65,7 @@ function AppContent({ locale }: { locale: string }) {
     }
   }, [currentStyle]);
 
-  const currentCanvasWidth = currentCanvasHeight * currentData.ratio;
+  const currentCanvasWidth = currentCanvasHeight * (currentData?.ratio ?? 4.5);
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<ImageSize[]>([]);
 
@@ -99,15 +76,16 @@ function AppContent({ locale }: { locale: string }) {
       value: i + 1,
     }));
     setSaveSizeList(result);
-  }, [currentCanvasHeight, currentData.ratio]);
+  }, [currentCanvasHeight, currentData?.ratio]);
 
   const handleSave = () => {
+    if (!currentData) return;
     if (ref.current) {
       const uri = ref.current.toDataURL({
         pixelRatio: saveSize / currentBaseScale,
       });
       const link = document.createElement("a");
-      link.download = `${currentData.stationName}.png`;
+      link.download = `${currentData.primaryName}.png`;
       link.href = uri;
       document.body.appendChild(link);
       link.click();
@@ -120,11 +98,12 @@ function AppContent({ locale }: { locale: string }) {
   const handleChangeDirect = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
+    if (!currentData) return;
     const { name, value } = e.target;
-    setCurrentData((prevData) => ({
-      ...prevData,
+    setCurrentData({
+      ...currentData,
       [name]: typeof value === "string" ? value.slice(0, 120) : value,
-    }));
+    });
   };
 
   // =====test=====
@@ -137,6 +116,17 @@ function AppContent({ locale }: { locale: string }) {
     setTest({ ...test, [name]: value });
   };
   // ===============
+
+  if (dbLoading || !currentData) {
+    return (
+      <>
+        <Header locale={locale} />
+        <Center style={{ height: "100vh" }}>
+          <Loader size="lg" />
+        </Center>
+      </>
+    );
+  }
 
   return (
     <>
@@ -158,7 +148,7 @@ function AppContent({ locale }: { locale: string }) {
         {t("common.preview")}
       </Title>
       <JrEastSign {...currentData} ref={ref} />
-      <Box style={{ width: "100%", padding: "25px" }}>
+      <Box style={{ width: "100%", padding: "25px", overflowX: "hidden" }}>
         <Grid gutter="md" style={{ padding: "10px" }}>
           <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
             <Select
