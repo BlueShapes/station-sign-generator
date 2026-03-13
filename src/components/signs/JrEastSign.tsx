@@ -892,7 +892,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     )}
                   </>
                 ))}
-              {stationNote ? (
+              {note ? (
                 <>
                   <Text
                     text={quaternaryName}
