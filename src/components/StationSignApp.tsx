@@ -185,7 +185,7 @@ function AppContent({
             style={{ display: "flex", justifyContent: "center" }}
           >
             <Button
-              color="secondary"
+              color="green"
               size="lg"
               variant="filled"
               onClick={handleSave}

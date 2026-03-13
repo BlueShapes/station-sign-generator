@@ -1,7 +1,7 @@
 /**
  * App version — shown in the header.
  */
-export const APP_VERSION = "2026.3.0-alpha2";
+export const APP_VERSION = "2026.3.0-alpha3";
 
 /**
  * Database schema version — used to determine if a migration is needed.

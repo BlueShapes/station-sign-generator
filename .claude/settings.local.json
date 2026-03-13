@@ -4,7 +4,14 @@
       "Bash(bun install:*)",
       "Bash(bun run:*)",
       "Bash(curl -s http://192.168.1.45:4321/ | grep -i \"favicon\\\\|icon\")",
-      "Bash(bunx tsc:*)"
+      "Bash(bunx tsc:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.astro.build)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:astro.build)",
+      "WebFetch(domain:github.com)",
+      "Bash(bun add:*)",
+      "Bash(bunx astro:*)"
     ]
   }
 }
