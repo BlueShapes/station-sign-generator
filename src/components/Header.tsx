@@ -14,6 +14,7 @@ import { type ReactElement, useEffect, useState } from "react";
 import { BsTwitter, BsCopy } from "react-icons/bs";
 import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from "react-icons/si";
 import { useTranslations } from "@/i18n/useTranslation";
+import { APP_VERSION } from "@/config";
 
 interface HeaderProps {
   locale: string;
@@ -148,6 +149,15 @@ const Header = ({ locale }: HeaderProps) => {
               }}
             >
               {t("header.title")}
+            </Text>
+            <Text
+              style={{
+                fontSize: "11px",
+                color: "var(--mantine-color-dimmed)",
+                marginTop: "2px",
+              }}
+            >
+              v{APP_VERSION}
             </Text>
           </Box>
 
