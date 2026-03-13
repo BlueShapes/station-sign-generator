@@ -130,7 +130,7 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
         </Grid>
       </Box>
 
-      <Box style={{ width: "100%", overflowX: "hidden" }}>
+      <Box style={{ width: "100%" }}>
         <Grid gutter="md" justify="center">
           {/* Left station */}
           <Grid.Col span={{ base: 10, md: 3 }}>

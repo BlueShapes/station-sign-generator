@@ -148,7 +148,7 @@ function AppContent({ locale }: { locale: string }) {
         {t("common.preview")}
       </Title>
       <JrEastSign {...currentData} ref={ref} />
-      <Box style={{ width: "100%", padding: "25px", overflowX: "hidden" }}>
+      <Box style={{ width: "100%", padding: "25px" }}>
         <Grid gutter="md" style={{ padding: "10px" }}>
           <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
             <Select
