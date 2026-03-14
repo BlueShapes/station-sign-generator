@@ -34,8 +34,12 @@ input:
     reset: "入力内容をリセット"
     reset-title: "入力内容のリセット"
     reset-confirm: "入力内容をすべてリセットしますか？この操作は元に戻せません。"
-    base-color: "ベースカラー"
+    base-color: "会社カラー"
     line-color: "ラインカラー"
+    local-lines: "路線"
+    local-lines-prefix: "プレフィックス"
+    local-lines-add: "路線を追加"
+    local-lines-empty: "路線を追加するとここから番号プレフィックスを選択できます"
     lstation: "左駅名"
     lread: "左駅名（ひらがな）"
     len: "左駅名（英語）"
@@ -70,6 +74,62 @@ common:
   theme-light: ライトモードに切り替え
   loading: 読み込み中...
   loading-fonts: フォントを読み込み中...
+  edit: 編集
+  delete: 削除
+  save: 保存
+  close: 閉じる
 
 error:
   on-save: 保存に失敗しました。駅名標の表示があるにも関わらずこのエラーが出た場合、予期せぬ不具合ですので開発者に報告してください。
+  corrupted-cache: 保存データが破損していたため、初期値にリセットしました。引き続きご利用いただけます。
+
+tabs:
+  simple: シンプル入力
+  route-input: 路線から入力
+  route-edit: 路線を編集
+
+route:
+  download-sqlite: SQLiteをダウンロード
+  no-routes: 路線がありません。「路線を編集」タブで路線を作成してください。
+  company:
+    title: 会社
+    add: 会社を追加
+    edit: 会社を編集
+    name: 会社名
+    color: 会社カラー
+    empty: 会社がありません
+    delete-confirm: この会社を削除しますか？関連する路線も削除されます。
+  line:
+    title: 路線
+    add: 路線を追加
+    edit: 路線を編集
+    name: 路線名
+    color: 路線カラー
+    prefix: プレフィックス
+    priority: 優先度
+    company: 所属会社
+    empty: 路線がありません
+    select: 路線を選択してください
+    all: すべての会社
+    delete-confirm: この路線を削除しますか？
+  station:
+    title: 駅
+    add: 駅を追加
+    edit: 駅を編集
+    name: 駅名
+    furigana: 読み方（ひらがな）
+    en: 英語名
+    ko: 韓国語名
+    zh: 中国語名
+    note: 備考
+    trc: スリーレターコード
+    number: 駅番号
+    areas: 特定都区市内
+    empty: 路線を選択してください
+    no-station: 駅がありません
+    delete-confirm: この駅をこの路線から削除しますか？
+    select: 駅を選択してください
+  sign:
+    style: スタイル
+    direction: 表示方向
+    jreast: JR東日本風

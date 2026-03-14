@@ -1,18 +1,35 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import type { Database } from 'sql.js';
+import { useState, useCallback } from 'react';
 import type DirectInputStationProps from '@/components/signs/DirectInputStationProps';
-import { getDatabase, persistDatabase } from '@/db/init';
-import { getSignConfig, saveSignConfig } from '@/db/repositories/stations';
-import { seedDefaultData, DEFAULT_DATA } from '@/db/seed';
+import { DEFAULT_DATA } from '@/db/seed';
 
 const SESSION_KEY = 'sign-config-v1';
 
-function loadFromSession(): DirectInputStationProps | null {
+function isValidData(data: unknown): data is DirectInputStationProps {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return (
+    typeof d.primaryName === 'string' &&
+    typeof d.baseColor === 'string' &&
+    Array.isArray(d.left) &&
+    Array.isArray(d.right)
+  );
+}
+
+function loadFromSession(): { data: DirectInputStationProps; wasCorrupted: boolean } {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
-    return raw ? (JSON.parse(raw) as DirectInputStationProps) : null;
+    if (!raw) return { data: DEFAULT_DATA, wasCorrupted: false };
+    const parsed = JSON.parse(raw) as unknown;
+    if (isValidData(parsed)) {
+      return { data: parsed, wasCorrupted: false };
+    }
+    // Parsed successfully but failed validation — clear corrupted data
+    sessionStorage.removeItem(SESSION_KEY);
+    return { data: DEFAULT_DATA, wasCorrupted: true };
   } catch {
-    return null;
+    // JSON parse failed — clear corrupted data
+    try { sessionStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
+    return { data: DEFAULT_DATA, wasCorrupted: true };
   }
 }
 
@@ -33,73 +50,26 @@ function clearSession(): void {
 }
 
 interface UseDatabaseResult {
-  data: DirectInputStationProps | null;
-  loading: boolean;
+  data: DirectInputStationProps;
   update: (newData: DirectInputStationProps) => void;
   reset: () => void;
+  isCorrupted: boolean;
 }
 
 export function useDatabase(): UseDatabaseResult {
-  const [data, setData] = useState<DirectInputStationProps | null>(null);
-  const [loading, setLoading] = useState(true);
-  const dbRef = useRef<Database | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    // Restore from sessionStorage immediately for instant display
-    const cached = loadFromSession();
-    if (cached && !cancelled) {
-      setData(cached);
-      setLoading(false);
-    }
-
-    getDatabase()
-      .then((db) => {
-        if (cancelled) return;
-        dbRef.current = db;
-
-        let config = getSignConfig(db);
-        if (!config) {
-          seedDefaultData(db);
-          config = getSignConfig(db);
-          persistDatabase(db);
-        }
-
-        if (!cancelled && config) {
-          setData(config);
-          saveToSession(config);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to initialize database:', err);
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [{ data, wasCorrupted }] = useState(() => loadFromSession());
+  const [currentData, setCurrentData] = useState<DirectInputStationProps>(data);
 
   const update = useCallback((newData: DirectInputStationProps) => {
-    setData(newData);
+    setCurrentData(newData);
     saveToSession(newData);
-    if (dbRef.current) {
-      saveSignConfig(dbRef.current, newData);
-      persistDatabase(dbRef.current);
-    }
   }, []);
 
   const reset = useCallback(() => {
     clearSession();
-    if (dbRef.current) {
-      seedDefaultData(dbRef.current);
-      persistDatabase(dbRef.current);
-    }
-    setData(DEFAULT_DATA);
+    setCurrentData(DEFAULT_DATA);
     saveToSession(DEFAULT_DATA);
   }, []);
 
-  return { data, loading, update, reset };
+  return { data: currentData, update, reset, isCorrupted: wasCorrupted };
 }

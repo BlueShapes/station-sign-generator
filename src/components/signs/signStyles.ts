@@ -5,32 +5,31 @@
 
 type FieldRequirement = "required" | "optional" | "hidden";
 
+type AdjacentFieldSpec = {
+  primaryName: FieldRequirement;
+  primaryNameFurigana: FieldRequirement;
+  secondaryName: FieldRequirement;
+  numberPrimary: FieldRequirement;
+  numberSecondary: FieldRequirement;
+};
+
 interface SignStyleFieldSpec {
   // Current station
   primaryName: FieldRequirement;
   primaryNameFurigana: FieldRequirement;
-  secondaryName: FieldRequirement;   // English in default
-  tertiaryName: FieldRequirement;    // Korean in default
-  quaternaryName: FieldRequirement;  // Chinese in default
+  secondaryName: FieldRequirement; // English in default
+  tertiaryName: FieldRequirement; // Korean in default
+  quaternaryName: FieldRequirement; // Chinese in default
   note: FieldRequirement;
   numberPrimary: FieldRequirement;
   numberSecondary: FieldRequirement;
   threeLetterCode: FieldRequirement;
   stationAreas: FieldRequirement;
   // Adjacent stations
-  leftPrimaryName: FieldRequirement;
-  leftPrimaryNameFurigana: FieldRequirement;
-  leftSecondaryName: FieldRequirement;
-  leftNumberPrimary: FieldRequirement;
-  leftNumberSecondary: FieldRequirement;
-  rightPrimaryName: FieldRequirement;
-  rightPrimaryNameFurigana: FieldRequirement;
-  rightSecondaryName: FieldRequirement;
-  rightNumberPrimary: FieldRequirement;
-  rightNumberSecondary: FieldRequirement;
+  left: AdjacentFieldSpec;
+  right: AdjacentFieldSpec;
   // Sign config
   baseColor: FieldRequirement;
-  lineColor: FieldRequirement;
   ratio: FieldRequirement;
   direction: FieldRequirement;
 }
@@ -49,22 +48,25 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
     threeLetterCode: "optional",
     stationAreas: "optional",
     // Adjacent stations
-    leftPrimaryName: "required",
-    leftPrimaryNameFurigana: "hidden",
-    leftSecondaryName: "required",
-    leftNumberPrimary: "optional",
-    leftNumberSecondary: "optional",
-    rightPrimaryName: "required",
-    rightPrimaryNameFurigana: "hidden",
-    rightSecondaryName: "required",
-    rightNumberPrimary: "optional",
-    rightNumberSecondary: "optional",
+    left: {
+      primaryName: "required",
+      primaryNameFurigana: "hidden",
+      secondaryName: "required",
+      numberPrimary: "optional",
+      numberSecondary: "optional",
+    },
+    right: {
+      primaryName: "required",
+      primaryNameFurigana: "hidden",
+      secondaryName: "required",
+      numberPrimary: "optional",
+      numberSecondary: "optional",
+    },
     // Sign config
     baseColor: "required",
-    lineColor: "required",
     ratio: "required",
     direction: "required",
   },
 };
 
-export type { SignStyleFieldSpec };
+export type { SignStyleFieldSpec, AdjacentFieldSpec };

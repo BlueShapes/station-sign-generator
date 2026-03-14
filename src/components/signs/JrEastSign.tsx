@@ -2,7 +2,6 @@ import { Fragment, useState, useEffect, forwardRef } from "react";
 import type StationProps from "./DirectInputStationProps";
 import { Rect, Layer, Stage, Text, Line } from "react-konva";
 import Konva from "konva";
-import processStationNumber from "@/functions/processStationNumber";
 import { v7 as uuidv7 } from "uuid";
 import { isMobile } from "react-device-detect";
 
@@ -25,22 +24,35 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       tertiaryName,
       note,
       stationAreas,
-      leftPrimaryName,
-      leftSecondaryName,
-      leftNumberPrimary,
-      leftNumberSecondary,
-      rightPrimaryName,
-      rightSecondaryName,
-      rightNumberPrimary,
-      rightNumberSecondary,
-      numberPrimary,
-      numberSecondary,
+      left,
+      right,
+      numberPrimaryPrefix,
+      numberPrimaryValue,
+      numberSecondaryPrefix,
+      numberSecondaryValue,
       threeLetterCode,
       baseColor,
-      lineColor,
+      localLines,
       direction,
       ratio,
     } = props;
+
+    const getLineColor = (prefix?: string): string => {
+      if (!prefix) return "#000000";
+      return localLines?.find((l) => l.prefix === prefix)?.color ?? "#000000";
+    };
+    const leftPrimaryName = left[0]?.primaryName ?? "";
+    const leftSecondaryName = left[0]?.secondaryName ?? "";
+    const leftNumberPrimaryPrefix = left[0]?.numberPrimaryPrefix;
+    const leftNumberPrimaryValue = left[0]?.numberPrimaryValue;
+    const leftNumberSecondaryPrefix = left[0]?.numberSecondaryPrefix;
+    const leftNumberSecondaryValue = left[0]?.numberSecondaryValue;
+    const rightPrimaryName = right[0]?.primaryName ?? "";
+    const rightSecondaryName = right[0]?.secondaryName ?? "";
+    const rightNumberPrimaryPrefix = right[0]?.numberPrimaryPrefix;
+    const rightNumberPrimaryValue = right[0]?.numberPrimaryValue;
+    const rightNumberSecondaryPrefix = right[0]?.numberSecondaryPrefix;
+    const rightNumberSecondaryValue = right[0]?.numberSecondaryValue;
     const spacedStationName = (() => {
       const str = primaryName;
       switch (str.length) {
@@ -58,24 +70,6 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     const startingPoint = 40;
     const lineHeight = 24;
     const linePosY = 70 + yOffset;
-    const processedStationNumberPrimary = numberPrimary
-      ? processStationNumber(numberPrimary)
-      : {};
-    const processedStationNumberSecondary = numberSecondary
-      ? processStationNumber(numberSecondary)
-      : {};
-    const processedLeftStationNumberPrimary = leftNumberPrimary
-      ? processStationNumber(leftNumberPrimary)
-      : {};
-    const processedLeftStationNumberSecondary = leftNumberSecondary
-      ? processStationNumber(leftNumberSecondary)
-      : {};
-    const processedRightStationNumberPrimary = rightNumberPrimary
-      ? processStationNumber(rightNumberPrimary)
-      : {};
-    const processedRightStationNumberSecondary = rightNumberSecondary
-      ? processStationNumber(rightNumberSecondary)
-      : {};
     // const [isFontLoaded, setIsFontLoaded] = useState(false)
     const [stageKey, setStageKey] = useState(0);
     const reversedStationArea = stationAreas
@@ -291,10 +285,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="white"
                     align="left"
                   />
-                  {leftNumberPrimary && (
+                  {leftNumberPrimaryValue && (
                     <>
                       <Rect
-                        stroke={lineColor}
+                        stroke={getLineColor(leftNumberPrimaryPrefix)}
                         strokeWidth={2}
                         x={44}
                         y={yOffset + 97}
@@ -303,7 +297,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         cornerRadius={2}
                       />
                       <Text
-                        text={processedLeftStationNumberPrimary.prefix}
+                        text={leftNumberPrimaryPrefix}
                         fill="black"
                         x={41.5}
                         fontSize={6}
@@ -315,7 +309,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         align="center"
                       />
                       <Text
-                        text={processedLeftStationNumberPrimary.number}
+                        text={leftNumberPrimaryValue}
                         fill="black"
                         x={41.5}
                         fontSize={9}
@@ -328,10 +322,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       />
                     </>
                   )}
-                  {leftNumberSecondary && (
+                  {leftNumberSecondaryValue && (
                     <>
                       <Rect
-                        stroke={lineColor}
+                        stroke={getLineColor(leftNumberSecondaryPrefix)}
                         strokeWidth={2}
                         x={24}
                         y={yOffset + 97}
@@ -340,7 +334,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         cornerRadius={2}
                       />
                       <Text
-                        text={processedLeftStationNumberSecondary.prefix}
+                        text={leftNumberSecondaryPrefix}
                         fill="black"
                         x={21.5}
                         fontSize={6}
@@ -352,7 +346,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         align="center"
                       />
                       <Text
-                        text={processedLeftStationNumberSecondary.number}
+                        text={leftNumberSecondaryValue}
                         fill="black"
                         x={21.5}
                         fontSize={9}
@@ -390,10 +384,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="black"
                     align="right"
                   />
-                  {rightNumberPrimary && (
+                  {rightNumberPrimaryValue && (
                     <>
                       <Rect
-                        stroke={lineColor}
+                        stroke={getLineColor(rightNumberPrimaryPrefix)}
                         strokeWidth={2}
                         x={width - 60}
                         y={yOffset + 97}
@@ -402,7 +396,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         cornerRadius={2}
                       />
                       <Text
-                        text={processedRightStationNumberPrimary.prefix}
+                        text={rightNumberPrimaryPrefix}
                         fill="black"
                         x={width - 62.5}
                         fontSize={6}
@@ -414,7 +408,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         align="center"
                       />
                       <Text
-                        text={processedRightStationNumberPrimary.number}
+                        text={rightNumberPrimaryValue}
                         fill="black"
                         x={width - 62.5}
                         fontSize={9}
@@ -427,10 +421,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       />
                     </>
                   )}
-                  {rightNumberSecondary && (
+                  {rightNumberSecondaryValue && (
                     <>
                       <Rect
-                        stroke={lineColor}
+                        stroke={getLineColor(rightNumberSecondaryPrefix)}
                         strokeWidth={2}
                         x={width - 40}
                         y={yOffset + 97}
@@ -439,7 +433,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         cornerRadius={2}
                       />
                       <Text
-                        text={processedRightStationNumberSecondary.prefix}
+                        text={rightNumberSecondaryPrefix}
                         fill="black"
                         x={width - 42.5}
                         fontSize={6}
@@ -451,7 +445,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         align="center"
                       />
                       <Text
-                        text={processedRightStationNumberSecondary.number}
+                        text={rightNumberSecondaryValue}
                         fill="black"
                         x={width - 42.5}
                         fontSize={9}
@@ -477,9 +471,9 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                 height={height}
               />
 
-              {/* Center Square (Additional layers can be added later) NEEDS UPDATE */}
+              {/* Center Square */}
               <Rect
-                fill={lineColor}
+                fill={getLineColor(numberPrimaryPrefix)}
                 x={width / 2 - 12}
                 y={yOffset + 69.5}
                 width={25}
@@ -537,11 +531,11 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               )}
 
               {/* If station number exists */}
-              {processedStationNumberPrimary.prefix &&
+              {numberPrimaryPrefix &&
                 (threeLetterCode ? (
                   <>
                     <Rect
-                      stroke={lineColor}
+                      stroke={getLineColor(numberPrimaryPrefix)}
                       strokeWidth={3}
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       y={yOffset + yOffsetWithNote + 29}
@@ -603,10 +597,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       height={45}
                       cornerRadius={4}
                     />
-                    {processedStationNumberSecondary.prefix ? (
+                    {numberSecondaryPrefix ? (
                       <>
                         <Rect
-                          stroke={lineColor}
+                          stroke={getLineColor(numberSecondaryPrefix)}
                           strokeWidth={3}
                           x={
                             xOffsetWithNote -
@@ -733,7 +727,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           align="center"
                         />
                         <Text
-                          text={processedStationNumberSecondary.prefix}
+                          text={numberSecondaryPrefix}
                           fill="black"
                           x={
                             xOffsetWithNote -
@@ -749,7 +743,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           align="center"
                         />
                         <Text
-                          text={processedStationNumberSecondary.number}
+                          text={numberSecondaryValue}
                           fill="black"
                           x={
                             xOffsetWithNote -
@@ -782,7 +776,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       </>
                     )}
                     <Text
-                      text={processedStationNumberPrimary.prefix}
+                      text={numberPrimaryPrefix}
                       fill="black"
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={11}
@@ -794,7 +788,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       align="center"
                     />
                     <Text
-                      text={processedStationNumberPrimary.number}
+                      text={numberPrimaryValue}
                       fill="black"
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={17}
@@ -809,7 +803,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                 ) : (
                   <>
                     <Rect
-                      stroke={lineColor}
+                      stroke={getLineColor(numberPrimaryPrefix)}
                       strokeWidth={3}
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       y={yOffset + yOffsetWithNote + 18}
@@ -818,7 +812,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       cornerRadius={2}
                     />
                     <Text
-                      text={processedStationNumberPrimary.prefix}
+                      text={numberPrimaryPrefix}
                       fill="black"
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={11}
@@ -830,7 +824,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       align="center"
                     />
                     <Text
-                      text={processedStationNumberPrimary.number}
+                      text={numberPrimaryValue}
                       fill="black"
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={17}
@@ -841,10 +835,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       height={32}
                       align="center"
                     />
-                    {processedStationNumberSecondary.prefix && (
+                    {numberSecondaryPrefix && (
                       <>
                         <Rect
-                          stroke={lineColor}
+                          stroke={getLineColor(numberSecondaryPrefix)}
                           strokeWidth={3}
                           x={
                             xOffsetWithNote -
@@ -857,7 +851,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           cornerRadius={2}
                         />
                         <Text
-                          text={processedStationNumberSecondary.prefix}
+                          text={numberSecondaryPrefix}
                           fill="black"
                           x={
                             xOffsetWithNote -
@@ -873,7 +867,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           align="center"
                         />
                         <Text
-                          text={processedStationNumberSecondary.number}
+                          text={numberSecondaryValue}
                           fill="black"
                           x={
                             xOffsetWithNote -

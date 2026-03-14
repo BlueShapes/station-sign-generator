@@ -34,8 +34,12 @@ input:
     reset: "Reset inputs"
     reset-title: "Reset all inputs"
     reset-confirm: "Are you sure you want to reset all inputs? This action cannot be undone."
-    base-color: "Base Color"
+    base-color: "Company Color"
     line-color: "Line Color"
+    local-lines: "Lines"
+    local-lines-prefix: "Prefix"
+    local-lines-add: "Add Line"
+    local-lines-empty: "Add lines above to select a prefix here"
     lstation: "Left Station Name"
     lread: "Left Station Subtext"
     len: "Left Station Alternative Name"
@@ -70,6 +74,62 @@ common:
   theme-light: Switch to light mode
   loading: Loading...
   loading-fonts: Loading fonts...
+  edit: Edit
+  delete: Delete
+  save: Save
+  close: Close
 
 error:
   on-save: "Function handleSave failed. This is completely unexpected behavior as the canvas is always rendered."
+  corrupted-cache: "Saved data was corrupted and has been reset to defaults. You can continue using the app normally."
+
+tabs:
+  simple: Simple Input
+  route-input: From Route
+  route-edit: Edit Routes
+
+route:
+  download-sqlite: Download SQLite
+  no-routes: No routes found. Please create routes in the "Edit Routes" tab.
+  company:
+    title: Companies
+    add: Add Company
+    edit: Edit Company
+    name: Company Name
+    color: Company Color
+    empty: No companies yet
+    delete-confirm: Delete this company? Associated lines will also be deleted.
+  line:
+    title: Lines
+    add: Add Line
+    edit: Edit Line
+    name: Line Name
+    color: Line Color
+    prefix: Prefix
+    priority: Priority
+    company: Company
+    empty: No lines yet
+    select: Select a line
+    all: All Companies
+    delete-confirm: Delete this line?
+  station:
+    title: Stations
+    add: Add Station
+    edit: Edit Station
+    name: Station Name
+    furigana: Reading (Hiragana)
+    en: English Name
+    ko: Korean Name
+    zh: Chinese Name
+    note: Note
+    trc: Three Letter Code
+    number: Station Number
+    areas: Fare Zone Badges
+    empty: Select a line to view stations
+    no-station: No stations yet
+    delete-confirm: Remove this station from the line?
+    select: Select a station
+  sign:
+    style: Style
+    direction: Direction
+    jreast: JR East Style

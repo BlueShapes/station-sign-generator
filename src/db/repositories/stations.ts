@@ -1,257 +1,162 @@
 import type { Database } from "sql.js";
-import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
-import type { Direction } from "@/components/signs/DirectInputStationProps";
+import type { Station, StationLine, StationNumber, StationArea } from "@/db/types";
 
-// Well-known IDs for the default single-session design
-export const CURRENT_ID = "station-current";
-export const LEFT_ID = "station-left";
-export const RIGHT_ID = "station-right";
-export const CONFIG_ID = "default";
+// ── Stations ──────────────────────────────────────────────────────────────────
 
-function getNumbers(
-  db: Database,
-  stationId: string,
-): { primary: string; secondary: string } {
+export function getAllStations(db: Database): Station[] {
   const stmt = db.prepare(
-    `SELECT value, is_primary FROM station_numbers WHERE station_id = :sid`,
+    `SELECT id, primary_name, primary_name_furigana, secondary_name, tertiary_name,
+            quaternary_name, quinary_name, note, three_letter_code, sort_order
+     FROM stations ORDER BY sort_order ASC, primary_name ASC`,
   );
-  stmt.bind({ ":sid": stationId });
-
-  let primary = "";
-  let secondary = "";
+  const results: Station[] = [];
   while (stmt.step()) {
-    const row = stmt.getAsObject() as { value: string; is_primary: number };
-    if (row.is_primary === 1) primary = row.value;
-    else secondary = row.value;
+    results.push(stmt.getAsObject() as unknown as Station);
   }
   stmt.free();
-  return { primary, secondary };
+  return results;
 }
 
-function syncNumbers(
-  db: Database,
-  stationId: string,
-  primary: string | undefined,
-  secondary: string | undefined,
-): void {
-  db.run(`DELETE FROM station_numbers WHERE station_id = ?`, [stationId]);
-  if (primary) {
-    db.run(
-      `INSERT INTO station_numbers (id, station_id, value, is_primary) VALUES (lower(hex(randomblob(16))), ?, ?, 1)`,
-      [stationId, primary],
-    );
-  }
-  if (secondary) {
-    db.run(
-      `INSERT INTO station_numbers (id, station_id, value, is_primary) VALUES (lower(hex(randomblob(16))), ?, ?, 0)`,
-      [stationId, secondary],
-    );
-  }
-}
-
-function getAreas(
-  db: Database,
-  stationId: string,
-): { id: string; name: string; isWhite: boolean }[] {
+export function getStationsByLine(db: Database, lineId: string): Station[] {
   const stmt = db.prepare(
-    `SELECT id, name, is_white FROM station_areas WHERE station_id = :sid ORDER BY sort_order`,
+    `SELECT s.id, s.primary_name, s.primary_name_furigana, s.secondary_name,
+            s.tertiary_name, s.quaternary_name, s.quinary_name, s.note,
+            s.three_letter_code, s.sort_order
+     FROM stations s
+     JOIN station_lines sl ON sl.station_id = s.id
+     WHERE sl.line_id = ?
+     ORDER BY sl.sort_order ASC`,
   );
-  stmt.bind({ ":sid": stationId });
-
-  const areas: { id: string; name: string; isWhite: boolean }[] = [];
+  stmt.bind([lineId]);
+  const results: Station[] = [];
   while (stmt.step()) {
-    const row = stmt.getAsObject() as {
-      id: string;
-      name: string;
-      is_white: number;
-    };
-    areas.push({ id: row.id, name: row.name, isWhite: row.is_white === 1 });
+    results.push(stmt.getAsObject() as unknown as Station);
   }
   stmt.free();
-  return areas;
+  return results;
 }
 
-function syncAreas(
-  db: Database,
-  stationId: string,
-  areas: { id: string; name: string; isWhite?: boolean }[] | undefined,
-): void {
-  db.run(`DELETE FROM station_areas WHERE station_id = ?`, [stationId]);
-  if (!areas) return;
-  areas.forEach((area, i) => {
-    db.run(
-      `INSERT INTO station_areas (id, station_id, name, is_white, sort_order) VALUES (?, ?, ?, ?, ?)`,
-      [area.id, stationId, area.name, area.isWhite ? 1 : 0, i],
-    );
-  });
-}
-
-export function getSignConfig(db: Database): DirectInputStationProps | null {
-  const stmt = db.prepare(`
-    SELECT
-      s.name              AS station_name,
-      s.name_furigana     AS station_name_furigana,
-      s.name_english      AS station_name_english,
-      s.name_korean       AS station_name_korean,
-      s.name_chinese      AS station_name_chinese,
-      s.note              AS station_note,
-      s.three_letter_code AS station_three_letter_code,
-      sc.line_color,
-      sc.base_color,
-      sc.ratio,
-      sc.direction,
-      ls.name             AS left_name,
-      ls.name_furigana    AS left_furigana,
-      ls.name_english     AS left_english,
-      rs.name             AS right_name,
-      rs.name_furigana    AS right_furigana,
-      rs.name_english     AS right_english
-    FROM sign_configurations sc
-    JOIN stations s ON sc.station_id = s.id
-    LEFT JOIN adjacent_stations als
-           ON als.station_id = s.id AND als.direction = 'left'
-    LEFT JOIN stations ls ON als.adjacent_station_id = ls.id
-    LEFT JOIN adjacent_stations ars
-           ON ars.station_id = s.id AND ars.direction = 'right'
-    LEFT JOIN stations rs ON ars.adjacent_station_id = rs.id
-    WHERE sc.id = :id
-    LIMIT 1
-  `);
-  stmt.bind({ ":id": CONFIG_ID });
-
-  if (!stmt.step()) {
-    stmt.free();
-    return null;
-  }
-
-  const row = stmt.getAsObject() as Record<string, string | number | null>;
-  stmt.free();
-
-  const str = (v: string | number | null): string => (v as string) ?? "";
-
-  const currentNums = getNumbers(db, CURRENT_ID);
-  const leftNums = getNumbers(db, LEFT_ID);
-  const rightNums = getNumbers(db, RIGHT_ID);
-  const areas = getAreas(db, CURRENT_ID);
-
-  return {
-    primaryName: str(row["station_name"]),
-    primaryNameFurigana: str(row["station_name_furigana"]),
-    secondaryName: str(row["station_name_english"]),
-    tertiaryName: str(row["station_name_korean"]),
-    quaternaryName: str(row["station_name_chinese"]),
-    note: str(row["station_note"]),
-    threeLetterCode: str(row["station_three_letter_code"]),
-    numberPrimary: currentNums.primary,
-    numberSecondary: currentNums.secondary,
-    stationAreas: areas,
-    leftPrimaryName: str(row["left_name"]),
-    leftPrimaryNameFurigana: str(row["left_furigana"]),
-    leftSecondaryName: str(row["left_english"]),
-    leftNumberPrimary: leftNums.primary,
-    leftNumberSecondary: leftNums.secondary,
-    rightPrimaryName: str(row["right_name"]),
-    rightPrimaryNameFurigana: str(row["right_furigana"]),
-    rightSecondaryName: str(row["right_english"]),
-    rightNumberPrimary: rightNums.primary,
-    rightNumberSecondary: rightNums.secondary,
-    lineColor: str(row["line_color"]),
-    baseColor: str(row["base_color"]),
-    ratio: row["ratio"] as number,
-    direction: str(row["direction"]) as Direction,
-  };
-}
-
-export function saveSignConfig(
-  db: Database,
-  data: DirectInputStationProps,
-): void {
-  // Upsert the three station rows
-  const upsertStation = (
-    id: string,
-    name: string,
-    furigana: string | undefined,
-    english: string,
-    korean?: string,
-    chinese?: string,
-    note?: string,
-    tlc?: string,
-  ) => {
-    db.run(
-      `INSERT OR REPLACE INTO stations
-         (id, name, name_furigana, name_english, name_korean, name_chinese, note, three_letter_code)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        name,
-        furigana ?? null,
-        english,
-        korean ?? null,
-        chinese ?? null,
-        note ?? null,
-        tlc ?? null,
-      ],
-    );
-  };
-
-  upsertStation(
-    CURRENT_ID,
-    data.primaryName,
-    data.primaryNameFurigana,
-    data.secondaryName,
-    data.tertiaryName,
-    data.quaternaryName,
-    data.note,
-    data.threeLetterCode,
-  );
-  upsertStation(
-    LEFT_ID,
-    data.leftPrimaryName,
-    data.leftPrimaryNameFurigana,
-    data.leftSecondaryName,
-  );
-  upsertStation(
-    RIGHT_ID,
-    data.rightPrimaryName,
-    data.rightPrimaryNameFurigana,
-    data.rightSecondaryName,
-  );
-
-  // Sync station numbers
-  syncNumbers(db, CURRENT_ID, data.numberPrimary, data.numberSecondary);
-  syncNumbers(db, LEFT_ID, data.leftNumberPrimary, data.leftNumberSecondary);
-  syncNumbers(db, RIGHT_ID, data.rightNumberPrimary, data.rightNumberSecondary);
-
-  // Sync station areas (current station only)
-  syncAreas(db, CURRENT_ID, data.stationAreas);
-
-  // Upsert adjacent_stations links
-  const upsertAdjacent = (direction: "left" | "right", adjacentId: string) => {
-    db.run(
-      `INSERT OR REPLACE INTO adjacent_stations
-         (id, station_id, adjacent_station_id, direction)
-       VALUES (
-         (SELECT id FROM adjacent_stations WHERE station_id = ? AND direction = ?),
-         ?, ?, ?
-       )`,
-      [CURRENT_ID, direction, CURRENT_ID, adjacentId, direction],
-    );
-  };
-  upsertAdjacent("left", LEFT_ID);
-  upsertAdjacent("right", RIGHT_ID);
-
-  // Upsert sign_configuration
+export function upsertStation(db: Database, station: Station): void {
   db.run(
-    `INSERT OR REPLACE INTO sign_configurations
-       (id, station_id, line_color, base_color, ratio, direction, sign_style)
-     VALUES (?, ?, ?, ?, ?, ?, 'jreast')`,
+    `INSERT OR REPLACE INTO stations
+       (id, primary_name, primary_name_furigana, secondary_name, tertiary_name,
+        quaternary_name, quinary_name, note, three_letter_code, sort_order)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      CONFIG_ID,
-      CURRENT_ID,
-      data.lineColor,
-      data.baseColor,
-      data.ratio,
-      data.direction ?? "left",
+      station.id,
+      station.primary_name,
+      station.primary_name_furigana,
+      station.secondary_name,
+      station.tertiary_name,
+      station.quaternary_name,
+      station.quinary_name,
+      station.note,
+      station.three_letter_code,
+      station.sort_order,
     ],
   );
+}
+
+export function deleteStation(db: Database, id: string): void {
+  db.run(`DELETE FROM stations WHERE id = ?`, [id]);
+}
+
+// ── Station Lines ─────────────────────────────────────────────────────────────
+
+export function getStationLines(db: Database, stationId: string): StationLine[] {
+  const stmt = db.prepare(
+    `SELECT id, station_id, line_id, sort_order FROM station_lines WHERE station_id = ? ORDER BY sort_order ASC`,
+  );
+  stmt.bind([stationId]);
+  const results: StationLine[] = [];
+  while (stmt.step()) {
+    results.push(stmt.getAsObject() as unknown as StationLine);
+  }
+  stmt.free();
+  return results;
+}
+
+export function upsertStationLine(db: Database, sl: StationLine): void {
+  db.run(
+    `INSERT OR REPLACE INTO station_lines (id, station_id, line_id, sort_order) VALUES (?, ?, ?, ?)`,
+    [sl.id, sl.station_id, sl.line_id, sl.sort_order],
+  );
+}
+
+export function deleteStationLine(db: Database, id: string): void {
+  db.run(`DELETE FROM station_lines WHERE id = ?`, [id]);
+}
+
+export function deleteStationFromLine(db: Database, stationId: string, lineId: string): void {
+  db.run(`DELETE FROM station_lines WHERE station_id = ? AND line_id = ?`, [stationId, lineId]);
+}
+
+// ── Station Numbers ───────────────────────────────────────────────────────────
+
+export function getStationNumbers(db: Database, stationId: string, lineId?: string): StationNumber[] {
+  let stmt;
+  if (lineId !== undefined) {
+    stmt = db.prepare(
+      `SELECT id, station_id, line_id, value FROM station_numbers WHERE station_id = ? AND line_id = ?`,
+    );
+    stmt.bind([stationId, lineId]);
+  } else {
+    stmt = db.prepare(
+      `SELECT id, station_id, line_id, value FROM station_numbers WHERE station_id = ?`,
+    );
+    stmt.bind([stationId]);
+  }
+  const results: StationNumber[] = [];
+  while (stmt.step()) {
+    results.push(stmt.getAsObject() as unknown as StationNumber);
+  }
+  stmt.free();
+  return results;
+}
+
+export function upsertStationNumber(db: Database, sn: StationNumber): void {
+  db.run(
+    `INSERT OR REPLACE INTO station_numbers (id, station_id, line_id, value) VALUES (?, ?, ?, ?)`,
+    [sn.id, sn.station_id, sn.line_id, sn.value],
+  );
+}
+
+export function deleteStationNumber(db: Database, id: string): void {
+  db.run(`DELETE FROM station_numbers WHERE id = ?`, [id]);
+}
+
+// ── Station Areas ─────────────────────────────────────────────────────────────
+
+export function getStationAreas(db: Database, stationId: string): StationArea[] {
+  const stmt = db.prepare(
+    `SELECT id, station_id, name, is_white, sort_order FROM station_areas WHERE station_id = ? ORDER BY sort_order ASC`,
+  );
+  stmt.bind([stationId]);
+  const results: StationArea[] = [];
+  while (stmt.step()) {
+    results.push(stmt.getAsObject() as unknown as StationArea);
+  }
+  stmt.free();
+  return results;
+}
+
+export function upsertStationArea(db: Database, sa: StationArea): void {
+  db.run(
+    `INSERT OR REPLACE INTO station_areas (id, station_id, name, is_white, sort_order) VALUES (?, ?, ?, ?, ?)`,
+    [sa.id, sa.station_id, sa.name, sa.is_white, sa.sort_order],
+  );
+}
+
+export function deleteStationArea(db: Database, id: string): void {
+  db.run(`DELETE FROM station_areas WHERE id = ?`, [id]);
+}
+
+export function syncStationAreas(db: Database, stationId: string, areas: StationArea[]): void {
+  db.run(`DELETE FROM station_areas WHERE station_id = ?`, [stationId]);
+  areas.forEach((area) => {
+    db.run(
+      `INSERT INTO station_areas (id, station_id, name, is_white, sort_order) VALUES (?, ?, ?, ?, ?)`,
+      [area.id, stationId, area.name, area.is_white, area.sort_order],
+    );
+  });
 }

@@ -1,6 +1,12 @@
 import { type RefObject } from "react";
 import Konva from "konva";
 
+export type LocalLine = {
+  id: string;
+  prefix: string;
+  color: string;
+};
+
 type StationArea = {
   id: string;
   name: string;
@@ -8,6 +14,17 @@ type StationArea = {
 };
 
 export type Direction = "left" | "right" | "both";
+
+export type AdjacentStationProps = {
+  id: string;
+  primaryName: string;
+  secondaryName: string;
+  primaryNameFurigana?: string;
+  numberPrimaryPrefix?: string;
+  numberPrimaryValue?: string;
+  numberSecondaryPrefix?: string;
+  numberSecondaryValue?: string;
+};
 
 interface DirectInputStationProps {
   //main
@@ -17,25 +34,18 @@ interface DirectInputStationProps {
   secondaryName: string;
   tertiaryName?: string;
   quaternaryName?: string;
-  numberPrimary?: string;
-  numberSecondary?: string;
+  numberPrimaryPrefix?: string;
+  numberPrimaryValue?: string;
+  numberSecondaryPrefix?: string;
+  numberSecondaryValue?: string;
   threeLetterCode?: string;
   stationAreas?: StationArea[];
-  //right
-  rightPrimaryName: string;
-  rightSecondaryName: string;
-  rightPrimaryNameFurigana?: string;
-  rightNumberPrimary?: string;
-  rightNumberSecondary?: string;
-  //left
-  leftPrimaryName: string;
-  leftSecondaryName: string;
-  leftPrimaryNameFurigana?: string;
-  leftNumberPrimary?: string;
-  leftNumberSecondary?: string;
+  //adjacent
+  left: AdjacentStationProps[];
+  right: AdjacentStationProps[];
   //misc
-  lineColor: string;
   baseColor: string;
+  localLines?: LocalLine[];
   ratio: number;
   direction?: Direction;
   ref?: RefObject<Konva.Stage>;

@@ -13,7 +13,10 @@ import {
   Text,
   Textarea,
   ColorInput,
+  ColorSwatch,
+  Select,
   Modal,
+  Divider,
 } from "@mantine/core";
 import {
   IconTrash,
@@ -29,14 +32,19 @@ import {
   IconTypographyOff,
 } from "@tabler/icons-react";
 import type DirectInputStationProps from "../signs/DirectInputStationProps";
+import type { LocalLine } from "../signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "../signs/signStyles";
-import type { SignStyleFieldSpec } from "../signs/signStyles";
+import type {
+  SignStyleFieldSpec,
+  AdjacentFieldSpec,
+} from "../signs/signStyles";
 import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
 
 interface DirectInputStationPropsWithHandleChange extends DirectInputStationProps {
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onUpdate?: (updates: Partial<DirectInputStationProps>) => void;
   onReset?: () => void;
   signStyle?: string;
 }
@@ -48,28 +56,18 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
   const fields: SignStyleFieldSpec =
     SIGN_STYLE_FIELDS[props.signStyle ?? "jreast"] ??
     SIGN_STYLE_FIELDS["jreast"];
-  const show = (f: keyof SignStyleFieldSpec) => fields[f] !== "hidden";
+  const show = (f: keyof Omit<SignStyleFieldSpec, "left" | "right">) =>
+    fields[f] !== "hidden";
+  const showLeft = (f: keyof AdjacentFieldSpec) => fields.left[f] !== "hidden";
+  const showRight = (f: keyof AdjacentFieldSpec) =>
+    fields.right[f] !== "hidden";
 
   const [resetModalOpen, setResetModalOpen] = useState(false);
 
   const handleSwap = () => {
-    const target = {
-      leftPrimaryName: props.rightPrimaryName,
-      leftPrimaryNameFurigana: props.rightPrimaryNameFurigana,
-      leftSecondaryName: props.rightSecondaryName,
-      leftNumberPrimary: props.rightNumberPrimary,
-      leftNumberSecondary: props.rightNumberSecondary,
-      rightPrimaryName: props.leftPrimaryName,
-      rightPrimaryNameFurigana: props.leftPrimaryNameFurigana,
-      rightSecondaryName: props.leftSecondaryName,
-      rightNumberPrimary: props.leftNumberPrimary,
-      rightNumberSecondary: props.leftNumberSecondary,
-    };
-
-    Object.entries(target).forEach(([key, value]) => {
-      props.onChange({
-        target: { name: key, value: value || "" },
-      } as ChangeEvent<HTMLInputElement | HTMLTextAreaElement>);
+    props.onUpdate?.({
+      left: [...(props.right ?? [])],
+      right: [...(props.left ?? [])],
     });
   };
 
@@ -84,6 +82,12 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
       target: { name, value },
     } as unknown as ChangeEvent<HTMLInputElement>);
   };
+
+  const localLines: LocalLine[] = props.localLines ?? [];
+  const lineSelectData = localLines.map((l) => ({
+    value: l.prefix,
+    label: l.prefix,
+  }));
 
   return (
     <>
@@ -175,46 +179,171 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 <IconChevronsLeft size={20} />
                 {t("input.direct.input-left")}
               </InputHead>
-              {show("leftPrimaryName") && (
-                <TextInput
-                  name="leftPrimaryName"
-                  label={t("input.direct.lstation")}
-                  value={props.leftPrimaryName}
-                  onChange={props.onChange}
-                />
-              )}
-              {show("leftPrimaryNameFurigana") && (
-                <TextInput
-                  name="leftPrimaryNameFurigana"
-                  label={t("input.direct.lread")}
-                  value={props.leftPrimaryNameFurigana}
-                  onChange={props.onChange}
-                />
-              )}
-              {show("leftSecondaryName") && (
-                <TextInput
-                  name="leftSecondaryName"
-                  label={t("input.direct.len")}
-                  value={props.leftSecondaryName}
-                  onChange={props.onChange}
-                />
-              )}
-              {show("leftNumberPrimary") && (
-                <TextInput
-                  name="leftNumberPrimary"
-                  label={t("input.direct.lnum")}
-                  value={props.leftNumberPrimary}
-                  onChange={props.onChange}
-                />
-              )}
-              {show("leftNumberSecondary") && (
-                <TextInput
-                  name="leftNumberSecondary"
-                  label={t("input.direct.lnum2")}
-                  value={props.leftNumberSecondary}
-                  onChange={props.onChange}
-                />
-              )}
+              {props.left.map((station, idx) => (
+                <Stack key={station.id} gap="sm">
+                  {idx > 0 && <Divider />}
+                  <Group justify="flex-end">
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      aria-label="delete"
+                      onClick={() =>
+                        updateCurrentData(
+                          "left",
+                          props.left.filter((_, i) => i !== idx),
+                        )
+                      }
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+                  {showLeft("primaryName") && (
+                    <TextInput
+                      label={t("input.direct.lstation")}
+                      value={station.primaryName}
+                      onChange={(e) =>
+                        updateCurrentData(
+                          "left",
+                          props.left.map((s, i) =>
+                            i === idx
+                              ? { ...s, primaryName: e.target.value }
+                              : s,
+                          ),
+                        )
+                      }
+                    />
+                  )}
+                  {showLeft("primaryNameFurigana") && (
+                    <TextInput
+                      label={t("input.direct.lread")}
+                      value={station.primaryNameFurigana}
+                      onChange={(e) =>
+                        updateCurrentData(
+                          "left",
+                          props.left.map((s, i) =>
+                            i === idx
+                              ? { ...s, primaryNameFurigana: e.target.value }
+                              : s,
+                          ),
+                        )
+                      }
+                    />
+                  )}
+                  {showLeft("secondaryName") && (
+                    <TextInput
+                      label={t("input.direct.len")}
+                      value={station.secondaryName}
+                      onChange={(e) =>
+                        updateCurrentData(
+                          "left",
+                          props.left.map((s, i) =>
+                            i === idx
+                              ? { ...s, secondaryName: e.target.value }
+                              : s,
+                          ),
+                        )
+                      }
+                    />
+                  )}
+                  {showLeft("numberPrimary") && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("input.direct.lnum")}
+                      </Text>
+                      <Group gap="xs">
+                        <Select
+                          placeholder="JY"
+                          style={{ width: "90px" }}
+                          value={station.numberPrimaryPrefix ?? null}
+                          data={lineSelectData}
+                          clearable
+                          onChange={(v) =>
+                            updateCurrentData(
+                              "left",
+                              props.left.map((s, i) =>
+                                i === idx
+                                  ? { ...s, numberPrimaryPrefix: v ?? "" }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                        <TextInput
+                          placeholder="25"
+                          style={{ flex: 1 }}
+                          value={station.numberPrimaryValue ?? ""}
+                          onChange={(e) =>
+                            updateCurrentData(
+                              "left",
+                              props.left.map((s, i) =>
+                                i === idx
+                                  ? { ...s, numberPrimaryValue: e.target.value }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                      </Group>
+                    </div>
+                  )}
+                  {showLeft("numberSecondary") && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("input.direct.lnum2")}
+                      </Text>
+                      <Group gap="xs">
+                        <Select
+                          placeholder="JY"
+                          style={{ width: "90px" }}
+                          value={station.numberSecondaryPrefix ?? null}
+                          data={lineSelectData}
+                          clearable
+                          onChange={(v) =>
+                            updateCurrentData(
+                              "left",
+                              props.left.map((s, i) =>
+                                i === idx
+                                  ? { ...s, numberSecondaryPrefix: v ?? "" }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                        <TextInput
+                          placeholder="25"
+                          style={{ flex: 1 }}
+                          value={station.numberSecondaryValue ?? ""}
+                          onChange={(e) =>
+                            updateCurrentData(
+                              "left",
+                              props.left.map((s, i) =>
+                                i === idx
+                                  ? {
+                                      ...s,
+                                      numberSecondaryValue: e.target.value,
+                                    }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                      </Group>
+                    </div>
+                  )}
+                </Stack>
+              ))}
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() =>
+                  updateCurrentData("left", [
+                    ...props.left,
+                    { id: uuidv7(), primaryName: "", secondaryName: "" },
+                  ])
+                }
+              >
+                {t("common.add")}
+              </Button>
             </Stack>
           </Grid.Col>
 
@@ -266,20 +395,56 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 />
               )}
               {show("numberPrimary") && (
-                <TextInput
-                  name="numberPrimary"
-                  label={t("input.direct.num")}
-                  value={props.numberPrimary}
-                  onChange={props.onChange}
-                />
+                <div>
+                  <Text size="sm" fw={500} mb={4}>
+                    {t("input.direct.num")}
+                  </Text>
+                  <Group gap="xs">
+                    <Select
+                      placeholder="JY"
+                      style={{ width: "90px" }}
+                      value={props.numberPrimaryPrefix ?? null}
+                      data={lineSelectData}
+                      clearable
+                      onChange={(v) =>
+                        updateCurrentData("numberPrimaryPrefix", v ?? "")
+                      }
+                    />
+                    <TextInput
+                      name="numberPrimaryValue"
+                      placeholder="26"
+                      style={{ flex: 1 }}
+                      value={props.numberPrimaryValue ?? ""}
+                      onChange={props.onChange}
+                    />
+                  </Group>
+                </div>
               )}
               {show("numberSecondary") && (
-                <TextInput
-                  name="numberSecondary"
-                  label={t("input.direct.num2")}
-                  value={props.numberSecondary}
-                  onChange={props.onChange}
-                />
+                <div>
+                  <Text size="sm" fw={500} mb={4}>
+                    {t("input.direct.num2")}
+                  </Text>
+                  <Group gap="xs">
+                    <Select
+                      placeholder="JS"
+                      style={{ width: "90px" }}
+                      value={props.numberSecondaryPrefix ?? null}
+                      data={lineSelectData}
+                      clearable
+                      onChange={(v) =>
+                        updateCurrentData("numberSecondaryPrefix", v ?? "")
+                      }
+                    />
+                    <TextInput
+                      name="numberSecondaryValue"
+                      placeholder="26"
+                      style={{ flex: 1 }}
+                      value={props.numberSecondaryValue ?? ""}
+                      onChange={props.onChange}
+                    />
+                  </Group>
+                </div>
               )}
               {show("threeLetterCode") && (
                 <TextInput
@@ -382,14 +547,14 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 value={props.baseColor}
                 onChange={(color) => handleColorChange("baseColor", color)}
                 format="hex"
-                swatches={["#36ab33", "#005bac", "#e60012", "#f97f00", "#000000", "#ffffff"]}
-              />
-              <ColorInput
-                label={t("input.direct.line-color")}
-                value={props.lineColor}
-                onChange={(color) => handleColorChange("lineColor", color)}
-                format="hex"
-                swatches={["#89ff12", "#ffffff", "#000000", "#ffdd00", "#f97f00"]}
+                swatches={[
+                  "#36ab33",
+                  "#005bac",
+                  "#e60012",
+                  "#f97f00",
+                  "#000000",
+                  "#ffffff",
+                ]}
               />
             </Stack>
           </Grid.Col>
@@ -401,46 +566,242 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 {t("input.direct.input-right")}
                 <IconChevronsRight size={20} />
               </InputHead>
-              {show("rightPrimaryName") && (
-                <TextInput
-                  name="rightPrimaryName"
-                  label={t("input.direct.rstation")}
-                  value={props.rightPrimaryName}
-                  onChange={props.onChange}
-                />
-              )}
-              {show("rightPrimaryNameFurigana") && (
-                <TextInput
-                  name="rightPrimaryNameFurigana"
-                  label={t("input.direct.rread")}
-                  value={props.rightPrimaryNameFurigana}
-                  onChange={props.onChange}
-                />
-              )}
-              {show("rightSecondaryName") && (
-                <TextInput
-                  name="rightSecondaryName"
-                  label={t("input.direct.ren")}
-                  value={props.rightSecondaryName}
-                  onChange={props.onChange}
-                />
-              )}
-              {show("rightNumberPrimary") && (
-                <TextInput
-                  name="rightNumberPrimary"
-                  label={t("input.direct.rnum")}
-                  value={props.rightNumberPrimary}
-                  onChange={props.onChange}
-                />
-              )}
-              {show("rightNumberSecondary") && (
-                <TextInput
-                  name="rightNumberSecondary"
-                  label={t("input.direct.rnum2")}
-                  value={props.rightNumberSecondary}
-                  onChange={props.onChange}
-                />
-              )}
+              {props.right.map((station, idx) => (
+                <Stack key={station.id} gap="sm">
+                  {idx > 0 && <Divider />}
+                  <Group justify="flex-end">
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      aria-label="delete"
+                      onClick={() =>
+                        updateCurrentData(
+                          "right",
+                          props.right.filter((_, i) => i !== idx),
+                        )
+                      }
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+                  {showRight("primaryName") && (
+                    <TextInput
+                      label={t("input.direct.rstation")}
+                      value={station.primaryName}
+                      onChange={(e) =>
+                        updateCurrentData(
+                          "right",
+                          props.right.map((s, i) =>
+                            i === idx
+                              ? { ...s, primaryName: e.target.value }
+                              : s,
+                          ),
+                        )
+                      }
+                    />
+                  )}
+                  {showRight("primaryNameFurigana") && (
+                    <TextInput
+                      label={t("input.direct.rread")}
+                      value={station.primaryNameFurigana}
+                      onChange={(e) =>
+                        updateCurrentData(
+                          "right",
+                          props.right.map((s, i) =>
+                            i === idx
+                              ? { ...s, primaryNameFurigana: e.target.value }
+                              : s,
+                          ),
+                        )
+                      }
+                    />
+                  )}
+                  {showRight("secondaryName") && (
+                    <TextInput
+                      label={t("input.direct.ren")}
+                      value={station.secondaryName}
+                      onChange={(e) =>
+                        updateCurrentData(
+                          "right",
+                          props.right.map((s, i) =>
+                            i === idx
+                              ? { ...s, secondaryName: e.target.value }
+                              : s,
+                          ),
+                        )
+                      }
+                    />
+                  )}
+                  {showRight("numberPrimary") && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("input.direct.rnum")}
+                      </Text>
+                      <Group gap="xs">
+                        <Select
+                          placeholder="JY"
+                          style={{ width: "90px" }}
+                          value={station.numberPrimaryPrefix ?? null}
+                          data={lineSelectData}
+                          clearable
+                          onChange={(v) =>
+                            updateCurrentData(
+                              "right",
+                              props.right.map((s, i) =>
+                                i === idx
+                                  ? { ...s, numberPrimaryPrefix: v ?? "" }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                        <TextInput
+                          placeholder="27"
+                          style={{ flex: 1 }}
+                          value={station.numberPrimaryValue ?? ""}
+                          onChange={(e) =>
+                            updateCurrentData(
+                              "right",
+                              props.right.map((s, i) =>
+                                i === idx
+                                  ? { ...s, numberPrimaryValue: e.target.value }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                      </Group>
+                    </div>
+                  )}
+                  {showRight("numberSecondary") && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("input.direct.rnum2")}
+                      </Text>
+                      <Group gap="xs">
+                        <Select
+                          placeholder="JY"
+                          style={{ width: "90px" }}
+                          value={station.numberSecondaryPrefix ?? null}
+                          data={lineSelectData}
+                          clearable
+                          onChange={(v) =>
+                            updateCurrentData(
+                              "right",
+                              props.right.map((s, i) =>
+                                i === idx
+                                  ? { ...s, numberSecondaryPrefix: v ?? "" }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                        <TextInput
+                          placeholder="27"
+                          style={{ flex: 1 }}
+                          value={station.numberSecondaryValue ?? ""}
+                          onChange={(e) =>
+                            updateCurrentData(
+                              "right",
+                              props.right.map((s, i) =>
+                                i === idx
+                                  ? {
+                                      ...s,
+                                      numberSecondaryValue: e.target.value,
+                                    }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                      </Group>
+                    </div>
+                  )}
+                </Stack>
+              ))}
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() =>
+                  updateCurrentData("right", [
+                    ...props.right,
+                    { id: uuidv7(), primaryName: "", secondaryName: "" },
+                  ])
+                }
+              >
+                {t("common.add")}
+              </Button>
+
+              {/* Lines management */}
+              <Divider mt="xl" mb="sm" />
+              <Text size="sm" fw={700} mb="xs">
+                {t("input.direct.local-lines")}
+              </Text>
+              <Stack gap="xs">
+                {localLines.map((line) => (
+                  <Group key={line.id} gap="xs" wrap="nowrap">
+                    <ColorSwatch
+                      color={line.color}
+                      size={20}
+                      style={{ flexShrink: 0 }}
+                    />
+                    <ColorInput
+                      value={line.color}
+                      style={{ width: "110px" }}
+                      format="hex"
+                      onChange={(color) =>
+                        updateCurrentData(
+                          "localLines",
+                          localLines.map((l) =>
+                            l.id === line.id ? { ...l, color } : l,
+                          ),
+                        )
+                      }
+                    />
+                    <TextInput
+                      placeholder={t("input.direct.local-lines-prefix")}
+                      style={{ flex: 1 }}
+                      value={line.prefix}
+                      onChange={(e) =>
+                        updateCurrentData(
+                          "localLines",
+                          localLines.map((l) =>
+                            l.id === line.id
+                              ? { ...l, prefix: e.target.value }
+                              : l,
+                          ),
+                        )
+                      }
+                    />
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      aria-label="delete"
+                      onClick={() =>
+                        updateCurrentData(
+                          "localLines",
+                          localLines.filter((l) => l.id !== line.id),
+                        )
+                      }
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+                ))}
+              </Stack>
+              <Button
+                variant="outline"
+                size="xs"
+                mt="xs"
+                onClick={() =>
+                  updateCurrentData("localLines", [
+                    ...localLines,
+                    { id: uuidv7(), prefix: "", color: "#89ff12" },
+                  ])
+                }
+              >
+                {t("input.direct.local-lines-add")}
+              </Button>
             </Stack>
           </Grid.Col>
         </Grid>

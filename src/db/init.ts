@@ -1,61 +1,65 @@
 import initSqlJs from "sql.js";
 import type { SqlJsStatic, Database } from "sql.js";
 
-const STORAGE_KEY = "station-sign-db-v1";
+const STORAGE_KEY = "station-sign-db-v2";
 
 const SCHEMA_SQL = `
+CREATE TABLE IF NOT EXISTS companies (
+  id            TEXT PRIMARY KEY,
+  name          TEXT NOT NULL,
+  company_color TEXT NOT NULL DEFAULT '#36ab33'
+);
+
 CREATE TABLE IF NOT EXISTS lines (
-  id     TEXT PRIMARY KEY,
-  name   TEXT NOT NULL,
-  color  TEXT NOT NULL,
-  prefix TEXT NOT NULL
+  id         TEXT PRIMARY KEY,
+  company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
+  name       TEXT NOT NULL,
+  line_color TEXT NOT NULL DEFAULT '#89ff12',
+  prefix     TEXT NOT NULL,
+  priority   INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS stations (
-  id                TEXT PRIMARY KEY,
-  line_id           TEXT REFERENCES lines(id),
-  name              TEXT NOT NULL DEFAULT '',
-  name_furigana     TEXT,
-  name_english      TEXT,
-  name_korean       TEXT,
-  name_chinese      TEXT,
-  note              TEXT,
-  three_letter_code TEXT,
-  sort_order        INTEGER
+  id                   TEXT PRIMARY KEY,
+  primary_name         TEXT NOT NULL DEFAULT '',
+  primary_name_furigana TEXT,
+  secondary_name       TEXT,
+  tertiary_name        TEXT,
+  quaternary_name      TEXT,
+  quinary_name         TEXT,
+  note                 TEXT,
+  three_letter_code    TEXT,
+  sort_order           INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS station_lines (
+  id         TEXT PRIMARY KEY,
+  station_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  line_id    TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
+  sort_order INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS station_numbers (
-  id         TEXT    PRIMARY KEY,
-  station_id TEXT    NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
-  value      TEXT    NOT NULL,
-  is_primary INTEGER NOT NULL DEFAULT 1
+  id         TEXT PRIMARY KEY,
+  station_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  line_id    TEXT REFERENCES lines(id) ON DELETE CASCADE,
+  value      TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS station_areas (
-  id         TEXT    PRIMARY KEY,
-  station_id TEXT    NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
-  name       TEXT    NOT NULL,
-  is_white   INTEGER NOT NULL DEFAULT 0,
-  sort_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS adjacent_stations (
-  id                  TEXT PRIMARY KEY,
-  station_id          TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
-  adjacent_station_id TEXT NOT NULL REFERENCES stations(id),
-  direction           TEXT NOT NULL CHECK(direction IN ('left', 'right')),
-  UNIQUE(station_id, direction)
-);
-
-CREATE TABLE IF NOT EXISTS sign_configurations (
   id         TEXT PRIMARY KEY,
-  station_id TEXT NOT NULL REFERENCES stations(id),
-  line_color TEXT NOT NULL DEFAULT '#89ff12',
-  base_color TEXT NOT NULL DEFAULT '#36ab33',
-  ratio      REAL NOT NULL DEFAULT 4.5,
-  direction  TEXT NOT NULL DEFAULT 'left'
-             CHECK(direction IN ('left', 'right', 'both')),
-  sign_style TEXT NOT NULL DEFAULT 'jreast'
+  station_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  is_white   INTEGER DEFAULT 0,
+  sort_order INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS current_sign_configurations (
+  id         TEXT PRIMARY KEY,
+  station_id TEXT REFERENCES stations(id) ON DELETE CASCADE,
+  ratio      REAL DEFAULT 4.5,
+  direction  TEXT DEFAULT 'left',
+  sign_style TEXT
 );
 `;
 
@@ -102,4 +106,22 @@ export function persistDatabase(database: Database): void {
   } catch (e) {
     console.error("Failed to persist database to localStorage:", e);
   }
+}
+
+export function downloadDatabase(
+  database: Database,
+  filename = "station-signs.sqlite",
+): void {
+  const binary = database.export();
+  const blob = new Blob([binary as unknown as BlobPart], {
+    type: "application/x-sqlite3",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
