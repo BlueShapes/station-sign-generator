@@ -1,7 +1,10 @@
 import { Grid, Title, List, Anchor, Text } from "@mantine/core";
 import { IconChevronsRight } from "@tabler/icons-react";
+import { useTranslations } from "@/i18n/useTranslation";
 
 const Footer = () => {
+  const t = useTranslations();
+
   const linkContents = [
     { name: "Website", link: "https://aosankaku.github.io" },
     { name: "Twitter (Formerly X)", link: "https://twitter.com/@ao_sankaku" },
@@ -51,6 +54,8 @@ const Footer = () => {
         </List>
       </Grid.Col>
       <Grid.Col span={12} style={{ textAlign: "center", margin: "60px 0 80px" }}>
+        <Text>{t("footer.notice")}</Text>
+        <br />
         <Text>Copyright 2025 BlueShapes</Text>
         <Text>(Blue Triangle and sysnote8)</Text>
         <Text>MIT License</Text>

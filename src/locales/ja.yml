@@ -165,3 +165,6 @@ route:
     next-station: 次の駅
     jreast: JR東日本風
     center-colors: 中央四角の色
+
+footer:
+  notice: このサイトはファンサイトです。商標は各鉄道会社に帰属します。当サイトは各鉄道会社とは一切関係ありません。
