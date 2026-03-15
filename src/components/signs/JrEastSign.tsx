@@ -32,6 +32,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       numberSecondaryValue,
       threeLetterCode,
       baseColor,
+      centerSquareColors,
       localLines,
       direction,
       ratio,
@@ -471,14 +472,24 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                 height={height}
               />
 
-              {/* Center Square */}
-              <Rect
-                fill={getLineColor(numberPrimaryPrefix)}
-                x={width / 2 - 12}
-                y={yOffset + 69.5}
-                width={25}
-                height={25}
-              />
+              {/* Center Square — 1–4 vertical color segments (top to bottom) */}
+              {(() => {
+                const colors =
+                  centerSquareColors && centerSquareColors.length > 0
+                    ? centerSquareColors.slice(0, 4)
+                    : [baseColor];
+                const segH = 25 / colors.length;
+                return colors.map((color, i) => (
+                  <Rect
+                    key={i}
+                    fill={color}
+                    x={width / 2 - 12}
+                    y={yOffset + 69.5 + i * segH}
+                    width={25}
+                    height={segH}
+                  />
+                ));
+              })()}
 
               {note ? (
                 <>

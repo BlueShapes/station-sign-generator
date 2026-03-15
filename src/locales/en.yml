@@ -64,6 +64,7 @@ input:
     input-right: "Right Station Info"
     area: Station Fare Area
     area-name: Area Name
+    center-colors: Center Square Colors
 
 common:
   preview: Preview
@@ -163,3 +164,4 @@ route:
     prev-station: Previous station
     next-station: Next station
     jreast: JR East Style
+    center-colors: Center Square Colors

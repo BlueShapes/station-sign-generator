@@ -332,9 +332,9 @@ const DirectInput = memo(function DirectInput({
                               formData.left.map((s, i) =>
                                 i === idx
                                   ? {
-                                    ...s,
-                                    numberSecondaryValue: e.target.value,
-                                  }
+                                      ...s,
+                                      numberSecondaryValue: e.target.value,
+                                    }
                                   : s,
                               ),
                             )
@@ -494,10 +494,10 @@ const DirectInput = memo(function DirectInput({
                         const nextAreas = formData.stationAreas?.map((c) =>
                           e.id === c.id
                             ? {
-                              id: c.id,
-                              name: i.target.value,
-                              isWhite: c.isWhite,
-                            }
+                                id: c.id,
+                                name: i.target.value,
+                                isWhite: c.isWhite,
+                              }
                             : c,
                         );
                         updateField("stationAreas", nextAreas);
@@ -543,9 +543,9 @@ const DirectInput = memo(function DirectInput({
                     "stationAreas",
                     formData.stationAreas
                       ? [
-                        ...formData.stationAreas,
-                        { id: uuidv7(), name: "", isWhite: true },
-                      ]
+                          ...formData.stationAreas,
+                          { id: uuidv7(), name: "", isWhite: true },
+                        ]
                       : undefined,
                   );
                 }}
@@ -570,6 +570,69 @@ const DirectInput = memo(function DirectInput({
                   "#ffffff",
                 ]}
               />
+            </Stack>
+
+            {/* Center square colors */}
+            <Stack gap="xs" mt="md" style={{ maxWidth: 220 }}>
+              <Text size="sm" fw={500}>
+                {t("input.direct.center-colors")}
+              </Text>
+              {(formData.centerSquareColors ?? []).map((color, idx) => (
+                <Group key={idx} gap="xs" wrap="nowrap">
+                  <ColorSwatch
+                    color={color}
+                    size={20}
+                    style={{ flexShrink: 0 }}
+                  />
+                  <Select
+                    style={{ flex: 1 }}
+                    value={color}
+                    placeholder={t("input.direct.local-lines-empty")}
+                    data={localLines.map((l) => ({
+                      value: l.color,
+                      label: l.prefix || "?",
+                    }))}
+                    onChange={(v) => {
+                      if (!v) return;
+                      const next = [...(formData.centerSquareColors ?? [])];
+                      next[idx] = v;
+                      updateField("centerSquareColors", next);
+                    }}
+                  />
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    aria-label="delete"
+                    disabled={(formData.centerSquareColors ?? []).length <= 1}
+                    onClick={() => {
+                      const next = (formData.centerSquareColors ?? []).filter(
+                        (_, i) => i !== idx,
+                      );
+                      updateField("centerSquareColors", next);
+                    }}
+                  >
+                    <IconTrash size={16} />
+                  </ActionIcon>
+                </Group>
+              ))}
+              <Button
+                variant="outline"
+                size="xs"
+                disabled={
+                  (formData.centerSquareColors ?? []).length >= 4 ||
+                  localLines.length === 0
+                }
+                onClick={() => {
+                  const existing = formData.centerSquareColors ?? [];
+                  if (existing.length >= 4 || localLines.length === 0) return;
+                  updateField("centerSquareColors", [
+                    ...existing,
+                    localLines[0].color,
+                  ]);
+                }}
+              >
+                {t("common.add")}
+              </Button>
             </Stack>
           </Grid.Col>
 
@@ -720,9 +783,9 @@ const DirectInput = memo(function DirectInput({
                               formData.right.map((s, i) =>
                                 i === idx
                                   ? {
-                                    ...s,
-                                    numberSecondaryValue: e.target.value,
-                                  }
+                                      ...s,
+                                      numberSecondaryValue: e.target.value,
+                                    }
                                   : s,
                               ),
                             )

@@ -19,6 +19,7 @@ import {
   Group,
   Box,
   Select,
+  MultiSelect,
   Title,
   Loader,
   Center,
@@ -42,6 +43,7 @@ import { getAllLines } from "@/db/repositories/lines";
 import { getAllCompanies } from "@/db/repositories/companies";
 import {
   getStationsByLine,
+  getStationLines,
   getStationNumbers,
   getStationAreasWithZones,
 } from "@/db/repositories/stations";
@@ -75,6 +77,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [signData, setSignData] = useState<DirectInputStationProps | null>(
     null,
   );
+  const [centerSquareLineIds, setCenterSquareLineIds] = useState<string[]>([]);
+  const [stationLines, setStationLines] = useState<Line[]>([]);
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<
     { label: string; value: number }[]
@@ -98,10 +102,18 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setSelectedStationId(null);
   }, [db, selectedLineId]);
 
+  // Reset center square line selection when station or primary line changes
+  useEffect(() => {
+    setCenterSquareLineIds(
+      selectedLineId && selectedStationId ? [selectedLineId] : [],
+    );
+  }, [selectedStationId, selectedLineId]);
+
   // Build sign data when station changes
   useEffect(() => {
     if (!db || !selectedLineId || !selectedStationId) {
       setSignData(null);
+      setStationLines([]);
       return;
     }
 
@@ -157,6 +169,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
     const linePrefix = line?.prefix ?? "";
 
+    // All lines this station belongs to
+    const stationLineRecords = getStationLines(db, currentStation.id);
+    const allStationLines = lines.filter((l) =>
+      stationLineRecords.some((sl) => sl.line_id === l.id),
+    );
+    setStationLines(allStationLines);
+
+    // Center square colors — map selected line IDs to their colors
+    const centerColors =
+      centerSquareLineIds.length > 0
+        ? (centerSquareLineIds
+            .map((id) => allStationLines.find((l) => l.id === id)?.line_color)
+            .filter(Boolean) as string[])
+        : line
+          ? [line.line_color]
+          : [];
+
     const data: DirectInputStationProps = {
       primaryName: currentStation.primary_name,
       primaryNameFurigana: currentStation.primary_name_furigana ?? "",
@@ -205,9 +234,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           ]
         : [],
       baseColor,
-      localLines: line
-        ? [{ id: line.id, prefix: line.prefix, color: line.line_color }]
-        : [],
+      centerSquareColors: centerColors,
+      localLines: allStationLines.map((l) => ({
+        id: l.id,
+        prefix: l.prefix,
+        color: l.line_color,
+      })),
       ratio,
       direction,
     };
@@ -222,6 +254,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     ratio,
     direction,
     flipped,
+    centerSquareLineIds,
   ]);
 
   // Update canvas size list
@@ -332,6 +365,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 { value: "both", label: <IconArrowsHorizontal size={16} /> },
                 { value: "right", label: <IconArrowRight size={16} /> },
               ]}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+            <MultiSelect
+              label={t("route.sign.center-colors")}
+              value={centerSquareLineIds}
+              onChange={(v) =>
+                setCenterSquareLineIds(
+                  v.length > 0 ? v.slice(0, 4) : centerSquareLineIds,
+                )
+              }
+              data={stationLines.map((l) => ({
+                value: l.id,
+                label: `[${l.prefix}] ${l.name}`,
+              }))}
+              disabled={!selectedStationId}
+              maxValues={4}
             />
           </Grid.Col>
         </Grid>

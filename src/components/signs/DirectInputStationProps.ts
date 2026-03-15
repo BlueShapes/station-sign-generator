@@ -45,6 +45,8 @@ interface DirectInputStationProps {
   right: AdjacentStationProps[];
   //misc
   baseColor: string;
+  /** 1–4 colors shown as horizontal segments in the center square. Falls back to baseColor if empty/absent. */
+  centerSquareColors?: string[];
   localLines?: LocalLine[];
   ratio: number;
   direction?: Direction;

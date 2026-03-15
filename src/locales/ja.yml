@@ -64,6 +64,7 @@ input:
     input-right: "右駅の情報"
     area: "特定都区市内"
     area-name: 区域名称
+    center-colors: 中央四角の色
 
 common:
   preview: プレビュー
@@ -163,3 +164,4 @@ route:
     prev-station: 前の駅
     next-station: 次の駅
     jreast: JR東日本風
+    center-colors: 中央四角の色
