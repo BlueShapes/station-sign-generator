@@ -1,4 +1,4 @@
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useState, useEffect, useRef, memo } from "react";
 import {
   Button,
   TextInput,
@@ -11,7 +11,6 @@ import {
   SegmentedControl,
   Group,
   Text,
-  Textarea,
   ColorInput,
   ColorSwatch,
   Select,
@@ -42,48 +41,62 @@ import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
 
-interface DirectInputStationPropsWithHandleChange extends DirectInputStationProps {
-  onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onUpdate?: (updates: Partial<DirectInputStationProps>) => void;
+const DEBOUNCE_MS = 400;
+
+interface DirectInputProps {
+  initialData: DirectInputStationProps;
+  onUpdate: (data: DirectInputStationProps) => void;
   onReset?: () => void;
   signStyle?: string;
 }
 
-const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
-  props,
-) => {
+const DirectInput = memo(function DirectInput({
+  initialData,
+  onUpdate,
+  onReset,
+  signStyle,
+}: DirectInputProps) {
   const t = useTranslations();
   const fields: SignStyleFieldSpec =
-    SIGN_STYLE_FIELDS[props.signStyle ?? "jreast"] ??
-    SIGN_STYLE_FIELDS["jreast"];
+    SIGN_STYLE_FIELDS[signStyle ?? "jreast"] ?? SIGN_STYLE_FIELDS["jreast"];
   const show = (f: keyof Omit<SignStyleFieldSpec, "left" | "right">) =>
     fields[f] !== "hidden";
   const showLeft = (f: keyof AdjacentFieldSpec) => fields.left[f] !== "hidden";
   const showRight = (f: keyof AdjacentFieldSpec) =>
     fields.right[f] !== "hidden";
 
+  const [formData, setFormData] =
+    useState<DirectInputStationProps>(initialData);
   const [resetModalOpen, setResetModalOpen] = useState(false);
 
+  // Debounce propagation to parent
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onUpdateRef.current(formData);
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [formData]);
+
+  const updateField = (name: string, value: unknown) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        typeof value === "string" ? (value as string).slice(0, 120) : value,
+    }));
+  };
+
   const handleSwap = () => {
-    props.onUpdate?.({
-      left: [...(props.right ?? [])],
-      right: [...(props.left ?? [])],
-    });
+    setFormData((prev) => ({
+      ...prev,
+      left: [...(prev.right ?? [])],
+      right: [...(prev.left ?? [])],
+    }));
   };
 
-  const handleColorChange = (name: string, color: string) => {
-    props.onChange({
-      target: { name, value: color },
-    } as ChangeEvent<HTMLInputElement>);
-  };
-
-  const updateCurrentData = (name: string, value: unknown) => {
-    props.onChange({
-      target: { name, value },
-    } as unknown as ChangeEvent<HTMLInputElement>);
-  };
-
-  const localLines: LocalLine[] = props.localLines ?? [];
+  const localLines: LocalLine[] = formData.localLines ?? [];
   const lineSelectData = localLines.map((l) => ({
     value: l.prefix,
     label: l.prefix,
@@ -106,7 +119,7 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
           <Button
             color="red"
             onClick={() => {
-              props.onReset?.();
+              onReset?.();
               setResetModalOpen(false);
             }}
           >
@@ -127,8 +140,8 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
             }}
           >
             <SegmentedControl
-              value={props.direction ?? "left"}
-              onChange={(n) => updateCurrentData("direction", n)}
+              value={formData.direction ?? "left"}
+              onChange={(n) => updateField("direction", n)}
               data={[
                 { value: "left", label: <IconArrowLeft size={16} /> },
                 { value: "both", label: <IconArrowsHorizontal size={16} /> },
@@ -157,14 +170,14 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
           >
             <IconRuler size={20} style={{ flexShrink: 0 }} />
             <Slider
-              defaultValue={props.ratio}
+              value={formData.ratio ?? 4.5}
               label={(v) => v}
               labelAlwaysOn
               step={0.5}
               min={2.5}
               max={8}
               style={{ width: "100%" }}
-              onChange={(v) => updateCurrentData("ratio", v)}
+              onChange={(v) => updateField("ratio", v)}
             />
           </Grid.Col>
         </Grid>
@@ -179,7 +192,7 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 <IconChevronsLeft size={20} />
                 {t("input.direct.input-left")}
               </InputHead>
-              {props.left.map((station, idx) => (
+              {formData.left.map((station, idx) => (
                 <Stack key={station.id} gap="sm">
                   {idx > 0 && <Divider />}
                   <Group justify="flex-end">
@@ -188,9 +201,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       color="red"
                       aria-label="delete"
                       onClick={() =>
-                        updateCurrentData(
+                        updateField(
                           "left",
-                          props.left.filter((_, i) => i !== idx),
+                          formData.left.filter((_, i) => i !== idx),
                         )
                       }
                     >
@@ -202,9 +215,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       label={t("input.direct.lstation")}
                       value={station.primaryName}
                       onChange={(e) =>
-                        updateCurrentData(
+                        updateField(
                           "left",
-                          props.left.map((s, i) =>
+                          formData.left.map((s, i) =>
                             i === idx
                               ? { ...s, primaryName: e.target.value }
                               : s,
@@ -218,9 +231,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       label={t("input.direct.lread")}
                       value={station.primaryNameFurigana}
                       onChange={(e) =>
-                        updateCurrentData(
+                        updateField(
                           "left",
-                          props.left.map((s, i) =>
+                          formData.left.map((s, i) =>
                             i === idx
                               ? { ...s, primaryNameFurigana: e.target.value }
                               : s,
@@ -234,9 +247,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       label={t("input.direct.len")}
                       value={station.secondaryName}
                       onChange={(e) =>
-                        updateCurrentData(
+                        updateField(
                           "left",
-                          props.left.map((s, i) =>
+                          formData.left.map((s, i) =>
                             i === idx
                               ? { ...s, secondaryName: e.target.value }
                               : s,
@@ -258,9 +271,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                           data={lineSelectData}
                           clearable
                           onChange={(v) =>
-                            updateCurrentData(
+                            updateField(
                               "left",
-                              props.left.map((s, i) =>
+                              formData.left.map((s, i) =>
                                 i === idx
                                   ? { ...s, numberPrimaryPrefix: v ?? "" }
                                   : s,
@@ -273,9 +286,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                           style={{ flex: 1 }}
                           value={station.numberPrimaryValue ?? ""}
                           onChange={(e) =>
-                            updateCurrentData(
+                            updateField(
                               "left",
-                              props.left.map((s, i) =>
+                              formData.left.map((s, i) =>
                                 i === idx
                                   ? { ...s, numberPrimaryValue: e.target.value }
                                   : s,
@@ -299,9 +312,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                           data={lineSelectData}
                           clearable
                           onChange={(v) =>
-                            updateCurrentData(
+                            updateField(
                               "left",
-                              props.left.map((s, i) =>
+                              formData.left.map((s, i) =>
                                 i === idx
                                   ? { ...s, numberSecondaryPrefix: v ?? "" }
                                   : s,
@@ -314,9 +327,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                           style={{ flex: 1 }}
                           value={station.numberSecondaryValue ?? ""}
                           onChange={(e) =>
-                            updateCurrentData(
+                            updateField(
                               "left",
-                              props.left.map((s, i) =>
+                              formData.left.map((s, i) =>
                                 i === idx
                                   ? {
                                       ...s,
@@ -336,8 +349,8 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 variant="outline"
                 size="xs"
                 onClick={() =>
-                  updateCurrentData("left", [
-                    ...props.left,
+                  updateField("left", [
+                    ...formData.left,
                     { id: uuidv7(), primaryName: "", secondaryName: "" },
                   ])
                 }
@@ -356,42 +369,41 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
               </InputHead>
               {show("primaryName") && (
                 <TextInput
-                  name="primaryName"
                   label={t("input.direct.station")}
-                  value={props.primaryName}
-                  onChange={props.onChange}
+                  value={formData.primaryName}
+                  onChange={(e) => updateField("primaryName", e.target.value)}
                 />
               )}
               {show("primaryNameFurigana") && (
                 <TextInput
-                  name="primaryNameFurigana"
                   label={t("input.direct.read")}
-                  value={props.primaryNameFurigana}
-                  onChange={props.onChange}
+                  value={formData.primaryNameFurigana}
+                  onChange={(e) =>
+                    updateField("primaryNameFurigana", e.target.value)
+                  }
                 />
               )}
               {show("secondaryName") && (
                 <TextInput
-                  name="secondaryName"
                   label={t("input.direct.en")}
-                  value={props.secondaryName}
-                  onChange={props.onChange}
+                  value={formData.secondaryName}
+                  onChange={(e) => updateField("secondaryName", e.target.value)}
                 />
               )}
               {show("quaternaryName") && (
                 <TextInput
-                  name="quaternaryName"
                   label={t("input.direct.ch")}
-                  value={props.quaternaryName}
-                  onChange={props.onChange}
+                  value={formData.quaternaryName}
+                  onChange={(e) =>
+                    updateField("quaternaryName", e.target.value)
+                  }
                 />
               )}
               {show("tertiaryName") && (
                 <TextInput
-                  name="tertiaryName"
                   label={t("input.direct.kp")}
-                  value={props.tertiaryName}
-                  onChange={props.onChange}
+                  value={formData.tertiaryName}
+                  onChange={(e) => updateField("tertiaryName", e.target.value)}
                 />
               )}
               {show("numberPrimary") && (
@@ -403,19 +415,20 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                     <Select
                       placeholder="JY"
                       style={{ width: "90px" }}
-                      value={props.numberPrimaryPrefix ?? null}
+                      value={formData.numberPrimaryPrefix ?? null}
                       data={lineSelectData}
                       clearable
                       onChange={(v) =>
-                        updateCurrentData("numberPrimaryPrefix", v ?? "")
+                        updateField("numberPrimaryPrefix", v ?? "")
                       }
                     />
                     <TextInput
-                      name="numberPrimaryValue"
                       placeholder="26"
                       style={{ flex: 1 }}
-                      value={props.numberPrimaryValue ?? ""}
-                      onChange={props.onChange}
+                      value={formData.numberPrimaryValue ?? ""}
+                      onChange={(e) =>
+                        updateField("numberPrimaryValue", e.target.value)
+                      }
                     />
                   </Group>
                 </div>
@@ -429,37 +442,38 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                     <Select
                       placeholder="JS"
                       style={{ width: "90px" }}
-                      value={props.numberSecondaryPrefix ?? null}
+                      value={formData.numberSecondaryPrefix ?? null}
                       data={lineSelectData}
                       clearable
                       onChange={(v) =>
-                        updateCurrentData("numberSecondaryPrefix", v ?? "")
+                        updateField("numberSecondaryPrefix", v ?? "")
                       }
                     />
                     <TextInput
-                      name="numberSecondaryValue"
                       placeholder="26"
                       style={{ flex: 1 }}
-                      value={props.numberSecondaryValue ?? ""}
-                      onChange={props.onChange}
+                      value={formData.numberSecondaryValue ?? ""}
+                      onChange={(e) =>
+                        updateField("numberSecondaryValue", e.target.value)
+                      }
                     />
                   </Group>
                 </div>
               )}
               {show("threeLetterCode") && (
                 <TextInput
-                  name="threeLetterCode"
                   label={t("input.direct.trc")}
-                  value={props.threeLetterCode}
-                  onChange={props.onChange}
+                  value={formData.threeLetterCode}
+                  onChange={(e) =>
+                    updateField("threeLetterCode", e.target.value)
+                  }
                 />
               )}
               {show("note") && (
                 <TextInput
-                  name="note"
                   label={t("input.direct.note")}
-                  value={props.note}
-                  onChange={props.onChange}
+                  value={formData.note}
+                  onChange={(e) => updateField("note", e.target.value)}
                 />
               )}
             </Stack>
@@ -470,14 +484,14 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 {t("input.direct.area")}
               </Text>
               <Stack gap="xs">
-                {props.stationAreas?.map((e) => (
+                {formData.stationAreas?.map((e) => (
                   <Group key={e.id} gap="xs" align="center" wrap="nowrap">
                     <TextInput
                       style={{ minWidth: "68px", flex: 1 }}
                       placeholder={t("input.direct.area-name")}
                       value={e.name}
                       onChange={(i) => {
-                        const nextAreas = props.stationAreas?.map((c) =>
+                        const nextAreas = formData.stationAreas?.map((c) =>
                           e.id === c.id
                             ? {
                                 id: c.id,
@@ -486,7 +500,7 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                               }
                             : c,
                         );
-                        updateCurrentData("stationAreas", nextAreas);
+                        updateField("stationAreas", nextAreas);
                       }}
                     />
                     {e.isWhite ? (
@@ -497,12 +511,12 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                     <Switch
                       checked={e.isWhite}
                       onChange={() => {
-                        const nextAreas = props.stationAreas?.map((c) =>
+                        const nextAreas = formData.stationAreas?.map((c) =>
                           e.id === c.id
                             ? { id: c.id, name: c.name, isWhite: !c.isWhite }
                             : c,
                         );
-                        updateCurrentData("stationAreas", nextAreas);
+                        updateField("stationAreas", nextAreas);
                       }}
                     />
                     <ActionIcon
@@ -510,9 +524,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       color="red"
                       aria-label="delete"
                       onClick={() => {
-                        updateCurrentData(
+                        updateField(
                           "stationAreas",
-                          props.stationAreas?.filter((c) => c.id !== e.id),
+                          formData.stationAreas?.filter((c) => c.id !== e.id),
                         );
                       }}
                     >
@@ -525,11 +539,11 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 variant="filled"
                 mt="xs"
                 onClick={() => {
-                  updateCurrentData(
+                  updateField(
                     "stationAreas",
-                    props.stationAreas
+                    formData.stationAreas
                       ? [
-                          ...props.stationAreas,
+                          ...formData.stationAreas,
                           { id: uuidv7(), name: "", isWhite: true },
                         ]
                       : undefined,
@@ -544,8 +558,8 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
             <Stack gap="sm" mt="lg" style={{ maxWidth: 220 }}>
               <ColorInput
                 label={t("input.direct.base-color")}
-                value={props.baseColor}
-                onChange={(color) => handleColorChange("baseColor", color)}
+                value={formData.baseColor}
+                onChange={(color) => updateField("baseColor", color)}
                 format="hex"
                 swatches={[
                   "#36ab33",
@@ -566,7 +580,7 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 {t("input.direct.input-right")}
                 <IconChevronsRight size={20} />
               </InputHead>
-              {props.right.map((station, idx) => (
+              {formData.right.map((station, idx) => (
                 <Stack key={station.id} gap="sm">
                   {idx > 0 && <Divider />}
                   <Group justify="flex-end">
@@ -575,9 +589,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       color="red"
                       aria-label="delete"
                       onClick={() =>
-                        updateCurrentData(
+                        updateField(
                           "right",
-                          props.right.filter((_, i) => i !== idx),
+                          formData.right.filter((_, i) => i !== idx),
                         )
                       }
                     >
@@ -589,9 +603,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       label={t("input.direct.rstation")}
                       value={station.primaryName}
                       onChange={(e) =>
-                        updateCurrentData(
+                        updateField(
                           "right",
-                          props.right.map((s, i) =>
+                          formData.right.map((s, i) =>
                             i === idx
                               ? { ...s, primaryName: e.target.value }
                               : s,
@@ -605,9 +619,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       label={t("input.direct.rread")}
                       value={station.primaryNameFurigana}
                       onChange={(e) =>
-                        updateCurrentData(
+                        updateField(
                           "right",
-                          props.right.map((s, i) =>
+                          formData.right.map((s, i) =>
                             i === idx
                               ? { ...s, primaryNameFurigana: e.target.value }
                               : s,
@@ -621,9 +635,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       label={t("input.direct.ren")}
                       value={station.secondaryName}
                       onChange={(e) =>
-                        updateCurrentData(
+                        updateField(
                           "right",
-                          props.right.map((s, i) =>
+                          formData.right.map((s, i) =>
                             i === idx
                               ? { ...s, secondaryName: e.target.value }
                               : s,
@@ -645,9 +659,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                           data={lineSelectData}
                           clearable
                           onChange={(v) =>
-                            updateCurrentData(
+                            updateField(
                               "right",
-                              props.right.map((s, i) =>
+                              formData.right.map((s, i) =>
                                 i === idx
                                   ? { ...s, numberPrimaryPrefix: v ?? "" }
                                   : s,
@@ -660,9 +674,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                           style={{ flex: 1 }}
                           value={station.numberPrimaryValue ?? ""}
                           onChange={(e) =>
-                            updateCurrentData(
+                            updateField(
                               "right",
-                              props.right.map((s, i) =>
+                              formData.right.map((s, i) =>
                                 i === idx
                                   ? { ...s, numberPrimaryValue: e.target.value }
                                   : s,
@@ -686,9 +700,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                           data={lineSelectData}
                           clearable
                           onChange={(v) =>
-                            updateCurrentData(
+                            updateField(
                               "right",
-                              props.right.map((s, i) =>
+                              formData.right.map((s, i) =>
                                 i === idx
                                   ? { ...s, numberSecondaryPrefix: v ?? "" }
                                   : s,
@@ -701,9 +715,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                           style={{ flex: 1 }}
                           value={station.numberSecondaryValue ?? ""}
                           onChange={(e) =>
-                            updateCurrentData(
+                            updateField(
                               "right",
-                              props.right.map((s, i) =>
+                              formData.right.map((s, i) =>
                                 i === idx
                                   ? {
                                       ...s,
@@ -723,8 +737,8 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 variant="outline"
                 size="xs"
                 onClick={() =>
-                  updateCurrentData("right", [
-                    ...props.right,
+                  updateField("right", [
+                    ...formData.right,
                     { id: uuidv7(), primaryName: "", secondaryName: "" },
                   ])
                 }
@@ -750,7 +764,7 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       style={{ width: "110px" }}
                       format="hex"
                       onChange={(color) =>
-                        updateCurrentData(
+                        updateField(
                           "localLines",
                           localLines.map((l) =>
                             l.id === line.id ? { ...l, color } : l,
@@ -763,7 +777,7 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       style={{ flex: 1 }}
                       value={line.prefix}
                       onChange={(e) =>
-                        updateCurrentData(
+                        updateField(
                           "localLines",
                           localLines.map((l) =>
                             l.id === line.id
@@ -778,7 +792,7 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                       color="red"
                       aria-label="delete"
                       onClick={() =>
-                        updateCurrentData(
+                        updateField(
                           "localLines",
                           localLines.filter((l) => l.id !== line.id),
                         )
@@ -794,7 +808,7 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
                 size="xs"
                 mt="xs"
                 onClick={() =>
-                  updateCurrentData("localLines", [
+                  updateField("localLines", [
                     ...localLines,
                     { id: uuidv7(), prefix: "", color: "#89ff12" },
                   ])
@@ -806,13 +820,9 @@ const DirectInput: React.FC<DirectInputStationPropsWithHandleChange> = (
           </Grid.Col>
         </Grid>
       </Box>
-
-      <Box style={{ width: "100%", padding: "25px" }}>
-        <Textarea autosize value={JSON.stringify(props, null, 2)} readOnly />
-      </Box>
     </>
   );
-};
+});
 
 const InputHead = styled.div`
   display: flex;

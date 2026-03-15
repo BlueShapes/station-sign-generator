@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button, Grid, Box, Select, Title, Alert } from "@mantine/core";
 import { IconDownload, IconEye, IconAlertTriangle } from "@tabler/icons-react";
 import Konva from "konva";
@@ -6,6 +6,8 @@ import DirectInput from "@/components/inputs/DirectInput";
 import Footer from "@/components/Footer";
 import { useTranslations } from "@/i18n/useTranslation";
 import { useDatabase } from "@/db/useDatabase";
+import { DEFAULT_DATA } from "@/db/seed";
+import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 
 // You have to import height and scale for every child station sign component!!!
 import JrEastSign, {
@@ -18,12 +20,41 @@ export default function SimpleInputTab() {
   const t = useTranslations();
 
   const {
-    data: currentData,
-    update: setCurrentData,
+    data: savedData,
+    update: saveData,
     reset: resetData,
     isCorrupted,
   } = useDatabase();
   const [corruptedDismissed, setCorruptedDismissed] = useState(false);
+
+  // previewData drives the canvas (updated via debounced onUpdate from DirectInput)
+  const [previewData, setPreviewData] =
+    useState<DirectInputStationProps>(savedData);
+
+  // Track latest data for download filename without triggering re-renders
+  const latestDataRef = useRef<DirectInputStationProps>(savedData);
+
+  // directInputKey forces DirectInput to remount (used on reset)
+  const [directInputKey, setDirectInputKey] = useState(0);
+  const [directInputInitialData, setDirectInputInitialData] =
+    useState<DirectInputStationProps>(savedData);
+
+  const handleUpdate = useCallback(
+    (data: DirectInputStationProps) => {
+      latestDataRef.current = data;
+      setPreviewData(data);
+      saveData(data);
+    },
+    [saveData],
+  );
+
+  const handleReset = useCallback(() => {
+    resetData();
+    latestDataRef.current = DEFAULT_DATA;
+    setPreviewData(DEFAULT_DATA);
+    setDirectInputInitialData(DEFAULT_DATA);
+    setDirectInputKey((k) => k + 1);
+  }, [resetData]);
 
   type ImageSize = { label: string; value: number };
 
@@ -44,7 +75,7 @@ export default function SimpleInputTab() {
     }
   }, [currentStyle]);
 
-  const currentCanvasWidth = currentCanvasHeight * (currentData.ratio ?? 4.5);
+  const currentCanvasWidth = currentCanvasHeight * (previewData.ratio ?? 4.5);
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<ImageSize[]>([]);
 
@@ -55,7 +86,7 @@ export default function SimpleInputTab() {
       value: i + 1,
     }));
     setSaveSizeList(result);
-  }, [currentCanvasHeight, currentData.ratio]);
+  }, [currentCanvasHeight, previewData.ratio]);
 
   const handleSave = () => {
     if (ref.current) {
@@ -63,7 +94,7 @@ export default function SimpleInputTab() {
         pixelRatio: saveSize / currentBaseScale,
       });
       const link = document.createElement("a");
-      link.download = `${currentData.primaryName}.png`;
+      link.download = `${latestDataRef.current.primaryName}.png`;
       link.href = uri;
       document.body.appendChild(link);
       link.click();
@@ -71,16 +102,6 @@ export default function SimpleInputTab() {
     } else {
       console.error(t("error.on-save"));
     }
-  };
-
-  const handleChangeDirect = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setCurrentData({
-      ...currentData,
-      [name]: typeof value === "string" ? value.slice(0, 120) : value,
-    });
   };
 
   return (
@@ -110,7 +131,7 @@ export default function SimpleInputTab() {
         <IconEye size="1.6em" />
         {t("common.preview")}
       </Title>
-      <JrEastSign {...currentData} ref={ref} />
+      <JrEastSign {...previewData} ref={ref} />
       <Box style={{ width: "100%", padding: "25px" }}>
         <Grid gutter="md" style={{ padding: "10px" }}>
           <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
@@ -142,10 +163,10 @@ export default function SimpleInputTab() {
         </Grid>
       </Box>
       <DirectInput
-        {...currentData}
-        onChange={handleChangeDirect}
-        onUpdate={(updates) => setCurrentData({ ...currentData, ...updates })}
-        onReset={resetData}
+        key={directInputKey}
+        initialData={directInputInitialData}
+        onUpdate={handleUpdate}
+        onReset={handleReset}
       />
       <Footer />
     </>

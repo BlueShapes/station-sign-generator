@@ -15,7 +15,8 @@
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
       "Bash(npx astro:*)",
-      "Bash(timeout 90 npx astro build 2>&1; echo \"EXIT: $?\")"
+      "Bash(timeout 90 npx astro build 2>&1; echo \"EXIT: $?\")",
+      "Bash(bunx playwright:*)"
     ]
   }
 }
