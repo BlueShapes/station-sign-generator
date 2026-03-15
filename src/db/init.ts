@@ -1,5 +1,7 @@
 import initSqlJs from "sql.js";
 import type { SqlJsStatic, Database } from "sql.js";
+import { DB_VERSION } from "../config";
+import migrateV001toV010 from "./migrations/v0.0.1_to_v0.1.0";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -79,101 +81,23 @@ let SQL: SqlJsStatic | null = null;
 let db: Database | null = null;
 
 /**
- * Migrate a database from v0.0.1 to v0.0.2:
- * - Adds is_loop column to lines (if missing)
- * - Migrates station_areas from (name, is_white) to (zone_id) via new special_zones table
- * - Sets db_metadata version to 0.0.2
+ * Run all registered migrations in order, then stamp the current DB_VERSION.
+ * To add a new migration: import its function above and add it to the array.
  */
 function migrateDatabase(database: Database): void {
-  // Add is_loop to lines if missing
-  try {
-    const linesCols = database.exec(`PRAGMA table_info(lines)`);
-    const linesColNames = linesCols.length
-      ? (linesCols[0].values.map((r) => r[1]) as string[])
-      : [];
-    if (!linesColNames.includes("is_loop")) {
-      database.run(
-        `ALTER TABLE lines ADD COLUMN is_loop INTEGER NOT NULL DEFAULT 0`,
-      );
-    }
-  } catch {
-    /* ignore */
+  // Migrations run in order; each is idempotent (safe to re-run)
+  const migrations = [
+    migrateV001toV010,
+    // add future migrations here, e.g.: migrateV010toV020,
+  ];
+
+  for (const migrate of migrations) {
+    migrate(database);
   }
 
-  // Migrate station_areas from old schema (name/is_white) to new (zone_id)
-  try {
-    const areasCols = database.exec(`PRAGMA table_info(station_areas)`);
-    const areasColNames = areasCols.length
-      ? (areasCols[0].values.map((r) => r[1]) as string[])
-      : [];
-
-    if (
-      areasColNames.includes("name") &&
-      !areasColNames.includes("zone_id")
-    ) {
-      // Collect distinct (name, is_white) pairs and create special zones
-      const distinctZones = database.exec(
-        `SELECT DISTINCT name, is_white FROM station_areas`,
-      );
-      const zoneMap: Record<string, string> = {};
-
-      if (distinctZones.length && distinctZones[0].values.length) {
-        for (const row of distinctZones[0].values) {
-          const [name, is_white] = row as [string, number];
-          const safeKey = String(name).replace(/[^a-zA-Z0-9\u3000-\u9FFF]/g, "_");
-          const zoneId = `mig-${safeKey}-${is_white}`;
-          const abbreviation = String(name).charAt(0);
-          const is_black = is_white === 1 ? 0 : 1;
-          database.run(
-            `INSERT OR IGNORE INTO special_zones (id, name, abbreviation, is_black) VALUES (?, ?, ?, ?)`,
-            [zoneId, String(name), abbreviation, is_black],
-          );
-          zoneMap[`${name}|${is_white}`] = zoneId;
-        }
-      }
-
-      // Fetch old rows
-      const oldData = database.exec(
-        `SELECT id, station_id, name, is_white, sort_order FROM station_areas`,
-      );
-
-      // Recreate station_areas with new schema
-      database.run(`DROP TABLE station_areas`);
-      database.run(`
-        CREATE TABLE station_areas (
-          id         TEXT PRIMARY KEY,
-          station_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
-          zone_id    TEXT NOT NULL REFERENCES special_zones(id) ON DELETE CASCADE,
-          sort_order INTEGER DEFAULT 0
-        )
-      `);
-
-      if (oldData.length && oldData[0].values.length) {
-        for (const row of oldData[0].values) {
-          const [id, station_id, name, is_white, sort_order] = row as [
-            string,
-            string,
-            string,
-            number,
-            number,
-          ];
-          const zone_id = zoneMap[`${name}|${is_white}`];
-          if (zone_id) {
-            database.run(
-              `INSERT INTO station_areas (id, station_id, zone_id, sort_order) VALUES (?, ?, ?, ?)`,
-              [id, station_id, zone_id, sort_order],
-            );
-          }
-        }
-      }
-    }
-  } catch {
-    /* ignore migration errors on already-new schema */
-  }
-
-  // Set version
+  // Stamp the final version
   database.run(
-    `INSERT OR REPLACE INTO db_metadata (key, value) VALUES ('version', '0.0.2')`,
+    `INSERT OR REPLACE INTO db_metadata (key, value) VALUES ('version', '${DB_VERSION}')`,
   );
 }
 
@@ -235,10 +159,32 @@ const REQUIRED_SCHEMA: Record<string, string[]> = {
 export type ValidationResult =
   | { valid: true }
   | {
-    valid: false;
-    reason: "invalid-file" | "missing-table" | "missing-column";
-    detail?: string;
-  };
+      valid: false;
+      reason: "invalid-file" | "missing-table" | "missing-column";
+      detail?: string;
+    };
+
+/**
+ * Migrate an imported binary database to the current schema.
+ * Returns the migrated binary so callers can use it for import.
+ * Throws if the binary is not a valid SQLite file.
+ */
+export async function migrateImportedDatabase(
+  binary: Uint8Array,
+): Promise<Uint8Array> {
+  if (!SQL) {
+    SQL = await initSqlJs({ locateFile: () => "/sql-wasm.wasm" });
+  }
+  const tempDb = new SQL.Database(binary);
+  try {
+    // Ensure all tables exist (CREATE IF NOT EXISTS), then run migrations
+    tempDb.run(SCHEMA_SQL);
+    migrateDatabase(tempDb);
+    return tempDb.export();
+  } finally {
+    tempDb.close();
+  }
+}
 
 export async function validateImportDatabase(
   binary: Uint8Array,
@@ -252,6 +198,9 @@ export async function validateImportDatabase(
   let tempDb: Database | null = null;
   try {
     tempDb = new SQL.Database(binary);
+    // Apply schema + migrations so older databases pass validation
+    tempDb.run(SCHEMA_SQL);
+    migrateDatabase(tempDb);
 
     for (const [table, requiredCols] of Object.entries(REQUIRED_SCHEMA)) {
       const tableCheck = tempDb.exec(
@@ -312,6 +261,9 @@ export async function overwriteDatabaseInPlace(
     SQL = await initSqlJs({ locateFile: () => "/sql-wasm.wasm" });
   }
   const importDb = new SQL.Database(binary);
+  // Migrate imported database to current schema before reading
+  importDb.run(SCHEMA_SQL);
+  migrateDatabase(importDb);
   try {
     // Clear existing rows (reverse dependency order to avoid FK issues)
     for (const table of [...MERGE_TABLES].reverse()) {
@@ -341,7 +293,7 @@ export async function overwriteDatabaseInPlace(
     }
     // Ensure schema version is current after overwrite
     currentDb.run(
-      `INSERT OR REPLACE INTO db_metadata (key, value) VALUES ('version', '0.0.2')`,
+      `INSERT OR REPLACE INTO db_metadata (key, value) VALUES ('version', '${DB_VERSION}')`,
     );
   } finally {
     importDb.close();
@@ -356,6 +308,9 @@ export async function mergeDatabase(binary: Uint8Array): Promise<void> {
     db = await getDatabase();
   }
   const importDb = new SQL.Database(binary);
+  // Migrate imported database to current schema before reading
+  importDb.run(SCHEMA_SQL);
+  migrateDatabase(importDb);
   for (const table of MERGE_TABLES) {
     try {
       const results = importDb.exec(`SELECT * FROM ${table}`);

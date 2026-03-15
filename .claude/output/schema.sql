@@ -1,4 +1,4 @@
--- Station Sign Generator — SQLite Schema (v0.0.2)
+-- Station Sign Generator — SQLite Schema (v0.1.0)
 -- All data is browser-only (sql.js / WebAssembly). No server storage.
 
 CREATE TABLE IF NOT EXISTS db_metadata (
