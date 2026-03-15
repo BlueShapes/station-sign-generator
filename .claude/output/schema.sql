@@ -1,5 +1,10 @@
--- Station Sign Generator — SQLite Schema (v2)
+-- Station Sign Generator — SQLite Schema (v0.0.2)
 -- All data is browser-only (sql.js / WebAssembly). No server storage.
+
+CREATE TABLE IF NOT EXISTS db_metadata (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS companies (
   id            TEXT PRIMARY KEY,
@@ -11,9 +16,10 @@ CREATE TABLE IF NOT EXISTS lines (
   id         TEXT PRIMARY KEY,
   company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
   name       TEXT NOT NULL,
-  line_color TEXT NOT NULL DEFAULT '#89ff12',
+  line_color TEXT NOT NULL DEFAULT '#9fff00',
   prefix     TEXT NOT NULL,
-  priority   INTEGER
+  priority   INTEGER,
+  is_loop    INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS stations (
@@ -43,11 +49,17 @@ CREATE TABLE IF NOT EXISTS station_numbers (
   value      TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS special_zones (
+  id           TEXT PRIMARY KEY,
+  name         TEXT NOT NULL,
+  abbreviation TEXT NOT NULL,
+  is_black     INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS station_areas (
   id         TEXT PRIMARY KEY,
   station_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
-  name       TEXT NOT NULL,
-  is_white   INTEGER DEFAULT 0,
+  zone_id    TEXT NOT NULL REFERENCES special_zones(id) ON DELETE CASCADE,
   sort_order INTEGER DEFAULT 0
 );
 

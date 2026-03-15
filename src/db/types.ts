@@ -11,6 +11,7 @@ export interface Line {
   line_color: string;
   prefix: string;
   priority: number | null;
+  is_loop: number;
 }
 
 export interface Station {
@@ -40,10 +41,26 @@ export interface StationNumber {
   value: string;
 }
 
+export interface SpecialZone {
+  id: string;
+  name: string;
+  abbreviation: string;
+  is_black: number;
+}
+
 export interface StationArea {
   id: string;
   station_id: string;
-  name: string;
-  is_white: number;
+  zone_id: string;
   sort_order: number;
+}
+
+export interface StationAreaWithZone {
+  id: string;
+  station_id: string;
+  zone_id: string;
+  sort_order: number;
+  zone_name: string;
+  zone_abbreviation: string;
+  zone_is_black: number;
 }

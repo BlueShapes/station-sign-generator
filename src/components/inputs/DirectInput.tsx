@@ -332,9 +332,9 @@ const DirectInput = memo(function DirectInput({
                               formData.left.map((s, i) =>
                                 i === idx
                                   ? {
-                                      ...s,
-                                      numberSecondaryValue: e.target.value,
-                                    }
+                                    ...s,
+                                    numberSecondaryValue: e.target.value,
+                                  }
                                   : s,
                               ),
                             )
@@ -494,10 +494,10 @@ const DirectInput = memo(function DirectInput({
                         const nextAreas = formData.stationAreas?.map((c) =>
                           e.id === c.id
                             ? {
-                                id: c.id,
-                                name: i.target.value,
-                                isWhite: c.isWhite,
-                              }
+                              id: c.id,
+                              name: i.target.value,
+                              isWhite: c.isWhite,
+                            }
                             : c,
                         );
                         updateField("stationAreas", nextAreas);
@@ -543,9 +543,9 @@ const DirectInput = memo(function DirectInput({
                     "stationAreas",
                     formData.stationAreas
                       ? [
-                          ...formData.stationAreas,
-                          { id: uuidv7(), name: "", isWhite: true },
-                        ]
+                        ...formData.stationAreas,
+                        { id: uuidv7(), name: "", isWhite: true },
+                      ]
                       : undefined,
                   );
                 }}
@@ -720,9 +720,9 @@ const DirectInput = memo(function DirectInput({
                               formData.right.map((s, i) =>
                                 i === idx
                                   ? {
-                                      ...s,
-                                      numberSecondaryValue: e.target.value,
-                                    }
+                                    ...s,
+                                    numberSecondaryValue: e.target.value,
+                                  }
                                   : s,
                               ),
                             )
@@ -810,7 +810,7 @@ const DirectInput = memo(function DirectInput({
                 onClick={() =>
                   updateField("localLines", [
                     ...localLines,
-                    { id: uuidv7(), prefix: "", color: "#89ff12" },
+                    { id: uuidv7(), prefix: "", color: "#9fff00" },
                   ])
                 }
               >

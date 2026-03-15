@@ -1,5 +1,11 @@
 import type { Database } from "sql.js";
-import type { Station, StationLine, StationNumber, StationArea } from "@/db/types";
+import type {
+  Station,
+  StationLine,
+  StationNumber,
+  StationArea,
+  StationAreaWithZone,
+} from "@/db/types";
 
 // ── Stations ──────────────────────────────────────────────────────────────────
 
@@ -63,7 +69,10 @@ export function deleteStation(db: Database, id: string): void {
 
 // ── Station Lines ─────────────────────────────────────────────────────────────
 
-export function getStationLines(db: Database, stationId: string): StationLine[] {
+export function getStationLines(
+  db: Database,
+  stationId: string,
+): StationLine[] {
   const stmt = db.prepare(
     `SELECT id, station_id, line_id, sort_order FROM station_lines WHERE station_id = ? ORDER BY sort_order ASC`,
   );
@@ -87,13 +96,24 @@ export function deleteStationLine(db: Database, id: string): void {
   db.run(`DELETE FROM station_lines WHERE id = ?`, [id]);
 }
 
-export function deleteStationFromLine(db: Database, stationId: string, lineId: string): void {
-  db.run(`DELETE FROM station_lines WHERE station_id = ? AND line_id = ?`, [stationId, lineId]);
+export function deleteStationFromLine(
+  db: Database,
+  stationId: string,
+  lineId: string,
+): void {
+  db.run(`DELETE FROM station_lines WHERE station_id = ? AND line_id = ?`, [
+    stationId,
+    lineId,
+  ]);
 }
 
 // ── Station Numbers ───────────────────────────────────────────────────────────
 
-export function getStationNumbers(db: Database, stationId: string, lineId?: string): StationNumber[] {
+export function getStationNumbers(
+  db: Database,
+  stationId: string,
+  lineId?: string,
+): StationNumber[] {
   let stmt;
   if (lineId !== undefined) {
     stmt = db.prepare(
@@ -127,9 +147,12 @@ export function deleteStationNumber(db: Database, id: string): void {
 
 // ── Station Areas ─────────────────────────────────────────────────────────────
 
-export function getStationAreas(db: Database, stationId: string): StationArea[] {
+export function getStationAreas(
+  db: Database,
+  stationId: string,
+): StationArea[] {
   const stmt = db.prepare(
-    `SELECT id, station_id, name, is_white, sort_order FROM station_areas WHERE station_id = ? ORDER BY sort_order ASC`,
+    `SELECT id, station_id, zone_id, sort_order FROM station_areas WHERE station_id = ? ORDER BY sort_order ASC`,
   );
   stmt.bind([stationId]);
   const results: StationArea[] = [];
@@ -140,10 +163,32 @@ export function getStationAreas(db: Database, stationId: string): StationArea[] 
   return results;
 }
 
+export function getStationAreasWithZones(
+  db: Database,
+  stationId: string,
+): StationAreaWithZone[] {
+  const stmt = db.prepare(
+    `SELECT sa.id, sa.station_id, sa.zone_id, sa.sort_order,
+            sz.name AS zone_name, sz.abbreviation AS zone_abbreviation,
+            sz.is_black AS zone_is_black
+     FROM station_areas sa
+     JOIN special_zones sz ON sz.id = sa.zone_id
+     WHERE sa.station_id = ?
+     ORDER BY sa.sort_order ASC`,
+  );
+  stmt.bind([stationId]);
+  const results: StationAreaWithZone[] = [];
+  while (stmt.step()) {
+    results.push(stmt.getAsObject() as unknown as StationAreaWithZone);
+  }
+  stmt.free();
+  return results;
+}
+
 export function upsertStationArea(db: Database, sa: StationArea): void {
   db.run(
-    `INSERT OR REPLACE INTO station_areas (id, station_id, name, is_white, sort_order) VALUES (?, ?, ?, ?, ?)`,
-    [sa.id, sa.station_id, sa.name, sa.is_white, sa.sort_order],
+    `INSERT OR REPLACE INTO station_areas (id, station_id, zone_id, sort_order) VALUES (?, ?, ?, ?)`,
+    [sa.id, sa.station_id, sa.zone_id, sa.sort_order],
   );
 }
 
@@ -151,12 +196,16 @@ export function deleteStationArea(db: Database, id: string): void {
   db.run(`DELETE FROM station_areas WHERE id = ?`, [id]);
 }
 
-export function syncStationAreas(db: Database, stationId: string, areas: StationArea[]): void {
+export function syncStationAreas(
+  db: Database,
+  stationId: string,
+  areas: StationArea[],
+): void {
   db.run(`DELETE FROM station_areas WHERE station_id = ?`, [stationId]);
   areas.forEach((area) => {
     db.run(
-      `INSERT INTO station_areas (id, station_id, name, is_white, sort_order) VALUES (?, ?, ?, ?, ?)`,
-      [area.id, stationId, area.name, area.is_white, area.sort_order],
+      `INSERT INTO station_areas (id, station_id, zone_id, sort_order) VALUES (?, ?, ?, ?)`,
+      [area.id, stationId, area.zone_id, area.sort_order],
     );
   });
 }

@@ -90,6 +90,19 @@ tabs:
 
 route:
   download-sqlite: Download SQLite
+  import-sqlite: Import SQLite
+  import-sample: Load Sample Data (Yamanote Line)
+  import-error:
+    invalid-file: "The selected file is not a valid SQLite database."
+    missing-table: "The database is missing a required table: {detail}"
+    missing-column: "The database is missing a required column: {detail}"
+  import-modal:
+    title: Import Database
+    description: An existing database is already present. How would you like to import?
+    overwrite-desc: "Overwrite: Replace all existing data with the imported data."
+    merge-desc: "Merge: Add imported data to the existing database. Conflicting records will be updated."
+    overwrite: Overwrite
+    merge: Merge
   no-routes: No routes found. Please create routes in the "Edit Routes" tab.
   company:
     title: Companies
@@ -99,6 +112,15 @@ route:
     color: Company Color
     empty: No companies yet
     delete-confirm: Delete this company? Associated lines will also be deleted.
+  special-zone:
+    title: Special Zones
+    add: Add Zone
+    edit: Edit Zone
+    name: Zone Name
+    abbreviation: Abbreviation (1 char)
+    is-black: Black fill
+    empty: No zones yet
+    delete-confirm: Delete this zone? All stations using it will lose this badge.
   line:
     title: Lines
     add: Add Line
@@ -108,6 +130,7 @@ route:
     prefix: Prefix
     priority: Priority
     company: Company
+    is-loop: Loop Line (circular route)
     empty: No lines yet
     select: Select a line
     all: All Companies
@@ -132,4 +155,7 @@ route:
   sign:
     style: Style
     direction: Direction
+    flip: Flip direction
+    prev-station: Previous station
+    next-station: Next station
     jreast: JR East Style

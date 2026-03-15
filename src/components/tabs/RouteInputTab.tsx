@@ -16,6 +16,7 @@ import type { Database } from "sql.js";
 import {
   Button,
   Grid,
+  Group,
   Box,
   Select,
   Title,
@@ -32,6 +33,7 @@ import {
   IconArrowLeft,
   IconArrowRight,
   IconArrowsHorizontal,
+  IconArrowsLeftRight,
   IconRuler,
 } from "@tabler/icons-react";
 import Konva from "konva";
@@ -41,7 +43,7 @@ import { getAllCompanies } from "@/db/repositories/companies";
 import {
   getStationsByLine,
   getStationNumbers,
-  getStationAreas,
+  getStationAreasWithZones,
 } from "@/db/repositories/stations";
 import type { Line, Station } from "@/db/types";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
@@ -68,6 +70,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     null,
   );
   const [direction, setDirection] = useState<Direction>("left");
+  const [flipped, setFlipped] = useState(false);
   const [ratio, setRatio] = useState(4.5);
   const [signData, setSignData] = useState<DirectInputStationProps | null>(
     null,
@@ -109,8 +112,22 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
 
     const currentStation = stations[idx];
-    const leftStation = idx > 0 ? stations[idx - 1] : null;
-    const rightStation = idx < stations.length - 1 ? stations[idx + 1] : null;
+    const line = lines.find((l) => l.id === selectedLineId);
+    const isLoop = line?.is_loop === 1;
+
+    // For loop lines, wrap around at the ends
+    const leftStation =
+      idx > 0
+        ? stations[idx - 1]
+        : isLoop
+          ? stations[stations.length - 1]
+          : null;
+    const rightStation =
+      idx < stations.length - 1
+        ? stations[idx + 1]
+        : isLoop
+          ? stations[0]
+          : null;
 
     // Get station numbers
     const currentNums = getStationNumbers(
@@ -125,11 +142,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ? getStationNumbers(db, rightStation.id, selectedLineId)
       : [];
 
-    // Get station areas
-    const areas = getStationAreas(db, currentStation.id);
-
-    // Get line info
-    const line = lines.find((l) => l.id === selectedLineId);
+    // Get station areas with zone details
+    const areas = getStationAreasWithZones(db, currentStation.id);
 
     // Get company color
     let baseColor = "#36ab33";
@@ -155,30 +169,38 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       numberPrimaryValue: currentNums[0]?.value ?? "",
       stationAreas: areas.map((a) => ({
         id: a.id,
-        name: a.name,
-        isWhite: a.is_white === 1,
+        name: a.zone_abbreviation,
+        isWhite: a.zone_is_black === 0,
       })),
-      left: leftStation
+      left: (flipped ? rightStation : leftStation)
         ? [
             {
-              id: leftStation.id,
-              primaryName: leftStation.primary_name,
-              primaryNameFurigana: leftStation.primary_name_furigana ?? "",
-              secondaryName: leftStation.secondary_name ?? "",
+              id: (flipped ? rightStation : leftStation)!.id,
+              primaryName: (flipped ? rightStation : leftStation)!.primary_name,
+              primaryNameFurigana:
+                (flipped ? rightStation : leftStation)!.primary_name_furigana ??
+                "",
+              secondaryName:
+                (flipped ? rightStation : leftStation)!.secondary_name ?? "",
               numberPrimaryPrefix: linePrefix,
-              numberPrimaryValue: leftNums[0]?.value ?? "",
+              numberPrimaryValue:
+                (flipped ? rightNums : leftNums)[0]?.value ?? "",
             },
           ]
         : [],
-      right: rightStation
+      right: (flipped ? leftStation : rightStation)
         ? [
             {
-              id: rightStation.id,
-              primaryName: rightStation.primary_name,
-              primaryNameFurigana: rightStation.primary_name_furigana ?? "",
-              secondaryName: rightStation.secondary_name ?? "",
+              id: (flipped ? leftStation : rightStation)!.id,
+              primaryName: (flipped ? leftStation : rightStation)!.primary_name,
+              primaryNameFurigana:
+                (flipped ? leftStation : rightStation)!.primary_name_furigana ??
+                "",
+              secondaryName:
+                (flipped ? leftStation : rightStation)!.secondary_name ?? "",
               numberPrimaryPrefix: linePrefix,
-              numberPrimaryValue: rightNums[0]?.value ?? "",
+              numberPrimaryValue:
+                (flipped ? leftNums : rightNums)[0]?.value ?? "",
             },
           ]
         : [],
@@ -199,6 +221,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     lines,
     ratio,
     direction,
+    flipped,
   ]);
 
   // Update canvas size list
@@ -312,6 +335,52 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
             />
           </Grid.Col>
         </Grid>
+
+        {/* Station navigation + flip */}
+        <Group gap="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            leftSection={<IconArrowLeft size={16} />}
+            disabled={!selectedStationId || stations.length === 0}
+            onClick={() => {
+              const idx = stations.findIndex((s) => s.id === selectedStationId);
+              if (idx > 0) setSelectedStationId(stations[idx - 1].id);
+              else if (
+                lines.find((l) => l.id === selectedLineId)?.is_loop === 1
+              )
+                setSelectedStationId(stations[stations.length - 1].id);
+            }}
+          >
+            {t("route.sign.prev-station")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            rightSection={<IconArrowRight size={16} />}
+            disabled={!selectedStationId || stations.length === 0}
+            onClick={() => {
+              const idx = stations.findIndex((s) => s.id === selectedStationId);
+              if (idx < stations.length - 1)
+                setSelectedStationId(stations[idx + 1].id);
+              else if (
+                lines.find((l) => l.id === selectedLineId)?.is_loop === 1
+              )
+                setSelectedStationId(stations[0].id);
+            }}
+          >
+            {t("route.sign.next-station")}
+          </Button>
+          <Button
+            variant={flipped ? "filled" : "outline"}
+            size="sm"
+            leftSection={<IconArrowsLeftRight size={16} />}
+            disabled={!selectedStationId}
+            onClick={() => setFlipped((f) => !f)}
+          >
+            {t("route.sign.flip")}
+          </Button>
+        </Group>
 
         {/* Ratio slider */}
         <Box style={{ display: "flex", alignItems: "center", gap: "12px" }}>

@@ -90,6 +90,19 @@ tabs:
 
 route:
   download-sqlite: SQLiteをダウンロード
+  import-sqlite: SQLiteをインポート
+  import-sample: サンプルデータを読み込む（山手線）
+  import-error:
+    invalid-file: "選択されたファイルは有効なSQLiteデータベースではありません。"
+    missing-table: "必要なテーブルが見つかりません: {detail}"
+    missing-column: "必要な列が見つかりません: {detail}"
+  import-modal:
+    title: データベースのインポート
+    description: 既存のデータベースがあります。インポート方法を選択してください。
+    overwrite-desc: "上書き: 既存のデータをすべて削除し、インポートしたデータで置き換えます。"
+    merge-desc: "マージ: インポートしたデータを既存のデータベースに追加します。同じIDのレコードは上書きされます。"
+    overwrite: 上書き
+    merge: マージ
   no-routes: 路線がありません。「路線を編集」タブで路線を作成してください。
   company:
     title: 会社
@@ -99,6 +112,15 @@ route:
     color: 会社カラー
     empty: 会社がありません
     delete-confirm: この会社を削除しますか？関連する路線も削除されます。
+  special-zone:
+    title: 特定都区市内
+    add: 区域を追加
+    edit: 区域を編集
+    name: 区域名称
+    abbreviation: 略称（1文字）
+    is-black: 黒塗り
+    empty: 区域がありません
+    delete-confirm: この区域を削除しますか？使用中の駅のバッジも削除されます。
   line:
     title: 路線
     add: 路線を追加
@@ -108,6 +130,7 @@ route:
     prefix: プレフィックス
     priority: 優先度
     company: 所属会社
+    is-loop: 環状線
     empty: 路線がありません
     select: 路線を選択してください
     all: すべての会社
@@ -132,4 +155,7 @@ route:
   sign:
     style: スタイル
     direction: 表示方向
+    flip: 方向を反転
+    prev-station: 前の駅
+    next-station: 次の駅
     jreast: JR東日本風

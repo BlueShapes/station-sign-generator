@@ -1,4 +1,9 @@
 erDiagram
+    db_metadata {
+        TEXT key PK
+        TEXT value "NOT NULL"
+    }
+
     companies {
         TEXT id PK
         TEXT name
@@ -8,9 +13,10 @@ erDiagram
     lines {
         TEXT id PK
         TEXT name "NOT NULL"
-        TEXT line_color "NOT NULL - hex default #89ff12"
+        TEXT line_color "NOT NULL - hex default #9fff00"
         TEXT prefix "NOT NULL - e.g. JY"
         INTEGER priority
+        INTEGER is_loop "0 or 1 default 0"
     }
 
     stations {
@@ -37,14 +43,20 @@ erDiagram
         TEXT id PK
         TEXT station_id FK "NOT NULL - CASCADE"
         TEXT line_id FK "NOT NULL"
-        TEXT value "NOT NULL - e.g. 26, 5A"
+        TEXT value "NOT NULL - e.g. JY26, 5A"
+    }
+
+    special_zones {
+        TEXT id PK
+        TEXT name "NOT NULL - e.g. 山手線内"
+        TEXT abbreviation "NOT NULL - single char e.g. 山"
+        INTEGER is_black "0=white fill 1=black fill default 0"
     }
 
     station_areas {
         TEXT id PK
         TEXT station_id FK "NOT NULL - CASCADE"
-        TEXT name "NOT NULL - kanji e.g. 山"
-        INTEGER is_white "0 or 1 default 0"
+        TEXT zone_id FK "NOT NULL - special_zones.id CASCADE"
         INTEGER sort_order "display order default 0"
     }
 
@@ -60,5 +72,6 @@ erDiagram
     lines ||--o{ station_lines : "belongs to"
     stations ||--o{ station_lines : "serves"
     station_lines ||--o{ station_numbers : "has numbers"
+    special_zones ||--o{ station_areas : "defines badge"
     stations ||--o{ station_areas : "has area badges"
     stations ||--o| current_sign_configurations : "is configured as"

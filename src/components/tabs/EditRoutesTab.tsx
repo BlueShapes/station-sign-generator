@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { Database } from "sql.js";
 import {
   Button,
@@ -19,6 +19,7 @@ import {
   Switch,
   Divider,
   Table,
+  Alert,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -26,14 +27,31 @@ import {
   IconEdit,
   IconTrash,
   IconDownload,
+  IconUpload,
   IconArrowUp,
   IconArrowDown,
+  IconAlertCircle,
+  IconDatabaseImport,
 } from "@tabler/icons-react";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
-import { downloadDatabase } from "@/db/init";
-import { getAllCompanies, upsertCompany, deleteCompany } from "@/db/repositories/companies";
+import {
+  downloadDatabase,
+  overwriteDatabaseInPlace,
+  mergeDatabase,
+  validateImportDatabase,
+} from "@/db/init";
+import {
+  getAllCompanies,
+  upsertCompany,
+  deleteCompany,
+} from "@/db/repositories/companies";
 import { getAllLines, upsertLine, deleteLine } from "@/db/repositories/lines";
+import {
+  getAllSpecialZones,
+  upsertSpecialZone,
+  deleteSpecialZone,
+} from "@/db/repositories/special-zones";
 import {
   getStationsByLine,
   upsertStation,
@@ -42,15 +60,82 @@ import {
   upsertStationLine,
   getStationNumbers,
   upsertStationNumber,
-  deleteStationNumber,
   getStationAreas,
   syncStationAreas,
 } from "@/db/repositories/stations";
-import type { Company, Line, Station, StationArea } from "@/db/types";
+import type {
+  Company,
+  Line,
+  Station,
+  StationArea,
+  SpecialZone,
+} from "@/db/types";
 
 interface EditRoutesTabProps {
   db: Database | null;
   persist: () => void;
+}
+
+// ── Special Zone Form Modal ───────────────────────────────────────────────────
+
+interface SpecialZoneFormProps {
+  db: Database;
+  zone?: SpecialZone;
+  onSave: () => void;
+  onClose: () => void;
+}
+
+function SpecialZoneForm({ db, zone, onSave, onClose }: SpecialZoneFormProps) {
+  const t = useTranslations();
+  const [name, setName] = useState(zone?.name ?? "");
+  const [abbreviation, setAbbreviation] = useState(zone?.abbreviation ?? "");
+  const [isBlack, setIsBlack] = useState((zone?.is_black ?? 0) === 1);
+
+  const handleSave = () => {
+    if (!name.trim() || !abbreviation.trim()) return;
+    upsertSpecialZone(db, {
+      id: zone?.id ?? uuidv7(),
+      name: name.trim(),
+      abbreviation: abbreviation.trim().charAt(0),
+      is_black: isBlack ? 1 : 0,
+    });
+    onSave();
+    onClose();
+  };
+
+  return (
+    <Stack gap="md">
+      <TextInput
+        label={t("route.special-zone.name")}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+      />
+      <TextInput
+        label={t("route.special-zone.abbreviation")}
+        value={abbreviation}
+        onChange={(e) => setAbbreviation(e.target.value.charAt(0))}
+        maxLength={1}
+        required
+      />
+      <Switch
+        label={t("route.special-zone.is-black")}
+        checked={isBlack}
+        onChange={(e) => setIsBlack(e.currentTarget.checked)}
+      />
+      <Group justify="flex-end" mt="md">
+        <Button variant="default" onClick={onClose}>
+          {t("common.close")}
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={!name.trim() || !abbreviation.trim()}
+        >
+          {t("common.save")}
+        </Button>
+      </Group>
+    </Stack>
+  );
 }
 
 // ── Company Form Modal ────────────────────────────────────────────────────────
@@ -91,11 +176,22 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
         value={color}
         onChange={setColor}
         format="hex"
-        swatches={["#36ab33", "#005bac", "#e60012", "#f97f00", "#000000", "#ffffff"]}
+        swatches={[
+          "#36ab33",
+          "#005bac",
+          "#e60012",
+          "#f97f00",
+          "#000000",
+          "#ffffff",
+        ]}
       />
       <Group justify="flex-end" mt="md">
-        <Button variant="default" onClick={onClose}>{t("common.close")}</Button>
-        <Button onClick={handleSave} disabled={!name.trim()}>{t("common.save")}</Button>
+        <Button variant="default" onClick={onClose}>
+          {t("common.close")}
+        </Button>
+        <Button onClick={handleSave} disabled={!name.trim()}>
+          {t("common.save")}
+        </Button>
       </Group>
     </Stack>
   );
@@ -115,9 +211,14 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
   const t = useTranslations();
   const [name, setName] = useState(line?.name ?? "");
   const [prefix, setPrefix] = useState(line?.prefix ?? "");
-  const [color, setColor] = useState(line?.line_color ?? "#89ff12");
-  const [companyId, setCompanyId] = useState<string | null>(line?.company_id ?? null);
-  const [priority, setPriority] = useState<number | string>(line?.priority ?? "");
+  const [color, setColor] = useState(line?.line_color ?? "#9fff00");
+  const [companyId, setCompanyId] = useState<string | null>(
+    line?.company_id ?? null,
+  );
+  const [priority, setPriority] = useState<number | string>(
+    line?.priority ?? "",
+  );
+  const [isLoop, setIsLoop] = useState((line?.is_loop ?? 0) === 1);
 
   const handleSave = () => {
     if (!name.trim() || !prefix.trim()) return;
@@ -128,6 +229,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
       line_color: color,
       company_id: companyId,
       priority: priority === "" ? null : Number(priority),
+      is_loop: isLoop ? 1 : 0,
     });
     onSave();
     onClose();
@@ -152,7 +254,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
         value={color}
         onChange={setColor}
         format="hex"
-        swatches={["#89ff12", "#ffffff", "#000000", "#ffdd00", "#f97f00"]}
+        swatches={["#9fff00", "#ffffff", "#000000", "#ffdd00", "#f97f00"]}
       />
       <Select
         label={t("route.line.company")}
@@ -168,9 +270,18 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
         onChange={setPriority}
         placeholder="—"
       />
+      <Switch
+        label={t("route.line.is-loop")}
+        checked={isLoop}
+        onChange={(e) => setIsLoop(e.currentTarget.checked)}
+      />
       <Group justify="flex-end" mt="md">
-        <Button variant="default" onClick={onClose}>{t("common.close")}</Button>
-        <Button onClick={handleSave} disabled={!name.trim() || !prefix.trim()}>{t("common.save")}</Button>
+        <Button variant="default" onClick={onClose}>
+          {t("common.close")}
+        </Button>
+        <Button onClick={handleSave} disabled={!name.trim() || !prefix.trim()}>
+          {t("common.save")}
+        </Button>
       </Group>
     </Stack>
   );
@@ -183,27 +294,61 @@ interface StationFormProps {
   station?: Station;
   lineId: string;
   maxSortOrder: number;
+  specialZones: SpecialZone[];
   onSave: () => void;
   onClose: () => void;
 }
 
-function StationForm({ db, station, lineId, maxSortOrder, onSave, onClose }: StationFormProps) {
+function StationForm({
+  db,
+  station,
+  lineId,
+  maxSortOrder,
+  specialZones,
+  onSave,
+  onClose,
+}: StationFormProps) {
   const t = useTranslations();
 
-  const existingNums = station
-    ? getStationNumbers(db, station.id, lineId)
-    : [];
+  const existingNums = station ? getStationNumbers(db, station.id, lineId) : [];
   const existingAreas = station ? getStationAreas(db, station.id) : [];
 
   const [primaryName, setPrimaryName] = useState(station?.primary_name ?? "");
-  const [furigana, setFurigana] = useState(station?.primary_name_furigana ?? "");
-  const [secondaryName, setSecondaryName] = useState(station?.secondary_name ?? "");
-  const [tertiaryName, setTertiaryName] = useState(station?.tertiary_name ?? "");
-  const [quaternaryName, setQuaternaryName] = useState(station?.quaternary_name ?? "");
+  const [furigana, setFurigana] = useState(
+    station?.primary_name_furigana ?? "",
+  );
+  const [secondaryName, setSecondaryName] = useState(
+    station?.secondary_name ?? "",
+  );
+  const [tertiaryName, setTertiaryName] = useState(
+    station?.tertiary_name ?? "",
+  );
+  const [quaternaryName, setQuaternaryName] = useState(
+    station?.quaternary_name ?? "",
+  );
   const [note, setNote] = useState(station?.note ?? "");
   const [trc, setTrc] = useState(station?.three_letter_code ?? "");
-  const [stationNumber, setStationNumber] = useState(existingNums[0]?.value ?? "");
+  const [stationNumber, setStationNumber] = useState(
+    existingNums[0]?.value ?? "",
+  );
   const [areas, setAreas] = useState<StationArea[]>(existingAreas);
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+
+  const handleAddZone = () => {
+    if (!selectedZoneId) return;
+    // Avoid duplicates
+    if (areas.some((a) => a.zone_id === selectedZoneId)) return;
+    setAreas((prev) => [
+      ...prev,
+      {
+        id: uuidv7(),
+        station_id: station?.id ?? "",
+        zone_id: selectedZoneId,
+        sort_order: prev.length,
+      },
+    ]);
+    setSelectedZoneId(null);
+  };
 
   const handleSave = () => {
     if (!primaryName.trim()) return;
@@ -236,8 +381,10 @@ function StationForm({ db, station, lineId, maxSortOrder, onSave, onClose }: Sta
 
     // Upsert station number for this line
     if (stationNumber.trim()) {
-      // Delete existing numbers for this station+line
-      db.run(`DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`, [stationId, lineId]);
+      db.run(
+        `DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`,
+        [stationId, lineId],
+      );
       upsertStationNumber(db, {
         id: uuidv7(),
         station_id: stationId,
@@ -245,15 +392,29 @@ function StationForm({ db, station, lineId, maxSortOrder, onSave, onClose }: Sta
         value: stationNumber.trim(),
       });
     } else {
-      db.run(`DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`, [stationId, lineId]);
+      db.run(
+        `DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`,
+        [stationId, lineId],
+      );
     }
 
     // Sync areas
-    syncStationAreas(db, stationId, areas.map((a, i) => ({ ...a, sort_order: i })));
+    syncStationAreas(
+      db,
+      stationId,
+      areas.map((a, i) => ({ ...a, sort_order: i })),
+    );
 
     onSave();
     onClose();
   };
+
+  const zoneSelectData = specialZones
+    .filter((z) => !areas.some((a) => a.zone_id === z.id))
+    .map((z) => ({
+      value: z.id,
+      label: `${z.abbreviation} — ${z.name}`,
+    }));
 
   return (
     <Stack gap="md">
@@ -302,59 +463,61 @@ function StationForm({ db, station, lineId, maxSortOrder, onSave, onClose }: Sta
 
       <Divider label={t("route.station.areas")} labelPosition="left" />
       <Stack gap="xs">
-        {areas.map((area) => (
-          <Group key={area.id} gap="xs" align="center" wrap="nowrap">
-            <TextInput
+        {areas.map((area) => {
+          const zone = specialZones.find((z) => z.id === area.zone_id);
+          return (
+            <Group key={area.id} gap="xs" align="center" wrap="nowrap">
+              <Badge
+                variant={zone?.is_black === 1 ? "filled" : "outline"}
+                color="dark"
+                style={{ minWidth: 32 }}
+              >
+                {zone?.abbreviation ?? "?"}
+              </Badge>
+              <Text size="sm" style={{ flex: 1 }}>
+                {zone?.name ?? area.zone_id}
+              </Text>
+              <ActionIcon
+                variant="subtle"
+                color="red"
+                onClick={() =>
+                  setAreas((prev) => prev.filter((a) => a.id !== area.id))
+                }
+              >
+                <IconTrash size={16} />
+              </ActionIcon>
+            </Group>
+          );
+        })}
+        {zoneSelectData.length > 0 && (
+          <Group gap="xs" align="flex-end">
+            <Select
               style={{ flex: 1 }}
-              value={area.name}
-              onChange={(e) =>
-                setAreas((prev) =>
-                  prev.map((a) => (a.id === area.id ? { ...a, name: e.target.value } : a)),
-                )
-              }
+              value={selectedZoneId}
+              onChange={setSelectedZoneId}
+              data={zoneSelectData}
+              placeholder={t("route.station.areas")}
+              clearable
             />
-            <Switch
-              checked={area.is_white === 1}
-              onChange={() =>
-                setAreas((prev) =>
-                  prev.map((a) =>
-                    a.id === area.id ? { ...a, is_white: a.is_white === 1 ? 0 : 1 } : a,
-                  ),
-                )
-              }
-            />
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              onClick={() => setAreas((prev) => prev.filter((a) => a.id !== area.id))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAddZone}
+              disabled={!selectedZoneId}
             >
-              <IconTrash size={16} />
-            </ActionIcon>
+              {t("common.add")}
+            </Button>
           </Group>
-        ))}
-        <Button
-          variant="outline"
-          size="xs"
-          onClick={() =>
-            setAreas((prev) => [
-              ...prev,
-              {
-                id: uuidv7(),
-                station_id: station?.id ?? "",
-                name: "",
-                is_white: 0,
-                sort_order: prev.length,
-              },
-            ])
-          }
-        >
-          {t("common.add")}
-        </Button>
+        )}
       </Stack>
 
       <Group justify="flex-end" mt="md">
-        <Button variant="default" onClick={onClose}>{t("common.close")}</Button>
-        <Button onClick={handleSave} disabled={!primaryName.trim()}>{t("common.save")}</Button>
+        <Button variant="default" onClick={onClose}>
+          {t("common.close")}
+        </Button>
+        <Button onClick={handleSave} disabled={!primaryName.trim()}>
+          {t("common.save")}
+        </Button>
       </Group>
     </Stack>
   );
@@ -364,25 +527,120 @@ function StationForm({ db, station, lineId, maxSortOrder, onSave, onClose }: Sta
 
 export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const t = useTranslations();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [, setRefreshKey] = useState(0);
 
   const refresh = () => {
     persist();
     setRefreshKey((k) => k + 1);
   };
 
+  // Import state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingImportBinary, setPendingImportBinary] =
+    useState<Uint8Array | null>(null);
+  const [
+    importModalOpened,
+    { open: openImportModal, close: closeImportModal },
+  ] = useDisclosure(false);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+
+  const handleImportFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const binary = new Uint8Array(ev.target!.result as ArrayBuffer);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+
+      const result = await validateImportDatabase(binary);
+      if (!result.valid) {
+        const msg =
+          result.reason === "invalid-file"
+            ? t("route.import-error.invalid-file")
+            : result.reason === "missing-table"
+              ? t("route.import-error.missing-table", {
+                  detail: result.detail ?? "",
+                })
+              : t("route.import-error.missing-column", {
+                  detail: result.detail ?? "",
+                });
+        setImportError(msg);
+        return;
+      }
+
+      setImportError(null);
+      setPendingImportBinary(binary);
+      openImportModal();
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleLoadSample = async () => {
+    try {
+      const res = await fetch("/sample-yamanote.sqlite");
+      if (!res.ok) throw new Error("fetch failed");
+      const binary = new Uint8Array(await res.arrayBuffer());
+      setImportError(null);
+      setPendingImportBinary(binary);
+      openImportModal();
+    } catch {
+      setImportError(t("route.import-error.invalid-file"));
+    }
+  };
+
+  const handleImportOverwrite = async () => {
+    if (!pendingImportBinary || !db) return;
+    setImporting(true);
+    await overwriteDatabaseInPlace(pendingImportBinary, db);
+    setPendingImportBinary(null);
+    setImporting(false);
+    closeImportModal();
+    refresh();
+  };
+
+  const handleImportMerge = async () => {
+    if (!pendingImportBinary) return;
+    setImporting(true);
+    await mergeDatabase(pendingImportBinary);
+    setPendingImportBinary(null);
+    setImporting(false);
+    closeImportModal();
+    refresh();
+  };
+
+  // Special zone state
+  const [zoneModalOpened, { open: openZoneModal, close: closeZoneModal }] =
+    useDisclosure(false);
+  const [editingZone, setEditingZone] = useState<SpecialZone | undefined>(
+    undefined,
+  );
+
   // Company state
-  const [companyModalOpened, { open: openCompanyModal, close: closeCompanyModal }] = useDisclosure(false);
-  const [editingCompany, setEditingCompany] = useState<Company | undefined>(undefined);
+  const [
+    companyModalOpened,
+    { open: openCompanyModal, close: closeCompanyModal },
+  ] = useDisclosure(false);
+  const [editingCompany, setEditingCompany] = useState<Company | undefined>(
+    undefined,
+  );
 
   // Line state
-  const [lineModalOpened, { open: openLineModal, close: closeLineModal }] = useDisclosure(false);
+  const [lineModalOpened, { open: openLineModal, close: closeLineModal }] =
+    useDisclosure(false);
   const [editingLine, setEditingLine] = useState<Line | undefined>(undefined);
-  const [lineCompanyFilter, setLineCompanyFilter] = useState<string | null>(null);
+  const [lineCompanyFilter, setLineCompanyFilter] = useState<string | null>(
+    null,
+  );
 
   // Station state
-  const [stationModalOpened, { open: openStationModal, close: closeStationModal }] = useDisclosure(false);
-  const [editingStation, setEditingStation] = useState<Station | undefined>(undefined);
+  const [
+    stationModalOpened,
+    { open: openStationModal, close: closeStationModal },
+  ] = useDisclosure(false);
+  const [editingStation, setEditingStation] = useState<Station | undefined>(
+    undefined,
+  );
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
 
   if (!db) {
@@ -390,20 +648,31 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
       <Center style={{ height: "300px" }}>
         <Stack align="center" gap="md">
           <Loader size="lg" />
-          <Text size="sm" c="dimmed">{t("common.loading")}</Text>
+          <Text size="sm" c="dimmed">
+            {t("common.loading")}
+          </Text>
         </Stack>
       </Center>
     );
   }
 
   // Read data from DB (re-reads on refreshKey change)
+  const specialZones = getAllSpecialZones(db);
   const companies = getAllCompanies(db);
   const allLines = getAllLines(db);
   const filteredLines = lineCompanyFilter
     ? allLines.filter((l) => l.company_id === lineCompanyFilter)
     : allLines;
-  const stationsInLine = selectedLineId ? getStationsByLine(db, selectedLineId) : [];
+  const stationsInLine = selectedLineId
+    ? getStationsByLine(db, selectedLineId)
+    : [];
   const selectedLine = allLines.find((l) => l.id === selectedLineId);
+
+  const handleDeleteZone = (id: string) => {
+    if (!window.confirm(t("route.special-zone.delete-confirm"))) return;
+    deleteSpecialZone(db, id);
+    refresh();
+  };
 
   const handleDeleteCompany = (id: string) => {
     if (!window.confirm(t("route.company.delete-confirm"))) return;
@@ -424,12 +693,17 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     refresh();
   };
 
-  const handleReorderStation = (stationId: string, direction: "up" | "down") => {
+  const handleReorderStation = (
+    stationId: string,
+    direction: "up" | "down",
+  ) => {
     if (!selectedLineId) return;
-    const stationLines = stationsInLine.map((s) => {
-      const sls = getStationLines(db, s.id);
-      return sls.find((sl) => sl.line_id === selectedLineId);
-    }).filter(Boolean);
+    const stationLines = stationsInLine
+      .map((s) => {
+        const sls = getStationLines(db, s.id);
+        return sls.find((sl) => sl.line_id === selectedLineId);
+      })
+      .filter(Boolean);
 
     const idx = stationLines.findIndex((sl) => sl!.station_id === stationId);
     if (idx === -1) return;
@@ -440,7 +714,6 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     const a = stationLines[idx]!;
     const b = stationLines[swapIdx]!;
 
-    // Swap sort_orders
     const tempOrder = a.sort_order;
     upsertStationLine(db, { ...a, sort_order: b.sort_order });
     upsertStationLine(db, { ...b, sort_order: tempOrder });
@@ -461,8 +734,31 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
 
   return (
     <Box style={{ padding: "16px" }}>
-      {/* Download SQLite button */}
-      <Group justify="flex-end" mb="lg">
+      {/* Hidden file input for SQLite import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".sqlite,.sqlite3,.db"
+        style={{ display: "none" }}
+        onChange={handleImportFileChange}
+      />
+
+      {/* Toolbar: Import / Download */}
+      <Group justify="flex-end" mb={importError ? "xs" : "lg"} gap="sm">
+        <Button
+          variant="outline"
+          leftSection={<IconDatabaseImport size={16} />}
+          onClick={() => void handleLoadSample()}
+        >
+          {t("route.import-sample")}
+        </Button>
+        <Button
+          variant="outline"
+          leftSection={<IconUpload size={16} />}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {t("route.import-sqlite")}
+        </Button>
         <Button
           variant="outline"
           leftSection={<IconDownload size={16} />}
@@ -472,7 +768,93 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         </Button>
       </Group>
 
+      {importError && (
+        <Alert
+          icon={<IconAlertCircle size={16} />}
+          color="red"
+          mb="lg"
+          withCloseButton
+          onClose={() => setImportError(null)}
+        >
+          {importError}
+        </Alert>
+      )}
+
       <Stack gap="xl">
+        {/* ── Special Zones section ── */}
+        <Box>
+          <Group justify="space-between" mb="md">
+            <Title order={3}>{t("route.special-zone.title")}</Title>
+            <Button
+              size="sm"
+              leftSection={<IconPlus size={16} />}
+              onClick={() => {
+                setEditingZone(undefined);
+                openZoneModal();
+              }}
+            >
+              {t("route.special-zone.add")}
+            </Button>
+          </Group>
+
+          {specialZones.length === 0 ? (
+            <Text c="dimmed" size="sm">
+              {t("route.special-zone.empty")}
+            </Text>
+          ) : (
+            <Table withTableBorder withColumnBorders>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>{t("route.special-zone.abbreviation")}</Table.Th>
+                  <Table.Th>{t("route.special-zone.name")}</Table.Th>
+                  <Table.Th>{t("route.special-zone.is-black")}</Table.Th>
+                  <Table.Th style={{ width: 100 }}></Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {specialZones.map((zone) => (
+                  <Table.Tr key={zone.id}>
+                    <Table.Td>
+                      <Badge
+                        variant={zone.is_black === 1 ? "filled" : "outline"}
+                        color="dark"
+                      >
+                        {zone.abbreviation}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td>{zone.name}</Table.Td>
+                    <Table.Td>
+                      <Switch checked={zone.is_black === 1} readOnly />
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <ActionIcon
+                          variant="subtle"
+                          onClick={() => {
+                            setEditingZone(zone);
+                            openZoneModal();
+                          }}
+                        >
+                          <IconEdit size={16} />
+                        </ActionIcon>
+                        <ActionIcon
+                          variant="subtle"
+                          color="red"
+                          onClick={() => handleDeleteZone(zone.id)}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          )}
+        </Box>
+
+        <Divider />
+
         {/* ── Companies section ── */}
         <Box>
           <Group justify="space-between" mb="md">
@@ -490,7 +872,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
           </Group>
 
           {companies.length === 0 ? (
-            <Text c="dimmed" size="sm">{t("route.company.empty")}</Text>
+            <Text c="dimmed" size="sm">
+              {t("route.company.empty")}
+            </Text>
           ) : (
             <Table withTableBorder withColumnBorders>
               <Table.Thead>
@@ -577,7 +961,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
           />
 
           {filteredLines.length === 0 ? (
-            <Text c="dimmed" size="sm">{t("route.line.empty")}</Text>
+            <Text c="dimmed" size="sm">
+              {t("route.line.empty")}
+            </Text>
           ) : (
             <Table withTableBorder withColumnBorders>
               <Table.Thead>
@@ -586,12 +972,15 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                   <Table.Th>{t("route.line.prefix")}</Table.Th>
                   <Table.Th>{t("route.line.color")}</Table.Th>
                   <Table.Th>{t("route.line.company")}</Table.Th>
+                  <Table.Th>{t("route.line.is-loop")}</Table.Th>
                   <Table.Th style={{ width: 100 }}></Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
                 {filteredLines.map((line) => {
-                  const company = companies.find((c) => c.id === line.company_id);
+                  const company = companies.find(
+                    (c) => c.id === line.company_id,
+                  );
                   return (
                     <Table.Tr key={line.id}>
                       <Table.Td>{line.name}</Table.Td>
@@ -613,6 +1002,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                         </Group>
                       </Table.Td>
                       <Table.Td>{company?.name ?? "—"}</Table.Td>
+                      <Table.Td>
+                        <Switch checked={line.is_loop === 1} readOnly />
+                      </Table.Td>
                       <Table.Td>
                         <Group gap="xs">
                           <ActionIcon
@@ -674,9 +1066,13 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
           />
 
           {!selectedLineId ? (
-            <Text c="dimmed" size="sm">{t("route.station.empty")}</Text>
+            <Text c="dimmed" size="sm">
+              {t("route.station.empty")}
+            </Text>
           ) : stationsInLine.length === 0 ? (
-            <Text c="dimmed" size="sm">{t("route.station.no-station")}</Text>
+            <Text c="dimmed" size="sm">
+              {t("route.station.no-station")}
+            </Text>
           ) : (
             <Table withTableBorder withColumnBorders>
               <Table.Thead>
@@ -689,20 +1085,32 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
               </Table.Thead>
               <Table.Tbody>
                 {stationsInLine.map((station, idx) => {
-                  const nums = getStationNumbers(db, station.id, selectedLineId!);
+                  const nums = getStationNumbers(
+                    db,
+                    station.id,
+                    selectedLineId!,
+                  );
                   return (
                     <Table.Tr key={station.id}>
                       <Table.Td>
-                        <Badge variant="light" size="sm">{idx + 1}</Badge>
+                        <Badge variant="light" size="sm">
+                          {idx + 1}
+                        </Badge>
                       </Table.Td>
                       <Table.Td>
                         <Stack gap={2}>
-                          <Text size="sm" fw={600}>{station.primary_name}</Text>
+                          <Text size="sm" fw={600}>
+                            {station.primary_name}
+                          </Text>
                           {station.primary_name_furigana && (
-                            <Text size="xs" c="dimmed">{station.primary_name_furigana}</Text>
+                            <Text size="xs" c="dimmed">
+                              {station.primary_name_furigana}
+                            </Text>
                           )}
                           {station.secondary_name && (
-                            <Text size="xs" c="dimmed">{station.secondary_name}</Text>
+                            <Text size="xs" c="dimmed">
+                              {station.secondary_name}
+                            </Text>
                           )}
                         </Stack>
                       </Table.Td>
@@ -710,7 +1118,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                         {nums[0]?.value ? (
                           <Badge>{nums[0].value}</Badge>
                         ) : (
-                          <Text size="sm" c="dimmed">—</Text>
+                          <Text size="sm" c="dimmed">
+                            —
+                          </Text>
                         )}
                       </Table.Td>
                       <Table.Td>
@@ -718,14 +1128,18 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                           <ActionIcon
                             variant="subtle"
                             disabled={idx === 0}
-                            onClick={() => handleReorderStation(station.id, "up")}
+                            onClick={() =>
+                              handleReorderStation(station.id, "up")
+                            }
                           >
                             <IconArrowUp size={16} />
                           </ActionIcon>
                           <ActionIcon
                             variant="subtle"
                             disabled={idx === stationsInLine.length - 1}
-                            onClick={() => handleReorderStation(station.id, "down")}
+                            onClick={() =>
+                              handleReorderStation(station.id, "down")
+                            }
                           >
                             <IconArrowDown size={16} />
                           </ActionIcon>
@@ -756,11 +1170,83 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         </Box>
       </Stack>
 
+      {/* ── Import confirmation modal ── */}
+      <Modal
+        opened={importModalOpened}
+        onClose={() => {
+          if (!importing) {
+            setPendingImportBinary(null);
+            closeImportModal();
+          }
+        }}
+        title={t("route.import-modal.title")}
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">{t("route.import-modal.description")}</Text>
+          <Stack gap="xs">
+            <Text size="xs" c="dimmed">
+              {t("route.import-modal.overwrite-desc")}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {t("route.import-modal.merge-desc")}
+            </Text>
+          </Stack>
+          <Group justify="flex-end" mt="md">
+            <Button
+              variant="default"
+              onClick={() => {
+                setPendingImportBinary(null);
+                closeImportModal();
+              }}
+              disabled={importing}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              variant="outline"
+              loading={importing}
+              onClick={() => void handleImportMerge()}
+            >
+              {t("route.import-modal.merge")}
+            </Button>
+            <Button
+              color="red"
+              loading={importing}
+              onClick={() => void handleImportOverwrite()}
+            >
+              {t("route.import-modal.overwrite")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* ── Special Zone Modal ── */}
+      <Modal
+        opened={zoneModalOpened}
+        onClose={closeZoneModal}
+        title={
+          editingZone
+            ? t("route.special-zone.edit")
+            : t("route.special-zone.add")
+        }
+        centered
+      >
+        <SpecialZoneForm
+          db={db}
+          zone={editingZone}
+          onSave={refresh}
+          onClose={closeZoneModal}
+        />
+      </Modal>
+
       {/* ── Modals ── */}
       <Modal
         opened={companyModalOpened}
         onClose={closeCompanyModal}
-        title={editingCompany ? t("route.company.edit") : t("route.company.add")}
+        title={
+          editingCompany ? t("route.company.edit") : t("route.company.add")
+        }
         centered
       >
         <CompanyForm
@@ -790,7 +1276,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         <Modal
           opened={stationModalOpened}
           onClose={closeStationModal}
-          title={editingStation ? t("route.station.edit") : t("route.station.add")}
+          title={
+            editingStation ? t("route.station.edit") : t("route.station.add")
+          }
           centered
           size="lg"
         >
@@ -799,6 +1287,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             station={editingStation}
             lineId={selectedLine.id}
             maxSortOrder={maxSortOrder}
+            specialZones={specialZones}
             onSave={refresh}
             onClose={closeStationModal}
           />

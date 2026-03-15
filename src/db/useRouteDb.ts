@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import type { Database } from 'sql.js';
-import { getDatabase, persistDatabase } from '@/db/init';
+import { useState, useEffect, useRef, useCallback } from "react";
+import type { Database } from "sql.js";
+import { getDatabase, persistDatabase } from "@/db/init";
 
 interface UseRouteDbResult {
   db: Database | null;
   loading: boolean;
   persist: () => void;
+  replaceDb: (newDb: Database) => void;
 }
 
 export function useRouteDb(): UseRouteDbResult {
@@ -24,7 +25,7 @@ export function useRouteDb(): UseRouteDbResult {
         setLoading(false);
       })
       .catch((err) => {
-        console.error('Failed to initialize route database:', err);
+        console.error("Failed to initialize route database:", err);
         if (!cancelled) setLoading(false);
       });
 
@@ -39,5 +40,10 @@ export function useRouteDb(): UseRouteDbResult {
     }
   }, []);
 
-  return { db, loading, persist };
+  const replaceDb = useCallback((newDb: Database) => {
+    dbRef.current = newDb;
+    setDb(newDb);
+  }, []);
+
+  return { db, loading, persist, replaceDb };
 }
