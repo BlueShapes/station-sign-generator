@@ -138,6 +138,10 @@ route:
   station:
     title: 駅
     add: 駅を追加
+    add-existing: すでにある駅から追加
+    link-title: 既存の駅を路線に追加
+    select-existing: 追加する駅を選択
+    inherited-info: 引き継がれる情報（読み取り専用）
     edit: 駅を編集
     name: 駅名
     furigana: 読み方（ひらがな）

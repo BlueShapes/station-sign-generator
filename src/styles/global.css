@@ -38,6 +38,54 @@ html.theme-ready *::after {
     box-shadow 0.2s ease !important;
 }
 
+/* ==================== Bottom Navigation (narrow screens) ==================== */
+@media (max-width: 48em) {
+  .ssg-tabs .mantine-Tabs-list {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background-color: var(--mantine-color-body);
+    border-top: 1px solid var(--mantine-color-default-border);
+    border-bottom: none;
+    justify-content: stretch;
+    gap: 0;
+  }
+
+  .ssg-tabs .mantine-Tabs-tab {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border-bottom: none;
+    border-top: 2px solid transparent;
+    margin-top: -1px;
+    border-radius: 0;
+    font-size: 0.7rem;
+  }
+
+  /* Icon inside tab: reset leftSection margin and scale up on mobile */
+  .ssg-tabs .mantine-Tabs-tabSection {
+    margin: 0;
+  }
+
+  .ssg-tabs .mantine-Tabs-tabSection svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .ssg-tabs .mantine-Tabs-tab[data-active] {
+    border-top-color: var(--mantine-color-blue-filled);
+  }
+
+  .ssg-tabs .mantine-Tabs-panel {
+    padding-bottom: 60px;
+  }
+}
+
 /* ==================== Custom Fonts (for Konva canvas) ==================== */
 @font-face {
   font-family: 'NotoSansJP';

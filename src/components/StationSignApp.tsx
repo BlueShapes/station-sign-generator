@@ -12,6 +12,7 @@ import {
   Tabs,
   Box,
 } from "@mantine/core";
+import { IconKeyboard, IconRoute, IconPencil } from "@tabler/icons-react";
 import Header from "@/components/Header";
 import { TranslationProvider } from "@/i18n/TranslationProvider";
 import { useTranslations } from "@/i18n/useTranslation";
@@ -73,11 +74,17 @@ function AppContent({
       {/* Toolbar spacer */}
       <div style={{ height: "64px" }} />
       <Box style={{ width: "100%" }}>
-        <Tabs defaultValue="simple" keepMounted={false}>
+        <Tabs defaultValue="simple" keepMounted={false} className="ssg-tabs">
           <Tabs.List>
-            <Tabs.Tab value="simple">{t("tabs.simple")}</Tabs.Tab>
-            <Tabs.Tab value="route-input">{t("tabs.route-input")}</Tabs.Tab>
-            <Tabs.Tab value="route-edit">{t("tabs.route-edit")}</Tabs.Tab>
+            <Tabs.Tab value="simple" leftSection={<IconKeyboard size={16} />}>
+              {t("tabs.simple")}
+            </Tabs.Tab>
+            <Tabs.Tab value="route-input" leftSection={<IconRoute size={16} />}>
+              {t("tabs.route-input")}
+            </Tabs.Tab>
+            <Tabs.Tab value="route-edit" leftSection={<IconPencil size={16} />}>
+              {t("tabs.route-edit")}
+            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="simple">

@@ -3,7 +3,7 @@ import path from "path";
 
 const SQLITE_PATH = path.resolve(
   __dirname,
-  "../.claude/output/sample-yamanote.sqlite",
+  "../.claude/output/sample.sqlite",
 );
 
 test.describe("SQLite import", () => {

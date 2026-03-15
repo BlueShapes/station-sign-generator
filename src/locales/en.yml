@@ -138,6 +138,10 @@ route:
   station:
     title: Stations
     add: Add Station
+    add-existing: Add from Existing Station
+    link-title: Add Existing Station to Line
+    select-existing: Select a station to add
+    inherited-info: Inherited info (read-only)
     edit: Edit Station
     name: Station Name
     furigana: Reading (Hiragana)

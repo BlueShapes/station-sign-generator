@@ -32,6 +32,7 @@ import {
   IconArrowDown,
   IconAlertCircle,
   IconDatabaseImport,
+  IconLink,
 } from "@tabler/icons-react";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
@@ -53,6 +54,7 @@ import {
   deleteSpecialZone,
 } from "@/db/repositories/special-zones";
 import {
+  getAllStations,
   getStationsByLine,
   upsertStation,
   deleteStationFromLine,
@@ -523,6 +525,159 @@ function StationForm({
   );
 }
 
+// ── Link Existing Station Form Modal ─────────────────────────────────────────
+
+interface LinkExistingStationFormProps {
+  db: Database;
+  lineId: string;
+  maxSortOrder: number;
+  specialZones: SpecialZone[];
+  alreadyOnLineIds: Set<string>;
+  onSave: () => void;
+  onClose: () => void;
+}
+
+function LinkExistingStationForm({
+  db,
+  lineId,
+  maxSortOrder,
+  specialZones,
+  alreadyOnLineIds,
+  onSave,
+  onClose,
+}: LinkExistingStationFormProps) {
+  const t = useTranslations();
+  const allStations = getAllStations(db);
+  const available = allStations.filter((s) => !alreadyOnLineIds.has(s.id));
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [stationNumber, setStationNumber] = useState("");
+
+  const selectedStation = available.find((s) => s.id === selectedId) ?? null;
+  const selectedAreas = selectedStation
+    ? getStationAreas(db, selectedStation.id)
+    : [];
+
+  const handleSave = () => {
+    if (!selectedId) return;
+    upsertStationLine(db, {
+      id: uuidv7(),
+      station_id: selectedId,
+      line_id: lineId,
+      sort_order: maxSortOrder + 1,
+    });
+    if (stationNumber.trim()) {
+      db.run(
+        `DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`,
+        [selectedId, lineId],
+      );
+      upsertStationNumber(db, {
+        id: uuidv7(),
+        station_id: selectedId,
+        line_id: lineId,
+        value: stationNumber.trim(),
+      });
+    }
+    onSave();
+    onClose();
+  };
+
+  const infoRows: [string, string | null | undefined][] = [
+    [t("route.station.furigana"), selectedStation?.primary_name_furigana],
+    [t("route.station.en"), selectedStation?.secondary_name],
+    [t("route.station.ko"), selectedStation?.tertiary_name],
+    [t("route.station.zh"), selectedStation?.quaternary_name],
+    [t("route.station.note"), selectedStation?.note],
+    [t("route.station.trc"), selectedStation?.three_letter_code],
+  ];
+
+  return (
+    <Stack gap="md">
+      <Select
+        label={t("route.station.select-existing")}
+        data={available.map((s) => ({
+          value: s.id,
+          label: s.secondary_name
+            ? `${s.primary_name} (${s.secondary_name})`
+            : s.primary_name,
+        }))}
+        value={selectedId}
+        onChange={setSelectedId}
+        searchable
+        required
+        placeholder="—"
+      />
+
+      {selectedStation && (
+        <>
+          <Divider
+            label={t("route.station.inherited-info")}
+            labelPosition="left"
+          />
+          <Stack gap="xs">
+            {infoRows
+              .filter(([, val]) => val)
+              .map(([label, val]) => (
+                <Group key={label} gap="xs">
+                  <Text
+                    size="sm"
+                    c="dimmed"
+                    style={{ width: 140, flexShrink: 0 }}
+                  >
+                    {label}
+                  </Text>
+                  <Text size="sm">{val}</Text>
+                </Group>
+              ))}
+            {selectedAreas.length > 0 && (
+              <Group gap="xs" align="center">
+                <Text
+                  size="sm"
+                  c="dimmed"
+                  style={{ width: 140, flexShrink: 0 }}
+                >
+                  {t("route.station.areas")}
+                </Text>
+                <Group gap="xs">
+                  {selectedAreas.map((area) => {
+                    const zone = specialZones.find(
+                      (z) => z.id === area.zone_id,
+                    );
+                    return (
+                      <Badge
+                        key={area.id}
+                        variant={zone?.is_black === 1 ? "filled" : "outline"}
+                        color="dark"
+                      >
+                        {zone?.abbreviation ?? "?"}
+                      </Badge>
+                    );
+                  })}
+                </Group>
+              </Group>
+            )}
+          </Stack>
+        </>
+      )}
+
+      <TextInput
+        label={t("route.station.number")}
+        value={stationNumber}
+        onChange={(e) => setStationNumber(e.target.value)}
+      />
+
+      <Group justify="flex-end" mt="md">
+        <Button variant="default" onClick={onClose}>
+          {t("common.close")}
+        </Button>
+        <Button onClick={handleSave} disabled={!selectedId}>
+          {t("common.save")}
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
+
 // ── Main EditRoutesTab ────────────────────────────────────────────────────────
 
 export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
@@ -560,11 +715,11 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             ? t("route.import-error.invalid-file")
             : result.reason === "missing-table"
               ? t("route.import-error.missing-table", {
-                  detail: result.detail ?? "",
-                })
+                detail: result.detail ?? "",
+              })
               : t("route.import-error.missing-column", {
-                  detail: result.detail ?? "",
-                });
+                detail: result.detail ?? "",
+              });
         setImportError(msg);
         return;
       }
@@ -578,7 +733,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
 
   const handleLoadSample = async () => {
     try {
-      const res = await fetch("/sample-yamanote.sqlite");
+      const res = await fetch("/sample.sqlite");
       if (!res.ok) throw new Error("fetch failed");
       const binary = new Uint8Array(await res.arrayBuffer());
       setImportError(null);
@@ -638,6 +793,10 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     stationModalOpened,
     { open: openStationModal, close: closeStationModal },
   ] = useDisclosure(false);
+  const [
+    linkStationModalOpened,
+    { open: openLinkStationModal, close: closeLinkStationModal },
+  ] = useDisclosure(false);
   const [editingStation, setEditingStation] = useState<Station | undefined>(
     undefined,
   );
@@ -666,6 +825,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const stationsInLine = selectedLineId
     ? getStationsByLine(db, selectedLineId)
     : [];
+  const alreadyOnLineIds = new Set(stationsInLine.map((s) => s.id));
   const selectedLine = allLines.find((l) => l.id === selectedLineId);
 
   const handleDeleteZone = (id: string) => {
@@ -724,12 +884,12 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const maxSortOrder =
     stationsInLine.length > 0
       ? Math.max(
-          ...stationsInLine.map((s) => {
-            const sls = getStationLines(db, s.id);
-            const sl = sls.find((sl) => sl.line_id === selectedLineId);
-            return sl?.sort_order ?? 0;
-          }),
-        )
+        ...stationsInLine.map((s) => {
+          const sls = getStationLines(db, s.id);
+          const sl = sls.find((sl) => sl.line_id === selectedLineId);
+          return sl?.sort_order ?? 0;
+        }),
+      )
       : 0;
 
   return (
@@ -1039,17 +1199,28 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         <Box>
           <Group justify="space-between" mb="md">
             <Title order={3}>{t("route.station.title")}</Title>
-            <Button
-              size="sm"
-              leftSection={<IconPlus size={16} />}
-              disabled={!selectedLineId}
-              onClick={() => {
-                setEditingStation(undefined);
-                openStationModal();
-              }}
-            >
-              {t("route.station.add")}
-            </Button>
+            <Group gap="sm">
+              <Button
+                size="sm"
+                variant="outline"
+                leftSection={<IconLink size={16} />}
+                disabled={!selectedLineId}
+                onClick={openLinkStationModal}
+              >
+                {t("route.station.add-existing")}
+              </Button>
+              <Button
+                size="sm"
+                leftSection={<IconPlus size={16} />}
+                disabled={!selectedLineId}
+                onClick={() => {
+                  setEditingStation(undefined);
+                  openStationModal();
+                }}
+              >
+                {t("route.station.add")}
+              </Button>
+            </Group>
           </Group>
 
           <Select
@@ -1290,6 +1461,26 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             specialZones={specialZones}
             onSave={refresh}
             onClose={closeStationModal}
+          />
+        </Modal>
+      )}
+
+      {selectedLine && (
+        <Modal
+          opened={linkStationModalOpened}
+          onClose={closeLinkStationModal}
+          title={t("route.station.link-title")}
+          centered
+          size="lg"
+        >
+          <LinkExistingStationForm
+            db={db}
+            lineId={selectedLine.id}
+            maxSortOrder={maxSortOrder}
+            specialZones={specialZones}
+            alreadyOnLineIds={alreadyOnLineIds}
+            onSave={refresh}
+            onClose={closeLinkStationModal}
           />
         </Modal>
       )}
