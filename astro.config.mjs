@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   output: 'static',
-  site: 'https://blueshapes.github.io',
+  site: 'https://stationsigngen.aosankaku.net',
   integrations: [react()],
   vite: {
     ssr: {
