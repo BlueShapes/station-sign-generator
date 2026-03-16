@@ -55,6 +55,10 @@ import JrEastSign, {
   height as JrEastSignHeight,
   scale as JrEastSignBaseScale,
 } from "@/components/signs/JrEastSign";
+import JrWestSign, {
+  height as JrWestSignHeight,
+  scale as JrWestSignBaseScale,
+} from "@/components/signs/JrWestSign";
 
 interface RouteInputTabProps {
   db: Database | null;
@@ -79,6 +83,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   );
   const [centerSquareLineIds, setCenterSquareLineIds] = useState<string[]>([]);
   const [stationLines, setStationLines] = useState<Line[]>([]);
+  const [signStyle, setSignStyle] = useState<"jreast" | "jrwest">("jreast");
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<
     { label: string; value: number }[]
@@ -259,7 +264,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
   // Update canvas size list
   useEffect(() => {
-    const canvasHeight = JrEastSignHeight;
+    const canvasHeight =
+      signStyle === "jrwest" ? JrWestSignHeight : JrEastSignHeight;
+    const baseScale =
+      signStyle === "jrwest" ? JrWestSignBaseScale : JrEastSignBaseScale;
     const canvasWidth = canvasHeight * ratio;
     const sizes = ["SS", "S", "M", "L", "XL", "XXL"];
     const result = sizes.map((label, i) => ({
@@ -267,13 +275,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       value: i + 1,
     }));
     setSaveSizeList(result);
-  }, [ratio]);
+    setSaveSize(baseScale);
+  }, [ratio, signStyle]);
 
   const handleSave = () => {
     if (!signData) return;
     if (ref.current) {
+      const baseScale =
+        signStyle === "jrwest" ? JrWestSignBaseScale : JrEastSignBaseScale;
       const uri = ref.current.toDataURL({
-        pixelRatio: saveSize / JrEastSignBaseScale,
+        pixelRatio: saveSize / baseScale,
       });
       const link = document.createElement("a");
       link.download = `${signData.primaryName}.png`;
@@ -317,9 +328,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             <Select
               label={t("route.sign.style")}
-              value="jreast"
-              data={[{ value: "jreast", label: t("route.sign.jreast") }]}
-              readOnly
+              value={signStyle}
+              onChange={(v) => v && setSignStyle(v as "jreast" | "jrwest")}
+              data={[
+                { value: "jreast", label: t("route.sign.jreast") },
+                { value: "jrwest", label: t("route.sign.jrwest") },
+              ]}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
@@ -464,7 +478,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               <IconEye size="1.6em" />
               {t("common.preview")}
             </Title>
-            <JrEastSign {...signData} ref={ref} />
+            {signStyle === "jrwest" ? (
+              <JrWestSign {...signData} ref={ref} />
+            ) : (
+              <JrEastSign {...signData} ref={ref} />
+            )}
 
             {/* Download controls */}
             <Grid gutter="md" style={{ padding: "10px" }}>
