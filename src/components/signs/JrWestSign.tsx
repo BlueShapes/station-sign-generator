@@ -6,15 +6,12 @@ import Konva from "konva";
 import { isMobile } from "react-device-detect";
 import styled from "styled-components";
 import spacedStationName from "@/functions/spaceStationName";
-import { v7 as uuidv7 } from "uuid";
 
 export const height = 140;
 export const scale = 3;
 
 const topBarH = 22;
 const bottomBarH = 40;
-const contentY = topBarH;
-const contentH = height - topBarH - bottomBarH; // 96
 
 const JrWestSign = forwardRef<Konva.Stage, StationProps>(
   (props, ref: React.Ref<Konva.Stage>) => {
@@ -30,11 +27,6 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
     } = props;
 
     const width = height * 3.3;
-
-    // 30 / 40 / 30 split
-    const sideW = width * 0.3;
-    const centerX = sideW;
-    const centerW = width * 0.4;
     const rightSecX = width * 0.7;
 
     const showLeftArrow = direction !== "right";
@@ -51,9 +43,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
       : undefined;
 
     useEffect(() => {
-      document.fonts.ready.then(() => {
-        setStageKey((k) => k + 1);
-      });
+      document.fonts.ready.then(() => setStageKey((k) => k + 1));
     }, []);
 
     useEffect(() => {
@@ -65,49 +55,58 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
       if (isMobile && stageKey >= 1) {
         const t = setTimeout(render, 1000);
         return () => clearTimeout(t);
-      } else {
-        render();
       }
+      render();
     }, [props, stageKey]);
 
-    // Arrow pointing right (tip on the right side)
-    const arrowRight = (x: number, y: number, size: number) => [
-      x + 3, y,
-      x + 11, y + 0,
-      x + size, y + size / 2,
-      x + 11, y + size,
-      x + 3, y + size,
-      x + size - 10.5, y + size / 2 + 2.5,
-      x - 11, y + size / 2 + 2.5,
-      x - 11, y + size / 2 - 2.5,
-      x + size - 10.5, y + size / 2 - 2.5,
+    // Arrow shape pointing right; origin is (0,0), tip at (size, size/2)
+    const arrowPoints = (size: number) => [
+      3,
+      0,
+      11,
+      0,
+      size,
+      size / 2,
+      11,
+      size,
+      3,
+      size,
+      size - 10.5,
+      size / 2 + 2.5,
+      -11,
+      size / 2 + 2.5,
+      -11,
+      size / 2 - 2.5,
+      size - 10.5,
+      size / 2 - 2.5,
     ];
 
-    /**
-     * Render one adjacent station's text rows (furigana, name, English).
-     * offsetY is relative to the top of the sub-slot.
-     */
-    const renderStation = (
-      s: AdjacentStationProps,
-      secX: number,
-      slotY: number, // absolute y of the slot top
-    ) => {
-      const withArrow = direction === "both" || (
-        (secX === 0 && showLeftArrow) || (secX !== 0 && showRightArrow)
-      );
-      const textWidth = Math.max(
-        (new Konva.Text({ text: s.primaryNameFurigana, fontSize: 14, fontFamily: "NotoSansJP", fontStyle: "700" })).width(),
-        (new Konva.Text({ text: s.secondaryName, fontSize: 12, fontFamily: "NotoSansJP", fontStyle: "500" })).width()
-      );
+    const renderStation = (s: AdjacentStationProps, secX: number) => {
       const isRight = secX !== 0;
-      const pad = (withArrow ? 42 * (secX === 0 ? 1 : -1) : 0) + 12 + (isRight ? -1 * textWidth + 115 : 0);
+      const showArrow = isRight ? showRightArrow : showLeftArrow;
+      const textWidth = Math.max(
+        new Konva.Text({
+          text: s.primaryNameFurigana,
+          fontSize: 14,
+          fontFamily: "NotoSansJP",
+          fontStyle: "700",
+        }).width(),
+        new Konva.Text({
+          text: s.secondaryName,
+          fontSize: 12,
+          fontFamily: "NotoSansJP",
+          fontStyle: "500",
+        }).width(),
+      );
+      const arrowOffset = showArrow ? 42 * (isRight ? -1 : 1) : 0;
+      const pad = arrowOffset + 12 + (isRight ? -textWidth + 115 : 0);
 
       return (
         <>
           <Text
             text={s.primaryNameFurigana ?? ""}
             x={secX + pad}
-            y={slotY + 86}
+            y={topBarH + 86}
             width={width}
             fontSize={14}
             fontFamily="NotoSansJP"
@@ -118,7 +117,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
           <Text
             text={s.secondaryName}
             x={secX + pad}
-            y={slotY + 102}
+            y={topBarH + 102}
             width={width}
             fontSize={12}
             fontFamily="NotoSansJP"
@@ -130,40 +129,30 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
       );
     };
 
-    /** Render a full side section (1 or 2 stations). */
     const renderSide = (stations: AdjacentStationProps[], isLeft: boolean) => {
       if (stations.length === 0) return null;
 
       const secX = isLeft ? 0 : rightSecX;
+      const showArrow = isLeft ? showLeftArrow : showRightArrow;
 
-      // Merge 2 stations into one with ／-joined fields
       const merged: AdjacentStationProps =
         stations.length === 2
           ? {
-            ...stations[0],
-            primaryNameFurigana: `${stations[0].primaryNameFurigana ?? ""}／${stations[1].primaryNameFurigana ?? ""}`,
-            secondaryName: `${stations[0].secondaryName}／${stations[1].secondaryName}`,
-          }
+              ...stations[0],
+              primaryNameFurigana: `${stations[0].primaryNameFurigana ?? ""}／${stations[1].primaryNameFurigana ?? ""}`,
+              secondaryName: `${stations[0].secondaryName}／${stations[1].secondaryName}`,
+            }
           : stations[0];
 
-      // White arrow in the bottom bar
       const arrowSize = 24;
-
-      // 1. points 用のベース座標は「0」にする
-      // これにより、Lineの基準点(0,0)からの相対的な形が定義されます
-      const points = arrowRight(0, 0, arrowSize);
-
-      // 2. 実際の描画位置を計算
-      // isLeft のときは、x=12 の位置から「左」に向かって描画されるように
-      // 反転の起点（arrowSize分）をずらします
       const actualX = isLeft ? 8 + arrowSize : width - 8 - arrowSize;
 
       return (
         <>
-          {isLeft && showLeftArrow && (
+          {showArrow && (
             <Line
               closed
-              points={points}
+              points={arrowPoints(arrowSize)}
               x={actualX}
               y={108}
               scaleX={isLeft ? -1 : 1}
@@ -171,18 +160,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
               strokeWidth={0}
             />
           )}
-          {!isLeft && showRightArrow && (
-            <Line
-              closed
-              points={points}
-              x={actualX}
-              y={108}
-              scaleX={isLeft ? -1 : 1}
-              fill="white"
-              strokeWidth={0}
-            />
-          )}
-          {renderStation(merged, secX, contentY)}
+          {renderStation(merged, secX)}
         </>
       );
     };
@@ -209,47 +187,45 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
               {/* White background */}
               <Rect fill="white" x={0} y={0} width={width} height={height} />
 
-              {/* Bottom color bar */}
+              {/* Bottom color bar — uses line color (localLines[0]) for JR West */}
               <Rect
-                fill={baseColor}
+                fill={props.localLines?.[0]?.color ?? baseColor}
                 x={0}
                 y={height - bottomBarH}
                 width={width}
                 height={bottomBarH}
               />
 
-              {/* Fare zone (note) — right side of top bar */}
-              {reversedStationArea?.map((e, i) => {
-                return (
-                  <Fragment key={uuidv7()}>
-                    <Rect
-                      x={width - 42 + 5 + i * -32}
-                      y={12}
-                      fill={e.isWhite ? "white" : "#462cb9"}
-                      width={26}
-                      height={26}
-                      stroke={e.isWhite ? "black" : "#462cb9"}
-                      strokeWidth={1}
-                    />
-                    <Text
-                      text={e.name}
-                      x={width - 43 + 5 + i * -32}
-                      y={10.5}
-                      fontSize={28}
-                      fontStyle="600"
-                      fontFamily="NotoSansJP"
-                      fill={e.isWhite ? "black" : "white"}
-                      align="center"
-                    />
-                  </Fragment>
-                );
-              })}
+              {/* Fare zone badges — top-right */}
+              {reversedStationArea?.map((e, i) => (
+                <Fragment key={i}>
+                  <Rect
+                    x={width - 42 + 5 + i * -32}
+                    y={12}
+                    fill={e.isWhite ? "white" : "#462cb9"}
+                    width={26}
+                    height={26}
+                    stroke={e.isWhite ? "black" : "#462cb9"}
+                    strokeWidth={1}
+                  />
+                  <Text
+                    text={e.name}
+                    x={width - 43 + 5 + i * -32}
+                    y={10.5}
+                    fontSize={28}
+                    fontStyle="600"
+                    fontFamily="NotoSansJP"
+                    fill={e.isWhite ? "black" : "white"}
+                    align="center"
+                  />
+                </Fragment>
+              ))}
 
-              {/* ── Current station (center) ── */}
+              {/* Current station */}
               <Text
                 text={spacedStationName(primaryName)}
                 x={0}
-                y={contentY - 8}
+                y={topBarH - 8}
                 width={width}
                 fontSize={52}
                 fontFamily="NotoSansJP"
@@ -260,7 +236,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
               <Text
                 text={`${primaryNameFurigana}  ${secondaryName}`}
                 x={0}
-                y={contentY + 50}
+                y={topBarH + 50}
                 width={width}
                 fontSize={18}
                 fontFamily="NotoSansJP"
@@ -269,7 +245,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
                 align="center"
               />
 
-              {/* ── Adjacent stations ── */}
+              {/* Adjacent stations */}
               {renderSide(leftStations, true)}
               {renderSide(rightStations, false)}
             </Layer>

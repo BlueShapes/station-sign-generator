@@ -32,8 +32,15 @@ interface SignStyleFieldSpec {
   maxAdjacentCount?: number;
   // Sign config
   baseColor: FieldRequirement;
+  centerSquareColors: FieldRequirement;
   ratio: FieldRequirement;
+  /** Fixed aspect ratio (width/height). When defined, the ratio slider is hidden and this value is used for size calculations. */
+  fixedRatio?: number;
   direction: FieldRequirement;
+  /** Maximum number of local lines. undefined = unlimited. */
+  localLinesMax?: number;
+  /** Minimum number of local lines. */
+  localLinesMin?: number;
 }
 
 export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
@@ -66,9 +73,13 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
     },
     maxAdjacentCount: 2,
     // Sign config
-    baseColor: "required",
+    baseColor: "hidden",
+    centerSquareColors: "hidden",
     ratio: "hidden",
+    fixedRatio: 3.3,
     direction: "required",
+    localLinesMax: 1,
+    localLinesMin: 1,
   },
   jreast: {
     // Current station
@@ -99,6 +110,7 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
     },
     // Sign config
     baseColor: "required",
+    centerSquareColors: "optional",
     ratio: "required",
     direction: "required",
   },

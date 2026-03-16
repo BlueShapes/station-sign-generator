@@ -50,6 +50,7 @@ import {
 import type { Line, Station } from "@/db/types";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import type { Direction } from "@/components/signs/DirectInputStationProps";
+import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 
 import JrEastSign, {
   height as JrEastSignHeight,
@@ -240,11 +241,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         : [],
       baseColor,
       centerSquareColors: centerColors,
-      localLines: allStationLines.map((l) => ({
-        id: l.id,
-        prefix: l.prefix,
-        color: l.line_color,
-      })),
+      localLines: [
+        ...allStationLines.filter((l) => l.id === selectedLineId),
+        ...allStationLines.filter((l) => l.id !== selectedLineId),
+      ].map((l) => ({ id: l.id, prefix: l.prefix, color: l.line_color })),
       ratio,
       direction,
     };
@@ -268,7 +268,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       signStyle === "jrwest" ? JrWestSignHeight : JrEastSignHeight;
     const baseScale =
       signStyle === "jrwest" ? JrWestSignBaseScale : JrEastSignBaseScale;
-    const canvasWidth = canvasHeight * ratio;
+    const effectiveRatio = SIGN_STYLE_FIELDS[signStyle]?.fixedRatio ?? ratio;
+    const canvasWidth = canvasHeight * effectiveRatio;
     const sizes = ["SS", "S", "M", "L", "XL", "XXL"];
     const result = sizes.map((label, i) => ({
       label: `${Math.round(canvasWidth * (i + 1))} × ${canvasHeight * (i + 1)} (${label})`,
@@ -446,20 +447,22 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           </Button>
         </Group>
 
-        {/* Ratio slider */}
-        <Box style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <IconRuler size={20} style={{ flexShrink: 0 }} />
-          <Slider
-            value={ratio}
-            label={(v) => v}
-            labelAlwaysOn
-            step={0.5}
-            min={2.5}
-            max={8}
-            style={{ width: "100%" }}
-            onChange={setRatio}
-          />
-        </Box>
+        {/* Ratio slider — hidden for fixed-ratio styles */}
+        {SIGN_STYLE_FIELDS[signStyle]?.fixedRatio === undefined && (
+          <Box style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <IconRuler size={20} style={{ flexShrink: 0 }} />
+            <Slider
+              value={ratio}
+              label={(v) => v}
+              labelAlwaysOn
+              step={0.5}
+              min={2.5}
+              max={8}
+              style={{ width: "100%" }}
+              onChange={setRatio}
+            />
+          </Box>
+        )}
 
         {/* Preview */}
         {signData && (

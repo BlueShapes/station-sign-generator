@@ -32,6 +32,7 @@ import { useTranslations } from "@/i18n/useTranslation";
 import { useDatabase } from "@/db/useDatabase";
 import { DEFAULT_DATA } from "@/db/seed";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
+import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 
 // You have to import height and scale for every child station sign component!!!
 import JrEastSign, {
@@ -172,8 +173,14 @@ export default function SimpleInputTab() {
   type ImageSize = { label: string; value: number };
 
   const [currentStyle, setCurrentStyle] = useState<"jreast" | "jrwest">(
-    "jreast",
+    () =>
+      (sessionStorage.getItem("sign-style-v1") as "jreast" | "jrwest") ??
+      "jreast",
   );
+
+  useEffect(() => {
+    sessionStorage.setItem("sign-style-v1", currentStyle);
+  }, [currentStyle]);
   const [currentBaseScale, setCurrentBaseScale] = useState(1);
   const [currentCanvasHeight, setCurrentCanvasHeight] = useState(0);
 
@@ -191,18 +198,20 @@ export default function SimpleInputTab() {
     }
   }, [currentStyle]);
 
-  const currentCanvasWidth = currentCanvasHeight * (previewData.ratio ?? 4.5);
+  const currentCanvasWidth =
+    currentCanvasHeight *
+    (SIGN_STYLE_FIELDS[currentStyle]?.fixedRatio ?? previewData.ratio ?? 4.5);
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<ImageSize[]>([]);
 
   useEffect(() => {
     const sizes = ["SS", "S", "M", "L", "XL", "XXL"];
     const result: ImageSize[] = sizes.map((label, i) => ({
-      label: `${currentCanvasWidth * (i + 1)} × ${currentCanvasHeight * (i + 1)} (${label})`,
+      label: `${Math.round(currentCanvasWidth * (i + 1))} × ${currentCanvasHeight * (i + 1)} (${label})`,
       value: i + 1,
     }));
     setSaveSizeList(result);
-  }, [currentCanvasHeight, previewData.ratio]);
+  }, [currentCanvasWidth, currentCanvasHeight]);
 
   const handleSave = () => {
     if (ref.current) {

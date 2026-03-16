@@ -164,22 +164,24 @@ const DirectInput = memo(function DirectInput({
               {t("input.direct.reset")}
             </Button>
           </Grid.Col>
-          <Grid.Col
-            span={12}
-            style={{ display: "flex", alignItems: "center", gap: "12px" }}
-          >
-            <IconRuler size={20} style={{ flexShrink: 0 }} />
-            <Slider
-              value={formData.ratio ?? 4.5}
-              label={(v) => v}
-              labelAlwaysOn
-              step={0.5}
-              min={2.5}
-              max={8}
-              style={{ width: "100%" }}
-              onChange={(v) => updateField("ratio", v)}
-            />
-          </Grid.Col>
+          {show("ratio") && (
+            <Grid.Col
+              span={12}
+              style={{ display: "flex", alignItems: "center", gap: "12px" }}
+            >
+              <IconRuler size={20} style={{ flexShrink: 0 }} />
+              <Slider
+                value={formData.ratio ?? 4.5}
+                label={(v) => v}
+                labelAlwaysOn
+                step={0.5}
+                min={2.5}
+                max={8}
+                style={{ width: "100%" }}
+                onChange={(v) => updateField("ratio", v)}
+              />
+            </Grid.Col>
+          )}
         </Grid>
       </Box>
 
@@ -559,85 +561,89 @@ const DirectInput = memo(function DirectInput({
             </Box>
 
             {/* Color pickers */}
-            <Stack gap="sm" mt="lg" style={{ maxWidth: 220 }}>
-              <ColorInput
-                label={t("input.direct.base-color")}
-                value={formData.baseColor}
-                onChange={(color) => updateField("baseColor", color)}
-                format="hex"
-                swatches={[
-                  "#36ab33",
-                  "#005bac",
-                  "#e60012",
-                  "#f97f00",
-                  "#000000",
-                  "#ffffff",
-                ]}
-              />
-            </Stack>
+            {show("baseColor") && (
+              <Stack gap="sm" mt="lg" style={{ maxWidth: 220 }}>
+                <ColorInput
+                  label={t("input.direct.base-color")}
+                  value={formData.baseColor}
+                  onChange={(color) => updateField("baseColor", color)}
+                  format="hex"
+                  swatches={[
+                    "#36ab33",
+                    "#005bac",
+                    "#e60012",
+                    "#f97f00",
+                    "#000000",
+                    "#ffffff",
+                  ]}
+                />
+              </Stack>
+            )}
 
             {/* Center square colors */}
-            <Stack gap="xs" mt="md" style={{ maxWidth: 220 }}>
-              <Text size="sm" fw={500}>
-                {t("input.direct.center-colors")}
-              </Text>
-              {(formData.centerSquareColors ?? []).map((color, idx) => (
-                <Group key={idx} gap="xs" wrap="nowrap">
-                  <ColorSwatch
-                    color={color}
-                    size={20}
-                    style={{ flexShrink: 0 }}
-                  />
-                  <Select
-                    style={{ flex: 1 }}
-                    value={color}
-                    placeholder={t("input.direct.local-lines-empty")}
-                    data={localLines.map((l) => ({
-                      value: l.color,
-                      label: l.prefix || "?",
-                    }))}
-                    onChange={(v) => {
-                      if (!v) return;
-                      const next = [...(formData.centerSquareColors ?? [])];
-                      next[idx] = v;
-                      updateField("centerSquareColors", next);
-                    }}
-                  />
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    aria-label="delete"
-                    disabled={(formData.centerSquareColors ?? []).length <= 1}
-                    onClick={() => {
-                      const next = (formData.centerSquareColors ?? []).filter(
-                        (_, i) => i !== idx,
-                      );
-                      updateField("centerSquareColors", next);
-                    }}
-                  >
-                    <IconTrash size={16} />
-                  </ActionIcon>
-                </Group>
-              ))}
-              <Button
-                variant="outline"
-                size="xs"
-                disabled={
-                  (formData.centerSquareColors ?? []).length >= 4 ||
-                  localLines.length === 0
-                }
-                onClick={() => {
-                  const existing = formData.centerSquareColors ?? [];
-                  if (existing.length >= 4 || localLines.length === 0) return;
-                  updateField("centerSquareColors", [
-                    ...existing,
-                    localLines[0].color,
-                  ]);
-                }}
-              >
-                {t("common.add")}
-              </Button>
-            </Stack>
+            {show("centerSquareColors") && (
+              <Stack gap="xs" mt="md" style={{ maxWidth: 220 }}>
+                <Text size="sm" fw={500}>
+                  {t("input.direct.center-colors")}
+                </Text>
+                {(formData.centerSquareColors ?? []).map((color, idx) => (
+                  <Group key={idx} gap="xs" wrap="nowrap">
+                    <ColorSwatch
+                      color={color}
+                      size={20}
+                      style={{ flexShrink: 0 }}
+                    />
+                    <Select
+                      style={{ flex: 1 }}
+                      value={color}
+                      placeholder={t("input.direct.local-lines-empty")}
+                      data={localLines.map((l) => ({
+                        value: l.color,
+                        label: l.prefix || "?",
+                      }))}
+                      onChange={(v) => {
+                        if (!v) return;
+                        const next = [...(formData.centerSquareColors ?? [])];
+                        next[idx] = v;
+                        updateField("centerSquareColors", next);
+                      }}
+                    />
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      aria-label="delete"
+                      disabled={(formData.centerSquareColors ?? []).length <= 1}
+                      onClick={() => {
+                        const next = (formData.centerSquareColors ?? []).filter(
+                          (_, i) => i !== idx,
+                        );
+                        updateField("centerSquareColors", next);
+                      }}
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+                ))}
+                <Button
+                  variant="outline"
+                  size="xs"
+                  disabled={
+                    (formData.centerSquareColors ?? []).length >= 4 ||
+                    localLines.length === 0
+                  }
+                  onClick={() => {
+                    const existing = formData.centerSquareColors ?? [];
+                    if (existing.length >= 4 || localLines.length === 0) return;
+                    updateField("centerSquareColors", [
+                      ...existing,
+                      localLines[0].color,
+                    ]);
+                  }}
+                >
+                  {t("common.add")}
+                </Button>
+              </Stack>
+            )}
           </Grid.Col>
 
           {/* Right station */}
@@ -858,35 +864,41 @@ const DirectInput = memo(function DirectInput({
                         )
                       }
                     />
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      aria-label="delete"
-                      onClick={() =>
-                        updateField(
-                          "localLines",
-                          localLines.filter((l) => l.id !== line.id),
-                        )
-                      }
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
+                    {(fields.localLinesMin === undefined ||
+                      localLines.length > fields.localLinesMin) && (
+                      <ActionIcon
+                        variant="subtle"
+                        color="red"
+                        aria-label="delete"
+                        onClick={() =>
+                          updateField(
+                            "localLines",
+                            localLines.filter((l) => l.id !== line.id),
+                          )
+                        }
+                      >
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    )}
                   </Group>
                 ))}
               </Stack>
-              <Button
-                variant="outline"
-                size="xs"
-                mt="xs"
-                onClick={() =>
-                  updateField("localLines", [
-                    ...localLines,
-                    { id: uuidv7(), prefix: "", color: "#9fff00" },
-                  ])
-                }
-              >
-                {t("input.direct.local-lines-add")}
-              </Button>
+              {(fields.localLinesMax === undefined ||
+                localLines.length < fields.localLinesMax) && (
+                <Button
+                  variant="outline"
+                  size="xs"
+                  mt="xs"
+                  onClick={() =>
+                    updateField("localLines", [
+                      ...localLines,
+                      { id: uuidv7(), prefix: "", color: "#9fff00" },
+                    ])
+                  }
+                >
+                  {t("input.direct.local-lines-add")}
+                </Button>
+              )}
             </Stack>
           </Grid.Col>
         </Grid>
