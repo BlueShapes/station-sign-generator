@@ -28,6 +28,8 @@ interface SignStyleFieldSpec {
   // Adjacent stations
   left: AdjacentFieldSpec;
   right: AdjacentFieldSpec;
+  /** Maximum number of adjacent stations per side. undefined = unlimited. */
+  maxAdjacentCount?: number;
   // Sign config
   baseColor: FieldRequirement;
   ratio: FieldRequirement;
@@ -35,6 +37,39 @@ interface SignStyleFieldSpec {
 }
 
 export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
+  jrwest: {
+    // Current station
+    primaryName: "required",
+    primaryNameFurigana: "required",
+    secondaryName: "required",
+    tertiaryName: "hidden",
+    quaternaryName: "hidden",
+    note: "hidden",
+    numberPrimary: "hidden",
+    numberSecondary: "hidden",
+    threeLetterCode: "hidden",
+    stationAreas: "hidden",
+    // Adjacent stations
+    left: {
+      primaryName: "hidden",
+      primaryNameFurigana: "required",
+      secondaryName: "required",
+      numberPrimary: "hidden",
+      numberSecondary: "hidden",
+    },
+    right: {
+      primaryName: "hidden",
+      primaryNameFurigana: "required",
+      secondaryName: "required",
+      numberPrimary: "hidden",
+      numberSecondary: "hidden",
+    },
+    maxAdjacentCount: 2,
+    // Sign config
+    baseColor: "required",
+    ratio: "hidden",
+    direction: "required",
+  },
   jreast: {
     // Current station
     primaryName: "required",

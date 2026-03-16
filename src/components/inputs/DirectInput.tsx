@@ -348,6 +348,10 @@ const DirectInput = memo(function DirectInput({
               <Button
                 variant="outline"
                 size="xs"
+                disabled={
+                  fields.maxAdjacentCount !== undefined &&
+                  formData.left.length >= fields.maxAdjacentCount
+                }
                 onClick={() =>
                   updateField("left", [
                     ...formData.left,
@@ -799,6 +803,10 @@ const DirectInput = memo(function DirectInput({
               <Button
                 variant="outline"
                 size="xs"
+                disabled={
+                  fields.maxAdjacentCount !== undefined &&
+                  formData.right.length >= fields.maxAdjacentCount
+                }
                 onClick={() =>
                   updateField("right", [
                     ...formData.right,

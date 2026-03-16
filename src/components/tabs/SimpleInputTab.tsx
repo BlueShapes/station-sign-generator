@@ -38,6 +38,10 @@ import JrEastSign, {
   height as JrEastSignHeight,
   scale as JrEastSignBaseScale,
 } from "@/components/signs/JrEastSign";
+import JrWestSign, {
+  height as JrWestSignHeight,
+  scale as JrWestSignBaseScale,
+} from "@/components/signs/JrWestSign";
 
 function validateDirectInputData(text: string): DirectInputStationProps {
   let parsed: unknown;
@@ -167,19 +171,22 @@ export default function SimpleInputTab() {
 
   type ImageSize = { label: string; value: number };
 
-  const [currentStyle] = useState("jreast");
+  const [currentStyle, setCurrentStyle] = useState<"jreast" | "jrwest">(
+    "jreast",
+  );
   const [currentBaseScale, setCurrentBaseScale] = useState(1);
   const [currentCanvasHeight, setCurrentCanvasHeight] = useState(0);
 
   useEffect(() => {
     switch (currentStyle) {
+      case "jrwest":
+        setCurrentBaseScale(JrWestSignBaseScale);
+        setCurrentCanvasHeight(JrWestSignHeight);
+        break;
       case "jreast":
+      default:
         setCurrentBaseScale(JrEastSignBaseScale);
         setCurrentCanvasHeight(JrEastSignHeight);
-        break;
-      default:
-        setCurrentBaseScale(1);
-        setCurrentCanvasHeight(0);
         break;
     }
   }, [currentStyle]);
@@ -290,6 +297,18 @@ export default function SimpleInputTab() {
           {t("error.corrupted-cache")}
         </Alert>
       )}
+      <Box style={{ padding: "10px 5px 0" }}>
+        <Select
+          label={t("route.sign.style")}
+          value={currentStyle}
+          onChange={(v) => v && setCurrentStyle(v as "jreast" | "jrwest")}
+          data={[
+            { value: "jreast", label: t("route.sign.jreast") },
+            { value: "jrwest", label: t("route.sign.jrwest") },
+          ]}
+          style={{ maxWidth: 240 }}
+        />
+      </Box>
       <Title
         order={2}
         style={{
@@ -304,7 +323,11 @@ export default function SimpleInputTab() {
         <IconEye size="1.6em" />
         {t("common.preview")}
       </Title>
-      <JrEastSign {...previewData} ref={ref} />
+      {currentStyle === "jrwest" ? (
+        <JrWestSign {...previewData} ref={ref} />
+      ) : (
+        <JrEastSign {...previewData} ref={ref} />
+      )}
       <Box style={{ width: "100%", padding: "25px" }}>
         <Grid gutter="md" style={{ padding: "10px", overflow: "hidden" }}>
           <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
@@ -340,6 +363,7 @@ export default function SimpleInputTab() {
         initialData={directInputInitialData}
         onUpdate={handleUpdate}
         onReset={handleReset}
+        signStyle={currentStyle}
       />
       <Box style={{ width: "100%", padding: "25px" }}>
         <Group gap="sm" wrap="wrap">
