@@ -1,6 +1,6 @@
 $site-name: "駅名標ジェネレーター"
 $site-description: "さぁ、あたらしい駅名標をあなたの手で。"
-$og-image-path: "/images/ja/ogp.png"
+$og-image-path: "/ogp.png"
 
 meta:
   title: 駅名標ジェネレーター 青三角版 JR東日本風

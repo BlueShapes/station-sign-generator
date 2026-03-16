@@ -1,6 +1,6 @@
 $site-name: "Station Sign Generator"
 $site-description: "Let's create your new station sign!"
-$og-image-path: "/images/en/ogp.png"
+$og-image-path: "/ogp.png"
 
 meta:
   title: Railway Sign Generator | Blue Triangle Edition (JR East style)
