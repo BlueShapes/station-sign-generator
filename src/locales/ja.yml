@@ -175,6 +175,7 @@ route:
     next-station: 次の駅
     jreast: JR東日本風
     jrwest: JR西日本風
+    jrwestlarge: JR西日本風（大）
     center-colors: 中央四角の色
 
 footer:

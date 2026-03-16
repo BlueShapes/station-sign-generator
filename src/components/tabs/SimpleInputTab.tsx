@@ -34,7 +34,6 @@ import { DEFAULT_DATA } from "@/db/seed";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 
-// You have to import height and scale for every child station sign component!!!
 import JrEastSign, {
   height as JrEastSignHeight,
   scale as JrEastSignBaseScale,
@@ -43,6 +42,33 @@ import JrWestSign, {
   height as JrWestSignHeight,
   scale as JrWestSignBaseScale,
 } from "@/components/signs/JrWestSign";
+import JrWestSignLarge, {
+  height as JrWestSignLargeHeight,
+  scale as JrWestSignLargeBaseScale,
+} from "@/components/signs/JrWestSignLarge";
+
+type SignStyle = "jreast" | "jrwest" | "jrwestlarge";
+
+const SIGN_STYLES: Record<
+  SignStyle,
+  { Component: typeof JrEastSign; height: number; scale: number }
+> = {
+  jreast: {
+    Component: JrEastSign,
+    height: JrEastSignHeight,
+    scale: JrEastSignBaseScale,
+  },
+  jrwest: {
+    Component: JrWestSign,
+    height: JrWestSignHeight,
+    scale: JrWestSignBaseScale,
+  },
+  jrwestlarge: {
+    Component: JrWestSignLarge,
+    height: JrWestSignLargeHeight,
+    scale: JrWestSignLargeBaseScale,
+  },
+};
 
 function validateDirectInputData(text: string): DirectInputStationProps {
   let parsed: unknown;
@@ -172,31 +198,16 @@ export default function SimpleInputTab() {
 
   type ImageSize = { label: string; value: number };
 
-  const [currentStyle, setCurrentStyle] = useState<"jreast" | "jrwest">(
-    () =>
-      (sessionStorage.getItem("sign-style-v1") as "jreast" | "jrwest") ??
-      "jreast",
+  const [currentStyle, setCurrentStyle] = useState<SignStyle>(
+    () => (sessionStorage.getItem("sign-style-v1") as SignStyle) ?? "jreast",
   );
 
   useEffect(() => {
     sessionStorage.setItem("sign-style-v1", currentStyle);
   }, [currentStyle]);
-  const [currentBaseScale, setCurrentBaseScale] = useState(1);
-  const [currentCanvasHeight, setCurrentCanvasHeight] = useState(0);
 
-  useEffect(() => {
-    switch (currentStyle) {
-      case "jrwest":
-        setCurrentBaseScale(JrWestSignBaseScale);
-        setCurrentCanvasHeight(JrWestSignHeight);
-        break;
-      case "jreast":
-      default:
-        setCurrentBaseScale(JrEastSignBaseScale);
-        setCurrentCanvasHeight(JrEastSignHeight);
-        break;
-    }
-  }, [currentStyle]);
+  const { height: currentCanvasHeight, scale: currentBaseScale } =
+    SIGN_STYLES[currentStyle];
 
   const currentCanvasWidth =
     currentCanvasHeight *
@@ -228,6 +239,8 @@ export default function SimpleInputTab() {
       console.error(t("error.on-save"));
     }
   };
+
+  const { Component: SignComponent } = SIGN_STYLES[currentStyle];
 
   return (
     <>
@@ -310,10 +323,11 @@ export default function SimpleInputTab() {
         <Select
           label={t("route.sign.style")}
           value={currentStyle}
-          onChange={(v) => v && setCurrentStyle(v as "jreast" | "jrwest")}
+          onChange={(v) => v && setCurrentStyle(v as SignStyle)}
           data={[
             { value: "jreast", label: t("route.sign.jreast") },
             { value: "jrwest", label: t("route.sign.jrwest") },
+            { value: "jrwestlarge", label: t("route.sign.jrwestlarge") },
           ]}
           style={{ maxWidth: 240 }}
         />
@@ -332,11 +346,7 @@ export default function SimpleInputTab() {
         <IconEye size="1.6em" />
         {t("common.preview")}
       </Title>
-      {currentStyle === "jrwest" ? (
-        <JrWestSign {...previewData} ref={ref} />
-      ) : (
-        <JrEastSign {...previewData} ref={ref} />
-      )}
+      <SignComponent {...previewData} ref={ref} />
       <Box style={{ width: "100%", padding: "25px" }}>
         <Grid gutter="md" style={{ padding: "10px", overflow: "hidden" }}>
           <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>

@@ -60,6 +60,33 @@ import JrWestSign, {
   height as JrWestSignHeight,
   scale as JrWestSignBaseScale,
 } from "@/components/signs/JrWestSign";
+import JrWestSignLarge, {
+  height as JrWestSignLargeHeight,
+  scale as JrWestSignLargeBaseScale,
+} from "@/components/signs/JrWestSignLarge";
+
+type SignStyle = "jreast" | "jrwest" | "jrwestlarge";
+
+const SIGN_STYLES: Record<
+  SignStyle,
+  { Component: typeof JrEastSign; height: number; scale: number }
+> = {
+  jreast: {
+    Component: JrEastSign,
+    height: JrEastSignHeight,
+    scale: JrEastSignBaseScale,
+  },
+  jrwest: {
+    Component: JrWestSign,
+    height: JrWestSignHeight,
+    scale: JrWestSignBaseScale,
+  },
+  jrwestlarge: {
+    Component: JrWestSignLarge,
+    height: JrWestSignLargeHeight,
+    scale: JrWestSignLargeBaseScale,
+  },
+};
 
 interface RouteInputTabProps {
   db: Database | null;
@@ -84,7 +111,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   );
   const [centerSquareLineIds, setCenterSquareLineIds] = useState<string[]>([]);
   const [stationLines, setStationLines] = useState<Line[]>([]);
-  const [signStyle, setSignStyle] = useState<"jreast" | "jrwest">("jreast");
+  const [signStyle, setSignStyle] = useState<SignStyle>("jreast");
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<
     { label: string; value: number }[]
@@ -264,10 +291,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
   // Update canvas size list
   useEffect(() => {
-    const canvasHeight =
-      signStyle === "jrwest" ? JrWestSignHeight : JrEastSignHeight;
-    const baseScale =
-      signStyle === "jrwest" ? JrWestSignBaseScale : JrEastSignBaseScale;
+    const { height: canvasHeight, scale: baseScale } = SIGN_STYLES[signStyle];
     const effectiveRatio = SIGN_STYLE_FIELDS[signStyle]?.fixedRatio ?? ratio;
     const canvasWidth = canvasHeight * effectiveRatio;
     const sizes = ["SS", "S", "M", "L", "XL", "XXL"];
@@ -282,8 +306,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const handleSave = () => {
     if (!signData) return;
     if (ref.current) {
-      const baseScale =
-        signStyle === "jrwest" ? JrWestSignBaseScale : JrEastSignBaseScale;
+      const { scale: baseScale } = SIGN_STYLES[signStyle];
       const uri = ref.current.toDataURL({
         pixelRatio: saveSize / baseScale,
       });
@@ -330,10 +353,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
             <Select
               label={t("route.sign.style")}
               value={signStyle}
-              onChange={(v) => v && setSignStyle(v as "jreast" | "jrwest")}
+              onChange={(v) => v && setSignStyle(v as SignStyle)}
               data={[
                 { value: "jreast", label: t("route.sign.jreast") },
                 { value: "jrwest", label: t("route.sign.jrwest") },
+                { value: "jrwestlarge", label: t("route.sign.jrwestlarge") },
               ]}
             />
           </Grid.Col>
@@ -481,11 +505,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               <IconEye size="1.6em" />
               {t("common.preview")}
             </Title>
-            {signStyle === "jrwest" ? (
-              <JrWestSign {...signData} ref={ref} />
-            ) : (
-              <JrEastSign {...signData} ref={ref} />
-            )}
+            {(() => {
+              const { Component: SignComponent } = SIGN_STYLES[signStyle];
+              return <SignComponent {...signData} ref={ref} />;
+            })()}
 
             {/* Download controls */}
             <Grid gutter="md" style={{ padding: "10px" }}>

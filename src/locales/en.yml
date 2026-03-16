@@ -175,6 +175,7 @@ route:
     next-station: Next station
     jreast: JR East Style
     jrwest: JR West Style
+    jrwestlarge: JR West Style (Large)
     center-colors: Center Square Colors
 
 footer:
