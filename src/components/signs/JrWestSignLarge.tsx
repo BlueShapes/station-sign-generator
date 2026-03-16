@@ -166,6 +166,31 @@ const JrWestSignLarge = forwardRef<Konva.Stage, StationProps>(
       );
     };
 
+    const maxWidth = width * 0.9;
+
+    // --- 1. メイン駅名の計算 ---
+    const mainNameText = spacedStationName(primaryName).replace("　", " ");
+    // 計測用のダミー。実際のfontSizeやfontFamilyを合わせる
+    const mainMeasurer = new Konva.Text({
+      text: mainNameText,
+      fontSize: 52,
+      fontFamily: "NotoSansJP",
+      fontStyle: "900",
+    });
+    const mainNativeWidth = mainMeasurer.width();
+    const mainScale = mainNativeWidth > maxWidth ? maxWidth / mainNativeWidth : 1;
+
+    // --- 2. ふりがな・副駅名の計算 ---
+    const subNameText = `${primaryNameFurigana}　${secondaryName}`;
+    const subMeasurer = new Konva.Text({
+      text: subNameText,
+      fontSize: 22,
+      fontFamily: "NotoSansJP",
+      fontStyle: "800",
+    });
+    const subNativeWidth = subMeasurer.width();
+    const subScale = subNativeWidth > maxWidth ? maxWidth / subNativeWidth : 1;
+
     return (
       <>
         {canvasImage && (
@@ -225,25 +250,27 @@ const JrWestSignLarge = forwardRef<Konva.Stage, StationProps>(
               {/* Current station */}
               <Text
                 text={spacedStationName(primaryName).replace("　", " ")}
-                x={0}
+                x={width / 2}
                 y={topBarH + 40}
-                width={width}
                 fontSize={52}
                 fontFamily="NotoSansJP"
                 fontStyle="900"
                 fill="black"
+                offsetX={mainNativeWidth / 2}
                 align="center"
+                scaleX={mainScale}
               />
               <Text
                 text={`${primaryNameFurigana}　${secondaryName}`}
-                x={0}
+                x={width / 2}
                 y={topBarH + 100}
-                width={width}
+                offsetX={subNativeWidth / 2}
                 fontSize={22}
                 fontFamily="NotoSansJP"
                 fontStyle="800"
                 fill="black"
                 align="center"
+                scaleX={subScale}
               />
 
               {/* Adjacent stations */}

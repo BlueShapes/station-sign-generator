@@ -76,7 +76,7 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
     baseColor: "hidden",
     centerSquareColors: "hidden",
     ratio: "hidden",
-    fixedRatio: 3.3,
+    fixedRatio: 1.4,
     direction: "required",
     localLinesMax: 1,
     localLinesMin: 1,
