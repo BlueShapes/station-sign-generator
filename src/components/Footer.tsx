@@ -28,13 +28,17 @@ const Footer = () => {
   ];
 
   return (
-    <Grid gutter="md" style={{ padding: "10px" }}>
+    <Grid gutter="md" style={{ padding: "10px", overflow: "hidden" }}>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <Title order={6}>Links</Title>
         <List spacing="xs" icon={<IconChevronsRight size={16} />}>
           {linkContents.map((e) => (
             <List.Item key={e.link}>
-              <Anchor href={e.link} underline="never">
+              <Anchor
+                href={e.link}
+                underline="never"
+                style={{ wordBreak: "break-word" }}
+              >
                 {e.name}
               </Anchor>
             </List.Item>
@@ -46,15 +50,22 @@ const Footer = () => {
         <List spacing="xs" icon={<IconChevronsRight size={16} />}>
           {devContents.map((e) => (
             <List.Item key={e.link}>
-              <Anchor href={e.link} underline="never">
+              <Anchor
+                href={e.link}
+                underline="never"
+                style={{ wordBreak: "break-word" }}
+              >
                 {e.name}
               </Anchor>
             </List.Item>
           ))}
         </List>
       </Grid.Col>
-      <Grid.Col span={12} style={{ textAlign: "center", margin: "60px 0 80px" }}>
-        <Text>{t("footer.notice")}</Text>
+      <Grid.Col
+        span={12}
+        style={{ textAlign: "center", margin: "60px 0 80px" }}
+      >
+        <Text style={{ wordBreak: "break-word" }}>{t("footer.notice")}</Text>
         <br />
         <Text>Copyright 2025 BlueShapes</Text>
         <Text>(Blue Triangle and sysnote8)</Text>

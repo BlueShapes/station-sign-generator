@@ -129,7 +129,7 @@ const DirectInput = memo(function DirectInput({
       </Modal>
 
       <Box style={{ width: "100%", padding: "25px" }}>
-        <Grid gutter="md">
+        <Grid gutter="md" style={{ overflow: "hidden" }}>
           <Grid.Col
             span={{ base: 12, sm: "auto" }}
             style={{
@@ -184,7 +184,7 @@ const DirectInput = memo(function DirectInput({
       </Box>
 
       <Box style={{ width: "100%" }}>
-        <Grid gutter="md" justify="center">
+        <Grid gutter="md" justify="center" style={{ overflow: "hidden" }}>
           {/* Left station */}
           <Grid.Col span={{ base: 10, md: 3 }}>
             <Stack gap="md">

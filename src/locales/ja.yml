@@ -65,6 +65,16 @@ input:
     area: "特定都区市内"
     area-name: 区域名称
     center-colors: 中央四角の色
+    export-copy: JSONをコピー
+    export-copy-done: コピーしました！
+    export-download: JSONをダウンロード
+    import: JSONをインポート
+    import-modal-title: JSONデータをインポート
+    import-paste-label: JSONを貼り付け
+    import-paste-placeholder: "エクスポートしたJSONをここに貼り付けてください..."
+    import-file-label: JSONファイルをアップロード
+    import-submit: インポート
+    import-error: "データが不正です: {detail}"
 
 common:
   preview: プレビュー

@@ -65,6 +65,16 @@ input:
     area: Station Fare Area
     area-name: Area Name
     center-colors: Center Square Colors
+    export-copy: Copy JSON
+    export-copy-done: Copied!
+    export-download: Download JSON
+    import: Import JSON
+    import-modal-title: Import JSON Data
+    import-paste-label: Paste JSON
+    import-paste-placeholder: "Paste exported JSON here..."
+    import-file-label: Upload JSON file
+    import-submit: Import
+    import-error: "Invalid data: {detail}"
 
 common:
   preview: Preview

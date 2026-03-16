@@ -1,6 +1,30 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Button, Grid, Box, Select, Title, Alert } from "@mantine/core";
-import { IconDownload, IconEye, IconAlertTriangle } from "@tabler/icons-react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type ChangeEvent,
+} from "react";
+import {
+  Button,
+  Grid,
+  Box,
+  Select,
+  Title,
+  Alert,
+  Modal,
+  Textarea,
+  Group,
+} from "@mantine/core";
+import {
+  IconDownload,
+  IconEye,
+  IconAlertTriangle,
+  IconCopy,
+  IconCheck,
+  IconUpload,
+  IconFileImport,
+} from "@tabler/icons-react";
 import Konva from "konva";
 import DirectInput from "@/components/inputs/DirectInput";
 import Footer from "@/components/Footer";
@@ -14,6 +38,31 @@ import JrEastSign, {
   height as JrEastSignHeight,
   scale as JrEastSignBaseScale,
 } from "@/components/signs/JrEastSign";
+
+function validateDirectInputData(text: string): DirectInputStationProps {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("not valid JSON");
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("expected a JSON object");
+  }
+  const d = parsed as Record<string, unknown>;
+  if (typeof d.primaryName !== "string")
+    throw new Error("missing field: primaryName");
+  if (typeof d.primaryNameFurigana !== "string")
+    throw new Error("missing field: primaryNameFurigana");
+  if (typeof d.secondaryName !== "string")
+    throw new Error("missing field: secondaryName");
+  if (!Array.isArray(d.left)) throw new Error("missing field: left");
+  if (!Array.isArray(d.right)) throw new Error("missing field: right");
+  if (typeof d.baseColor !== "string")
+    throw new Error("missing field: baseColor");
+  if (typeof d.ratio !== "number") throw new Error("missing field: ratio");
+  return parsed as DirectInputStationProps;
+}
 
 export default function SimpleInputTab() {
   const ref = useRef<Konva.Stage>(null);
@@ -55,6 +104,66 @@ export default function SimpleInputTab() {
     setDirectInputInitialData(DEFAULT_DATA);
     setDirectInputKey((k) => k + 1);
   }, [resetData]);
+
+  // Import / export state
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const [copyDone, setCopyDone] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportCopy = useCallback(async () => {
+    const json = JSON.stringify(latestDataRef.current, null, 2);
+    await navigator.clipboard.writeText(json);
+    setCopyDone(true);
+    setTimeout(() => setCopyDone(false), 2000);
+  }, []);
+
+  const handleExportDownload = useCallback(() => {
+    const data = latestDataRef.current;
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${data.primaryName || "station"}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, []);
+
+  const handleImportSubmit = useCallback(() => {
+    try {
+      const imported = validateDirectInputData(importText);
+      latestDataRef.current = imported;
+      setPreviewData(imported);
+      saveData(imported);
+      setDirectInputInitialData(imported);
+      setDirectInputKey((k) => k + 1);
+      setImportModalOpen(false);
+      setImportText("");
+      setImportError(null);
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : String(e));
+    }
+  }, [importText, saveData]);
+
+  const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result;
+      if (typeof text === "string") {
+        setImportText(text);
+        setImportError(null);
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input so the same file can be re-selected
+    e.target.value = "";
+  }, []);
 
   type ImageSize = { label: string; value: number };
 
@@ -106,6 +215,70 @@ export default function SimpleInputTab() {
 
   return (
     <>
+      {/* Import JSON modal */}
+      <Modal
+        opened={importModalOpen}
+        onClose={() => {
+          setImportModalOpen(false);
+          setImportText("");
+          setImportError(null);
+        }}
+        title={t("input.direct.import-modal-title")}
+        centered
+      >
+        <input
+          type="file"
+          accept=".json,application/json"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+        />
+        <Button
+          variant="outline"
+          leftSection={<IconUpload size={16} />}
+          mb="sm"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {t("input.direct.import-file-label")}
+        </Button>
+        <Textarea
+          label={t("input.direct.import-paste-label")}
+          placeholder={t("input.direct.import-paste-placeholder")}
+          value={importText}
+          onChange={(e) => {
+            setImportText(e.currentTarget.value);
+            setImportError(null);
+          }}
+          autosize
+          minRows={6}
+          maxRows={14}
+          styles={{ input: { fontFamily: "monospace", fontSize: "12px" } }}
+        />
+        {importError && (
+          <Alert icon={<IconAlertTriangle size={16} />} color="red" mt="sm">
+            {t("input.direct.import-error", { detail: importError })}
+          </Alert>
+        )}
+        <Group mt="lg" justify="flex-end">
+          <Button
+            variant="default"
+            onClick={() => {
+              setImportModalOpen(false);
+              setImportText("");
+              setImportError(null);
+            }}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button
+            onClick={handleImportSubmit}
+            disabled={importText.trim() === ""}
+          >
+            {t("input.direct.import-submit")}
+          </Button>
+        </Group>
+      </Modal>
+
       {isCorrupted && !corruptedDismissed && (
         <Alert
           icon={<IconAlertTriangle size={16} />}
@@ -133,7 +306,7 @@ export default function SimpleInputTab() {
       </Title>
       <JrEastSign {...previewData} ref={ref} />
       <Box style={{ width: "100%", padding: "25px" }}>
-        <Grid gutter="md" style={{ padding: "10px" }}>
+        <Grid gutter="md" style={{ padding: "10px", overflow: "hidden" }}>
           <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
             <Select
               label={t("input.image-size")}
@@ -168,6 +341,36 @@ export default function SimpleInputTab() {
         onUpdate={handleUpdate}
         onReset={handleReset}
       />
+      <Box style={{ width: "100%", padding: "25px" }}>
+        <Group gap="sm" wrap="wrap">
+          <Button
+            variant="outline"
+            leftSection={
+              copyDone ? <IconCheck size={16} /> : <IconCopy size={16} />
+            }
+            color={copyDone ? "green" : undefined}
+            onClick={handleExportCopy}
+          >
+            {copyDone
+              ? t("input.direct.export-copy-done")
+              : t("input.direct.export-copy")}
+          </Button>
+          <Button
+            variant="outline"
+            leftSection={<IconDownload size={16} />}
+            onClick={handleExportDownload}
+          >
+            {t("input.direct.export-download")}
+          </Button>
+          <Button
+            variant="outline"
+            leftSection={<IconFileImport size={16} />}
+            onClick={() => setImportModalOpen(true)}
+          >
+            {t("input.direct.import")}
+          </Button>
+        </Group>
+      </Box>
       <Footer />
     </>
   );
