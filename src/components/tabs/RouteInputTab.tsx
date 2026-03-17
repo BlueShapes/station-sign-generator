@@ -406,23 +406,25 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               ]}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <MultiSelect
-              label={t("route.sign.center-colors")}
-              value={centerSquareLineIds}
-              onChange={(v) =>
-                setCenterSquareLineIds(
-                  v.length > 0 ? v.slice(0, 4) : centerSquareLineIds,
-                )
-              }
-              data={stationLines.map((l) => ({
-                value: l.id,
-                label: `[${l.prefix}] ${l.name}`,
-              }))}
-              disabled={!selectedStationId}
-              maxValues={4}
-            />
-          </Grid.Col>
+          {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !== "hidden" && (
+            <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              <MultiSelect
+                label={t("route.sign.center-colors")}
+                value={centerSquareLineIds}
+                onChange={(v) =>
+                  setCenterSquareLineIds(
+                    v.length > 0 ? v.slice(0, 4) : centerSquareLineIds,
+                  )
+                }
+                data={stationLines.map((l) => ({
+                  value: l.id,
+                  label: `[${l.prefix}] ${l.name}`,
+                }))}
+                disabled={!selectedStationId}
+                maxValues={4}
+              />
+            </Grid.Col>
+          )}
         </Grid>
 
         {/* Station navigation + flip */}

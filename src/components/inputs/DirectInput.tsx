@@ -485,80 +485,77 @@ const DirectInput = memo(function DirectInput({
             </Stack>
 
             {/* Station area list */}
-            <Box style={{ maxWidth: 220, marginTop: "16px" }}>
-              <Text size="sm" fw={500} mb="xs">
-                {t("input.direct.area")}
-              </Text>
-              <Stack gap="xs">
-                {formData.stationAreas?.map((e) => (
-                  <Group key={e.id} gap="xs" align="center" wrap="nowrap">
-                    <TextInput
-                      style={{ minWidth: "68px", flex: 1 }}
-                      placeholder={t("input.direct.area-name")}
-                      value={e.name}
-                      onChange={(i) => {
-                        const nextAreas = formData.stationAreas?.map((c) =>
-                          e.id === c.id
-                            ? {
-                                id: c.id,
-                                name: i.target.value,
-                                isWhite: c.isWhite,
-                              }
-                            : c,
-                        );
-                        updateField("stationAreas", nextAreas);
-                      }}
-                    />
-                    {e.isWhite ? (
-                      <IconTypographyOff size={18} />
-                    ) : (
-                      <IconTypography size={18} />
-                    )}
-                    <Switch
-                      checked={e.isWhite}
-                      onChange={() => {
-                        const nextAreas = formData.stationAreas?.map((c) =>
-                          e.id === c.id
-                            ? { id: c.id, name: c.name, isWhite: !c.isWhite }
-                            : c,
-                        );
-                        updateField("stationAreas", nextAreas);
-                      }}
-                    />
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      aria-label="delete"
-                      onClick={() => {
-                        updateField(
-                          "stationAreas",
-                          formData.stationAreas?.filter((c) => c.id !== e.id),
-                        );
-                      }}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
-                ))}
-              </Stack>
-              <Button
-                variant="filled"
-                mt="xs"
-                onClick={() => {
-                  updateField(
-                    "stationAreas",
-                    formData.stationAreas
-                      ? [
-                          ...formData.stationAreas,
-                          { id: uuidv7(), name: "", isWhite: true },
-                        ]
-                      : undefined,
-                  );
-                }}
-              >
-                {t("common.add")}
-              </Button>
-            </Box>
+            {show("stationAreas") && (
+              <Box style={{ maxWidth: 220, marginTop: "16px" }}>
+                <Text size="sm" fw={500} mb="xs">
+                  {t("input.direct.area")}
+                </Text>
+                <Stack gap="xs">
+                  {formData.stationAreas?.map((e) => (
+                    <Group key={e.id} gap="xs" align="center" wrap="nowrap">
+                      <TextInput
+                        style={{ minWidth: "68px", flex: 1 }}
+                        placeholder={t("input.direct.area-name")}
+                        value={e.name}
+                        onChange={(i) => {
+                          const nextAreas = formData.stationAreas?.map((c) =>
+                            e.id === c.id
+                              ? {
+                                  id: c.id,
+                                  name: i.target.value,
+                                  isWhite: c.isWhite,
+                                }
+                              : c,
+                          );
+                          updateField("stationAreas", nextAreas);
+                        }}
+                      />
+                      {e.isWhite ? (
+                        <IconTypographyOff size={18} />
+                      ) : (
+                        <IconTypography size={18} />
+                      )}
+                      <Switch
+                        checked={e.isWhite}
+                        onChange={() => {
+                          const nextAreas = formData.stationAreas?.map((c) =>
+                            e.id === c.id
+                              ? { id: c.id, name: c.name, isWhite: !c.isWhite }
+                              : c,
+                          );
+                          updateField("stationAreas", nextAreas);
+                        }}
+                      />
+                      <ActionIcon
+                        variant="subtle"
+                        color="red"
+                        aria-label="delete"
+                        onClick={() => {
+                          updateField(
+                            "stationAreas",
+                            formData.stationAreas?.filter((c) => c.id !== e.id),
+                          );
+                        }}
+                      >
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    </Group>
+                  ))}
+                </Stack>
+                <Button
+                  variant="filled"
+                  mt="xs"
+                  onClick={() => {
+                    updateField("stationAreas", [
+                      ...(formData.stationAreas ?? []),
+                      { id: uuidv7(), name: "", isWhite: true },
+                    ]);
+                  }}
+                >
+                  {t("common.add")}
+                </Button>
+              </Box>
+            )}
 
             {/* Color pickers */}
             {show("baseColor") && (
@@ -588,21 +585,12 @@ const DirectInput = memo(function DirectInput({
                 </Text>
                 {(formData.centerSquareColors ?? []).map((color, idx) => (
                   <Group key={idx} gap="xs" wrap="nowrap">
-                    <ColorSwatch
-                      color={color}
-                      size={20}
-                      style={{ flexShrink: 0 }}
-                    />
-                    <Select
+                    <ColorInput
                       style={{ flex: 1 }}
                       value={color}
-                      placeholder={t("input.direct.local-lines-empty")}
-                      data={localLines.map((l) => ({
-                        value: l.color,
-                        label: l.prefix || "?",
-                      }))}
+                      format="hex"
+                      swatches={localLines.map((l) => l.color)}
                       onChange={(v) => {
-                        if (!v) return;
                         const next = [...(formData.centerSquareColors ?? [])];
                         next[idx] = v;
                         updateField("centerSquareColors", next);
@@ -627,16 +615,11 @@ const DirectInput = memo(function DirectInput({
                 <Button
                   variant="outline"
                   size="xs"
-                  disabled={
-                    (formData.centerSquareColors ?? []).length >= 4 ||
-                    localLines.length === 0
-                  }
+                  disabled={(formData.centerSquareColors ?? []).length >= 4}
                   onClick={() => {
-                    const existing = formData.centerSquareColors ?? [];
-                    if (existing.length >= 4 || localLines.length === 0) return;
                     updateField("centerSquareColors", [
-                      ...existing,
-                      localLines[0].color,
+                      ...(formData.centerSquareColors ?? []),
+                      localLines[0]?.color ?? formData.baseColor,
                     ]);
                   }}
                 >
