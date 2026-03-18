@@ -86,6 +86,29 @@ html.theme-ready *::after {
   }
 }
 
+/* ==================== Map Preview ==================== */
+/* Override Konva's touch-action:none so touch scroll works.
+   pan-x scrolls the overflow-x box horizontally; pan-y passes vertical
+   gestures up to the page. */
+.map-preview .konvajs-content {
+  touch-action: pan-x pan-y !important;
+}
+/* Prevent long-press callout (image save dialog) that can crash some browsers */
+.map-preview canvas {
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* Scale down the preview on narrow screens.
+   zoom shrinks both the visual size and the layout box, so the
+   overflow-x scroll area is proportionally reduced. */
+@media (max-width: 479px) {
+  .map-preview { zoom: 0.55; }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  .map-preview { zoom: 0.7; }
+}
+
 /* ==================== Custom Fonts (for Konva canvas) ==================== */
 @font-face {
   font-family: 'NotoSansJP';

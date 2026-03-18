@@ -891,7 +891,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   {t("common.preview")}
                 </Title>
 
-                <Box style={{ overflowX: "auto" }}>
+                <Box className="map-preview" style={{ overflowX: "auto" }}>
                   <LineMapRenderer
                     ref={mapRef}
                     stations={mapStations}

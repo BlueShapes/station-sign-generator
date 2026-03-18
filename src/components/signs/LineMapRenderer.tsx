@@ -289,6 +289,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
           height={C_SIZE * scale}
           scaleX={scale}
           scaleY={scale}
+          listening={false}
         >
           <Layer>
             <Rect x={0} y={0} width={C_SIZE} height={C_SIZE} fill="white" />
@@ -460,6 +461,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
           height={canvasH * scale}
           scaleX={scale}
           scaleY={scale}
+          listening={false}
         >
           <Layer>
             <Rect x={0} y={0} width={canvasW} height={canvasH} fill="white" />
@@ -622,6 +624,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         height={canvasH * scale}
         scaleX={scale}
         scaleY={scale}
+        listening={false}
       >
         <Layer>
           <Rect x={0} y={0} width={canvasW} height={canvasH} fill="white" />
