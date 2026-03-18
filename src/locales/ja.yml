@@ -177,6 +177,19 @@ route:
     jrwest: JR西日本風
     jrwestlarge: JR西日本風（大）
     center-colors: 中央四角の色
+  mode:
+    sign: 駅名標
+    linemap: 路線図
+  linemap:
+    orientation: 向き
+    horizontal: 横
+    vertical: 縦
+    range-start: 始発駅
+    range-end: 終着駅
+    transit-filter: 乗換路線を表示
+    font-size: 駅名フォントサイズ
+    overlap-warning-title: 駅名の重なりを検出
+    overlap-warning: 一部の駅名が重なっています。フォントサイズを小さくしてみてください。
 
 footer:
   notice: このサイトはファンサイトです。商標は各鉄道会社に帰属します。当サイトは各鉄道会社とは一切関係ありません。
