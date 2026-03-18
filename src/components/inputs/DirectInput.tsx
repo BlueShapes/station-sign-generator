@@ -88,6 +88,15 @@ const DirectInput = memo(function DirectInput({
     }));
   };
 
+  const updateDirection = (newDirection: string) => {
+    const updated = {
+      ...formData,
+      direction: newDirection as DirectInputStationProps["direction"],
+    };
+    setFormData(updated);
+    onUpdateRef.current(updated);
+  };
+
   const handleSwap = () => {
     setFormData((prev) => ({
       ...prev,
@@ -97,10 +106,9 @@ const DirectInput = memo(function DirectInput({
   };
 
   const localLines: LocalLine[] = formData.localLines ?? [];
-  const lineSelectData = localLines.map((l) => ({
-    value: l.prefix,
-    label: l.prefix,
-  }));
+  const lineSelectData = localLines
+    .filter((l) => l.prefix !== "")
+    .map((l) => ({ value: l.prefix, label: l.prefix }));
 
   return (
     <>
@@ -141,7 +149,7 @@ const DirectInput = memo(function DirectInput({
           >
             <SegmentedControl
               value={formData.direction ?? "left"}
-              onChange={(n) => updateField("direction", n)}
+              onChange={updateDirection}
               data={[
                 { value: "left", label: <IconArrowLeft size={16} /> },
                 { value: "both", label: <IconArrowsHorizontal size={16} /> },

@@ -509,7 +509,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
             </Title>
             {(() => {
               const { Component: SignComponent } = SIGN_STYLES[signStyle];
-              return <SignComponent {...signData} ref={ref} />;
+              return (
+                <SignComponent {...signData} direction={direction} ref={ref} />
+              );
             })()}
 
             {/* Download controls */}
