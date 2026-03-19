@@ -159,6 +159,9 @@ route:
     edit: Edit Company
     name: Company Name
     color: Company Color
+    station-number-style: Station Number Style
+    station-number-style-jreast: JR East style
+    station-number-style-preview: Sample badge (using company color as line color)
     empty: No companies yet
     delete-confirm: Delete this company? Associated lines will also be deleted.
   special-zone:
@@ -203,6 +206,7 @@ route:
     areas: Fare Zone Badges
     empty: Select a line to view stations
     no-station: No stations yet
+    duplicate-number-warning: "Duplicate station numbers in this line: {numbers}"
     delete-confirm: Remove this station from the line?
     select: Select a station
   sign:

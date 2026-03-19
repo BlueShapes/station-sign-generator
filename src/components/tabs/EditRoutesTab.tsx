@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { Database } from "sql.js";
 import {
   Button,
@@ -141,6 +141,80 @@ function SpecialZoneForm({ db, zone, onSave, onClose }: SpecialZoneFormProps) {
   );
 }
 
+// ── Station Number Badge Preview ──────────────────────────────────────────────
+
+function StationNumberBadgePreview({
+  color,
+  style,
+  prefix = "JY",
+  value = "01",
+  compact = false,
+}: {
+  color: string;
+  style: string;
+  prefix?: string;
+  value?: string;
+  compact?: boolean;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const scale = compact ? 1.125 : 1.5;
+    const badgeSize = 30 * scale;
+    const cssW = compact ? 75 : 120;
+    const cssH = compact ? 57 : 75;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    canvas.style.width = `${cssW}px`;
+    canvas.style.height = `${cssH}px`;
+
+    const draw = () => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, cssW, cssH);
+
+      if (style === "jreast") {
+        const bx = (cssW - badgeSize) / 2;
+        const by = (cssH - badgeSize) / 2;
+
+        // White fill inside the badge
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
+        ctx.fill();
+
+        // Colored outline
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3 * scale;
+        ctx.beginPath();
+        ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
+        ctx.stroke();
+
+        ctx.fillStyle = "#000000";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.font = `600 ${11 * scale}px "HindSemiBold", Arial, sans-serif`;
+        ctx.fillText(prefix, bx + badgeSize / 2, by + 4 * scale);
+
+        ctx.font = `600 ${17 * scale}px "HindSemiBold", Arial, sans-serif`;
+        ctx.fillText(value, bx + badgeSize / 2, by + 14 * scale);
+      }
+
+      ctx.restore();
+    };
+
+    document.fonts.ready.then(draw);
+  }, [color, style, prefix, value, compact]);
+
+  return <canvas ref={canvasRef} style={{ display: "block" }} />;
+}
+
 // ── Company Form Modal ────────────────────────────────────────────────────────
 
 interface CompanyFormProps {
@@ -154,6 +228,9 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
   const t = useTranslations();
   const [name, setName] = useState(company?.name ?? "");
   const [color, setColor] = useState(company?.company_color ?? "#36ab33");
+  const [stationNumberStyle, setStationNumberStyle] = useState(
+    company?.station_number_style ?? "jreast",
+  );
 
   const handleSave = () => {
     if (!name.trim()) return;
@@ -161,6 +238,7 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
       id: company?.id ?? uuidv7(),
       name: name.trim(),
       company_color: color,
+      station_number_style: stationNumberStyle,
     });
     onSave();
     onClose();
@@ -188,6 +266,23 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
           "#ffffff",
         ]}
       />
+      <Select
+        label={t("route.company.station-number-style")}
+        value={stationNumberStyle}
+        onChange={(v) => setStationNumberStyle(v ?? "jreast")}
+        data={[
+          {
+            value: "jreast",
+            label: t("route.company.station-number-style-jreast"),
+          },
+        ]}
+      />
+      <Group align="center" gap="md">
+        <StationNumberBadgePreview color={color} style={stationNumberStyle} />
+        <Text size="xs" c="dimmed">
+          {t("route.company.station-number-style-preview")}
+        </Text>
+      </Group>
       <Group justify="flex-end" mt="md">
         <Button variant="default" onClick={onClose}>
           {t("common.close")}
@@ -1248,98 +1343,151 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
               {t("route.station.no-station")}
             </Text>
           ) : (
-            <Table withTableBorder withColumnBorders>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th style={{ width: 60 }}>#</Table.Th>
-                  <Table.Th>{t("route.station.name")}</Table.Th>
-                  <Table.Th>{t("route.station.number")}</Table.Th>
-                  <Table.Th style={{ width: 140 }}></Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {stationsInLine.map((station, idx) => {
-                  const nums = getStationNumbers(
-                    db,
-                    station.id,
-                    selectedLineId!,
-                  );
-                  return (
-                    <Table.Tr key={station.id}>
-                      <Table.Td>
-                        <Badge variant="light" size="sm">
-                          {idx + 1}
-                        </Badge>
-                      </Table.Td>
-                      <Table.Td>
-                        <Stack gap={2}>
-                          <Text size="sm" fw={600}>
-                            {station.primary_name}
-                          </Text>
-                          {station.primary_name_furigana && (
-                            <Text size="xs" c="dimmed">
-                              {station.primary_name_furigana}
-                            </Text>
-                          )}
-                          {station.secondary_name && (
-                            <Text size="xs" c="dimmed">
-                              {station.secondary_name}
-                            </Text>
-                          )}
-                        </Stack>
-                      </Table.Td>
-                      <Table.Td>
-                        {nums[0]?.value ? (
-                          <Badge>{nums[0].value}</Badge>
-                        ) : (
-                          <Text size="sm" c="dimmed">
-                            —
-                          </Text>
-                        )}
-                      </Table.Td>
-                      <Table.Td>
-                        <Group gap="xs">
-                          <ActionIcon
-                            variant="subtle"
-                            disabled={idx === 0}
-                            onClick={() =>
-                              handleReorderStation(station.id, "up")
-                            }
-                          >
-                            <IconArrowUp size={16} />
-                          </ActionIcon>
-                          <ActionIcon
-                            variant="subtle"
-                            disabled={idx === stationsInLine.length - 1}
-                            onClick={() =>
-                              handleReorderStation(station.id, "down")
-                            }
-                          >
-                            <IconArrowDown size={16} />
-                          </ActionIcon>
-                          <ActionIcon
-                            variant="subtle"
-                            onClick={() => {
-                              setEditingStation(station);
-                              openStationModal();
-                            }}
-                          >
-                            <IconEdit size={16} />
-                          </ActionIcon>
-                          <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            onClick={() => handleDeleteStation(station.id)}
-                          >
-                            <IconTrash size={16} />
-                          </ActionIcon>
-                        </Group>
-                      </Table.Td>
-                    </Table.Tr>
-                  );
-                })}
-              </Table.Tbody>
-            </Table>
+            (() => {
+              const stationsWithNums = stationsInLine.map((station) => ({
+                station,
+                nums: getStationNumbers(db, station.id, selectedLineId!),
+              }));
+              const seen = new Set<string>();
+              const duplicateNumbers = new Set<string>();
+              for (const { nums } of stationsWithNums) {
+                for (const n of nums) {
+                  if (seen.has(n.value)) duplicateNumbers.add(n.value);
+                  else seen.add(n.value);
+                }
+              }
+              return (
+                <>
+                  {duplicateNumbers.size > 0 && (
+                    <Alert
+                      icon={<IconAlertCircle size={16} />}
+                      color="yellow"
+                      mb="sm"
+                      py="xs"
+                    >
+                      {t("route.station.duplicate-number-warning", {
+                        numbers: [...duplicateNumbers].join(", "),
+                      })}
+                    </Alert>
+                  )}
+                  <Table withTableBorder withColumnBorders>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th style={{ width: 60 }}>#</Table.Th>
+                        <Table.Th style={{ width: 85 }}>
+                          {t("route.station.number")}
+                        </Table.Th>
+                        <Table.Th>{t("route.station.name")}</Table.Th>
+                        <Table.Th style={{ width: 140 }}></Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {stationsWithNums.map(({ station, nums }, idx) => {
+                        const isDuplicate =
+                          !!nums[0]?.value &&
+                          duplicateNumbers.has(nums[0].value);
+                        return (
+                          <Table.Tr key={station.id}>
+                            <Table.Td>
+                              <Badge variant="light" size="sm">
+                                {idx + 1}
+                              </Badge>
+                            </Table.Td>
+                            <Table.Td>
+                              <Group gap={4} align="center" wrap="nowrap">
+                                {nums[0]?.value ? (
+                                  <StationNumberBadgePreview
+                                    color={
+                                      selectedLine?.line_color ?? "#000000"
+                                    }
+                                    style={
+                                      companies.find(
+                                        (c) =>
+                                          c.id === selectedLine?.company_id,
+                                      )?.station_number_style ?? "jreast"
+                                    }
+                                    prefix={selectedLine?.prefix ?? ""}
+                                    value={nums[0].value}
+                                    compact
+                                  />
+                                ) : (
+                                  <Badge variant="light" color="gray" size="sm">
+                                    —
+                                  </Badge>
+                                )}
+                                {isDuplicate && (
+                                  <IconAlertCircle
+                                    size={16}
+                                    color="var(--mantine-color-yellow-6)"
+                                  />
+                                )}
+                              </Group>
+                            </Table.Td>
+                            <Table.Td>
+                              <Stack gap={2}>
+                                <Text size="sm" fw={600}>
+                                  {station.primary_name}
+                                </Text>
+                                {station.primary_name_furigana && (
+                                  <Text size="xs" c="dimmed">
+                                    {station.primary_name_furigana}
+                                  </Text>
+                                )}
+                                {station.secondary_name && (
+                                  <Text size="xs" c="dimmed">
+                                    {station.secondary_name}
+                                  </Text>
+                                )}
+                              </Stack>
+                            </Table.Td>
+                            <Table.Td>
+                              <Group gap="xs">
+                                <ActionIcon
+                                  variant="subtle"
+                                  disabled={idx === 0}
+                                  onClick={() =>
+                                    handleReorderStation(station.id, "up")
+                                  }
+                                >
+                                  <IconArrowUp size={16} />
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="subtle"
+                                  disabled={idx === stationsInLine.length - 1}
+                                  onClick={() =>
+                                    handleReorderStation(station.id, "down")
+                                  }
+                                >
+                                  <IconArrowDown size={16} />
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="subtle"
+                                  onClick={() => {
+                                    setEditingStation(station);
+                                    openStationModal();
+                                  }}
+                                >
+                                  <IconEdit size={16} />
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  onClick={() =>
+                                    handleDeleteStation(station.id)
+                                  }
+                                >
+                                  <IconTrash size={16} />
+                                </ActionIcon>
+                              </Group>
+                            </Table.Td>
+                          </Table.Tr>
+                        );
+                      })}
+                    </Table.Tbody>
+                  </Table>
+                </>
+              );
+            })()
           )}
         </Box>
       </Stack>

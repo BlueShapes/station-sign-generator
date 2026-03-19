@@ -159,6 +159,9 @@ route:
     edit: 会社を編集
     name: 会社名
     color: 会社カラー
+    station-number-style: 駅番号スタイル
+    station-number-style-jreast: JR東日本風
+    station-number-style-preview: サンプルバッジ（会社カラーを路線カラーとして使用）
     empty: 会社がありません
     delete-confirm: この会社を削除しますか？関連する路線も削除されます。
   special-zone:
@@ -203,6 +206,7 @@ route:
     areas: 特定都区市内
     empty: 路線を選択してください
     no-station: 駅がありません
+    duplicate-number-warning: "この路線に重複する駅番号があります: {numbers}"
     delete-confirm: この駅をこの路線から削除しますか？
     select: 駅を選択してください
   sign:

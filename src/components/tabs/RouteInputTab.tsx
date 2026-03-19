@@ -226,13 +226,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     // Get station areas with zone details
     const areas = getStationAreasWithZones(db, currentStation.id);
 
-    // Get company color
+    // Get company color and station number style
     let baseColor = "#36ab33";
+    let stationNumberStyle: string | undefined;
     if (line?.company_id) {
       const companies = getAllCompanies(db);
       const company = companies.find((c) => c.id === line.company_id);
       if (company) {
         baseColor = company.company_color;
+        stationNumberStyle = company.station_number_style;
       }
     }
 
@@ -303,6 +305,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           ]
         : [],
       baseColor,
+      stationNumberStyle,
       centerSquareColors: centerColors,
       localLines: [
         ...allStationLines.filter((l) => l.id === selectedLineId),

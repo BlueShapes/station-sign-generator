@@ -346,7 +346,11 @@ export default function SimpleInputTab() {
         <IconEye size="1.6em" />
         {t("common.preview")}
       </Title>
-      <SignComponent {...previewData} ref={ref} />
+      <SignComponent
+        {...previewData}
+        stationNumberStyle={currentStyle === "jreast" ? "jreast" : undefined}
+        ref={ref}
+      />
       <Box style={{ width: "100%", padding: "25px" }}>
         <Grid gutter="md" style={{ padding: "10px", overflow: "hidden" }}>
           <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>

@@ -30,13 +30,20 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       numberPrimaryValue,
       numberSecondaryPrefix,
       numberSecondaryValue,
-      threeLetterCode,
+      threeLetterCode: threeLetterCodeRaw,
+      stationNumberStyle,
       baseColor,
       centerSquareColors,
       localLines,
       direction,
       ratio,
     } = props;
+
+    // Three-letter code is only rendered as part of the JR East station number badge
+    const threeLetterCode =
+      !stationNumberStyle || stationNumberStyle === "jreast"
+        ? threeLetterCodeRaw
+        : undefined;
 
     const getLineColor = (prefix?: string): string => {
       if (!prefix) return "#000000";

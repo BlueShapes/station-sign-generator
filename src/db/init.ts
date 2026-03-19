@@ -2,6 +2,7 @@ import initSqlJs from "sql.js";
 import type { SqlJsStatic, Database } from "sql.js";
 import { DB_VERSION } from "../config";
 import migrateV001toV010 from "./migrations/v0.0.1_to_v0.1.0";
+import migrateV010toV020 from "./migrations/v0.1.0_to_v0.2.0";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -12,9 +13,10 @@ CREATE TABLE IF NOT EXISTS db_metadata (
 );
 
 CREATE TABLE IF NOT EXISTS companies (
-  id            TEXT PRIMARY KEY,
-  name          TEXT NOT NULL,
-  company_color TEXT NOT NULL DEFAULT '#36ab33'
+  id                   TEXT PRIMARY KEY,
+  name                 TEXT NOT NULL,
+  company_color        TEXT NOT NULL DEFAULT '#36ab33',
+  station_number_style TEXT NOT NULL DEFAULT 'jreast'
 );
 
 CREATE TABLE IF NOT EXISTS lines (
@@ -86,10 +88,7 @@ let db: Database | null = null;
  */
 function migrateDatabase(database: Database): void {
   // Migrations run in order; each is idempotent (safe to re-run)
-  const migrations = [
-    migrateV001toV010,
-    // add future migrations here, e.g.: migrateV010toV020,
-  ];
+  const migrations = [migrateV001toV010, migrateV010toV020];
 
   for (const migrate of migrations) {
     migrate(database);
@@ -147,7 +146,7 @@ export function persistDatabase(database: Database): void {
 
 // Minimum required columns per table (subset that the app actively reads/writes)
 const REQUIRED_SCHEMA: Record<string, string[]> = {
-  companies: ["id", "name", "company_color"],
+  companies: ["id", "name", "company_color", "station_number_style"],
   lines: ["id", "name", "line_color", "prefix"],
   stations: ["id", "primary_name"],
   station_lines: ["id", "station_id", "line_id", "sort_order"],

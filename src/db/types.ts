@@ -2,6 +2,7 @@ export interface Company {
   id: string;
   name: string;
   company_color: string;
+  station_number_style: string;
 }
 
 export interface Line {
