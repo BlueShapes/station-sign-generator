@@ -78,11 +78,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       : undefined;
 
     useEffect(() => {
-      document.fonts.ready.then((fontFaceSet) => {
-        const fontFaces = [...fontFaceSet];
-        console.dir(fontFaces);
-        console.log("All fonts have been loaded.");
-        // setIsFontLoaded(true)
+      document.fonts.ready.then(() => {
         setStageKey((prevKey) => prevKey + 1);
       });
     }, []);

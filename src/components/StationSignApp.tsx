@@ -49,7 +49,13 @@ function AppContent({
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
-    document.fonts.ready.then(() => setFontsLoaded(true));
+    Promise.all([
+      document.fonts.load("900 1em NotoSansJP"),
+      document.fonts.load("1em NotoSansTC"),
+      document.fonts.load("1em NotoSansKR"),
+      document.fonts.load("1em OverusedGrotesk"),
+      document.fonts.load("600 1em HindSemiBold"),
+    ]).then(() => setFontsLoaded(true));
   }, []);
 
   if (!fontsLoaded) {
