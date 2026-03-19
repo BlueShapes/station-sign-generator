@@ -98,6 +98,44 @@ tabs:
   simple: Simple Input
   route-input: From Route
   route-edit: Edit Routes
+  settings: Settings
+
+settings:
+  storage:
+    title: Font Storage
+    indexeddb: IndexedDB (Persistent)
+    memory: Memory Only (Session)
+    memory-warning: Custom fonts uploaded in this session will be lost when the page is closed.
+  fonts:
+    builtin-title: Pre-installed Fonts
+    builtin-desc: Required fonts for station signs. Cannot be removed.
+    preload: Preload
+    user-title: Custom Fonts
+    upload: Upload Font
+    upload-modal-title: Upload Font
+    select-file: Select font file (.ttf, .otf, .woff, .woff2)
+    display-name: Display Name
+    family-name: CSS Font Family Name
+    family-hint: "Used in style configuration. No spaces allowed."
+    upload-submit: Upload
+    empty: No custom fonts uploaded yet.
+    remove-all: Remove All
+    remove-all-confirm: Remove all custom fonts? This also clears them from IndexedDB and cannot be undone.
+    status:
+      idle: Not loaded
+      loading: Loading...
+      loaded: Loaded
+      error: Error
+  images:
+    title: Images
+    upload: Upload Image
+    upload-modal-title: Upload Image
+    select-file: Select image file
+    display-name: Image Name
+    upload-submit: Upload
+    empty: No images uploaded yet.
+    remove-all: Remove All
+    remove-all-confirm: Remove all uploaded images? This also clears them from IndexedDB and cannot be undone.
 
 route:
   download-sqlite: Download SQLite

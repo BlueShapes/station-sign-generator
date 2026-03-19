@@ -12,7 +12,12 @@ import {
   Tabs,
   Box,
 } from "@mantine/core";
-import { IconKeyboard, IconRoute, IconPencil } from "@tabler/icons-react";
+import {
+  IconKeyboard,
+  IconRoute,
+  IconPencil,
+  IconSettings,
+} from "@tabler/icons-react";
 import Header from "@/components/Header";
 import { TranslationProvider } from "@/i18n/TranslationProvider";
 import { useTranslations } from "@/i18n/useTranslation";
@@ -20,6 +25,7 @@ import { useRouteDb } from "@/db/useRouteDb";
 import SimpleInputTab from "@/components/tabs/SimpleInputTab";
 import RouteInputTab from "@/components/tabs/RouteInputTab";
 import EditRoutesTab from "@/components/tabs/EditRoutesTab";
+import SettingsTab from "@/components/tabs/SettingsTab";
 
 const theme = createTheme({});
 const colorSchemeManager = localStorageColorSchemeManager({
@@ -91,6 +97,9 @@ function AppContent({
             <Tabs.Tab value="route-edit" leftSection={<IconPencil size={16} />}>
               {t("tabs.route-edit")}
             </Tabs.Tab>
+            <Tabs.Tab value="settings" leftSection={<IconSettings size={16} />}>
+              {t("tabs.settings")}
+            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="simple">
@@ -103,6 +112,10 @@ function AppContent({
 
           <Tabs.Panel value="route-edit">
             <EditRoutesTab db={db} persist={persist} />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="settings">
+            <SettingsTab />
           </Tabs.Panel>
         </Tabs>
       </Box>

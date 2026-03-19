@@ -20,6 +20,7 @@ import {
   Divider,
   Table,
   Alert,
+  ScrollArea,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -715,11 +716,11 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             ? t("route.import-error.invalid-file")
             : result.reason === "missing-table"
               ? t("route.import-error.missing-table", {
-                detail: result.detail ?? "",
-              })
+                  detail: result.detail ?? "",
+                })
               : t("route.import-error.missing-column", {
-                detail: result.detail ?? "",
-              });
+                  detail: result.detail ?? "",
+                });
         setImportError(msg);
         return;
       }
@@ -884,12 +885,12 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const maxSortOrder =
     stationsInLine.length > 0
       ? Math.max(
-        ...stationsInLine.map((s) => {
-          const sls = getStationLines(db, s.id);
-          const sl = sls.find((sl) => sl.line_id === selectedLineId);
-          return sl?.sort_order ?? 0;
-        }),
-      )
+          ...stationsInLine.map((s) => {
+            const sls = getStationLines(db, s.id);
+            const sl = sls.find((sl) => sl.line_id === selectedLineId);
+            return sl?.sort_order ?? 0;
+          }),
+        )
       : 0;
 
   return (
@@ -1125,71 +1126,73 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
               {t("route.line.empty")}
             </Text>
           ) : (
-            <Table withTableBorder withColumnBorders>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>{t("route.line.name")}</Table.Th>
-                  <Table.Th>{t("route.line.prefix")}</Table.Th>
-                  <Table.Th>{t("route.line.color")}</Table.Th>
-                  <Table.Th>{t("route.line.company")}</Table.Th>
-                  <Table.Th>{t("route.line.is-loop")}</Table.Th>
-                  <Table.Th style={{ width: 100 }}></Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {filteredLines.map((line) => {
-                  const company = companies.find(
-                    (c) => c.id === line.company_id,
-                  );
-                  return (
-                    <Table.Tr key={line.id}>
-                      <Table.Td>{line.name}</Table.Td>
-                      <Table.Td>
-                        <Badge variant="outline">{line.prefix}</Badge>
-                      </Table.Td>
-                      <Table.Td>
-                        <Group gap="xs">
-                          <Box
-                            style={{
-                              width: 20,
-                              height: 20,
-                              borderRadius: 4,
-                              backgroundColor: line.line_color,
-                              border: "1px solid #ccc",
-                            }}
-                          />
-                          <Text size="sm">{line.line_color}</Text>
-                        </Group>
-                      </Table.Td>
-                      <Table.Td>{company?.name ?? "—"}</Table.Td>
-                      <Table.Td>
-                        <Switch checked={line.is_loop === 1} readOnly />
-                      </Table.Td>
-                      <Table.Td>
-                        <Group gap="xs">
-                          <ActionIcon
-                            variant="subtle"
-                            onClick={() => {
-                              setEditingLine(line);
-                              openLineModal();
-                            }}
-                          >
-                            <IconEdit size={16} />
-                          </ActionIcon>
-                          <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            onClick={() => handleDeleteLine(line.id)}
-                          >
-                            <IconTrash size={16} />
-                          </ActionIcon>
-                        </Group>
-                      </Table.Td>
-                    </Table.Tr>
-                  );
-                })}
-              </Table.Tbody>
-            </Table>
+            <Box style={{ overflowX: "auto" }}>
+              <Table withTableBorder withColumnBorders>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("route.line.name")}</Table.Th>
+                    <Table.Th>{t("route.line.prefix")}</Table.Th>
+                    <Table.Th>{t("route.line.color")}</Table.Th>
+                    <Table.Th>{t("route.line.company")}</Table.Th>
+                    <Table.Th>{t("route.line.is-loop")}</Table.Th>
+                    <Table.Th style={{ width: 100 }}></Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {filteredLines.map((line) => {
+                    const company = companies.find(
+                      (c) => c.id === line.company_id,
+                    );
+                    return (
+                      <Table.Tr key={line.id}>
+                        <Table.Td>{line.name}</Table.Td>
+                        <Table.Td>
+                          <Badge variant="outline">{line.prefix}</Badge>
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap="xs">
+                            <Box
+                              style={{
+                                width: 20,
+                                height: 20,
+                                borderRadius: 4,
+                                backgroundColor: line.line_color,
+                                border: "1px solid #ccc",
+                              }}
+                            />
+                            <Text size="sm">{line.line_color}</Text>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>{company?.name ?? "—"}</Table.Td>
+                        <Table.Td>
+                          <Switch checked={line.is_loop === 1} readOnly />
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap="xs">
+                            <ActionIcon
+                              variant="subtle"
+                              onClick={() => {
+                                setEditingLine(line);
+                                openLineModal();
+                              }}
+                            >
+                              <IconEdit size={16} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() => handleDeleteLine(line.id)}
+                            >
+                              <IconTrash size={16} />
+                            </ActionIcon>
+                          </Group>
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  })}
+                </Table.Tbody>
+              </Table>
+            </Box>
           )}
         </Box>
 
@@ -1433,6 +1436,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         onClose={closeLineModal}
         title={editingLine ? t("route.line.edit") : t("route.line.add")}
         centered
+        scrollAreaComponent={ScrollArea.Autosize}
       >
         <LineForm
           db={db}
