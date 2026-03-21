@@ -232,6 +232,15 @@ route:
     font-size: Station Name Font Size
     overlap-warning-title: Label Overlap Detected
     overlap-warning: Some station names overlap. Try reducing the font size.
+    station-number-mode: Station Number Display
+    station-number-none: None
+    station-number-badge: Badge
+    station-number-dot: Replace Dot
+    name-style: Name Style
+    name-style-normal: Normal
+    name-style-above: Above
+    name-style-below: Below
+    station-spacing: Station Spacing
 
 footer:
   notice: This is a fan-made website. All trademarks are the property of their respective railway companies. This site is not affiliated with or endorsed by any railway company.

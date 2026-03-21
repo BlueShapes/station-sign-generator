@@ -73,8 +73,11 @@ import JrWestSignLarge, {
 import LineMapRenderer, {
   scale as LineMapScale,
   CIRCULAR_FONT_DEFAULT,
+  JP_FONT,
   detectCircularOverlaps,
   getMapCanvasDimensions,
+  type StationNumberMode,
+  type StationNumberMap,
 } from "@/components/signs/LineMapRenderer";
 
 type SignStyle = "jreast" | "jrwest" | "jrwestlarge";
@@ -147,6 +150,18 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   );
   const [mapFontSize, setMapFontSize] = useState(CIRCULAR_FONT_DEFAULT);
   const [mapSaveSize, setMapSaveSize] = useState(LineMapScale);
+  const [mapStationNumberMode, setMapStationNumberMode] =
+    useState<StationNumberMode>("none");
+  const [mapStationNumbers, setMapStationNumbers] = useState<
+    Record<
+      string,
+      { prefix: string; value: string; threeLetterCode?: string | null }
+    >
+  >({});
+  const [mapNameStyle, setMapNameStyle] = useState<
+    "normal" | "above" | "below"
+  >("normal");
+  const [mapStationSpacing, setMapStationSpacing] = useState(90);
 
   // Load lines when db becomes available
   useEffect(() => {
@@ -177,6 +192,17 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       selectedLineId && selectedStationId ? [selectedLineId] : [],
     );
   }, [selectedStationId, selectedLineId]);
+
+  // Reset station spacing to sensible defaults when orientation/nameStyle changes
+  useEffect(() => {
+    if (mapOrientation === "vertical") {
+      setMapStationSpacing(62);
+    } else if (mapNameStyle === "above" || mapNameStyle === "below") {
+      setMapStationSpacing(60);
+    } else {
+      setMapStationSpacing(90);
+    }
+  }, [mapOrientation, mapNameStyle]);
 
   // Build sign data when station changes
   useEffect(() => {
@@ -378,6 +404,30 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const selectedLine = lines.find((l) => l.id === selectedLineId) ?? null;
   const isLoopLine = selectedLine?.is_loop === 1;
 
+  // Load station numbers for map range
+  useEffect(() => {
+    if (!db || !selectedLineId || mapStations.length === 0) {
+      setMapStationNumbers({});
+      return;
+    }
+    const linePrefix = lines.find((l) => l.id === selectedLineId)?.prefix ?? "";
+    const result: Record<
+      string,
+      { prefix: string; value: string; threeLetterCode?: string | null }
+    > = {};
+    for (const station of mapStations) {
+      const nums = getStationNumbers(db, station.id, selectedLineId);
+      if (nums.length > 0) {
+        result[station.id] = {
+          prefix: linePrefix,
+          value: nums[0].value,
+          threeLetterCode: station.three_letter_code,
+        };
+      }
+    }
+    setMapStationNumbers(result);
+  }, [db, selectedLineId, mapStations, lines]);
+
   // All unique transit lines that appear in the current map range
   const allTransitLines = useMemo(() => {
     const seen = new Set<string>();
@@ -392,6 +442,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
     return result;
   }, [mapStations, mapTransits]);
+
+  // Max 縦書き text height (Konva units) — used to size canvas when nameStyle is above/below
+  const mapMaxNameExtent = useMemo(() => {
+    if (mapStations.length === 0) return 60;
+    const maxCharCount = Math.max(
+      ...mapStations.map((s) => [...s.primary_name].length),
+    );
+    return maxCharCount > 0 ? maxCharCount * (JP_FONT + 1) - 1 : 60;
+  }, [mapStations]);
 
   // Apply transit filter before passing to renderer
   const filteredMapTransits = useMemo<Record<string, Line[]>>(
@@ -414,12 +473,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       isLoopLine,
       mapOrientation,
       filteredMapTransits,
+      mapNameStyle,
+      mapMaxNameExtent,
+      mapStationSpacing,
     );
     return [1, 2, 3, 4].map((mult) => ({
       label: `${w * mult} × ${h * mult} (${["SS", "M", "L", "XL"][mult - 1]})`,
       value: LineMapScale * mult,
     }));
-  }, [mapStations.length, isLoopLine, mapOrientation, filteredMapTransits]);
+  }, [
+    mapStations.length,
+    isLoopLine,
+    mapOrientation,
+    filteredMapTransits,
+    mapNameStyle,
+    mapMaxNameExtent,
+    mapStationSpacing,
+  ]);
 
   // Overlap warnings for circular maps
   const overlapWarnings = useMemo<string[]>(() => {
@@ -428,8 +498,17 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapStations,
       filteredMapTransits,
       mapFontSize,
+      mapStationNumberMode,
+      mapStationNumbers,
     );
-  }, [isLoopLine, mapStations, filteredMapTransits, mapFontSize]);
+  }, [
+    isLoopLine,
+    mapStations,
+    filteredMapTransits,
+    mapFontSize,
+    mapStationNumberMode,
+    mapStationNumbers,
+  ]);
 
   const handleSaveSign = () => {
     if (!signData) return;
@@ -826,6 +905,35 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 </Grid.Col>
               )}
 
+              {/* Name style toggle — horizontal non-loop only */}
+              {!isLoopLine && mapOrientation === "horizontal" && (
+                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Text size="sm" fw={500} mb={4}>
+                    {t("route.linemap.name-style")}
+                  </Text>
+                  <SegmentedControl
+                    value={mapNameStyle}
+                    onChange={(v) =>
+                      setMapNameStyle(v as "normal" | "above" | "below")
+                    }
+                    data={[
+                      {
+                        value: "normal",
+                        label: t("route.linemap.name-style-normal"),
+                      },
+                      {
+                        value: "above",
+                        label: t("route.linemap.name-style-above"),
+                      },
+                      {
+                        value: "below",
+                        label: t("route.linemap.name-style-below"),
+                      },
+                    ]}
+                  />
+                </Grid.Col>
+              )}
+
               {/* Transit line filter — only shown when there are transit lines */}
               {allTransitLines.length > 0 && (
                 <Grid.Col span={{ base: 12, md: 6 }}>
@@ -865,6 +973,61 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               </Box>
             )}
 
+            {/* Station spacing slider — non-circular only */}
+            {!isLoopLine && selectedLine && (
+              <Box>
+                <Text size="sm" fw={500} mb={8}>
+                  {t("route.linemap.station-spacing")}
+                </Text>
+                <Box
+                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                >
+                  <IconRuler size={20} style={{ flexShrink: 0 }} />
+                  <Slider
+                    value={mapStationSpacing}
+                    label={(v) => `${v}`}
+                    labelAlwaysOn
+                    step={1}
+                    min={30}
+                    max={150}
+                    style={{ width: "100%" }}
+                    onChange={setMapStationSpacing}
+                    marks={[
+                      { value: 60, label: "60" },
+                      { value: 90, label: "90" },
+                    ]}
+                  />
+                </Box>
+              </Box>
+            )}
+
+            {/* Station number display mode */}
+            <Box>
+              <Text size="sm" fw={500} mb={4}>
+                {t("route.linemap.station-number-mode")}
+              </Text>
+              <SegmentedControl
+                value={mapStationNumberMode}
+                onChange={(v) =>
+                  setMapStationNumberMode(v as StationNumberMode)
+                }
+                data={[
+                  {
+                    value: "none",
+                    label: t("route.linemap.station-number-none"),
+                  },
+                  {
+                    value: "badge",
+                    label: t("route.linemap.station-number-badge"),
+                  },
+                  {
+                    value: "dot",
+                    label: t("route.linemap.station-number-dot"),
+                  },
+                ]}
+              />
+            </Box>
+
             {/* Overlap warning */}
             {overlapWarnings.length > 0 && (
               <Alert
@@ -902,7 +1065,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     isLoop={isLoopLine}
                     transits={filteredMapTransits}
                     orientation={mapOrientation}
+                    nameStyle={mapNameStyle}
                     circularFontSize={mapFontSize}
+                    stationNumberMode={mapStationNumberMode}
+                    stationNumbers={mapStationNumbers}
+                    stationSpacing={mapStationSpacing}
                   />
                 </Box>
 

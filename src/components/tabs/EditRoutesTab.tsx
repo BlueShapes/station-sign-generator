@@ -148,12 +148,14 @@ function StationNumberBadgePreview({
   style,
   prefix = "JY",
   value = "01",
+  threeLetterCode,
   compact = false,
 }: {
   color: string;
   style: string;
   prefix?: string;
   value?: string;
+  threeLetterCode?: string | null;
   compact?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -164,9 +166,14 @@ function StationNumberBadgePreview({
 
     const dpr = window.devicePixelRatio || 1;
     const scale = compact ? 1.125 : 1.5;
-    const badgeSize = 30 * scale;
+    const badgeSize = 30 * scale; // inner badge = 30×30 sign units
+    // With TRC: outer frame adds 12 above + 3 below the inner badge (sign units)
+    const trcH = 12 * scale;
+    const outerPadX = 3 * scale;
+    const outerPadBot = 3 * scale;
+    const trcExtension = threeLetterCode ? Math.ceil(trcH + outerPadBot) : 0;
     const cssW = compact ? 75 : 120;
-    const cssH = compact ? 57 : 75;
+    const cssH = (compact ? 57 : 75) + trcExtension;
     canvas.width = cssW * dpr;
     canvas.height = cssH * dpr;
     canvas.style.width = `${cssW}px`;
@@ -180,37 +187,95 @@ function StationNumberBadgePreview({
       ctx.clearRect(0, 0, cssW, cssH);
 
       if (style === "jreast") {
-        const bx = (cssW - badgeSize) / 2;
-        const by = (cssH - badgeSize) / 2;
+        if (threeLetterCode) {
+          // Outer frame: 36×45 sign units → (badgeSize + 2*outerPadX) × (trcH + badgeSize + outerPadBot)
+          const outerW = badgeSize + 2 * outerPadX;
+          const outerH = trcH + badgeSize + outerPadBot;
+          const ox = (cssW - outerW) / 2;
+          const oy = (cssH - outerH) / 2;
+          const ix = ox + outerPadX; // inner badge left
+          const iy = oy + trcH; // inner badge top
 
-        // White fill inside the badge
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
-        ctx.fill();
+          // White base fill for the entire outer frame
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.roundRect(ox, oy, outerW, outerH, 4 * scale);
+          ctx.fill();
 
-        // Colored outline
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 3 * scale;
-        ctx.beginPath();
-        ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
-        ctx.stroke();
+          // Black fill for TRC strip (top portion)
+          ctx.fillStyle = "#000000";
+          ctx.beginPath();
+          ctx.roundRect(ox, oy, outerW, trcH, [4 * scale, 4 * scale, 0, 0]);
+          ctx.fill();
 
-        ctx.fillStyle = "#000000";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        ctx.font = `600 ${11 * scale}px "HindSemiBold", Arial, sans-serif`;
-        ctx.fillText(prefix, bx + badgeSize / 2, by + 4 * scale);
+          // White fill for inner badge
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.roundRect(ix, iy, badgeSize, badgeSize, 2 * scale);
+          ctx.fill();
 
-        ctx.font = `600 ${17 * scale}px "HindSemiBold", Arial, sans-serif`;
-        ctx.fillText(value, bx + badgeSize / 2, by + 14 * scale);
+          // Outer black frame stroke (approximates the layered black rects in the sign)
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 3 * scale;
+          ctx.beginPath();
+          ctx.roundRect(ox, oy, outerW, outerH, 4 * scale);
+          ctx.stroke();
+
+          // Inner colored outline
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 3 * scale;
+          ctx.beginPath();
+          ctx.roundRect(ix, iy, badgeSize, badgeSize, 2 * scale);
+          ctx.stroke();
+
+          // TRC text (white), 1 unit below outer frame top, centered over inner width
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.font = `800 ${12.2 * scale}px "HindSemiBold", Arial, sans-serif`;
+          ctx.fillText(threeLetterCode, ix + badgeSize / 2, oy + 1 * scale);
+
+          // Prefix (+4 from inner badge top, same as non-TRC)
+          ctx.fillStyle = "#000000";
+          ctx.font = `600 ${11 * scale}px "HindSemiBold", Arial, sans-serif`;
+          ctx.fillText(prefix, ix + badgeSize / 2, iy + 4 * scale);
+
+          // Number (+14 from inner badge top, same as non-TRC)
+          ctx.font = `600 ${17 * scale}px "HindSemiBold", Arial, sans-serif`;
+          ctx.fillText(value, ix + badgeSize / 2, iy + 14 * scale);
+        } else {
+          const bx = (cssW - badgeSize) / 2;
+          const by = (cssH - badgeSize) / 2;
+
+          // White fill inside the badge
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
+          ctx.fill();
+
+          // Colored outline
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 3 * scale;
+          ctx.beginPath();
+          ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
+          ctx.stroke();
+
+          ctx.fillStyle = "#000000";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.font = `600 ${11 * scale}px "HindSemiBold", Arial, sans-serif`;
+          ctx.fillText(prefix, bx + badgeSize / 2, by + 4 * scale);
+
+          ctx.font = `600 ${17 * scale}px "HindSemiBold", Arial, sans-serif`;
+          ctx.fillText(value, bx + badgeSize / 2, by + 14 * scale);
+        }
       }
 
       ctx.restore();
     };
 
     document.fonts.ready.then(draw);
-  }, [color, style, prefix, value, compact]);
+  }, [color, style, prefix, value, threeLetterCode, compact]);
 
   return <canvas ref={canvasRef} style={{ display: "block" }} />;
 }
@@ -1058,54 +1123,60 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
               {t("route.special-zone.empty")}
             </Text>
           ) : (
-            <Table withTableBorder withColumnBorders>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>{t("route.special-zone.abbreviation")}</Table.Th>
-                  <Table.Th>{t("route.special-zone.name")}</Table.Th>
-                  <Table.Th>{t("route.special-zone.is-black")}</Table.Th>
-                  <Table.Th style={{ width: 100 }}></Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {specialZones.map((zone) => (
-                  <Table.Tr key={zone.id}>
-                    <Table.Td>
-                      <Badge
-                        variant={zone.is_black === 1 ? "filled" : "outline"}
-                        color="dark"
-                      >
-                        {zone.abbreviation}
-                      </Badge>
-                    </Table.Td>
-                    <Table.Td>{zone.name}</Table.Td>
-                    <Table.Td>
-                      <Switch checked={zone.is_black === 1} readOnly />
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <ActionIcon
-                          variant="subtle"
-                          onClick={() => {
-                            setEditingZone(zone);
-                            openZoneModal();
-                          }}
-                        >
-                          <IconEdit size={16} />
-                        </ActionIcon>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          onClick={() => handleDeleteZone(zone.id)}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Group>
-                    </Table.Td>
+            <ScrollArea>
+              <Table
+                withTableBorder
+                withColumnBorders
+                style={{ minWidth: 400 }}
+              >
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("route.special-zone.abbreviation")}</Table.Th>
+                    <Table.Th>{t("route.special-zone.name")}</Table.Th>
+                    <Table.Th>{t("route.special-zone.is-black")}</Table.Th>
+                    <Table.Th style={{ width: 100 }}></Table.Th>
                   </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
+                </Table.Thead>
+                <Table.Tbody>
+                  {specialZones.map((zone) => (
+                    <Table.Tr key={zone.id}>
+                      <Table.Td>
+                        <Badge
+                          variant={zone.is_black === 1 ? "filled" : "outline"}
+                          color="dark"
+                        >
+                          {zone.abbreviation}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>{zone.name}</Table.Td>
+                      <Table.Td>
+                        <Switch checked={zone.is_black === 1} readOnly />
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap="xs">
+                          <ActionIcon
+                            variant="subtle"
+                            onClick={() => {
+                              setEditingZone(zone);
+                              openZoneModal();
+                            }}
+                          >
+                            <IconEdit size={16} />
+                          </ActionIcon>
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            onClick={() => handleDeleteZone(zone.id)}
+                          >
+                            <IconTrash size={16} />
+                          </ActionIcon>
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </ScrollArea>
           )}
         </Box>
 
@@ -1132,56 +1203,62 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
               {t("route.company.empty")}
             </Text>
           ) : (
-            <Table withTableBorder withColumnBorders>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>{t("route.company.name")}</Table.Th>
-                  <Table.Th>{t("route.company.color")}</Table.Th>
-                  <Table.Th style={{ width: 100 }}></Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {companies.map((company) => (
-                  <Table.Tr key={company.id}>
-                    <Table.Td>{company.name}</Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Box
-                          style={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: 4,
-                            backgroundColor: company.company_color,
-                            border: "1px solid #ccc",
-                          }}
-                        />
-                        <Text size="sm">{company.company_color}</Text>
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <ActionIcon
-                          variant="subtle"
-                          onClick={() => {
-                            setEditingCompany(company);
-                            openCompanyModal();
-                          }}
-                        >
-                          <IconEdit size={16} />
-                        </ActionIcon>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          onClick={() => handleDeleteCompany(company.id)}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Group>
-                    </Table.Td>
+            <ScrollArea>
+              <Table
+                withTableBorder
+                withColumnBorders
+                style={{ minWidth: 360 }}
+              >
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("route.company.name")}</Table.Th>
+                    <Table.Th>{t("route.company.color")}</Table.Th>
+                    <Table.Th style={{ width: 100 }}></Table.Th>
                   </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
+                </Table.Thead>
+                <Table.Tbody>
+                  {companies.map((company) => (
+                    <Table.Tr key={company.id}>
+                      <Table.Td>{company.name}</Table.Td>
+                      <Table.Td>
+                        <Group gap="xs">
+                          <Box
+                            style={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: 4,
+                              backgroundColor: company.company_color,
+                              border: "1px solid #ccc",
+                            }}
+                          />
+                          <Text size="sm">{company.company_color}</Text>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap="xs">
+                          <ActionIcon
+                            variant="subtle"
+                            onClick={() => {
+                              setEditingCompany(company);
+                              openCompanyModal();
+                            }}
+                          >
+                            <IconEdit size={16} />
+                          </ActionIcon>
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            onClick={() => handleDeleteCompany(company.id)}
+                          >
+                            <IconTrash size={16} />
+                          </ActionIcon>
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </ScrollArea>
           )}
         </Box>
 
@@ -1221,8 +1298,12 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
               {t("route.line.empty")}
             </Text>
           ) : (
-            <Box style={{ overflowX: "auto" }}>
-              <Table withTableBorder withColumnBorders>
+            <ScrollArea>
+              <Table
+                withTableBorder
+                withColumnBorders
+                style={{ minWidth: 500 }}
+              >
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>{t("route.line.name")}</Table.Th>
@@ -1242,7 +1323,12 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                       <Table.Tr key={line.id}>
                         <Table.Td>{line.name}</Table.Td>
                         <Table.Td>
-                          <Badge variant="outline">{line.prefix}</Badge>
+                          <Badge
+                            variant="outline"
+                            color={line.prefix ? undefined : "gray"}
+                          >
+                            {line.prefix || "none"}
+                          </Badge>
                         </Table.Td>
                         <Table.Td>
                           <Group gap="xs">
@@ -1287,7 +1373,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                   })}
                 </Table.Tbody>
               </Table>
-            </Box>
+            </ScrollArea>
           )}
         </Box>
 
@@ -1370,121 +1456,134 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                       })}
                     </Alert>
                   )}
-                  <Table withTableBorder withColumnBorders>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th style={{ width: 60 }}>#</Table.Th>
-                        <Table.Th style={{ width: 85 }}>
-                          {t("route.station.number")}
-                        </Table.Th>
-                        <Table.Th>{t("route.station.name")}</Table.Th>
-                        <Table.Th style={{ width: 140 }}></Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {stationsWithNums.map(({ station, nums }, idx) => {
-                        const isDuplicate =
-                          !!nums[0]?.value &&
-                          duplicateNumbers.has(nums[0].value);
-                        return (
-                          <Table.Tr key={station.id}>
-                            <Table.Td>
-                              <Badge variant="light" size="sm">
-                                {idx + 1}
-                              </Badge>
-                            </Table.Td>
-                            <Table.Td>
-                              <Group gap={4} align="center" wrap="nowrap">
-                                {nums[0]?.value ? (
-                                  <StationNumberBadgePreview
-                                    color={
-                                      selectedLine?.line_color ?? "#000000"
-                                    }
-                                    style={
-                                      companies.find(
-                                        (c) =>
-                                          c.id === selectedLine?.company_id,
-                                      )?.station_number_style ?? "jreast"
-                                    }
-                                    prefix={selectedLine?.prefix ?? ""}
-                                    value={nums[0].value}
-                                    compact
-                                  />
-                                ) : (
-                                  <Badge variant="light" color="gray" size="sm">
-                                    —
-                                  </Badge>
-                                )}
-                                {isDuplicate && (
-                                  <IconAlertCircle
-                                    size={16}
-                                    color="var(--mantine-color-yellow-6)"
-                                  />
-                                )}
-                              </Group>
-                            </Table.Td>
-                            <Table.Td>
-                              <Stack gap={2}>
-                                <Text size="sm" fw={600}>
-                                  {station.primary_name}
-                                </Text>
-                                {station.primary_name_furigana && (
-                                  <Text size="xs" c="dimmed">
-                                    {station.primary_name_furigana}
+                  <ScrollArea>
+                    <Table
+                      withTableBorder
+                      withColumnBorders
+                      style={{ minWidth: 380 }}
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ width: 60 }}>#</Table.Th>
+                          <Table.Th style={{ width: 85 }}>
+                            {t("route.station.number")}
+                          </Table.Th>
+                          <Table.Th>{t("route.station.name")}</Table.Th>
+                          <Table.Th style={{ width: 140 }}></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {stationsWithNums.map(({ station, nums }, idx) => {
+                          const isDuplicate =
+                            !!nums[0]?.value &&
+                            duplicateNumbers.has(nums[0].value);
+                          return (
+                            <Table.Tr key={station.id}>
+                              <Table.Td>
+                                <Badge variant="light" size="sm">
+                                  {idx + 1}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap={4} align="center" wrap="nowrap">
+                                  {nums[0]?.value ? (
+                                    <StationNumberBadgePreview
+                                      color={
+                                        selectedLine?.line_color ?? "#000000"
+                                      }
+                                      style={
+                                        companies.find(
+                                          (c) =>
+                                            c.id === selectedLine?.company_id,
+                                        )?.station_number_style ?? "jreast"
+                                      }
+                                      prefix={selectedLine?.prefix ?? ""}
+                                      value={nums[0].value}
+                                      threeLetterCode={
+                                        station.three_letter_code
+                                      }
+                                      compact
+                                    />
+                                  ) : (
+                                    <Badge
+                                      variant="light"
+                                      color="gray"
+                                      size="sm"
+                                    >
+                                      —
+                                    </Badge>
+                                  )}
+                                  {isDuplicate && (
+                                    <IconAlertCircle
+                                      size={16}
+                                      color="var(--mantine-color-yellow-6)"
+                                    />
+                                  )}
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Stack gap={2}>
+                                  <Text size="sm" fw={600}>
+                                    {station.primary_name}
                                   </Text>
-                                )}
-                                {station.secondary_name && (
-                                  <Text size="xs" c="dimmed">
-                                    {station.secondary_name}
-                                  </Text>
-                                )}
-                              </Stack>
-                            </Table.Td>
-                            <Table.Td>
-                              <Group gap="xs">
-                                <ActionIcon
-                                  variant="subtle"
-                                  disabled={idx === 0}
-                                  onClick={() =>
-                                    handleReorderStation(station.id, "up")
-                                  }
-                                >
-                                  <IconArrowUp size={16} />
-                                </ActionIcon>
-                                <ActionIcon
-                                  variant="subtle"
-                                  disabled={idx === stationsInLine.length - 1}
-                                  onClick={() =>
-                                    handleReorderStation(station.id, "down")
-                                  }
-                                >
-                                  <IconArrowDown size={16} />
-                                </ActionIcon>
-                                <ActionIcon
-                                  variant="subtle"
-                                  onClick={() => {
-                                    setEditingStation(station);
-                                    openStationModal();
-                                  }}
-                                >
-                                  <IconEdit size={16} />
-                                </ActionIcon>
-                                <ActionIcon
-                                  variant="subtle"
-                                  color="red"
-                                  onClick={() =>
-                                    handleDeleteStation(station.id)
-                                  }
-                                >
-                                  <IconTrash size={16} />
-                                </ActionIcon>
-                              </Group>
-                            </Table.Td>
-                          </Table.Tr>
-                        );
-                      })}
-                    </Table.Tbody>
-                  </Table>
+                                  {station.primary_name_furigana && (
+                                    <Text size="xs" c="dimmed">
+                                      {station.primary_name_furigana}
+                                    </Text>
+                                  )}
+                                  {station.secondary_name && (
+                                    <Text size="xs" c="dimmed">
+                                      {station.secondary_name}
+                                    </Text>
+                                  )}
+                                </Stack>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap="xs">
+                                  <ActionIcon
+                                    variant="subtle"
+                                    disabled={idx === 0}
+                                    onClick={() =>
+                                      handleReorderStation(station.id, "up")
+                                    }
+                                  >
+                                    <IconArrowUp size={16} />
+                                  </ActionIcon>
+                                  <ActionIcon
+                                    variant="subtle"
+                                    disabled={idx === stationsInLine.length - 1}
+                                    onClick={() =>
+                                      handleReorderStation(station.id, "down")
+                                    }
+                                  >
+                                    <IconArrowDown size={16} />
+                                  </ActionIcon>
+                                  <ActionIcon
+                                    variant="subtle"
+                                    onClick={() => {
+                                      setEditingStation(station);
+                                      openStationModal();
+                                    }}
+                                  >
+                                    <IconEdit size={16} />
+                                  </ActionIcon>
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="red"
+                                    onClick={() =>
+                                      handleDeleteStation(station.id)
+                                    }
+                                  >
+                                    <IconTrash size={16} />
+                                  </ActionIcon>
+                                </Group>
+                              </Table.Td>
+                            </Table.Tr>
+                          );
+                        })}
+                      </Table.Tbody>
+                    </Table>
+                  </ScrollArea>
                 </>
               );
             })()

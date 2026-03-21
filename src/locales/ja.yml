@@ -232,6 +232,15 @@ route:
     font-size: 駅名フォントサイズ
     overlap-warning-title: 駅名の重なりを検出
     overlap-warning: 一部の駅名が重なっています。フォントサイズを小さくしてみてください。
+    station-number-mode: 駅番号の表示
+    station-number-none: 非表示
+    station-number-badge: バッジ
+    station-number-dot: ドットを置換
+    name-style: 駅名スタイル
+    name-style-normal: 標準
+    name-style-above: 上（縦書き）
+    name-style-below: 下（縦書き）
+    station-spacing: 駅間隔
 
 footer:
   notice: このサイトはファンサイトです。商標は各鉄道会社に帰属します。当サイトは各鉄道会社とは一切関係ありません。

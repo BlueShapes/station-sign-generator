@@ -12,16 +12,39 @@ import type { Station, Line } from "@/db/types";
 
 export const scale = 2;
 
+export type StationNumberMode = "none" | "badge" | "dot";
+
+export type StationNumberMap = Record<
+  string,
+  { prefix: string; value: string; threeLetterCode?: string | null }
+>;
+
 export interface LineMapRendererProps {
   stations: Station[];
   line: Line;
   isLoop: boolean;
   /** Ignored when isLoop is true; circular lines are always rendered as a circle */
   orientation: "horizontal" | "vertical";
+  /**
+   * Horizontal layout name style (ignored for vertical/loop):
+   *   "normal"  — horizontal names alternating above/below (default)
+   *   "above"   — 縦書き names always above the track
+   *   "below"   — 縦書き names always below the track
+   */
+  nameStyle?: "normal" | "above" | "below";
   /** Map from stationId to the other lines serving that station */
   transits: Record<string, Line[]>;
   /** JP font size for the circular layout only (default: JP_FONT) */
   circularFontSize?: number;
+  /** How to display station numbers in the route map */
+  stationNumberMode?: StationNumberMode;
+  /** Map from stationId to its station number for the current line */
+  stationNumbers?: Record<
+    string,
+    { prefix: string; value: string; threeLetterCode?: string | null }
+  >;
+  /** Override the gap between stations in canvas units (defaults: 90 horizontal, 62 vertical) */
+  stationSpacing?: number;
 }
 
 export const CIRCULAR_FONT_DEFAULT = 9;
@@ -40,6 +63,8 @@ function computeCircularBounds(
   stations: Station[],
   transits: Record<string, Line[]>,
   jpFont: number,
+  stationNumberMode?: StationNumberMode,
+  stationNumbers?: StationNumberMap,
 ): LabelBound[] {
   const enFont = Math.max(5, jpFont - 3);
   const n = stations.length;
@@ -52,8 +77,14 @@ function computeCircularBounds(
     const sinA = Math.sin(angle);
     const isXchg = (transits[station.id]?.length ?? 0) > 0;
     const r = isXchg ? XCHG_R : DOT_R;
+    const snNum = stationNumbers?.[station.id];
+    const dotModeActive = stationNumberMode === "dot" && !!snNum?.value;
+    const effectiveR = dotModeActive
+      ? (Math.abs(cosA) * snBadgeDims(!!snNum!.threeLetterCode).w) / 2 +
+      (Math.abs(sinA) * snBadgeDims(!!snNum!.threeLetterCode).h) / 2
+      : r;
     const stagger = i % 2 === 0 ? 0 : C_STAGGER;
-    const labelR = C_RADIUS + r + C_TICK_LEN + stagger;
+    const labelR = C_RADIUS + effectiveR + C_TICK_LEN + stagger;
     const tickEndX = C_CX + labelR * cosA;
     const tickEndY = C_CY + labelR * sinA;
 
@@ -102,12 +133,34 @@ export function getMapCanvasDimensions(
   isLoop: boolean,
   orientation: "horizontal" | "vertical",
   transits: Record<string, Line[]>,
+  nameStyle?: "normal" | "above" | "below",
+  /** Max vertical extent of the name block in canvas units — used when nameStyle is above/below */
+  maxNameExtent?: number,
+  /** Override station spacing (defaults: H_SPACING for horizontal, V_SPACING for vertical) */
+  stationSpacing?: number,
 ): { w: number; h: number } {
   if (isLoop) return { w: C_SIZE, h: C_SIZE };
   const n = stationCount;
+  const hSpacing = stationSpacing ?? H_SPACING;
+  const vSpacing = stationSpacing ?? V_SPACING;
   if (orientation === "horizontal") {
+    if (nameStyle === "above" || nameStyle === "below") {
+      const ne = maxNameExtent ?? 60;
+      const hasAnyTransit = Object.values(transits).some((t) => t.length > 0);
+      const halfExt =
+        XCHG_R +
+        VN_DOT_GAP +
+        (hasAnyTransit ? BADGE_H + VN_ITEM_GAP : 0) +
+        ne +
+        PADDING;
+      return {
+        w: Math.max(300, PADDING * 2 + (n - 1) * hSpacing),
+        // same canvas height regardless of above/below
+        h: halfExt + XCHG_R + PADDING,
+      };
+    }
     return {
-      w: Math.max(300, PADDING * 2 + (n - 1) * H_SPACING),
+      w: Math.max(300, PADDING * 2 + (n - 1) * hSpacing),
       h: H_HEIGHT,
     };
   }
@@ -121,14 +174,14 @@ export function getMapCanvasDimensions(
     w: Math.max(
       200,
       V_TRACK_X +
-        XCHG_R +
-        10 +
-        badgesWidth(maxBadgeCount) +
-        (maxBadgeCount > 0 ? 8 : 0) +
-        maxNameW +
-        V_RIGHT_MARGIN,
+      XCHG_R +
+      10 +
+      badgesWidth(maxBadgeCount) +
+      (maxBadgeCount > 0 ? 8 : 0) +
+      maxNameW +
+      V_RIGHT_MARGIN,
     ),
-    h: Math.max(200, PADDING * 2 + (n - 1) * V_SPACING),
+    h: Math.max(200, PADDING * 2 + (n - 1) * vSpacing),
   };
 }
 
@@ -137,8 +190,16 @@ export function detectCircularOverlaps(
   stations: Station[],
   transits: Record<string, Line[]>,
   jpFont: number,
+  stationNumberMode?: StationNumberMode,
+  stationNumbers?: StationNumberMap,
 ): string[] {
-  const bounds = computeCircularBounds(stations, transits, jpFont);
+  const bounds = computeCircularBounds(
+    stations,
+    transits,
+    jpFont,
+    stationNumberMode,
+    stationNumbers,
+  );
   const overlapping = new Set<string>();
   for (let i = 0; i < bounds.length; i++) {
     for (let j = i + 1; j < bounds.length; j++) {
@@ -164,7 +225,7 @@ const DOT_R = 7;
 const XCHG_R = 10;
 const TRACK_W = 6;
 const PADDING = 50;
-const JP_FONT = 9;
+export const JP_FONT = 9;
 const EN_FONT = 6;
 const LINE_TITLE_FONT = 12;
 const BADGE_H = 8;
@@ -176,10 +237,25 @@ const H_SPACING = 90;
 const H_HEIGHT = 210;
 const H_TRACK_Y = 105;
 
+// Vertical names (horizontal layout with rotated station names)
+const VN_DOT_GAP = 6; // gap from dot edge to first item
+const VN_ITEM_GAP = 4; // gap between items (badges, SN badge, name)
+
+// Characters that are horizontal glyphs in normal writing and must be
+// rotated 90° clockwise in 縦書き so they read as vertical strokes.
+const VJ_ROTATE_CHARS = new Set(["ー", "〜", "～", "‥", "…"]);
+
 // Vertical
 const V_SPACING = 62;
 const V_TRACK_X = 50;
 const V_RIGHT_MARGIN = 30;
+
+// Station number badge — all proportions derived from the JR East reference.
+// Reference coordinate system: inner badge = 30×30 sign units.
+// Every measurement below is (reference sign-unit value) × SN_S.
+const SN_INNER = 20; // inner badge size in Konva units (= 30 ref × SN_S)
+const SN_S = SN_INNER / 30; // scale factor from 30-unit reference
+const SN_BADGE_GAP = 4; // gap between badge and station name (Konva units)
 
 // Circular
 const C_SIZE = 760;
@@ -197,9 +273,152 @@ function badgesWidth(count: number): number {
   return count > 0 ? count * (BADGE_W + BADGE_GAP) - BADGE_GAP : 0;
 }
 
+// ── Helper: JR East station number badge dimensions ─────────────────────────
+
+// Derived reference measurements (all in Konva units = ref sign-units × SN_S)
+// Reference: outer-pad-x=3, trc-height=12, outer-pad-bot=3, stroke=3,
+//            corner-outer=4, corner-inner=2, trc-font=12.2, trc-y=1,
+//            prefix-font=11, prefix-y=4, value-font=17, value-y=14
+const _snOuterPadX = 3 * SN_S;
+const _snTrcH = 12 * SN_S;
+const _snOuterPadBot = 3 * SN_S;
+const _snStroke = 3 * SN_S;
+const _snCornerOuter = 4 * SN_S;
+const _snCornerInner = 2 * SN_S;
+const _snTrcFont = 12.2 * SN_S;
+const _snTrcY = 1 * SN_S;
+const _snPrefixFont = 11 * SN_S;
+const _snPrefixY = 4 * SN_S;
+const _snValueFont = 17 * SN_S;
+const _snValueY = 14 * SN_S;
+
+function snBadgeDims(hasTrc: boolean): { w: number; h: number } {
+  if (hasTrc) {
+    return {
+      w: SN_INNER + _snOuterPadX * 2, // 36 ref units
+      h: _snTrcH + SN_INNER + _snOuterPadBot, // 45 ref units
+    };
+  }
+  return { w: SN_INNER, h: SN_INNER };
+}
+
+/** Renders a JR East style station number badge at (x, y) top-left corner */
+function SnBadge({
+  x,
+  y,
+  color,
+  prefix,
+  value,
+  trc,
+}: {
+  x: number;
+  y: number;
+  color: string;
+  prefix: string;
+  value: string;
+  trc?: string | null;
+}) {
+  const hasTrc = !!trc;
+  const outerW = SN_INNER + _snOuterPadX * 2;
+  const outerH = _snTrcH + SN_INNER + _snOuterPadBot;
+  // Inner square top-left
+  const ix = hasTrc ? x + _snOuterPadX : x;
+  const iy = hasTrc ? y + _snTrcH : y;
+  const font = "HindSemiBold, Arial, sans-serif";
+
+  return (
+    <Fragment>
+      {hasTrc && (
+        <>
+          {/* Outer white frame */}
+          <Rect
+            x={x}
+            y={y}
+            width={outerW}
+            height={outerH}
+            fill="white"
+            stroke="black"
+            strokeWidth={_snStroke}
+            cornerRadius={_snCornerOuter}
+          />
+          {/* Black TRC strip — extended by _snCornerInner so the inner
+              square's rounded top corners sit on black with no white gap */}
+          <Rect
+            x={x}
+            y={y}
+            width={outerW}
+            height={_snTrcH + _snCornerInner}
+            fill="black"
+            cornerRadius={[_snCornerOuter, _snCornerOuter, 0, 0]}
+          />
+          {/* TRC text: 1 ref unit below outer top, centered over inner width */}
+          <Text
+            x={ix}
+            y={y + _snTrcY}
+            width={SN_INNER}
+            text={trc!}
+            fontSize={_snTrcFont}
+            fontFamily={font}
+            fontStyle="bold"
+            fill="white"
+            align="center"
+          />
+        </>
+      )}
+      {/* Inner white square with colored outline.
+          When hasTrc: top corners rounded (backed by the extended TRC strip),
+          bottom corners concentric with outer frame (outerCorner − pad).
+          When no TRC: uniform _snCornerInner. */}
+      <Rect
+        x={ix}
+        y={iy}
+        width={SN_INNER}
+        height={SN_INNER}
+        fill="white"
+        stroke={color}
+        strokeWidth={_snStroke}
+        cornerRadius={
+          hasTrc
+            ? [
+              _snCornerInner,
+              _snCornerInner,
+              _snCornerOuter - _snOuterPadX,
+              _snCornerOuter - _snOuterPadX,
+            ]
+            : _snCornerInner
+        }
+      />
+      {/* Prefix: 11 ref-unit font, 4 ref units from inner top (textBaseline=top) */}
+      <Text
+        x={ix}
+        y={iy + _snPrefixY}
+        width={SN_INNER}
+        text={prefix}
+        fontSize={_snPrefixFont}
+        fontFamily={font}
+        fontStyle="bold"
+        fill="black"
+        align="center"
+      />
+      {/* Value: 17 ref-unit font, 14 ref units from inner top (textBaseline=top) */}
+      <Text
+        x={ix}
+        y={iy + _snValueY}
+        width={SN_INNER}
+        text={value}
+        fontSize={_snValueFont}
+        fontFamily={font}
+        fontStyle="bold"
+        fill="black"
+        align="center"
+      />
+    </Fragment>
+  );
+}
+
 // ── Helper: measure rendered text width via Konva ───────────────────────────
 
-function measureTextWidth(
+export function measureTextWidth(
   text: string,
   fontSize: number,
   fontStyle = "normal",
@@ -217,9 +436,23 @@ function measureTextWidth(
 
 const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
   (
-    { stations, line, isLoop, orientation, transits, circularFontSize },
+    {
+      stations,
+      line,
+      isLoop,
+      orientation,
+      nameStyle = "normal",
+      transits,
+      circularFontSize,
+      stationNumberMode = "none",
+      stationNumbers = {},
+      stationSpacing,
+    },
     ref,
   ) => {
+    const hSpacing = stationSpacing ?? H_SPACING;
+    const vSpacing = stationSpacing ?? V_SPACING;
+
     const [stageKey, setStageKey] = useState(0);
 
     // Re-render once fonts are ready (same pattern as JrEastSign)
@@ -230,7 +463,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     // Also re-key when data changes so Konva re-renders correctly
     useEffect(() => {
       setStageKey((k) => k + 1);
-    }, [stations, line.id, orientation, isLoop]);
+    }, [stations, line.id, orientation, nameStyle, isLoop]);
 
     const lc = line.line_color;
     const n = stations.length;
@@ -253,9 +486,34 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         const isXchg = (transits[station.id]?.length ?? 0) > 0;
         const r = isXchg ? XCHG_R : DOT_R;
 
+        // In dot-replace mode the badge is pushed outward from the dot so its
+        // inner edge touches the track circle.  Use the full badge dimension as
+        // the effective radius so labels are anchored past the outer edge.
+        const snNum = stationNumbers[station.id];
+        const dotModeActive = stationNumberMode === "dot" && !!snNum?.value;
+        const _snDims = dotModeActive
+          ? snBadgeDims(!!snNum!.threeLetterCode)
+          : null;
+        // Radial extent of the (upright) badge in the outward direction.
+        // For a rectangle this equals |cosA|×w/2 + |sinA|×h/2 — largest at
+        // diagonal angles (~45°) and smallest at purely axial angles.
+        const snDotPush = 0;
+        const dotEffectiveR = dotModeActive
+          ? (Math.abs(cosA) * _snDims!.w) / 2 +
+          (Math.abs(sinA) * _snDims!.h) / 2
+          : r;
+        // In badge mode the badge sits beside the text, centred at tickEnd.
+        // Its radial extent from tickEnd must be added so labels start outside it.
+        const badgeModeActive = stationNumberMode === "badge" && !!snNum?.value;
+        const _badgeDims = badgeModeActive
+          ? snBadgeDims(!!snNum!.threeLetterCode)
+          : null;
+        const badgeExtraPush = 0;
+
         // Alternate label radii to stagger adjacent stations and prevent overlap
         const stagger = i % 2 === 0 ? 0 : C_STAGGER;
-        const labelR = C_RADIUS + r + C_TICK_LEN + stagger;
+        const labelR =
+          C_RADIUS + dotEffectiveR + C_TICK_LEN + stagger + badgeExtraPush;
         const tickEndX = C_CX + labelR * cosA;
         const tickEndY = C_CY + labelR * sinA;
 
@@ -323,17 +581,34 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             })}
 
             {/* Station dots */}
-            {stationData.map((sd, i) => (
-              <Circle
-                key={`dot-${i}`}
-                x={sd.dotX}
-                y={sd.dotY}
-                radius={sd.r}
-                fill="white"
-                stroke={lc}
-                strokeWidth={sd.isXchg ? 3 : 2}
-              />
-            ))}
+            {stationData.map((sd, i) => {
+              const snNum = stationNumbers[stations[i].id];
+              const showSnDot = stationNumberMode === "dot" && !!snNum?.value;
+              const snDotDims = showSnDot
+                ? snBadgeDims(!!snNum!.threeLetterCode)
+                : null;
+              return showSnDot && snDotDims ? (
+                <SnBadge
+                  key={`dot-${i}`}
+                  x={sd.dotX - snDotDims.w / 2}
+                  y={sd.dotY - snDotDims.h / 2}
+                  color={lc}
+                  prefix={snNum!.prefix}
+                  value={snNum!.value}
+                  trc={snNum!.threeLetterCode}
+                />
+              ) : (
+                <Circle
+                  key={`dot-${i}`}
+                  x={sd.dotX}
+                  y={sd.dotY}
+                  radius={sd.r}
+                  fill="white"
+                  stroke={lc}
+                  strokeWidth={sd.isXchg ? 3 : 2}
+                />
+              );
+            })}
 
             {/* Labels — rendered last so they sit on top */}
             {stations.map((station, i) => {
@@ -341,6 +616,13 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const stTransits = transits[station.id] ?? [];
               const nBadges = stTransits.length;
               const bw = badgesWidth(nBadges);
+
+              const snNum = stationNumbers[station.id];
+              const showSnBadge =
+                stationNumberMode === "badge" && !!snNum?.value;
+              const snDims = snNum
+                ? snBadgeDims(!!snNum.threeLetterCode)
+                : snBadgeDims(false);
 
               const jpW = measureTextWidth(station.primary_name, cJpFont);
               const enW = station.secondary_name
@@ -356,45 +638,111 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 enX: number,
                 enY: number,
                 bRowX: number,
-                bRowY: number;
+                bRowY: number,
+                snBadgeX: number,
+                snBadgeY: number;
 
               if (sd.isRight) {
-                // Text to the right, vertically centered on tick end
-                jpX = sd.tickEndX + C_LABEL_GAP;
+                // SN badge goes between tick and JP text.
+                // For diagonal right stations (upper/lower) shift labels right
+                // proportionally to |sinA| so they clear the badge visually.
+                const rightDiagShift = Math.abs(sd.sinA) * 10;
+                snBadgeX = sd.tickEndX + C_LABEL_GAP + rightDiagShift;
+                snBadgeY = sd.tickEndY - snDims.h / 2;
+                const snShift = showSnBadge ? snDims.w + SN_BADGE_GAP : 0;
+                jpX = sd.tickEndX + C_LABEL_GAP + rightDiagShift + snShift;
                 jpY = sd.tickEndY - totalLabelH / 2;
                 enX = jpX;
                 enY = jpY + cJpFont + 2;
                 bRowX = jpX;
                 bRowY = enY + enBlockH;
               } else if (sd.isLeft) {
-                // Text to the left, right-aligned against tick end
-                jpX = sd.tickEndX - jpW - C_LABEL_GAP;
-                jpY = sd.tickEndY - totalLabelH / 2;
-                enX = sd.tickEndX - enW - C_LABEL_GAP;
-                enY = jpY + cJpFont + 2;
-                bRowX = sd.tickEndX - bw - C_LABEL_GAP;
-                bRowY = enY + enBlockH;
+                // For diagonal left stations (upper/lower) shift labels left
+                // proportionally to |sinA| so they clear the badge visually.
+                const leftDiagShift = Math.abs(sd.sinA) * 10;
+                const blockRight = sd.tickEndX - C_LABEL_GAP - leftDiagShift;
+                if (showSnBadge) {
+                  // Badge to the right of all text, right edge flush at blockRight.
+                  // Text lines are right-aligned to the left edge of the badge.
+                  snBadgeX = blockRight - snDims.w;
+                  snBadgeY = sd.tickEndY - snDims.h / 2;
+                  const textRight = snBadgeX - SN_BADGE_GAP;
+                  jpX = textRight - jpW;
+                  jpY = sd.tickEndY - totalLabelH / 2;
+                  enX = textRight - enW;
+                  enY = jpY + cJpFont + 2;
+                  bRowX = textRight - bw;
+                  bRowY = enY + enBlockH;
+                } else {
+                  jpX = blockRight - jpW;
+                  jpY = sd.tickEndY - totalLabelH / 2;
+                  snBadgeX = jpX - snDims.w - SN_BADGE_GAP;
+                  snBadgeY = sd.tickEndY - snDims.h / 2;
+                  enX = blockRight - enW;
+                  enY = jpY + cJpFont + 2;
+                  bRowX = blockRight - bw;
+                  bRowY = enY + enBlockH;
+                }
               } else if (sd.isTop) {
-                // Text above tick end (further from center = lower y)
-                // Reading order top→bottom: JP, EN, badges (badges closest to dot)
-                jpY = sd.tickEndY - totalLabelH - C_LABEL_GAP;
-                jpX = sd.tickEndX - jpW / 2;
-                enX = sd.tickEndX - enW / 2;
-                enY = jpY + cJpFont + 2;
-                bRowX = sd.tickEndX - bw / 2;
-                bRowY = enY + enBlockH;
+                if (showSnBadge) {
+                  // Stack top→bottom: JP, EN, transfers, gap, SN badge (closest to tick)
+                  // All elements centred on tickEndX.
+                  const totalH =
+                    cJpFont + enBlockH + badgeBlockH + 2 + snDims.h;
+                  jpY = sd.tickEndY - C_LABEL_GAP - totalH;
+                  jpX = sd.tickEndX - jpW / 2;
+                  enX = sd.tickEndX - enW / 2;
+                  enY = jpY + cJpFont + 2;
+                  bRowX = sd.tickEndX - bw / 2;
+                  bRowY = enY + enBlockH;
+                  snBadgeX = sd.tickEndX - snDims.w / 2;
+                  snBadgeY = bRowY + badgeBlockH + 2;
+                } else {
+                  jpY = sd.tickEndY - totalLabelH - C_LABEL_GAP;
+                  jpX = sd.tickEndX - jpW / 2;
+                  snBadgeX = jpX - snDims.w - SN_BADGE_GAP;
+                  snBadgeY = jpY + (cJpFont - snDims.h) / 2;
+                  enX = sd.tickEndX - enW / 2;
+                  enY = jpY + cJpFont + 2;
+                  bRowX = sd.tickEndX - bw / 2;
+                  bRowY = enY + enBlockH;
+                }
               } else {
-                // Bottom: text below tick end
-                jpY = sd.tickEndY + C_LABEL_GAP;
-                jpX = sd.tickEndX - jpW / 2;
-                enX = sd.tickEndX - enW / 2;
-                enY = jpY + cJpFont + 2;
-                bRowX = sd.tickEndX - bw / 2;
-                bRowY = enY + enBlockH;
+                if (showSnBadge) {
+                  // Stack top→bottom: SN badge (closest to tick), gap, JP, EN, transfers
+                  // All elements centred on tickEndX.
+                  snBadgeX = sd.tickEndX - snDims.w / 2;
+                  snBadgeY = sd.tickEndY + C_LABEL_GAP;
+                  jpY = snBadgeY + snDims.h + 2;
+                  jpX = sd.tickEndX - jpW / 2;
+                  enX = sd.tickEndX - enW / 2;
+                  enY = jpY + cJpFont + 2;
+                  bRowX = sd.tickEndX - bw / 2;
+                  bRowY = enY + enBlockH;
+                } else {
+                  jpY = sd.tickEndY + C_LABEL_GAP;
+                  jpX = sd.tickEndX - jpW / 2;
+                  snBadgeX = jpX - snDims.w - SN_BADGE_GAP;
+                  snBadgeY = jpY + (cJpFont - snDims.h) / 2;
+                  enX = sd.tickEndX - enW / 2;
+                  enY = jpY + cJpFont + 2;
+                  bRowX = sd.tickEndX - bw / 2;
+                  bRowY = enY + enBlockH;
+                }
               }
 
               return (
                 <Fragment key={`label-${station.id}`}>
+                  {showSnBadge && snNum && (
+                    <SnBadge
+                      x={snBadgeX}
+                      y={snBadgeY}
+                      color={lc}
+                      prefix={snNum.prefix}
+                      value={snNum.value}
+                      trc={snNum.threeLetterCode}
+                    />
+                  )}
                   <Text
                     x={jpX}
                     y={jpY}
@@ -447,10 +795,282 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       );
     }
 
+    // ── Horizontal layout — 縦書き names (above or below track) ──────────────
+
+    if (
+      orientation === "horizontal" &&
+      (nameStyle === "above" || nameStyle === "below")
+    ) {
+      // EN name widths (for rotation=-90 sizing)
+      const enWidths = stations.map((s) =>
+        s.secondary_name ? measureTextWidth(s.secondary_name, EN_FONT) : 0,
+      );
+      // JP 縦書き text height: each character is JP_FONT tall, +1px gap between chars
+      const jpTextHeights = stations.map((s) => {
+        const n = [...s.primary_name].length;
+        return n > 0 ? n * (JP_FONT + 1) - 1 : 0;
+      });
+      const maxJpTextH = Math.max(1, ...jpTextHeights);
+      // EN text is placed to the right of the JP block, so its width does not
+      // contribute to the vertical (halfExt) calculation.
+
+      const hasAnyTransit = Object.values(transits).some((t) => t.length > 0);
+      const hasAnySnBadge =
+        stationNumberMode === "badge" &&
+        stations.some((s) => !!stationNumbers[s.id]?.value);
+      const maxSnH = hasAnySnBadge
+        ? Math.max(
+          ...stations.map((s) => {
+            const snNum = stationNumbers[s.id];
+            return snNum ? snBadgeDims(!!snNum.threeLetterCode).h : 0;
+          }),
+        )
+        : 0;
+
+      // halfExt: distance from track centre to outermost element + padding
+      const halfExt =
+        XCHG_R +
+        VN_DOT_GAP +
+        (hasAnyTransit ? BADGE_H + VN_ITEM_GAP : 0) +
+        (hasAnySnBadge ? maxSnH + VN_ITEM_GAP : 0) +
+        maxJpTextH +
+        PADDING;
+
+      // "above": track sits at the bottom of the name area; "below": track at top
+      const vnTrackY = nameStyle === "above" ? halfExt : XCHG_R + PADDING;
+      const vnCanvasH =
+        nameStyle === "above"
+          ? halfExt + XCHG_R + PADDING
+          : XCHG_R + PADDING + halfExt;
+      const vnCanvasW = Math.max(300, PADDING * 2 + (n - 1) * hSpacing);
+      // d: direction away from track (+1 = down for "below", -1 = up for "above")
+      const d = nameStyle === "above" ? -1 : 1;
+
+      return (
+        <Stage
+          ref={ref}
+          key={stageKey}
+          width={vnCanvasW * scale}
+          height={vnCanvasH * scale}
+          scaleX={scale}
+          scaleY={scale}
+          listening={false}
+        >
+          <Layer>
+            <Rect
+              x={0}
+              y={0}
+              width={vnCanvasW}
+              height={vnCanvasH}
+              fill="white"
+            />
+
+            {/* Line title */}
+            <Text
+              x={PADDING}
+              y={8}
+              text={line.name}
+              fontSize={LINE_TITLE_FONT}
+              fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+              fontStyle="bold"
+              fill={lc}
+            />
+
+            {/* Track */}
+            <KonvaLine
+              points={[
+                PADDING,
+                vnTrackY,
+                PADDING + (n - 1) * hSpacing,
+                vnTrackY,
+              ]}
+              stroke={lc}
+              strokeWidth={TRACK_W}
+              lineCap="round"
+            />
+
+            {/* Stations */}
+            {stations.map((station, i) => {
+              const x = PADDING + i * hSpacing;
+              const isXchg = (transits[station.id]?.length ?? 0) > 0;
+              const r = isXchg ? XCHG_R : DOT_R;
+              const stTransits = transits[station.id] ?? [];
+              const nBadges = stTransits.length;
+              const bw = badgesWidth(nBadges);
+
+              const snNum = stationNumbers[station.id];
+              const showSnBadge =
+                stationNumberMode === "badge" && !!snNum?.value;
+              const showSnDot = stationNumberMode === "dot" && !!snNum?.value;
+              const snDims = snNum
+                ? snBadgeDims(!!snNum.threeLetterCode)
+                : snBadgeDims(false);
+
+              const jpTextH = jpTextHeights[i];
+              const enW = enWidths[i];
+
+              // Walk outward from dot edge; cur is the inner boundary of the
+              // next item (decreases when going up, increases when going down).
+              // In dot mode the badge may be taller than the circle radius, so
+              // use the actual badge half-height as the starting offset.
+              const dotEdge = showSnDot ? Math.max(r, snDims.h / 2) : r;
+              let cur = vnTrackY + d * dotEdge + d * VN_DOT_GAP;
+
+              // Transit badges row (horizontal, centered on x, upright)
+              const badgeRowY = d === -1 ? cur - BADGE_H : cur;
+              if (nBadges > 0) cur += d * (BADGE_H + VN_ITEM_GAP);
+
+              // SN badge (upright, centered on x)
+              const snBadgeY = d === -1 ? cur - snDims.h : cur;
+              if (showSnBadge) cur += d * (snDims.h + VN_ITEM_GAP);
+
+              // JP 縦書き block
+              // For "above" (d=-1): bottom of block = cur, top = cur - jpTextH
+              // For "below" (d=+1): top of block = cur, bottom = cur + jpTextH
+              const jpTopY = d === -1 ? cur - jpTextH : cur;
+
+              // EN text (rotation=-90°) sits to the RIGHT of the JP block,
+              // vertically centred on it — does not affect vertical extent.
+              const enX = x + JP_FONT / 2 + 2 + EN_FONT / 2;
+              // "above": EN bottom-edge aligns with JP block bottom (closest to track)
+              // "below": EN top-edge aligns with JP block top (closest to track)
+              const enCenterY =
+                d === -1 ? jpTopY + jpTextH - enW / 2 : jpTopY + enW / 2;
+
+              const snDotDims =
+                showSnDot && snNum
+                  ? snBadgeDims(!!snNum.threeLetterCode)
+                  : null;
+
+              const jpChars = [...station.primary_name];
+
+              return (
+                <Fragment key={station.id}>
+                  {/* Dot or SN dot badge */}
+                  {showSnDot && snDotDims ? (
+                    <SnBadge
+                      x={x - snDotDims.w / 2}
+                      y={vnTrackY - snDotDims.h / 2}
+                      color={lc}
+                      prefix={snNum!.prefix}
+                      value={snNum!.value}
+                      trc={snNum!.threeLetterCode}
+                    />
+                  ) : (
+                    <Circle
+                      x={x}
+                      y={vnTrackY}
+                      radius={r}
+                      fill="white"
+                      stroke={lc}
+                      strokeWidth={isXchg ? 3 : 2}
+                    />
+                  )}
+
+                  {/* Transit badges — horizontal row, centered on x */}
+                  {stTransits.map((tl, ti) => {
+                    const bx = x - bw / 2 + ti * (BADGE_W + BADGE_GAP);
+                    return (
+                      <Fragment key={tl.id}>
+                        <Rect
+                          x={bx}
+                          y={badgeRowY}
+                          width={BADGE_W}
+                          height={BADGE_H}
+                          fill={tl.line_color}
+                          cornerRadius={2}
+                        />
+                        <Text
+                          x={bx}
+                          y={badgeRowY + 1}
+                          text={tl.prefix}
+                          fontSize={6}
+                          fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+                          fontStyle="bold"
+                          fill="white"
+                          align="center"
+                          width={BADGE_W}
+                        />
+                      </Fragment>
+                    );
+                  })}
+
+                  {/* SN badge (badge mode) — upright, centered on x */}
+                  {showSnBadge && snNum && (
+                    <SnBadge
+                      x={x - snDims.w / 2}
+                      y={snBadgeY}
+                      color={lc}
+                      prefix={snNum.prefix}
+                      value={snNum.value}
+                      trc={snNum.threeLetterCode}
+                    />
+                  )}
+
+                  {/* JP name — 縦書き: each character stacked top-to-bottom.
+                      Horizontal glyphs (ー, 〜, …) are rotated 90° around
+                      their cell centre so they render as vertical strokes. */}
+                  {jpChars.map((char, ci) => {
+                    const charTopY = jpTopY + ci * (JP_FONT + 1);
+                    if (VJ_ROTATE_CHARS.has(char)) {
+                      return (
+                        <Text
+                          key={ci}
+                          x={x}
+                          y={charTopY + JP_FONT / 2}
+                          offsetX={JP_FONT / 2}
+                          offsetY={JP_FONT / 2}
+                          rotation={90}
+                          text={char}
+                          fontSize={JP_FONT}
+                          fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+                          fill="#222"
+                          width={JP_FONT}
+                          align="center"
+                        />
+                      );
+                    }
+                    return (
+                      <Text
+                        key={ci}
+                        x={x - JP_FONT / 2}
+                        y={charTopY}
+                        text={char}
+                        fontSize={JP_FONT}
+                        fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+                        fill="#222"
+                        width={JP_FONT}
+                        align="center"
+                      />
+                    );
+                  })}
+
+                  {/* EN name — rotation 90° (reads top-to-bottom), to the right of JP 縦書き block */}
+                  {station.secondary_name && (
+                    <Text
+                      x={enX}
+                      y={enCenterY}
+                      offsetX={enW / 2}
+                      offsetY={EN_FONT / 2}
+                      rotation={90}
+                      text={station.secondary_name}
+                      fontSize={EN_FONT}
+                      fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+                      fill="#666"
+                    />
+                  )}
+                </Fragment>
+              );
+            })}
+          </Layer>
+        </Stage>
+      );
+    }
+
     // ── Horizontal linear layout ──────────────────────────────────────────
 
     if (orientation === "horizontal") {
-      const canvasW = Math.max(300, PADDING * 2 + (n - 1) * H_SPACING);
+      const canvasW = Math.max(300, PADDING * 2 + (n - 1) * hSpacing);
       const canvasH = H_HEIGHT;
 
       return (
@@ -482,7 +1102,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               points={[
                 PADDING,
                 H_TRACK_Y,
-                PADDING + (n - 1) * H_SPACING,
+                PADDING + (n - 1) * hSpacing,
                 H_TRACK_Y,
               ]}
               stroke={lc}
@@ -492,13 +1112,18 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
             {/* Stations */}
             {stations.map((station, i) => {
-              const x = PADDING + i * H_SPACING;
+              const x = PADDING + i * hSpacing;
               const isXchg = (transits[station.id]?.length ?? 0) > 0;
               const r = isXchg ? XCHG_R : DOT_R;
               const above = i % 2 === 0;
               const stTransits = transits[station.id] ?? [];
               const nBadges = stTransits.length;
               const bw = badgesWidth(nBadges);
+
+              const snNum = stationNumbers[station.id];
+              const showSnBadge =
+                stationNumberMode === "badge" && !!snNum?.value;
+              const showSnDot = stationNumberMode === "dot" && !!snNum?.value;
 
               // Measure actual text widths to center without wrapping
               const jpW = measureTextWidth(station.primary_name, JP_FONT);
@@ -528,16 +1153,52 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 jpNameY = enNameY + enH;
               }
 
+              // SN badge: inline to the left of the JP name
+              const snDims = snNum
+                ? snBadgeDims(!!snNum.threeLetterCode)
+                : snBadgeDims(false);
+              const snBadgeX = x - jpW / 2 - snDims.w - SN_BADGE_GAP;
+              const snBadgeY = jpNameY + (JP_FONT - snDims.h) / 2;
+
+              // Dot replacement: center badge on the dot position
+              const snDotDims =
+                showSnDot && snNum
+                  ? snBadgeDims(!!snNum.threeLetterCode)
+                  : null;
+
               return (
                 <Fragment key={station.id}>
-                  <Circle
-                    x={x}
-                    y={H_TRACK_Y}
-                    radius={r}
-                    fill="white"
-                    stroke={lc}
-                    strokeWidth={isXchg ? 3 : 2}
-                  />
+                  {showSnDot && snDotDims ? (
+                    <SnBadge
+                      x={x - snDotDims.w / 2}
+                      y={H_TRACK_Y - snDotDims.h / 2}
+                      color={lc}
+                      prefix={snNum!.prefix}
+                      value={snNum!.value}
+                      trc={snNum!.threeLetterCode}
+                    />
+                  ) : (
+                    <Circle
+                      x={x}
+                      y={H_TRACK_Y}
+                      radius={r}
+                      fill="white"
+                      stroke={lc}
+                      strokeWidth={isXchg ? 3 : 2}
+                    />
+                  )}
+
+                  {/* SN badge inline to the left of the JP name */}
+                  {showSnBadge && snNum && (
+                    <SnBadge
+                      x={snBadgeX}
+                      y={snBadgeY}
+                      color={lc}
+                      prefix={snNum.prefix}
+                      value={snNum.value}
+                      trc={snNum.threeLetterCode}
+                    />
+                  )}
 
                   {/* Primary name — centered on station x, no width constraint so no wrapping */}
                   <Text
@@ -607,14 +1268,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     const canvasW = Math.max(
       200,
       V_TRACK_X +
-        XCHG_R +
-        10 +
-        badgesWidth(maxBadgeCount) +
-        (maxBadgeCount > 0 ? 8 : 0) +
-        maxNameW +
-        V_RIGHT_MARGIN,
+      XCHG_R +
+      10 +
+      badgesWidth(maxBadgeCount) +
+      (maxBadgeCount > 0 ? 8 : 0) +
+      maxNameW +
+      V_RIGHT_MARGIN,
     );
-    const canvasH = Math.max(200, PADDING * 2 + (n - 1) * V_SPACING);
+    const canvasH = Math.max(200, PADDING * 2 + (n - 1) * vSpacing);
 
     return (
       <Stage
@@ -646,7 +1307,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               V_TRACK_X,
               PADDING,
               V_TRACK_X,
-              PADDING + (n - 1) * V_SPACING,
+              PADDING + (n - 1) * vSpacing,
             ]}
             stroke={lc}
             strokeWidth={TRACK_W}
@@ -655,31 +1316,57 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
           {/* Stations */}
           {stations.map((station, i) => {
-            const y = PADDING + i * V_SPACING;
+            const y = PADDING + i * vSpacing;
             const isXchg = (transits[station.id]?.length ?? 0) > 0;
             const r = isXchg ? XCHG_R : DOT_R;
             const stTransits = transits[station.id] ?? [];
             const nBadges = stTransits.length;
 
+            const snNum = stationNumbers[station.id];
+            const showSnBadge = stationNumberMode === "badge" && !!snNum?.value;
+            const showSnDot = stationNumberMode === "dot" && !!snNum?.value;
+            const snDims = snNum
+              ? snBadgeDims(!!snNum.threeLetterCode)
+              : snBadgeDims(false);
+
             // Badges start right after the dot
             const badgesStartX = V_TRACK_X + r + 10;
-            // Name starts after badges
-            const nameX =
+            const afterBadgesX =
               badgesStartX + badgesWidth(nBadges) + (nBadges > 0 ? 6 : 0);
+            // SN badge (if any) goes between transit badges and station name
+            const snBadgeX = afterBadgesX;
+            const snExtraW = showSnBadge ? snDims.w + SN_BADGE_GAP : 0;
+            // Name starts after SN badge
+            const nameX = afterBadgesX + snExtraW;
 
             const jpNameY = y - JP_FONT / 2;
             const enNameY = jpNameY + JP_FONT + 1;
 
+            // Dot replacement: center badge on the dot position
+            const snDotDims =
+              showSnDot && snNum ? snBadgeDims(!!snNum.threeLetterCode) : null;
+
             return (
               <Fragment key={station.id}>
-                <Circle
-                  x={V_TRACK_X}
-                  y={y}
-                  radius={r}
-                  fill="white"
-                  stroke={lc}
-                  strokeWidth={isXchg ? 3 : 2}
-                />
+                {showSnDot && snDotDims ? (
+                  <SnBadge
+                    x={V_TRACK_X - snDotDims.w / 2}
+                    y={y - snDotDims.h / 2}
+                    color={lc}
+                    prefix={snNum!.prefix}
+                    value={snNum!.value}
+                    trc={snNum!.threeLetterCode}
+                  />
+                ) : (
+                  <Circle
+                    x={V_TRACK_X}
+                    y={y}
+                    radius={r}
+                    fill="white"
+                    stroke={lc}
+                    strokeWidth={isXchg ? 3 : 2}
+                  />
+                )}
 
                 {/* Transit badges */}
                 {stTransits.map((tl, ti) => {
@@ -708,6 +1395,18 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     </Fragment>
                   );
                 })}
+
+                {/* Station number badge */}
+                {showSnBadge && snNum && (
+                  <SnBadge
+                    x={snBadgeX}
+                    y={y - snDims.h / 2}
+                    color={lc}
+                    prefix={snNum.prefix}
+                    value={snNum.value}
+                    trc={snNum.threeLetterCode}
+                  />
+                )}
 
                 {/* Primary name */}
                 <Text
