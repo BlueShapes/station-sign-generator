@@ -37,7 +37,7 @@ input:
     base-color: "Company Color"
     line-color: "Line Color"
     local-lines: "Lines"
-    local-lines-prefix: "Prefix"
+    local-lines-prefix: "Line Name Shorthand"
     local-lines-add: "Add Line"
     local-lines-empty: "Add lines above to select a prefix here"
     lstation: "Left Station Name"
@@ -179,7 +179,7 @@ route:
     edit: Edit Line
     name: Line Name
     color: Line Color
-    prefix: Prefix
+    prefix: Line Name Shorthand
     priority: Priority
     company: Company
     is-loop: Loop Line (circular route)
@@ -241,6 +241,13 @@ route:
     name-style-above: Above
     name-style-below: Below
     station-spacing: Station Spacing
+    primary-lang: Primary Language
+    secondary-lang: Secondary Language
+    show-secondary-lang: Show
+    lang-1st: 1st name
+    lang-2nd: 2nd name
+    lang-3rd: 3rd name
+    lang-4th: 4th name
 
 footer:
-  notice: This is a fan-made website. All trademarks are the property of their respective railway companies. This site is not affiliated with or endorsed by any railway company.
+  notice: This is a fan-made website. All trademarks are the property of their respective railway companies. This site is not affiliated with or endorsed by any railway company. Sample data and initial values may contain fake values.

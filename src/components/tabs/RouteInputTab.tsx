@@ -28,6 +28,7 @@ import {
   Text,
   SegmentedControl,
   Slider,
+  Switch,
 } from "@mantine/core";
 import {
   IconDownload,
@@ -78,6 +79,7 @@ import LineMapRenderer, {
   getMapCanvasDimensions,
   type StationNumberMode,
   type StationNumberMap,
+  type StationNameField,
 } from "@/components/signs/LineMapRenderer";
 
 type SignStyle = "jreast" | "jrwest" | "jrwestlarge";
@@ -162,6 +164,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     "normal" | "above" | "below"
   >("normal");
   const [mapStationSpacing, setMapStationSpacing] = useState(90);
+  const [mapPrimaryLang, setMapPrimaryLang] =
+    useState<StationNameField>("primary_name");
+  const [mapSecondaryLang, setMapSecondaryLang] =
+    useState<StationNameField>("secondary_name");
+  const [mapShowSecondaryLang, setMapShowSecondaryLang] = useState(true);
 
   // Load lines when db becomes available
   useEffect(() => {
@@ -277,8 +284,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     const centerColors =
       centerSquareLineIds.length > 0
         ? (centerSquareLineIds
-          .map((id) => allStationLines.find((l) => l.id === id)?.line_color)
-          .filter(Boolean) as string[])
+            .map((id) => allStationLines.find((l) => l.id === id)?.line_color)
+            .filter(Boolean) as string[])
         : line
           ? [line.line_color]
           : [];
@@ -300,35 +307,35 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       })),
       left: (flipped ? rightStation : leftStation)
         ? [
-          {
-            id: (flipped ? rightStation : leftStation)!.id,
-            primaryName: (flipped ? rightStation : leftStation)!.primary_name,
-            primaryNameFurigana:
-              (flipped ? rightStation : leftStation)!.primary_name_furigana ??
-              "",
-            secondaryName:
-              (flipped ? rightStation : leftStation)!.secondary_name ?? "",
-            numberPrimaryPrefix: linePrefix,
-            numberPrimaryValue:
-              (flipped ? rightNums : leftNums)[0]?.value ?? "",
-          },
-        ]
+            {
+              id: (flipped ? rightStation : leftStation)!.id,
+              primaryName: (flipped ? rightStation : leftStation)!.primary_name,
+              primaryNameFurigana:
+                (flipped ? rightStation : leftStation)!.primary_name_furigana ??
+                "",
+              secondaryName:
+                (flipped ? rightStation : leftStation)!.secondary_name ?? "",
+              numberPrimaryPrefix: linePrefix,
+              numberPrimaryValue:
+                (flipped ? rightNums : leftNums)[0]?.value ?? "",
+            },
+          ]
         : [],
       right: (flipped ? leftStation : rightStation)
         ? [
-          {
-            id: (flipped ? leftStation : rightStation)!.id,
-            primaryName: (flipped ? leftStation : rightStation)!.primary_name,
-            primaryNameFurigana:
-              (flipped ? leftStation : rightStation)!.primary_name_furigana ??
-              "",
-            secondaryName:
-              (flipped ? leftStation : rightStation)!.secondary_name ?? "",
-            numberPrimaryPrefix: linePrefix,
-            numberPrimaryValue:
-              (flipped ? leftNums : rightNums)[0]?.value ?? "",
-          },
-        ]
+            {
+              id: (flipped ? leftStation : rightStation)!.id,
+              primaryName: (flipped ? leftStation : rightStation)!.primary_name,
+              primaryNameFurigana:
+                (flipped ? leftStation : rightStation)!.primary_name_furigana ??
+                "",
+              secondaryName:
+                (flipped ? leftStation : rightStation)!.secondary_name ?? "",
+              numberPrimaryPrefix: linePrefix,
+              numberPrimaryValue:
+                (flipped ? leftNums : rightNums)[0]?.value ?? "",
+            },
+          ]
         : [],
       baseColor,
       stationNumberStyle,
@@ -447,10 +454,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const mapMaxNameExtent = useMemo(() => {
     if (mapStations.length === 0) return 60;
     const maxCharCount = Math.max(
-      ...mapStations.map((s) => [...s.primary_name].length),
+      ...mapStations.map((s) => [...(s[mapPrimaryLang] ?? "")].length),
     );
     return maxCharCount > 0 ? maxCharCount * (JP_FONT + 1) - 1 : 60;
-  }, [mapStations]);
+  }, [mapStations, mapPrimaryLang]);
 
   // Apply transit filter before passing to renderer
   const filteredMapTransits = useMemo<Record<string, Line[]>>(
@@ -458,11 +465,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapTransitFilter === null
         ? mapTransits
         : Object.fromEntries(
-          Object.entries(mapTransits).map(([stationId, tlines]) => [
-            stationId,
-            tlines.filter((tl) => mapTransitFilter.includes(tl.id)),
-          ]),
-        ),
+            Object.entries(mapTransits).map(([stationId, tlines]) => [
+              stationId,
+              tlines.filter((tl) => mapTransitFilter.includes(tl.id)),
+            ]),
+          ),
     [mapTransits, mapTransitFilter],
   );
 
@@ -500,6 +507,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapFontSize,
       mapStationNumberMode,
       mapStationNumbers,
+      mapPrimaryLang,
+      mapSecondaryLang,
+      mapShowSecondaryLang,
     );
   }, [
     isLoopLine,
@@ -508,6 +518,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapFontSize,
     mapStationNumberMode,
     mapStationNumbers,
+    mapPrimaryLang,
+    mapSecondaryLang,
+    mapShowSecondaryLang,
   ]);
 
   const handleSaveSign = () => {
@@ -664,24 +677,24 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               </Grid.Col>
               {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
                 "hidden" && (
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                    <MultiSelect
-                      label={t("route.sign.center-colors")}
-                      value={centerSquareLineIds}
-                      onChange={(v) =>
-                        setCenterSquareLineIds(
-                          v.length > 0 ? v.slice(0, 4) : centerSquareLineIds,
-                        )
-                      }
-                      data={stationLines.map((l) => ({
-                        value: l.id,
-                        label: `[${l.prefix}] ${l.name}`,
-                      }))}
-                      disabled={!selectedStationId}
-                      maxValues={4}
-                    />
-                  </Grid.Col>
-                )}
+                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <MultiSelect
+                    label={t("route.sign.center-colors")}
+                    value={centerSquareLineIds}
+                    onChange={(v) =>
+                      setCenterSquareLineIds(
+                        v.length > 0 ? v.slice(0, 4) : centerSquareLineIds,
+                      )
+                    }
+                    data={stationLines.map((l) => ({
+                      value: l.id,
+                      label: `[${l.prefix}] ${l.name}`,
+                    }))}
+                    disabled={!selectedStationId}
+                    maxValues={4}
+                  />
+                </Grid.Col>
+              )}
             </Grid>
 
             {/* Station navigation + flip */}
@@ -934,6 +947,91 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 </Grid.Col>
               )}
 
+              {/* Primary language */}
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <Select
+                  label={t("route.linemap.primary-lang")}
+                  value={mapPrimaryLang}
+                  onChange={(v) =>
+                    v && setMapPrimaryLang(v as StationNameField)
+                  }
+                  data={[
+                    {
+                      value: "primary_name",
+                      label: t("route.linemap.lang-1st"),
+                    },
+                    {
+                      value: "secondary_name",
+                      label: t("route.linemap.lang-2nd"),
+                    },
+                    {
+                      value: "tertiary_name",
+                      label: t("route.linemap.lang-3rd"),
+                    },
+                    {
+                      value: "quaternary_name",
+                      label: t("route.linemap.lang-4th"),
+                    },
+                  ]}
+                />
+                {mapStations.length > 0 && (
+                  <Text size="xs" c="dimmed" mt={4} truncate>
+                    {mapStations
+                      .slice(0, 3)
+                      .map((s) => s[mapPrimaryLang] || "—")
+                      .join(" · ")}
+                  </Text>
+                )}
+              </Grid.Col>
+
+              {/* Secondary language */}
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <Select
+                  label={t("route.linemap.secondary-lang")}
+                  value={mapSecondaryLang}
+                  onChange={(v) =>
+                    v && setMapSecondaryLang(v as StationNameField)
+                  }
+                  disabled={!mapShowSecondaryLang}
+                  data={[
+                    {
+                      value: "primary_name",
+                      label: t("route.linemap.lang-1st"),
+                    },
+                    {
+                      value: "secondary_name",
+                      label: t("route.linemap.lang-2nd"),
+                    },
+                    {
+                      value: "tertiary_name",
+                      label: t("route.linemap.lang-3rd"),
+                    },
+                    {
+                      value: "quaternary_name",
+                      label: t("route.linemap.lang-4th"),
+                    },
+                  ]}
+                />
+                <Group mt={6} gap="xs">
+                  <Switch
+                    label={t("route.linemap.show-secondary-lang")}
+                    checked={mapShowSecondaryLang}
+                    onChange={(e) =>
+                      setMapShowSecondaryLang(e.currentTarget.checked)
+                    }
+                    size="xs"
+                  />
+                </Group>
+                {mapShowSecondaryLang && mapStations.length > 0 && (
+                  <Text size="xs" c="dimmed" mt={2} truncate>
+                    {mapStations
+                      .slice(0, 3)
+                      .map((s) => s[mapSecondaryLang] || "—")
+                      .join(" · ")}
+                  </Text>
+                )}
+              </Grid.Col>
+
               {/* Transit line filter — only shown when there are transit lines */}
               {allTransitLines.length > 0 && (
                 <Grid.Col span={{ base: 12, md: 6 }}>
@@ -1070,6 +1168,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     stationNumberMode={mapStationNumberMode}
                     stationNumbers={mapStationNumbers}
                     stationSpacing={mapStationSpacing}
+                    primaryLangField={mapPrimaryLang}
+                    secondaryLangField={mapSecondaryLang}
+                    showSecondaryLang={mapShowSecondaryLang}
                   />
                 </Box>
 

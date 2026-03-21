@@ -37,7 +37,7 @@ input:
     base-color: "会社カラー"
     line-color: "ラインカラー"
     local-lines: "路線"
-    local-lines-prefix: "プレフィックス"
+    local-lines-prefix: "路線名略称"
     local-lines-add: "路線を追加"
     local-lines-empty: "路線を追加するとここから番号プレフィックスを選択できます"
     lstation: "左駅名"
@@ -179,7 +179,7 @@ route:
     edit: 路線を編集
     name: 路線名
     color: 路線カラー
-    prefix: プレフィックス
+    prefix: 路線名略称
     priority: 優先度
     company: 所属会社
     is-loop: 環状線
@@ -241,6 +241,13 @@ route:
     name-style-above: 上（縦書き）
     name-style-below: 下（縦書き）
     station-spacing: 駅間隔
+    primary-lang: 主表示
+    secondary-lang: 副表示
+    show-secondary-lang: 表示
+    lang-1st: 第1名称
+    lang-2nd: 第2名称
+    lang-3rd: 第3名称
+    lang-4th: 第4名称
 
 footer:
-  notice: このサイトはファンサイトです。商標は各鉄道会社に帰属します。当サイトは各鉄道会社とは一切関係ありません。
+  notice: このサイトはファンサイトです。商標は各鉄道会社に帰属します。当サイトは各鉄道会社とは一切関係ありません。また、開発者は鉄道オタクではなく、サンプルデータや初期値は誤りを含む場合があります。

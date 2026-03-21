@@ -384,7 +384,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
   const [isLoop, setIsLoop] = useState((line?.is_loop ?? 0) === 1);
 
   const handleSave = () => {
-    if (!name.trim() || !prefix.trim()) return;
+    if (!name.trim()) return;
     upsertLine(db, {
       id: line?.id ?? uuidv7(),
       name: name.trim(),
@@ -410,7 +410,6 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
         label={t("route.line.prefix")}
         value={prefix}
         onChange={(e) => setPrefix(e.target.value)}
-        required
       />
       <ColorInput
         label={t("route.line.color")}
@@ -442,7 +441,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
         <Button variant="default" onClick={onClose}>
           {t("common.close")}
         </Button>
-        <Button onClick={handleSave} disabled={!name.trim() || !prefix.trim()}>
+        <Button onClick={handleSave} disabled={!name.trim()}>
           {t("common.save")}
         </Button>
       </Group>
@@ -876,11 +875,11 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             ? t("route.import-error.invalid-file")
             : result.reason === "missing-table"
               ? t("route.import-error.missing-table", {
-                detail: result.detail ?? "",
-              })
+                  detail: result.detail ?? "",
+                })
               : t("route.import-error.missing-column", {
-                detail: result.detail ?? "",
-              });
+                  detail: result.detail ?? "",
+                });
         setImportError(msg);
         return;
       }
@@ -1045,12 +1044,12 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const maxSortOrder =
     stationsInLine.length > 0
       ? Math.max(
-        ...stationsInLine.map((s) => {
-          const sls = getStationLines(db, s.id);
-          const sl = sls.find((sl) => sl.line_id === selectedLineId);
-          return sl?.sort_order ?? 0;
-        }),
-      )
+          ...stationsInLine.map((s) => {
+            const sls = getStationLines(db, s.id);
+            const sl = sls.find((sl) => sl.line_id === selectedLineId);
+            return sl?.sort_order ?? 0;
+          }),
+        )
       : 0;
 
   return (

@@ -12,6 +12,16 @@ import type { Station, Line } from "@/db/types";
 
 export const scale = 2;
 
+export type StationNameField =
+  | "primary_name"
+  | "secondary_name"
+  | "tertiary_name"
+  | "quaternary_name";
+
+function stationName(station: Station, field: StationNameField): string {
+  return station[field] ?? "";
+}
+
 export type StationNumberMode = "none" | "badge" | "dot";
 
 export type StationNumberMap = Record<
@@ -45,6 +55,12 @@ export interface LineMapRendererProps {
   >;
   /** Override the gap between stations in canvas units (defaults: 90 horizontal, 62 vertical) */
   stationSpacing?: number;
+  /** Which station field to use as the primary (large) name. Defaults to "primary_name". */
+  primaryLangField?: StationNameField;
+  /** Which station field to use as the secondary (small) name. Defaults to "secondary_name". */
+  secondaryLangField?: StationNameField;
+  /** When false, the secondary name row is hidden entirely. Defaults to true. */
+  showSecondaryLang?: boolean;
 }
 
 export const CIRCULAR_FONT_DEFAULT = 9;
@@ -65,6 +81,9 @@ function computeCircularBounds(
   jpFont: number,
   stationNumberMode?: StationNumberMode,
   stationNumbers?: StationNumberMap,
+  primaryLangField: StationNameField = "primary_name",
+  secondaryLangField: StationNameField = "secondary_name",
+  showSecondaryLang: boolean = true,
 ): LabelBound[] {
   const enFont = Math.max(5, jpFont - 3);
   const n = stations.length;
@@ -81,7 +100,7 @@ function computeCircularBounds(
     const dotModeActive = stationNumberMode === "dot" && !!snNum?.value;
     const effectiveR = dotModeActive
       ? (Math.abs(cosA) * snBadgeDims(!!snNum!.threeLetterCode).w) / 2 +
-      (Math.abs(sinA) * snBadgeDims(!!snNum!.threeLetterCode).h) / 2
+        (Math.abs(sinA) * snBadgeDims(!!snNum!.threeLetterCode).h) / 2
       : r;
     const stagger = i % 2 === 0 ? 0 : C_STAGGER;
     const labelR = C_RADIUS + effectiveR + C_TICK_LEN + stagger;
@@ -90,14 +109,16 @@ function computeCircularBounds(
 
     const stTransits = transits[station.id] ?? [];
     const nBadges = stTransits.length;
-    const jpW = measureTextWidth(station.primary_name, jpFont);
-    const enW = station.secondary_name
-      ? measureTextWidth(station.secondary_name, enFont)
-      : 0;
+    const pName = stationName(station, primaryLangField);
+    const sName = showSecondaryLang
+      ? (station[secondaryLangField] ?? null)
+      : null;
+    const jpW = measureTextWidth(pName, jpFont);
+    const enW = sName ? measureTextWidth(sName, enFont) : 0;
     const bw = badgesWidth(nBadges);
     const maxW = Math.max(jpW, enW, bw);
 
-    const enBlockH = station.secondary_name ? enFont + 2 : 0;
+    const enBlockH = sName ? enFont + 2 : 0;
     const badgeBlockH = nBadges > 0 ? BADGE_H + 3 : 0;
     const totalH = jpFont + enBlockH + badgeBlockH;
 
@@ -120,7 +141,7 @@ function computeCircularBounds(
       y = tickEndY + C_LABEL_GAP;
     }
 
-    return { name: station.primary_name, x, y, w: maxW, h: totalH };
+    return { name: pName, x, y, w: maxW, h: totalH };
   });
 }
 
@@ -174,12 +195,12 @@ export function getMapCanvasDimensions(
     w: Math.max(
       200,
       V_TRACK_X +
-      XCHG_R +
-      10 +
-      badgesWidth(maxBadgeCount) +
-      (maxBadgeCount > 0 ? 8 : 0) +
-      maxNameW +
-      V_RIGHT_MARGIN,
+        XCHG_R +
+        10 +
+        badgesWidth(maxBadgeCount) +
+        (maxBadgeCount > 0 ? 8 : 0) +
+        maxNameW +
+        V_RIGHT_MARGIN,
     ),
     h: Math.max(200, PADDING * 2 + (n - 1) * vSpacing),
   };
@@ -192,6 +213,9 @@ export function detectCircularOverlaps(
   jpFont: number,
   stationNumberMode?: StationNumberMode,
   stationNumbers?: StationNumberMap,
+  primaryLangField?: StationNameField,
+  secondaryLangField?: StationNameField,
+  showSecondaryLang?: boolean,
 ): string[] {
   const bounds = computeCircularBounds(
     stations,
@@ -199,6 +223,9 @@ export function detectCircularOverlaps(
     jpFont,
     stationNumberMode,
     stationNumbers,
+    primaryLangField,
+    secondaryLangField,
+    showSecondaryLang,
   );
   const overlapping = new Set<string>();
   for (let i = 0; i < bounds.length; i++) {
@@ -244,6 +271,18 @@ const VN_ITEM_GAP = 4; // gap between items (badges, SN badge, name)
 // Characters that are horizontal glyphs in normal writing and must be
 // rotated 90° clockwise in 縦書き so they read as vertical strokes.
 const VJ_ROTATE_CHARS = new Set(["ー", "〜", "～", "‥", "…"]);
+
+// Hyphen/dash characters rendered as a Konva Rect (horizontal bar) in 縦書き.
+// Using a Rect avoids font-baseline positioning errors that shift the glyph
+// horizontally after 90° rotation (the glyph sits near the baseline, ~75-80%
+// from the top of the em square, not at the 50% we assume for ー etc.).
+// Values are bar length as a fraction of the cell size.
+const VJ_LINE_WIDTHS: Record<string, number> = {
+  "-": 0.55, // U+002D hyphen-minus
+  "‐": 0.55, // U+2010 hyphen
+  "–": 0.75, // U+2013 en dash
+  "—": 0.95, // U+2014 em dash
+};
 
 // Vertical
 const V_SPACING = 62;
@@ -380,11 +419,11 @@ function SnBadge({
         cornerRadius={
           hasTrc
             ? [
-              _snCornerInner,
-              _snCornerInner,
-              _snCornerOuter - _snOuterPadX,
-              _snCornerOuter - _snOuterPadX,
-            ]
+                _snCornerInner,
+                _snCornerInner,
+                _snCornerOuter - _snOuterPadX,
+                _snCornerOuter - _snOuterPadX,
+              ]
             : _snCornerInner
         }
       />
@@ -447,6 +486,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       stationNumberMode = "none",
       stationNumbers = {},
       stationSpacing,
+      primaryLangField = "primary_name",
+      secondaryLangField = "secondary_name",
+      showSecondaryLang = true,
     },
     ref,
   ) => {
@@ -463,7 +505,16 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     // Also re-key when data changes so Konva re-renders correctly
     useEffect(() => {
       setStageKey((k) => k + 1);
-    }, [stations, line.id, orientation, nameStyle, isLoop]);
+    }, [
+      stations,
+      line.id,
+      orientation,
+      nameStyle,
+      isLoop,
+      primaryLangField,
+      secondaryLangField,
+      showSecondaryLang,
+    ]);
 
     const lc = line.line_color;
     const n = stations.length;
@@ -500,7 +551,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         const snDotPush = 0;
         const dotEffectiveR = dotModeActive
           ? (Math.abs(cosA) * _snDims!.w) / 2 +
-          (Math.abs(sinA) * _snDims!.h) / 2
+            (Math.abs(sinA) * _snDims!.h) / 2
           : r;
         // In badge mode the badge sits beside the text, centred at tickEnd.
         // Its radial extent from tickEnd must be added so labels start outside it.
@@ -624,12 +675,16 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 ? snBadgeDims(!!snNum.threeLetterCode)
                 : snBadgeDims(false);
 
-              const jpW = measureTextWidth(station.primary_name, cJpFont);
-              const enW = station.secondary_name
-                ? measureTextWidth(station.secondary_name, cEnFont)
+              const primaryName = stationName(station, primaryLangField);
+              const secondaryName = showSecondaryLang
+                ? (station[secondaryLangField] ?? null)
+                : null;
+              const jpW = measureTextWidth(primaryName, cJpFont);
+              const enW = secondaryName
+                ? measureTextWidth(secondaryName, cEnFont)
                 : 0;
 
-              const enBlockH = station.secondary_name ? cEnFont + 2 : 0;
+              const enBlockH = secondaryName ? cEnFont + 2 : 0;
               const badgeBlockH = nBadges > 0 ? BADGE_H + 3 : 0;
               const totalLabelH = cJpFont + enBlockH + badgeBlockH;
 
@@ -746,16 +801,16 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   <Text
                     x={jpX}
                     y={jpY}
-                    text={station.primary_name}
+                    text={primaryName}
                     fontSize={cJpFont}
                     fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                     fill="#222"
                   />
-                  {station.secondary_name && (
+                  {secondaryName && (
                     <Text
                       x={enX}
                       y={enY}
-                      text={station.secondary_name}
+                      text={secondaryName}
                       fontSize={cEnFont}
                       fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                       fill="#666"
@@ -802,13 +857,17 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       (nameStyle === "above" || nameStyle === "below")
     ) {
       // EN name widths (for rotation=-90 sizing)
-      const enWidths = stations.map((s) =>
-        s.secondary_name ? measureTextWidth(s.secondary_name, EN_FONT) : 0,
-      );
+      const enWidths = stations.map((s) => {
+        const sName = showSecondaryLang
+          ? (s[secondaryLangField] ?? null)
+          : null;
+        return sName ? measureTextWidth(sName, EN_FONT) : 0;
+      });
       // JP 縦書き text height: each character is JP_FONT tall, +1px gap between chars
       const jpTextHeights = stations.map((s) => {
-        const n = [...s.primary_name].length;
-        return n > 0 ? n * (JP_FONT + 1) - 1 : 0;
+        const pName = stationName(s, primaryLangField);
+        const cn = [...pName].length;
+        return cn > 0 ? cn * (JP_FONT + 1) - 1 : 0;
       });
       const maxJpTextH = Math.max(1, ...jpTextHeights);
       // EN text is placed to the right of the JP block, so its width does not
@@ -820,11 +879,11 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         stations.some((s) => !!stationNumbers[s.id]?.value);
       const maxSnH = hasAnySnBadge
         ? Math.max(
-          ...stations.map((s) => {
-            const snNum = stationNumbers[s.id];
-            return snNum ? snBadgeDims(!!snNum.threeLetterCode).h : 0;
-          }),
-        )
+            ...stations.map((s) => {
+              const snNum = stationNumbers[s.id];
+              return snNum ? snBadgeDims(!!snNum.threeLetterCode).h : 0;
+            }),
+          )
         : 0;
 
       // halfExt: distance from track centre to outermost element + padding
@@ -906,6 +965,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 ? snBadgeDims(!!snNum.threeLetterCode)
                 : snBadgeDims(false);
 
+              const primaryName = stationName(station, primaryLangField);
+              const secondaryName = showSecondaryLang
+                ? (station[secondaryLangField] ?? null)
+                : null;
               const jpTextH = jpTextHeights[i];
               const enW = enWidths[i];
 
@@ -942,7 +1005,19 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   ? snBadgeDims(!!snNum.threeLetterCode)
                   : null;
 
-              const jpChars = [...station.primary_name];
+              const jpChars = [...primaryName];
+
+              // Non-Latin secondary text: compute actual stacked height so the
+              // block aligns correctly (enW ≈ n×EN_FONT but stack height = n×(EN_FONT+1)−1).
+              const secChars =
+                secondaryName && !/[a-zA-Z]/.test(secondaryName)
+                  ? [...secondaryName]
+                  : [];
+              const actualSecH =
+                secChars.length > 0 ? secChars.length * (EN_FONT + 1) - 1 : 0;
+              // above (d=-1): align block bottom with JP block bottom (nearest track)
+              // below (d=+1): align block top with JP block top (nearest track)
+              const secTopY = d === -1 ? jpTopY + jpTextH - actualSecH : jpTopY;
 
               return (
                 <Fragment key={station.id}>
@@ -1012,6 +1087,21 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       their cell centre so they render as vertical strokes. */}
                   {jpChars.map((char, ci) => {
                     const charTopY = jpTopY + ci * (JP_FONT + 1);
+                    // Hyphens/dashes: draw as a precisely centred vertical bar
+                    // (thin vertical line spanning the cell) for 縦書き layout.
+                    if (char in VJ_LINE_WIDTHS) {
+                      const barLen = VJ_LINE_WIDTHS[char] * JP_FONT;
+                      return (
+                        <Rect
+                          key={ci}
+                          x={x - 0.5}
+                          y={charTopY + (JP_FONT - barLen) / 2}
+                          width={1}
+                          height={barLen}
+                          fill="#222"
+                        />
+                      );
+                    }
                     if (VJ_ROTATE_CHARS.has(char)) {
                       return (
                         <Text
@@ -1045,20 +1135,72 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     );
                   })}
 
-                  {/* EN name — rotation 90° (reads top-to-bottom), to the right of JP 縦書き block */}
-                  {station.secondary_name && (
-                    <Text
-                      x={enX}
-                      y={enCenterY}
-                      offsetX={enW / 2}
-                      offsetY={EN_FONT / 2}
-                      rotation={90}
-                      text={station.secondary_name}
-                      fontSize={EN_FONT}
-                      fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
-                      fill="#666"
-                    />
-                  )}
+                  {/* Secondary name — rotated 90° for Latin text, stacked vertically for CJK.
+                      CJK path applies VJ_ROTATE_CHARS (ー etc.) and VJ_LINE_WIDTHS (dashes). */}
+                  {secondaryName &&
+                    (/[a-zA-Z]/.test(secondaryName) ? (
+                      <Text
+                        x={enX}
+                        y={enCenterY}
+                        offsetX={enW / 2}
+                        offsetY={EN_FONT / 2}
+                        rotation={90}
+                        text={secondaryName}
+                        fontSize={EN_FONT}
+                        fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+                        fill="#666"
+                      />
+                    ) : (
+                      <Fragment>
+                        {secChars.map((char, ci) => {
+                          const charTopY = secTopY + ci * (EN_FONT + 1);
+                          if (char in VJ_LINE_WIDTHS) {
+                            const barLen = VJ_LINE_WIDTHS[char] * EN_FONT;
+                            return (
+                              <Rect
+                                key={ci}
+                                x={enX - 0.35}
+                                y={charTopY + (EN_FONT - barLen) / 2}
+                                width={0.7}
+                                height={barLen}
+                                fill="#666"
+                              />
+                            );
+                          }
+                          if (VJ_ROTATE_CHARS.has(char)) {
+                            return (
+                              <Text
+                                key={ci}
+                                x={enX}
+                                y={charTopY + EN_FONT / 2}
+                                offsetX={EN_FONT / 2}
+                                offsetY={EN_FONT / 2}
+                                rotation={90}
+                                text={char}
+                                fontSize={EN_FONT}
+                                fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+                                fill="#666"
+                                width={EN_FONT}
+                                align="center"
+                              />
+                            );
+                          }
+                          return (
+                            <Text
+                              key={ci}
+                              x={enX - EN_FONT / 2}
+                              y={charTopY}
+                              text={char}
+                              fontSize={EN_FONT}
+                              fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+                              fill="#666"
+                              width={EN_FONT}
+                              align="center"
+                            />
+                          );
+                        })}
+                      </Fragment>
+                    ))}
                 </Fragment>
               );
             })}
@@ -1126,45 +1268,76 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const showSnDot = stationNumberMode === "dot" && !!snNum?.value;
 
               // Measure actual text widths to center without wrapping
-              const jpW = measureTextWidth(station.primary_name, JP_FONT);
-              const enW = station.secondary_name
-                ? measureTextWidth(station.secondary_name, EN_FONT)
+              const primaryName = stationName(station, primaryLangField);
+              const secondaryName = showSecondaryLang
+                ? (station[secondaryLangField] ?? null)
+                : null;
+              const jpW = measureTextWidth(primaryName, JP_FONT);
+              const enW = secondaryName
+                ? measureTextWidth(secondaryName, EN_FONT)
                 : 0;
 
               // Calculate label heights
               const jpH = JP_FONT;
-              const enH = station.secondary_name ? EN_FONT + 2 : 0;
+              const enH = secondaryName ? EN_FONT + 2 : 0;
               const badgeBlockH = nBadges > 0 ? BADGE_H + 4 : 0;
-
-              // For "above" stations: jp name at top, then en name, then badges, then gap, then dot
-              // For "below" stations: dot, then gap, then badges, then en name, then jp name
-              let jpNameY: number;
-              let enNameY: number;
-              let badgeRowY: number;
-
-              if (above) {
-                const totalH = jpH + enH + badgeBlockH;
-                jpNameY = H_TRACK_Y - r - 8 - totalH;
-                enNameY = jpNameY + jpH + 2;
-                badgeRowY = enNameY + enH;
-              } else {
-                badgeRowY = H_TRACK_Y + r + 6;
-                enNameY = badgeRowY + badgeBlockH;
-                jpNameY = enNameY + enH;
-              }
-
-              // SN badge: inline to the left of the JP name
-              const snDims = snNum
-                ? snBadgeDims(!!snNum.threeLetterCode)
-                : snBadgeDims(false);
-              const snBadgeX = x - jpW / 2 - snDims.w - SN_BADGE_GAP;
-              const snBadgeY = jpNameY + (JP_FONT - snDims.h) / 2;
 
               // Dot replacement: center badge on the dot position
               const snDotDims =
                 showSnDot && snNum
                   ? snBadgeDims(!!snNum.threeLetterCode)
                   : null;
+
+              // When replacing the dot with a badge, use the badge half-height
+              // as the effective radius so text doesn't overlap the badge.
+              const effectiveDotR = snDotDims
+                ? Math.max(r, snDotDims.h / 2)
+                : r;
+
+              // SN badge dimensions (used in badge mode)
+              const snDims = snNum
+                ? snBadgeDims(!!snNum.threeLetterCode)
+                : snBadgeDims(false);
+
+              // For "above" stations: jp name at top, then en name, then transit badges, then gap, then dot
+              // For "below" stations: dot, then gap, then transit badges, then en name, then jp name
+              // In badge mode the SN badge is inserted between the dot and the rest of the labels,
+              // centered on the station x.
+              let jpNameY: number;
+              let enNameY: number;
+              let badgeRowY: number;
+              let snBadgeX: number;
+              let snBadgeY: number;
+
+              if (showSnBadge && snNum) {
+                // Badge mode: SN badge sits directly adjacent to the dot; labels stack beyond it.
+                snBadgeX = x - snDims.w / 2;
+                if (above) {
+                  snBadgeY = H_TRACK_Y - r - 8 - snDims.h;
+                  const totalH = jpH + enH + badgeBlockH;
+                  jpNameY = snBadgeY - SN_BADGE_GAP - totalH;
+                  enNameY = jpNameY + jpH + 2;
+                  badgeRowY = enNameY + enH;
+                } else {
+                  snBadgeY = H_TRACK_Y + r + 8;
+                  badgeRowY = snBadgeY + snDims.h + SN_BADGE_GAP;
+                  enNameY = badgeRowY + badgeBlockH;
+                  jpNameY = enNameY + enH;
+                }
+              } else {
+                snBadgeX = 0;
+                snBadgeY = 0;
+                if (above) {
+                  const totalH = jpH + enH + badgeBlockH;
+                  jpNameY = H_TRACK_Y - effectiveDotR - 8 - totalH;
+                  enNameY = jpNameY + jpH + 2;
+                  badgeRowY = enNameY + enH;
+                } else {
+                  badgeRowY = H_TRACK_Y + effectiveDotR + 6;
+                  enNameY = badgeRowY + badgeBlockH;
+                  jpNameY = enNameY + enH;
+                }
+              }
 
               return (
                 <Fragment key={station.id}>
@@ -1204,18 +1377,18 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   <Text
                     x={x - jpW / 2}
                     y={jpNameY}
-                    text={station.primary_name}
+                    text={primaryName}
                     fontSize={JP_FONT}
                     fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                     fill="#222"
                   />
 
-                  {/* English name */}
-                  {station.secondary_name && (
+                  {/* Secondary name — centered on station x */}
+                  {secondaryName && (
                     <Text
                       x={x - enW / 2}
                       y={enNameY}
-                      text={station.secondary_name}
+                      text={secondaryName}
                       fontSize={EN_FONT}
                       fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                       fill="#666"
@@ -1268,12 +1441,12 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     const canvasW = Math.max(
       200,
       V_TRACK_X +
-      XCHG_R +
-      10 +
-      badgesWidth(maxBadgeCount) +
-      (maxBadgeCount > 0 ? 8 : 0) +
-      maxNameW +
-      V_RIGHT_MARGIN,
+        XCHG_R +
+        10 +
+        badgesWidth(maxBadgeCount) +
+        (maxBadgeCount > 0 ? 8 : 0) +
+        maxNameW +
+        V_RIGHT_MARGIN,
     );
     const canvasH = Math.max(200, PADDING * 2 + (n - 1) * vSpacing);
 
@@ -1412,18 +1585,18 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 <Text
                   x={nameX}
                   y={jpNameY}
-                  text={station.primary_name}
+                  text={stationName(station, primaryLangField)}
                   fontSize={JP_FONT}
                   fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                   fill="#222"
                 />
 
-                {/* English name */}
-                {station.secondary_name && (
+                {/* Secondary name */}
+                {showSecondaryLang && station[secondaryLangField] && (
                   <Text
                     x={nameX}
                     y={enNameY}
-                    text={station.secondary_name}
+                    text={station[secondaryLangField]!}
                     fontSize={EN_FONT}
                     fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                     fill="#666"
