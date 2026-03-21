@@ -36,7 +36,7 @@ export const DEFAULT_DATA: DirectInputStationProps = {
   ],
   ratio: 4.5,
   direction: "left",
-  baseColor: "#36ab33",
-  centerSquareColors: ["#9fff00"],
-  localLines: [{ id: "seed-localline-1", prefix: "JY", color: "#9fff00" }],
+  baseColor: "#3a9200",
+  centerSquareColors: ["#8cc800"],
+  localLines: [{ id: "seed-localline-1", prefix: "JY", color: "#8cc800" }],
 };

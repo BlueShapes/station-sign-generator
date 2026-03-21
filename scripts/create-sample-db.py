@@ -14,14 +14,14 @@ CREATE TABLE IF NOT EXISTS db_metadata (
 CREATE TABLE IF NOT EXISTS companies (
   id            TEXT PRIMARY KEY,
   name          TEXT NOT NULL,
-  company_color TEXT NOT NULL DEFAULT '#36ab33'
+  company_color TEXT NOT NULL DEFAULT '#3a9200'
 );
 
 CREATE TABLE IF NOT EXISTS lines (
   id         TEXT PRIMARY KEY,
   company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
   name       TEXT NOT NULL,
-  line_color TEXT NOT NULL DEFAULT '#9fff00',
+  line_color TEXT NOT NULL DEFAULT '#8cc800',
   prefix     TEXT NOT NULL,
   priority   INTEGER,
   is_loop    INTEGER NOT NULL DEFAULT 0
@@ -219,18 +219,18 @@ def main():
             (zone_id, name, abbreviation, is_black),
         )
 
-    # Company — color matches default #36ab33
+    # Company — color matches default #3a9200
     company_id = "company-jreast"
     c.execute(
         "INSERT INTO companies VALUES (?, ?, ?)",
-        (company_id, "JR東日本", "#36ab33"),
+        (company_id, "JR東日本", "#3a9200"),
     )
 
     # ── Yamanote Line ─────────────────────────────────────────────────────────
     jy_line_id = "line-yamanote"
     c.execute(
         "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (jy_line_id, company_id, "山手線", "#9fff00", "JY", 1, 1),
+        (jy_line_id, company_id, "山手線", "#8cc800", "JY", 1, 1),
     )
 
     for (num, primary_name, furigana, english, korean, chinese, tlc) in YAMANOTE_STATIONS:
@@ -265,7 +265,7 @@ def main():
     jk_line_id = "line-keihin-tohoku"
     c.execute(
         "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (jk_line_id, company_id, "京浜東北線・根岸線", "#00b2e2", "JK", 2, 0),
+        (jk_line_id, company_id, "京浜東北線・根岸線", "#5f9de9", "JK", 2, 0),
     )
 
     # Shared stations: reuse existing station records, add only station_lines + station_numbers
@@ -333,10 +333,10 @@ def main():
     print(f"Created: {out_path}")
     print(f"  - version: 0.1.0")
     print(f"  - 4 special zones (山手線内, 東京23区内, さいたま市内, 横浜市内)")
-    print(f"  - 1 company (JR東日本, color #36ab33)")
+    print(f"  - 1 company (JR東日本, color #3a9200)")
     print(f"  - 3 lines:")
-    print(f"      山手線         (JY, #9fff00,  is_loop=1): {len(YAMANOTE_STATIONS)} stations")
-    print(f"      京浜東北線・根岸線 (JK, #00b2e2, is_loop=0): {jk_shared} shared + {jk_exclusive} exclusive = {jk_shared + jk_exclusive} total")
+    print(f"      山手線         (JY, #8cc800,  is_loop=1): {len(YAMANOTE_STATIONS)} stations")
+    print(f"      京浜東北線・根岸線 (JK, #5f9de9, is_loop=0): {jk_shared} shared + {jk_exclusive} exclusive = {jk_shared + jk_exclusive} total")
     print(f"      根岸線         (no prefix, #8bd900, is_loop=0): {len(NEGISHI_JK_NUMS)} stations (shared with JK, no station numbers)")
 
 

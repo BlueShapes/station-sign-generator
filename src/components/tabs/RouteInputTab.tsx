@@ -253,7 +253,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     const areas = getStationAreasWithZones(db, currentStation.id);
 
     // Get company color and station number style
-    let baseColor = "#36ab33";
+    let baseColor = "#3a9200";
     let stationNumberStyle: string | undefined;
     if (line?.company_id) {
       const companies = getAllCompanies(db);
@@ -277,8 +277,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     const centerColors =
       centerSquareLineIds.length > 0
         ? (centerSquareLineIds
-            .map((id) => allStationLines.find((l) => l.id === id)?.line_color)
-            .filter(Boolean) as string[])
+          .map((id) => allStationLines.find((l) => l.id === id)?.line_color)
+          .filter(Boolean) as string[])
         : line
           ? [line.line_color]
           : [];
@@ -300,35 +300,35 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       })),
       left: (flipped ? rightStation : leftStation)
         ? [
-            {
-              id: (flipped ? rightStation : leftStation)!.id,
-              primaryName: (flipped ? rightStation : leftStation)!.primary_name,
-              primaryNameFurigana:
-                (flipped ? rightStation : leftStation)!.primary_name_furigana ??
-                "",
-              secondaryName:
-                (flipped ? rightStation : leftStation)!.secondary_name ?? "",
-              numberPrimaryPrefix: linePrefix,
-              numberPrimaryValue:
-                (flipped ? rightNums : leftNums)[0]?.value ?? "",
-            },
-          ]
+          {
+            id: (flipped ? rightStation : leftStation)!.id,
+            primaryName: (flipped ? rightStation : leftStation)!.primary_name,
+            primaryNameFurigana:
+              (flipped ? rightStation : leftStation)!.primary_name_furigana ??
+              "",
+            secondaryName:
+              (flipped ? rightStation : leftStation)!.secondary_name ?? "",
+            numberPrimaryPrefix: linePrefix,
+            numberPrimaryValue:
+              (flipped ? rightNums : leftNums)[0]?.value ?? "",
+          },
+        ]
         : [],
       right: (flipped ? leftStation : rightStation)
         ? [
-            {
-              id: (flipped ? leftStation : rightStation)!.id,
-              primaryName: (flipped ? leftStation : rightStation)!.primary_name,
-              primaryNameFurigana:
-                (flipped ? leftStation : rightStation)!.primary_name_furigana ??
-                "",
-              secondaryName:
-                (flipped ? leftStation : rightStation)!.secondary_name ?? "",
-              numberPrimaryPrefix: linePrefix,
-              numberPrimaryValue:
-                (flipped ? leftNums : rightNums)[0]?.value ?? "",
-            },
-          ]
+          {
+            id: (flipped ? leftStation : rightStation)!.id,
+            primaryName: (flipped ? leftStation : rightStation)!.primary_name,
+            primaryNameFurigana:
+              (flipped ? leftStation : rightStation)!.primary_name_furigana ??
+              "",
+            secondaryName:
+              (flipped ? leftStation : rightStation)!.secondary_name ?? "",
+            numberPrimaryPrefix: linePrefix,
+            numberPrimaryValue:
+              (flipped ? leftNums : rightNums)[0]?.value ?? "",
+          },
+        ]
         : [],
       baseColor,
       stationNumberStyle,
@@ -458,11 +458,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapTransitFilter === null
         ? mapTransits
         : Object.fromEntries(
-            Object.entries(mapTransits).map(([stationId, tlines]) => [
-              stationId,
-              tlines.filter((tl) => mapTransitFilter.includes(tl.id)),
-            ]),
-          ),
+          Object.entries(mapTransits).map(([stationId, tlines]) => [
+            stationId,
+            tlines.filter((tl) => mapTransitFilter.includes(tl.id)),
+          ]),
+        ),
     [mapTransits, mapTransitFilter],
   );
 
@@ -664,24 +664,24 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               </Grid.Col>
               {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
                 "hidden" && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <MultiSelect
-                    label={t("route.sign.center-colors")}
-                    value={centerSquareLineIds}
-                    onChange={(v) =>
-                      setCenterSquareLineIds(
-                        v.length > 0 ? v.slice(0, 4) : centerSquareLineIds,
-                      )
-                    }
-                    data={stationLines.map((l) => ({
-                      value: l.id,
-                      label: `[${l.prefix}] ${l.name}`,
-                    }))}
-                    disabled={!selectedStationId}
-                    maxValues={4}
-                  />
-                </Grid.Col>
-              )}
+                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <MultiSelect
+                      label={t("route.sign.center-colors")}
+                      value={centerSquareLineIds}
+                      onChange={(v) =>
+                        setCenterSquareLineIds(
+                          v.length > 0 ? v.slice(0, 4) : centerSquareLineIds,
+                        )
+                      }
+                      data={stationLines.map((l) => ({
+                        value: l.id,
+                        label: `[${l.prefix}] ${l.name}`,
+                      }))}
+                      disabled={!selectedStationId}
+                      maxValues={4}
+                    />
+                  </Grid.Col>
+                )}
             </Grid>
 
             {/* Station navigation + flip */}

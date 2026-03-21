@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS db_metadata (
 CREATE TABLE IF NOT EXISTS companies (
   id                   TEXT PRIMARY KEY,
   name                 TEXT NOT NULL,
-  company_color        TEXT NOT NULL DEFAULT '#36ab33',
+  company_color        TEXT NOT NULL DEFAULT '#3a9200',
   station_number_style TEXT NOT NULL DEFAULT 'jreast'
 );
 
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS lines (
   id         TEXT PRIMARY KEY,
   company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
   name       TEXT NOT NULL,
-  line_color TEXT NOT NULL DEFAULT '#9fff00',
+  line_color TEXT NOT NULL DEFAULT '#8cc800',
   prefix     TEXT NOT NULL,
   priority   INTEGER,
   is_loop    INTEGER NOT NULL DEFAULT 0

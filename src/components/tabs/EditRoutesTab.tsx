@@ -292,7 +292,7 @@ interface CompanyFormProps {
 function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
   const t = useTranslations();
   const [name, setName] = useState(company?.name ?? "");
-  const [color, setColor] = useState(company?.company_color ?? "#36ab33");
+  const [color, setColor] = useState(company?.company_color ?? "#3a9200");
   const [stationNumberStyle, setStationNumberStyle] = useState(
     company?.station_number_style ?? "jreast",
   );
@@ -323,7 +323,7 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
         onChange={setColor}
         format="hex"
         swatches={[
-          "#36ab33",
+          "#3a9200",
           "#005bac",
           "#e60012",
           "#f97f00",
@@ -374,7 +374,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
   const t = useTranslations();
   const [name, setName] = useState(line?.name ?? "");
   const [prefix, setPrefix] = useState(line?.prefix ?? "");
-  const [color, setColor] = useState(line?.line_color ?? "#9fff00");
+  const [color, setColor] = useState(line?.line_color ?? "#8cc800");
   const [companyId, setCompanyId] = useState<string | null>(
     line?.company_id ?? null,
   );
@@ -417,7 +417,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
         value={color}
         onChange={setColor}
         format="hex"
-        swatches={["#9fff00", "#ffffff", "#000000", "#ffdd00", "#f97f00"]}
+        swatches={["#8cc800", "#ffffff", "#000000", "#ffdd00", "#f97f00"]}
       />
       <Select
         label={t("route.line.company")}
@@ -876,11 +876,11 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             ? t("route.import-error.invalid-file")
             : result.reason === "missing-table"
               ? t("route.import-error.missing-table", {
-                  detail: result.detail ?? "",
-                })
+                detail: result.detail ?? "",
+              })
               : t("route.import-error.missing-column", {
-                  detail: result.detail ?? "",
-                });
+                detail: result.detail ?? "",
+              });
         setImportError(msg);
         return;
       }
@@ -1045,12 +1045,12 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const maxSortOrder =
     stationsInLine.length > 0
       ? Math.max(
-          ...stationsInLine.map((s) => {
-            const sls = getStationLines(db, s.id);
-            const sl = sls.find((sl) => sl.line_id === selectedLineId);
-            return sl?.sort_order ?? 0;
-          }),
-        )
+        ...stationsInLine.map((s) => {
+          const sls = getStationLines(db, s.id);
+          const sl = sls.find((sl) => sl.line_id === selectedLineId);
+          return sl?.sort_order ?? 0;
+        }),
+      )
       : 0;
 
   return (

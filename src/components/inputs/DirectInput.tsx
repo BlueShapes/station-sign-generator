@@ -342,9 +342,9 @@ const DirectInput = memo(function DirectInput({
                               formData.left.map((s, i) =>
                                 i === idx
                                   ? {
-                                      ...s,
-                                      numberSecondaryValue: e.target.value,
-                                    }
+                                    ...s,
+                                    numberSecondaryValue: e.target.value,
+                                  }
                                   : s,
                               ),
                             )
@@ -509,10 +509,10 @@ const DirectInput = memo(function DirectInput({
                           const nextAreas = formData.stationAreas?.map((c) =>
                             e.id === c.id
                               ? {
-                                  id: c.id,
-                                  name: i.target.value,
-                                  isWhite: c.isWhite,
-                                }
+                                id: c.id,
+                                name: i.target.value,
+                                isWhite: c.isWhite,
+                              }
                               : c,
                           );
                           updateField("stationAreas", nextAreas);
@@ -574,7 +574,7 @@ const DirectInput = memo(function DirectInput({
                   onChange={(color) => updateField("baseColor", color)}
                   format="hex"
                   swatches={[
-                    "#36ab33",
+                    "#3a9200",
                     "#005bac",
                     "#e60012",
                     "#f97f00",
@@ -784,9 +784,9 @@ const DirectInput = memo(function DirectInput({
                               formData.right.map((s, i) =>
                                 i === idx
                                   ? {
-                                      ...s,
-                                      numberSecondaryValue: e.target.value,
-                                    }
+                                    ...s,
+                                    numberSecondaryValue: e.target.value,
+                                  }
                                   : s,
                               ),
                             )
@@ -857,39 +857,39 @@ const DirectInput = memo(function DirectInput({
                     />
                     {(fields.localLinesMin === undefined ||
                       localLines.length > fields.localLinesMin) && (
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        aria-label="delete"
-                        onClick={() =>
-                          updateField(
-                            "localLines",
-                            localLines.filter((l) => l.id !== line.id),
-                          )
-                        }
-                      >
-                        <IconTrash size={16} />
-                      </ActionIcon>
-                    )}
+                        <ActionIcon
+                          variant="subtle"
+                          color="red"
+                          aria-label="delete"
+                          onClick={() =>
+                            updateField(
+                              "localLines",
+                              localLines.filter((l) => l.id !== line.id),
+                            )
+                          }
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      )}
                   </Group>
                 ))}
               </Stack>
               {(fields.localLinesMax === undefined ||
                 localLines.length < fields.localLinesMax) && (
-                <Button
-                  variant="outline"
-                  size="xs"
-                  mt="xs"
-                  onClick={() =>
-                    updateField("localLines", [
-                      ...localLines,
-                      { id: uuidv7(), prefix: "", color: "#9fff00" },
-                    ])
-                  }
-                >
-                  {t("input.direct.local-lines-add")}
-                </Button>
-              )}
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    mt="xs"
+                    onClick={() =>
+                      updateField("localLines", [
+                        ...localLines,
+                        { id: uuidv7(), prefix: "", color: "#8cc800" },
+                      ])
+                    }
+                  >
+                    {t("input.direct.local-lines-add")}
+                  </Button>
+                )}
             </Stack>
           </Grid.Col>
         </Grid>
