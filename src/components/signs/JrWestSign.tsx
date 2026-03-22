@@ -222,17 +222,41 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
               ))}
 
               {/* Current station */}
-              <Text
-                text={spacedStationName(primaryName)}
-                x={0}
-                y={topBarH - 8}
-                width={width}
-                fontSize={52}
-                fontFamily="NotoSansJP"
-                fontStyle="900"
-                fill="black"
-                align="center"
-              />
+              {(() => {
+                const stationNameText = spacedStationName(primaryName);
+                const numBadges = reversedStationArea?.length ?? 0;
+                const naturalNameWidth = new Konva.Text({
+                  text: stationNameText,
+                  fontSize: 52,
+                  fontFamily: "NotoSansJP",
+                  fontStyle: "900",
+                }).width();
+                const badgeMargin = 4;
+                const maxNameWidth =
+                  numBadges > 0
+                    ? Math.max(
+                        2 * (width - 37 - (numBadges - 1) * 32 - badgeMargin) -
+                          width,
+                        60,
+                      )
+                    : width;
+                const nameScaleX = Math.min(1, maxNameWidth / naturalNameWidth);
+                const nameX = (width - naturalNameWidth * nameScaleX) / 2;
+                return (
+                  <Text
+                    text={stationNameText}
+                    x={nameX}
+                    y={topBarH - 8}
+                    width={naturalNameWidth}
+                    fontSize={52}
+                    fontFamily="NotoSansJP"
+                    fontStyle="900"
+                    fill="black"
+                    align="left"
+                    scaleX={nameScaleX}
+                  />
+                );
+              })()}
               <Text
                 text={`${primaryNameFurigana}  ${secondaryName}`}
                 x={0}

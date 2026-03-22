@@ -92,7 +92,7 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
     numberPrimary: "hidden",
     numberSecondary: "hidden",
     threeLetterCode: "hidden",
-    stationAreas: "hidden",
+    stationAreas: "optional",
     // Adjacent stations
     left: {
       primaryName: "hidden",

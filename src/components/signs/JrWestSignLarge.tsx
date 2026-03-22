@@ -138,10 +138,10 @@ const JrWestSignLarge = forwardRef<Konva.Stage, StationProps>(
       const merged: AdjacentStationProps =
         stations.length === 2
           ? {
-            ...stations[0],
-            primaryNameFurigana: `${stations[0].primaryNameFurigana ?? ""}／${stations[1].primaryNameFurigana ?? ""}`,
-            secondaryName: `${stations[0].secondaryName}／${stations[1].secondaryName}`,
-          }
+              ...stations[0],
+              primaryNameFurigana: `${stations[0].primaryNameFurigana ?? ""}／${stations[1].primaryNameFurigana ?? ""}`,
+              secondaryName: `${stations[0].secondaryName}／${stations[1].secondaryName}`,
+            }
           : stations[0];
 
       const arrowSize = 24;
@@ -166,11 +166,8 @@ const JrWestSignLarge = forwardRef<Konva.Stage, StationProps>(
       );
     };
 
-    const maxWidth = width * 0.9;
-
     // --- 1. メイン駅名の計算 ---
     const mainNameText = spacedStationName(primaryName).replace("　", " ");
-    // 計測用のダミー。実際のfontSizeやfontFamilyを合わせる
     const mainMeasurer = new Konva.Text({
       text: mainNameText,
       fontSize: 52,
@@ -178,7 +175,17 @@ const JrWestSignLarge = forwardRef<Konva.Stage, StationProps>(
       fontStyle: "900",
     });
     const mainNativeWidth = mainMeasurer.width();
-    const mainScale = mainNativeWidth > maxWidth ? maxWidth / mainNativeWidth : 1;
+    const numBadges = reversedStationArea?.length ?? 0;
+    const badgeMargin = 4;
+    const mainMaxWidth =
+      numBadges > 0
+        ? Math.max(
+            2 * (width - 37 - (numBadges - 1) * 32 - badgeMargin) - width,
+            60,
+          )
+        : width * 0.9;
+    const mainScale =
+      mainNativeWidth > mainMaxWidth ? mainMaxWidth / mainNativeWidth : 1;
 
     // --- 2. ふりがな・副駅名の計算 ---
     const subNameText = `${primaryNameFurigana}　${secondaryName}`;
@@ -189,7 +196,9 @@ const JrWestSignLarge = forwardRef<Konva.Stage, StationProps>(
       fontStyle: "800",
     });
     const subNativeWidth = subMeasurer.width();
-    const subScale = subNativeWidth > maxWidth ? maxWidth / subNativeWidth : 1;
+    const subMaxWidth = width * 0.9;
+    const subScale =
+      subNativeWidth > subMaxWidth ? subMaxWidth / subNativeWidth : 1;
 
     return (
       <>
