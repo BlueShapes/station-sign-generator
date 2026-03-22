@@ -66,6 +66,8 @@ export interface LineMapRendererProps {
   secondaryLangField?: StationNameField;
   /** When false, the secondary name row is hidden entirely. Defaults to true. */
   showSecondaryLang?: boolean;
+  /** The company's station_number_style — used to decide whether to show a line indicator badge. */
+  companyStyle?: string;
 }
 
 export const CIRCULAR_FONT_DEFAULT = 9;
@@ -483,6 +485,88 @@ function SnBadge({
   );
 }
 
+// ── Line indicator badge (JR East style) ────────────────────────────────────
+
+// Badge side length — same as SN_INNER so line and station badges share proportions.
+const LI_SIZE = SN_INNER - 3; // 20 Konva units
+const LI_STROKE = 2;
+// Font/badge ratio 19:30 — identical to the canvas LineIndicatorBadgePreview.
+const LI_FONT = Math.round((LI_SIZE * 20) / 28); // 13
+const LI_CORNER = 1.5;
+const LI_GAP = 5; // gap between badge and line name text
+
+/**
+ * Compute the Konva Text y-offset (from badge top) that optically centres the
+ * glyphs vertically. Mirrors the measureText technique used in the canvas
+ * LineIndicatorBadgePreview (actualBoundingBoxAscent / actualBoundingBoxDescent).
+ *
+ * Konva positions text with y = top of the em-square ("top" textBaseline).
+ * We measure the actual rendered glyph bounds using a temporary canvas so the
+ * result is exact regardless of font metrics.
+ */
+function liTextY(): number {
+  if (typeof document === "undefined") return LI_SIZE / 2 - LI_FONT * 0.35;
+  const cv = document.createElement("canvas");
+  const ctx = cv.getContext("2d");
+  if (!ctx) return LI_SIZE / 2 - LI_FONT * 0.35;
+  const fontSpec = `600 ${LI_FONT}px "HindSemiBold", Arial, sans-serif`;
+
+  // Glyph bounds measured from the alphabetic baseline
+  ctx.textBaseline = "alphabetic";
+  ctx.font = fontSpec;
+  const mA = ctx.measureText("IM");
+  const glyphH = mA.actualBoundingBoxAscent + mA.actualBoundingBoxDescent;
+
+  // Distance from the em-square top to the visual top of the glyphs
+  ctx.textBaseline = "top";
+  ctx.font = fontSpec;
+  const mT = ctx.measureText("IM");
+  // mT.actualBoundingBoxAscent = how far glyphs extend ABOVE em-top (≈0 for caps)
+  const emTopToGlyphTop = -mT.actualBoundingBoxAscent;
+
+  // Centre the glyph block inside the badge
+  return LI_SIZE / 2 - glyphH / 2 - emTopToGlyphTop;
+}
+
+function LineIndicatorBadge({
+  x,
+  y,
+  color,
+  prefix,
+}: {
+  x: number;
+  y: number;
+  color: string;
+  prefix: string;
+}) {
+  const ty = liTextY();
+  return (
+    <Fragment>
+      <Rect
+        x={x}
+        y={y}
+        width={LI_SIZE}
+        height={LI_SIZE}
+        fill="white"
+        stroke={color}
+        strokeWidth={LI_STROKE}
+        cornerRadius={LI_CORNER}
+      />
+      <Text
+        x={x}
+        y={y + ty}
+        width={LI_SIZE}
+        text={prefix}
+        fontSize={LI_FONT}
+        fontFamily="HindSemiBold, Arial, sans-serif"
+        fontStyle="bold"
+        fill="black"
+        align="center"
+      />
+    </Fragment>
+  );
+}
+
 // ── Helper: measure rendered text width via Konva ───────────────────────────
 
 export function measureTextWidth(
@@ -519,6 +603,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       showSecondaryLang = true,
       hasMoreBefore = false,
       hasMoreAfter = false,
+      companyStyle,
     },
     ref,
   ) => {
@@ -550,16 +635,19 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     const n = stations.length;
     if (n === 0) return null;
 
+    // Whether to show a line indicator badge next to / above the line title
+    const showLineBadge = companyStyle === "jreast" && !!line.prefix;
+
     // ── Circular layout ───────────────────────────────────────────────────
 
     if (isLoop) {
       const cJpFont = circularFontSize ?? JP_FONT;
       const cEnFont = Math.max(5, cJpFont - 3);
       const isPartialLoop = hasMoreBefore || hasMoreAfter;
-      // For large partial loops add a phantom station to the divisor so the
-      // gap between the two cut-off endpoints spans ~2 station-widths.
-      const angleStep =
-        isPartialLoop && n > 15 ? (2 * Math.PI) / (n + 1) : (2 * Math.PI) / n;
+      // For large partial loops widen the gap between the two cut-off endpoints
+      // to ceil(n/12) station-widths by shrinking angleStep accordingly.
+      const gapStations = isPartialLoop && n > 15 ? Math.ceil(n / 12) : 1;
+      const angleStep = (2 * Math.PI) / (n - 1 + gapStations);
 
       // Precompute dot positions and per-station label anchors
       const stationData = stations.map((station, i) => {
@@ -638,9 +726,24 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             <Rect x={0} y={0} width={C_SIZE} height={C_SIZE} fill="white" />
 
             {/* Line title in the center */}
+            {showLineBadge && (
+              <LineIndicatorBadge
+                x={C_CX - LI_SIZE / 2}
+                y={C_CY - (LI_SIZE + LI_GAP + LINE_TITLE_FONT) / 2}
+                color={lc}
+                prefix={line.prefix}
+              />
+            )}
             <Text
               x={C_CX - 60}
-              y={C_CY - LINE_TITLE_FONT / 2}
+              y={
+                showLineBadge
+                  ? C_CY -
+                    (LI_SIZE + LI_GAP + LINE_TITLE_FONT) / 2 +
+                    LI_SIZE +
+                    LI_GAP
+                  : C_CY - LINE_TITLE_FONT / 2
+              }
               text={line.name}
               fontSize={LINE_TITLE_FONT}
               fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
@@ -1033,9 +1136,17 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             />
 
             {/* Line title */}
+            {showLineBadge && (
+              <LineIndicatorBadge
+                x={PADDING + vnExtraL}
+                y={8}
+                color={lc}
+                prefix={line.prefix}
+              />
+            )}
             <Text
-              x={PADDING + vnExtraL}
-              y={8}
+              x={PADDING + vnExtraL + (showLineBadge ? LI_SIZE + LI_GAP : 0)}
+              y={showLineBadge ? 8 + (LI_SIZE - LINE_TITLE_FONT) / 2 : 8}
               text={line.name}
               fontSize={LINE_TITLE_FONT}
               fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
@@ -1409,9 +1520,17 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             <Rect x={0} y={0} width={canvasW} height={canvasH} fill="white" />
 
             {/* Line title */}
+            {showLineBadge && (
+              <LineIndicatorBadge
+                x={PADDING + hExtraL}
+                y={8}
+                color={lc}
+                prefix={line.prefix}
+              />
+            )}
             <Text
-              x={PADDING + hExtraL}
-              y={8}
+              x={PADDING + hExtraL + (showLineBadge ? LI_SIZE + LI_GAP : 0)}
+              y={showLineBadge ? 8 + (LI_SIZE - LINE_TITLE_FONT) / 2 : 8}
               text={line.name}
               fontSize={LINE_TITLE_FONT}
               fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
@@ -1716,9 +1835,17 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
           <Rect x={0} y={0} width={canvasW} height={canvasH} fill="white" />
 
           {/* Line title */}
+          {showLineBadge && (
+            <LineIndicatorBadge
+              x={V_TRACK_X + XCHG_R + 10}
+              y={8}
+              color={lc}
+              prefix={line.prefix}
+            />
+          )}
           <Text
-            x={V_TRACK_X + XCHG_R + 10}
-            y={8}
+            x={V_TRACK_X + XCHG_R + 10 + (showLineBadge ? LI_SIZE + LI_GAP : 0)}
+            y={showLineBadge ? 8 + (LI_SIZE - LINE_TITLE_FONT) / 2 : 8}
             text={line.name}
             fontSize={LINE_TITLE_FONT}
             fontFamily="NotoSansJP, Noto Sans JP, sans-serif"

@@ -280,6 +280,93 @@ function StationNumberBadgePreview({
   return <canvas ref={canvasRef} style={{ display: "block" }} />;
 }
 
+// ── Line Indicator Badge Preview ──────────────────────────────────────────────
+
+function LineIndicatorBadgePreview({
+  color,
+  prefix,
+  style,
+  compact = false,
+}: {
+  color: string;
+  prefix: string;
+  style: string;
+  compact?: boolean;
+}) {
+  if (style !== "jreast") return null;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const scale = compact ? 1.125 : 1.5;
+    const badgeSize = 30 * scale;
+    const cssSize = compact ? 48 : 64;
+    canvas.width = cssSize * dpr;
+    canvas.height = cssSize * dpr;
+    canvas.style.width = `${cssSize}px`;
+    canvas.style.height = `${cssSize}px`;
+
+    const draw = () => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, cssSize, cssSize);
+
+      const bx = (cssSize - badgeSize) / 2;
+      const by = (cssSize - badgeSize) / 2;
+
+      // White rounded background with narrow padding
+      const pad = 3 * scale;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.roundRect(
+        bx - pad,
+        by - pad,
+        badgeSize + pad * 2,
+        badgeSize + pad * 2,
+        4 * scale,
+      );
+      ctx.fill();
+
+      // White fill
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
+      ctx.fill();
+
+      // Colored outline
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3 * scale;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
+      ctx.stroke();
+
+      // Prefix text centered
+      ctx.fillStyle = "#000000";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      ctx.font = `600 ${21 * scale}px "HindSemiBold", Arial, sans-serif`;
+      const m = ctx.measureText(prefix);
+      const textH = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+      ctx.fillText(
+        prefix,
+        bx + badgeSize / 2,
+        by + badgeSize / 2 + m.actualBoundingBoxAscent - textH / 2,
+      );
+
+      ctx.restore();
+    };
+
+    document.fonts.ready.then(draw);
+  }, [color, prefix, compact]);
+
+  return <canvas ref={canvasRef} style={{ display: "block" }} />;
+}
+
 // ── Company Form Modal ────────────────────────────────────────────────────────
 
 interface CompanyFormProps {
@@ -418,6 +505,21 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
         format="hex"
         swatches={["#8cc800", "#ffffff", "#000000", "#ffdd00", "#f97f00"]}
       />
+      {prefix.trim() && (
+        <Group align="center" gap="md">
+          <LineIndicatorBadgePreview
+            color={color}
+            prefix={prefix.trim()}
+            style={
+              companies.find((c) => c.id === companyId)?.station_number_style ??
+              ""
+            }
+          />
+          <Text size="xs" c="dimmed">
+            {t("route.line.prefix-preview")}
+          </Text>
+        </Group>
+      )}
       <Select
         label={t("route.line.company")}
         value={companyId}
@@ -1322,12 +1424,19 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                       <Table.Tr key={line.id}>
                         <Table.Td>{line.name}</Table.Td>
                         <Table.Td>
-                          <Badge
-                            variant="outline"
-                            color={line.prefix ? undefined : "gray"}
-                          >
-                            {line.prefix || "none"}
-                          </Badge>
+                          {line.prefix &&
+                          company?.station_number_style === "jreast" ? (
+                            <LineIndicatorBadgePreview
+                              color={line.line_color}
+                              prefix={line.prefix}
+                              style={company.station_number_style}
+                              compact
+                            />
+                          ) : (
+                            <Text size="sm" c="dimmed">
+                              {line.prefix || "—"}
+                            </Text>
+                          )}
                         </Table.Td>
                         <Table.Td>
                           <Group gap="xs">

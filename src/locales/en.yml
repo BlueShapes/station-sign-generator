@@ -187,6 +187,7 @@ route:
     select: Select a line
     all: All Companies
     delete-confirm: Delete this line?
+    prefix-preview: Line indicator badge preview
   station:
     title: Stations
     add: Add Station

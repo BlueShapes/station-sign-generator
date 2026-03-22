@@ -187,6 +187,7 @@ route:
     select: 路線を選択してください
     all: すべての会社
     delete-confirm: この路線を削除しますか？
+    prefix-preview: 路線インジケータバッジのプレビュー
   station:
     title: 駅
     add: 駅を追加

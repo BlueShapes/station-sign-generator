@@ -412,6 +412,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
   const selectedLine = lines.find((l) => l.id === selectedLineId) ?? null;
   const isLoopLine = selectedLine?.is_loop === 1;
+  const mapCompanyStyle = useMemo(() => {
+    if (!db || !selectedLine?.company_id) return undefined;
+    return getAllCompanies(db).find((c) => c.id === selectedLine.company_id)
+      ?.station_number_style;
+  }, [db, selectedLine?.company_id]);
 
   // Whether the map range is cut off at either end
   const mapHasMoreBefore = useMemo(() => {
@@ -1226,6 +1231,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     showSecondaryLang={mapShowSecondaryLang}
                     hasMoreBefore={mapHasMoreBefore && mapShowFadeBefore}
                     hasMoreAfter={mapHasMoreAfter && mapShowFadeAfter}
+                    companyStyle={mapCompanyStyle}
                   />
                 </Box>
 
