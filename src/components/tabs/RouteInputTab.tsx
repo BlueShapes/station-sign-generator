@@ -171,6 +171,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapSecondaryLang, setMapSecondaryLang] =
     useState<StationNameField>("secondary_name");
   const [mapShowSecondaryLang, setMapShowSecondaryLang] = useState(true);
+  const [mapForceLinear, setMapForceLinear] = useState(false);
 
   // Load lines when db becomes available
   useEffect(() => {
@@ -396,9 +397,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setMapTransits(result);
   }, [db, selectedLineId, stations, lines]);
 
-  // ── Derived: stations in selected map range ──────────────────────────────
-  const mapStations = useMemo(() => {
-    if (stations.length === 0) return [];
+  // ── Derived: stations in selected map range (respects direction) ─────────
+  const { mapStations, mapHasMoreBefore, mapHasMoreAfter } = useMemo(() => {
+    if (stations.length === 0)
+      return {
+        mapStations: [],
+        mapHasMoreBefore: false,
+        mapHasMoreAfter: false,
+      };
     const startIdx = mapStartId
       ? stations.findIndex((s) => s.id === mapStartId)
       : 0;
@@ -407,30 +413,45 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       : stations.length - 1;
     const si = startIdx === -1 ? 0 : startIdx;
     const ei = endIdx === -1 ? stations.length - 1 : endIdx;
-    return si <= ei ? stations.slice(si, ei + 1) : stations.slice(ei, si + 1);
+    const reversed = si > ei;
+    const sliced = reversed
+      ? stations.slice(ei, si + 1).reverse()
+      : stations.slice(si, ei + 1);
+    // "More before/after" tracks whether the route continues beyond each
+    // displayed end in the direction of travel.
+    const hasMoreBefore = reversed ? si < stations.length - 1 : si > 0;
+    const hasMoreAfter = reversed ? ei > 0 : ei < stations.length - 1;
+    return {
+      mapStations: sliced,
+      mapHasMoreBefore: hasMoreBefore,
+      mapHasMoreAfter: hasMoreAfter,
+    };
   }, [stations, mapStartId, mapEndId]);
 
   const selectedLine = lines.find((l) => l.id === selectedLineId) ?? null;
   const isLoopLine = selectedLine?.is_loop === 1;
+  // When the user opts into linear rendering for a loop line, treat it as non-loop.
+  const effectiveIsLoop = isLoopLine && !mapForceLinear;
   const mapCompanyStyle = useMemo(() => {
     if (!db || !selectedLine?.company_id) return undefined;
     return getAllCompanies(db).find((c) => c.id === selectedLine.company_id)
       ?.station_number_style;
   }, [db, selectedLine?.company_id]);
 
-  // Whether the map range is cut off at either end
-  const mapHasMoreBefore = useMemo(() => {
-    if (mapStations.length === 0 || stations.length === 0) return false;
-    return mapStations[0].id !== stations[0].id;
-  }, [mapStations, stations]);
-
-  const mapHasMoreAfter = useMemo(() => {
-    if (mapStations.length === 0 || stations.length === 0) return false;
-    return (
-      mapStations[mapStations.length - 1].id !==
-      stations[stations.length - 1].id
-    );
-  }, [mapStations, stations]);
+  // Build label map: stationId -> "[JY01] 東京" format for dropdowns
+  const stationLabelMap = useMemo(() => {
+    if (!db || !selectedLineId || stations.length === 0)
+      return {} as Record<string, string>;
+    const prefix = selectedLine?.prefix ?? "";
+    const result: Record<string, string> = {};
+    for (const s of stations) {
+      const nums = getStationNumbers(db, s.id, selectedLineId);
+      const num = nums[0];
+      const badge = num && prefix ? `[${prefix}${num.value}] ` : "";
+      result[s.id] = `${badge}${s.primary_name}`;
+    }
+    return result;
+  }, [db, selectedLineId, selectedLine?.prefix, stations]);
 
   // Load station numbers for map range
   useEffect(() => {
@@ -498,14 +519,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const mapSaveSizeList = useMemo(() => {
     const { w, h } = getMapCanvasDimensions(
       mapStations.length,
-      isLoopLine,
+      effectiveIsLoop,
       mapOrientation,
       filteredMapTransits,
       mapNameStyle,
       mapMaxNameExtent,
       mapStationSpacing,
-      mapHasMoreBefore && mapShowFadeBefore,
-      mapHasMoreAfter && mapShowFadeAfter,
+      mapForceLinear ? true : mapHasMoreBefore && mapShowFadeBefore,
+      mapForceLinear ? true : mapHasMoreAfter && mapShowFadeAfter,
     );
     return [1, 2, 3, 4].map((mult) => ({
       label: `${w * mult} × ${h * mult} (${["SS", "M", "L", "XL"][mult - 1]})`,
@@ -513,12 +534,13 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }));
   }, [
     mapStations.length,
-    isLoopLine,
+    effectiveIsLoop,
     mapOrientation,
     filteredMapTransits,
     mapNameStyle,
     mapMaxNameExtent,
     mapStationSpacing,
+    mapForceLinear,
     mapHasMoreBefore,
     mapShowFadeBefore,
     mapHasMoreAfter,
@@ -527,7 +549,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
   // Overlap warnings for circular maps
   const overlapWarnings = useMemo<string[]>(() => {
-    if (!isLoopLine || mapStations.length === 0) return [];
+    if (!effectiveIsLoop || mapStations.length === 0) return [];
     return detectCircularOverlaps(
       mapStations,
       filteredMapTransits,
@@ -539,7 +561,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapShowSecondaryLang,
     );
   }, [
-    isLoopLine,
+    effectiveIsLoop,
     mapStations,
     filteredMapTransits,
     mapFontSize,
@@ -674,7 +696,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   onChange={setSelectedStationId}
                   data={stations.map((s) => ({
                     value: s.id,
-                    label: s.primary_name,
+                    label: stationLabelMap[s.id] ?? s.primary_name,
                   }))}
                   placeholder={
                     selectedLineId
@@ -882,7 +904,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   onChange={setMapStartId}
                   data={stations.map((s) => ({
                     value: s.id,
-                    label: s.primary_name,
+                    label: stationLabelMap[s.id] ?? s.primary_name,
                   }))}
                   placeholder={
                     selectedLineId
@@ -891,6 +913,26 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   }
                   disabled={!selectedLineId}
                 />
+              </Grid.Col>
+
+              {/* Swap from/to */}
+              <Grid.Col
+                span={{ base: 12, sm: 6, md: 1 }}
+                style={{ display: "flex", alignItems: "flex-end" }}
+              >
+                <Button
+                  variant="default"
+                  fullWidth
+                  disabled={!selectedLineId}
+                  onClick={() => {
+                    const tmp = mapStartId;
+                    setMapStartId(mapEndId);
+                    setMapEndId(tmp);
+                  }}
+                  title={t("route.linemap.swap")}
+                >
+                  <IconArrowsLeftRight size={16} />
+                </Button>
               </Grid.Col>
 
               {/* Range: end station */}
@@ -901,7 +943,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   onChange={setMapEndId}
                   data={stations.map((s) => ({
                     value: s.id,
-                    label: s.primary_name,
+                    label: stationLabelMap[s.id] ?? s.primary_name,
                   }))}
                   placeholder={
                     selectedLineId
@@ -912,8 +954,22 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 />
               </Grid.Col>
 
-              {/* Orientation toggle — hidden for loop lines */}
-              {!isLoopLine && (
+              {/* Linear-mode toggle — loop lines only */}
+              {isLoopLine && (
+                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Text size="sm" fw={500} mb={4}>
+                    {t("route.linemap.loop-render-mode")}
+                  </Text>
+                  <Switch
+                    label={t("route.linemap.loop-as-linear")}
+                    checked={mapForceLinear}
+                    onChange={(e) => setMapForceLinear(e.currentTarget.checked)}
+                  />
+                </Grid.Col>
+              )}
+
+              {/* Orientation toggle — non-loop, or loop rendered as linear */}
+              {(!isLoopLine || mapForceLinear) && (
                 <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
                   <Text size="sm" fw={500} mb={4}>
                     {t("route.linemap.orientation")}
@@ -945,34 +1001,35 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 </Grid.Col>
               )}
 
-              {/* Name style toggle — horizontal non-loop only */}
-              {!isLoopLine && mapOrientation === "horizontal" && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <Text size="sm" fw={500} mb={4}>
-                    {t("route.linemap.name-style")}
-                  </Text>
-                  <SegmentedControl
-                    value={mapNameStyle}
-                    onChange={(v) =>
-                      setMapNameStyle(v as "normal" | "above" | "below")
-                    }
-                    data={[
-                      {
-                        value: "normal",
-                        label: t("route.linemap.name-style-normal"),
-                      },
-                      {
-                        value: "above",
-                        label: t("route.linemap.name-style-above"),
-                      },
-                      {
-                        value: "below",
-                        label: t("route.linemap.name-style-below"),
-                      },
-                    ]}
-                  />
-                </Grid.Col>
-              )}
+              {/* Name style toggle — horizontal, non-loop or loop-as-linear */}
+              {(!isLoopLine || mapForceLinear) &&
+                mapOrientation === "horizontal" && (
+                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Text size="sm" fw={500} mb={4}>
+                      {t("route.linemap.name-style")}
+                    </Text>
+                    <SegmentedControl
+                      value={mapNameStyle}
+                      onChange={(v) =>
+                        setMapNameStyle(v as "normal" | "above" | "below")
+                      }
+                      data={[
+                        {
+                          value: "normal",
+                          label: t("route.linemap.name-style-normal"),
+                        },
+                        {
+                          value: "above",
+                          label: t("route.linemap.name-style-above"),
+                        },
+                        {
+                          value: "below",
+                          label: t("route.linemap.name-style-below"),
+                        },
+                      ]}
+                    />
+                  </Grid.Col>
+                )}
 
               {/* Primary language */}
               <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
@@ -1079,8 +1136,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               )}
             </Grid>
 
-            {/* Font size slider — circular maps only */}
-            {isLoopLine && selectedLine && (
+            {/* Font size slider — circular maps only (not when shown as linear) */}
+            {effectiveIsLoop && selectedLine && (
               <Box
                 style={{ display: "flex", alignItems: "center", gap: "12px" }}
               >
@@ -1098,8 +1155,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               </Box>
             )}
 
-            {/* Station spacing slider — non-circular only */}
-            {!isLoopLine && selectedLine && (
+            {/* Station spacing slider — non-circular or loop-as-linear */}
+            {!effectiveIsLoop && selectedLine && (
               <Box>
                 <Text size="sm" fw={500} mb={8}>
                   {t("route.linemap.station-spacing")}
@@ -1218,7 +1275,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     ref={mapRef}
                     stations={mapStations}
                     line={selectedLine}
-                    isLoop={isLoopLine}
+                    isLoop={effectiveIsLoop}
                     transits={filteredMapTransits}
                     orientation={mapOrientation}
                     nameStyle={mapNameStyle}
@@ -1229,8 +1286,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     primaryLangField={mapPrimaryLang}
                     secondaryLangField={mapSecondaryLang}
                     showSecondaryLang={mapShowSecondaryLang}
-                    hasMoreBefore={mapHasMoreBefore && mapShowFadeBefore}
-                    hasMoreAfter={mapHasMoreAfter && mapShowFadeAfter}
+                    hasMoreBefore={
+                      mapForceLinear
+                        ? true
+                        : mapHasMoreBefore && mapShowFadeBefore
+                    }
+                    hasMoreAfter={
+                      mapForceLinear
+                        ? true
+                        : mapHasMoreAfter && mapShowFadeAfter
+                    }
                     companyStyle={mapCompanyStyle}
                   />
                 </Box>

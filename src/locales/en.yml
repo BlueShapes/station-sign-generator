@@ -252,6 +252,9 @@ route:
     continuation: Continuation Indicators
     continuation-before: Show at start
     continuation-after: Show at end
+    swap: Swap start and end
+    loop-render-mode: Loop Display Mode
+    loop-as-linear: Show as linear route
 
 footer:
   notice: This is a fan-made website. All trademarks are the property of their respective railway companies. This site is not affiliated with or endorsed by any railway company. Sample data and initial values may contain fake values.
