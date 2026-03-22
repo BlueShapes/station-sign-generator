@@ -248,6 +248,9 @@ route:
     lang-2nd: 第2名称
     lang-3rd: 第3名称
     lang-4th: 第4名称
+    continuation: 延長表示
+    continuation-before: 始発側
+    continuation-after: 終着側
 
 footer:
   notice: このサイトはファンサイトです。商標は各鉄道会社に帰属します。当サイトは各鉄道会社とは一切関係ありません。また、開発者は鉄道オタクではなく、サンプルデータや初期値は誤りを含む場合があります。

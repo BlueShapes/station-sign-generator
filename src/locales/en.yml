@@ -248,6 +248,9 @@ route:
     lang-2nd: 2nd name
     lang-3rd: 3rd name
     lang-4th: 4th name
+    continuation: Continuation Indicators
+    continuation-before: Show at start
+    continuation-after: Show at end
 
 footer:
   notice: This is a fan-made website. All trademarks are the property of their respective railway companies. This site is not affiliated with or endorsed by any railway company. Sample data and initial values may contain fake values.

@@ -145,6 +145,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     useState<MapOrientation>("horizontal");
   const [mapStartId, setMapStartId] = useState<string | null>(null);
   const [mapEndId, setMapEndId] = useState<string | null>(null);
+  const [mapShowFadeBefore, setMapShowFadeBefore] = useState(true);
+  const [mapShowFadeAfter, setMapShowFadeAfter] = useState(true);
   const [mapTransits, setMapTransits] = useState<Record<string, Line[]>>({});
   /** null = show all transit lines; array = show only these line IDs */
   const [mapTransitFilter, setMapTransitFilter] = useState<string[] | null>(
@@ -411,6 +413,20 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const selectedLine = lines.find((l) => l.id === selectedLineId) ?? null;
   const isLoopLine = selectedLine?.is_loop === 1;
 
+  // Whether the map range is cut off at either end
+  const mapHasMoreBefore = useMemo(() => {
+    if (mapStations.length === 0 || stations.length === 0) return false;
+    return mapStations[0].id !== stations[0].id;
+  }, [mapStations, stations]);
+
+  const mapHasMoreAfter = useMemo(() => {
+    if (mapStations.length === 0 || stations.length === 0) return false;
+    return (
+      mapStations[mapStations.length - 1].id !==
+      stations[stations.length - 1].id
+    );
+  }, [mapStations, stations]);
+
   // Load station numbers for map range
   useEffect(() => {
     if (!db || !selectedLineId || mapStations.length === 0) {
@@ -483,6 +499,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapNameStyle,
       mapMaxNameExtent,
       mapStationSpacing,
+      mapHasMoreBefore && mapShowFadeBefore,
+      mapHasMoreAfter && mapShowFadeAfter,
     );
     return [1, 2, 3, 4].map((mult) => ({
       label: `${w * mult} × ${h * mult} (${["SS", "M", "L", "XL"][mult - 1]})`,
@@ -496,6 +514,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapNameStyle,
     mapMaxNameExtent,
     mapStationSpacing,
+    mapHasMoreBefore,
+    mapShowFadeBefore,
+    mapHasMoreAfter,
+    mapShowFadeAfter,
   ]);
 
   // Overlap warnings for circular maps
@@ -1126,6 +1148,37 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               />
             </Box>
 
+            {/* Continuation indicator toggles — only shown when the map range is cut off */}
+            {(mapHasMoreBefore || mapHasMoreAfter) && (
+              <Box>
+                <Text size="sm" fw={500} mb={6}>
+                  {t("route.linemap.continuation")}
+                </Text>
+                <Group gap="md">
+                  {mapHasMoreBefore && (
+                    <Switch
+                      label={t("route.linemap.continuation-before")}
+                      checked={mapShowFadeBefore}
+                      onChange={(e) =>
+                        setMapShowFadeBefore(e.currentTarget.checked)
+                      }
+                      size="xs"
+                    />
+                  )}
+                  {mapHasMoreAfter && (
+                    <Switch
+                      label={t("route.linemap.continuation-after")}
+                      checked={mapShowFadeAfter}
+                      onChange={(e) =>
+                        setMapShowFadeAfter(e.currentTarget.checked)
+                      }
+                      size="xs"
+                    />
+                  )}
+                </Group>
+              </Box>
+            )}
+
             {/* Overlap warning */}
             {overlapWarnings.length > 0 && (
               <Alert
@@ -1171,6 +1224,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     primaryLangField={mapPrimaryLang}
                     secondaryLangField={mapSecondaryLang}
                     showSecondaryLang={mapShowSecondaryLang}
+                    hasMoreBefore={mapHasMoreBefore && mapShowFadeBefore}
+                    hasMoreAfter={mapHasMoreAfter && mapShowFadeAfter}
                   />
                 </Box>
 

@@ -6,6 +6,7 @@ import {
   Circle,
   Rect,
   Text,
+  Path as KonvaPath,
 } from "react-konva";
 import Konva from "konva";
 import type { Station, Line } from "@/db/types";
@@ -35,6 +36,10 @@ export interface LineMapRendererProps {
   isLoop: boolean;
   /** Ignored when isLoop is true; circular lines are always rendered as a circle */
   orientation: "horizontal" | "vertical";
+  /** When true, show fade dots before the first station (line continues beyond) */
+  hasMoreBefore?: boolean;
+  /** When true, show fade dots after the last station (line continues beyond) */
+  hasMoreAfter?: boolean;
   /**
    * Horizontal layout name style (ignored for vertical/loop):
    *   "normal"  — horizontal names alternating above/below (default)
@@ -159,12 +164,20 @@ export function getMapCanvasDimensions(
   maxNameExtent?: number,
   /** Override station spacing (defaults: H_SPACING for horizontal, V_SPACING for vertical) */
   stationSpacing?: number,
+  /** When true, extra space is added on the left/top for fade extension */
+  hasMoreBefore?: boolean,
+  /** When true, extra space is added on the right/bottom for fade extension */
+  hasMoreAfter?: boolean,
 ): { w: number; h: number } {
   if (isLoop) return { w: C_SIZE, h: C_SIZE };
   const n = stationCount;
   const hSpacing = stationSpacing ?? H_SPACING;
   const vSpacing = stationSpacing ?? V_SPACING;
   if (orientation === "horizontal") {
+    const hFadeLen = Math.round(hSpacing / 3);
+    const hFadeExtra = hFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+    const extraL = hasMoreBefore ? hFadeExtra : 0;
+    const extraR = hasMoreAfter ? hFadeExtra : 0;
     if (nameStyle === "above" || nameStyle === "below") {
       const ne = maxNameExtent ?? 60;
       const hasAnyTransit = Object.values(transits).some((t) => t.length > 0);
@@ -175,17 +188,27 @@ export function getMapCanvasDimensions(
         ne +
         PADDING;
       return {
-        w: Math.max(300, PADDING * 2 + (n - 1) * hSpacing),
+        w: Math.max(
+          300,
+          PADDING + extraL + (n - 1) * hSpacing + PADDING + extraR,
+        ),
         // same canvas height regardless of above/below
         h: halfExt + XCHG_R + PADDING,
       };
     }
     return {
-      w: Math.max(300, PADDING * 2 + (n - 1) * hSpacing),
+      w: Math.max(
+        300,
+        PADDING + extraL + (n - 1) * hSpacing + PADDING + extraR,
+      ),
       h: H_HEIGHT,
     };
   }
   // vertical
+  const vFadeLen = Math.round(vSpacing / 3);
+  const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+  const extraT = hasMoreBefore ? vFadeExtra : 0;
+  const extraB = hasMoreAfter ? vFadeExtra : 0;
   const maxBadgeCount = Math.max(
     0,
     ...Object.values(transits).map((t) => t.length),
@@ -202,7 +225,7 @@ export function getMapCanvasDimensions(
         maxNameW +
         V_RIGHT_MARGIN,
     ),
-    h: Math.max(200, PADDING * 2 + (n - 1) * vSpacing),
+    h: Math.max(200, PADDING + extraT + (n - 1) * vSpacing + PADDING + extraB),
   };
 }
 
@@ -305,6 +328,11 @@ const C_TICK_LEN = 3; // gap between dot edge and label anchor
 const C_STAGGER = 0; // no stagger — labels sit close to their dot
 const C_LABEL_GAP = 4; // gap between tick end and text
 const C_DIAG = 0.35; // |cosA| threshold below which station is in top/bottom zone
+
+// Fade dots — shown at line ends when the map is a partial view of the full line
+const FADE_DOT_SPACING = 10; // spacing between dots beyond the cutoff
+const FADE_DOT_R = TRACK_W / 2; // same radius as line half-width
+const FADE_OPACITIES = [0.65, 0.35, 0.15] as const; // nearest → farthest
 
 // ── Helper: compute total badges width for a station ───────────────────────
 
@@ -489,6 +517,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       primaryLangField = "primary_name",
       secondaryLangField = "secondary_name",
       showSecondaryLang = true,
+      hasMoreBefore = false,
+      hasMoreAfter = false,
     },
     ref,
   ) => {
@@ -525,7 +555,11 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     if (isLoop) {
       const cJpFont = circularFontSize ?? JP_FONT;
       const cEnFont = Math.max(5, cJpFont - 3);
-      const angleStep = (2 * Math.PI) / n;
+      const isPartialLoop = hasMoreBefore || hasMoreAfter;
+      // For large partial loops add a phantom station to the divisor so the
+      // gap between the two cut-off endpoints spans ~2 station-widths.
+      const angleStep =
+        isPartialLoop && n > 15 ? (2 * Math.PI) / (n + 1) : (2 * Math.PI) / n;
 
       // Precompute dot positions and per-station label anchors
       const stationData = stations.map((station, i) => {
@@ -616,8 +650,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               width={120}
             />
 
-            {/* Track segments */}
+            {/* Track segments — skip closing segment for partial loops */}
             {stationData.map((sd, i) => {
+              const isClosing = i === n - 1;
+              if (isClosing && isPartialLoop) return null;
               const next = stationData[(i + 1) % n];
               return (
                 <KonvaLine
@@ -630,6 +666,71 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 />
               );
             })}
+
+            {/* Fade track + dots at arc ends for partial circular loops */}
+            {(hasMoreBefore || hasMoreAfter) &&
+              (() => {
+                const angle0 = -Math.PI / 2;
+                const angleN = (n - 1) * angleStep - Math.PI / 2;
+                const arcExt = (2 * Math.PI) / n / 6;
+                const arcDot = FADE_DOT_SPACING / C_RADIUS;
+                const extAngle0 = angle0 - arcExt;
+                const extAngleN = angleN + arcExt;
+                return (
+                  <Fragment>
+                    {/* Extension lines (opacity 1, butt cap) */}
+                    <KonvaLine
+                      points={[
+                        stationData[0].dotX,
+                        stationData[0].dotY,
+                        C_CX + C_RADIUS * Math.cos(extAngle0),
+                        C_CY + C_RADIUS * Math.sin(extAngle0),
+                      ]}
+                      stroke={lc}
+                      strokeWidth={TRACK_W}
+                      lineCap="round"
+                    />
+                    <KonvaLine
+                      points={[
+                        stationData[n - 1].dotX,
+                        stationData[n - 1].dotY,
+                        C_CX + C_RADIUS * Math.cos(extAngleN),
+                        C_CY + C_RADIUS * Math.sin(extAngleN),
+                      ]}
+                      stroke={lc}
+                      strokeWidth={TRACK_W}
+                      lineCap="round"
+                    />
+                    {/* Fading dots beyond the cutoff */}
+                    {FADE_OPACITIES.map((opacity, idx) => {
+                      const a = extAngle0 - arcDot * (idx + 1);
+                      return (
+                        <Circle
+                          key={`fade-circ-before-${idx}`}
+                          x={C_CX + C_RADIUS * Math.cos(a)}
+                          y={C_CY + C_RADIUS * Math.sin(a)}
+                          radius={FADE_DOT_R}
+                          fill={lc}
+                          opacity={opacity}
+                        />
+                      );
+                    })}
+                    {FADE_OPACITIES.map((opacity, idx) => {
+                      const a = extAngleN + arcDot * (idx + 1);
+                      return (
+                        <Circle
+                          key={`fade-circ-after-${idx}`}
+                          x={C_CX + C_RADIUS * Math.cos(a)}
+                          y={C_CY + C_RADIUS * Math.sin(a)}
+                          radius={FADE_DOT_R}
+                          fill={lc}
+                          opacity={opacity}
+                        />
+                      );
+                    })}
+                  </Fragment>
+                );
+              })()}
 
             {/* Station dots */}
             {stationData.map((sd, i) => {
@@ -901,7 +1002,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         nameStyle === "above"
           ? halfExt + XCHG_R + PADDING
           : XCHG_R + PADDING + halfExt;
-      const vnCanvasW = Math.max(300, PADDING * 2 + (n - 1) * hSpacing);
+      const vnFadeLen = Math.round(hSpacing / 3);
+      const vnFadeExtra = vnFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const vnExtraL = hasMoreBefore ? vnFadeExtra : 0;
+      const vnExtraR = hasMoreAfter ? vnFadeExtra : 0;
+      const vnCanvasW = Math.max(
+        300,
+        PADDING + vnExtraL + (n - 1) * hSpacing + PADDING + vnExtraR,
+      );
       // d: direction away from track (+1 = down for "below", -1 = up for "above")
       const d = nameStyle === "above" ? -1 : 1;
 
@@ -926,7 +1034,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
             {/* Line title */}
             <Text
-              x={PADDING}
+              x={PADDING + vnExtraL}
               y={8}
               text={line.name}
               fontSize={LINE_TITLE_FONT}
@@ -938,9 +1046,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             {/* Track */}
             <KonvaLine
               points={[
-                PADDING,
+                PADDING + vnExtraL,
                 vnTrackY,
-                PADDING + (n - 1) * hSpacing,
+                PADDING + vnExtraL + (n - 1) * hSpacing,
                 vnTrackY,
               ]}
               stroke={lc}
@@ -948,9 +1056,74 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               lineCap="round"
             />
 
+            {/* Fade extension + dots — before first station */}
+            {hasMoreBefore && (
+              <Fragment>
+                <KonvaLine
+                  points={[
+                    PADDING + vnExtraL,
+                    vnTrackY,
+                    PADDING + vnExtraL - vnFadeLen,
+                    vnTrackY,
+                  ]}
+                  stroke={lc}
+                  strokeWidth={TRACK_W}
+                  lineCap="round"
+                />
+                {FADE_OPACITIES.map((opacity, idx) => (
+                  <Circle
+                    key={`fade-before-${idx}`}
+                    x={
+                      PADDING +
+                      vnExtraL -
+                      vnFadeLen -
+                      FADE_DOT_SPACING * (idx + 1)
+                    }
+                    y={vnTrackY}
+                    radius={FADE_DOT_R}
+                    fill={lc}
+                    opacity={opacity}
+                  />
+                ))}
+              </Fragment>
+            )}
+
+            {/* Fade extension + dots — after last station */}
+            {hasMoreAfter && (
+              <Fragment>
+                <KonvaLine
+                  points={[
+                    PADDING + vnExtraL + (n - 1) * hSpacing,
+                    vnTrackY,
+                    PADDING + vnExtraL + (n - 1) * hSpacing + vnFadeLen,
+                    vnTrackY,
+                  ]}
+                  stroke={lc}
+                  strokeWidth={TRACK_W}
+                  lineCap="round"
+                />
+                {FADE_OPACITIES.map((opacity, idx) => (
+                  <Circle
+                    key={`fade-after-${idx}`}
+                    x={
+                      PADDING +
+                      vnExtraL +
+                      (n - 1) * hSpacing +
+                      vnFadeLen +
+                      FADE_DOT_SPACING * (idx + 1)
+                    }
+                    y={vnTrackY}
+                    radius={FADE_DOT_R}
+                    fill={lc}
+                    opacity={opacity}
+                  />
+                ))}
+              </Fragment>
+            )}
+
             {/* Stations */}
             {stations.map((station, i) => {
-              const x = PADDING + i * hSpacing;
+              const x = PADDING + vnExtraL + i * hSpacing;
               const isXchg = (transits[station.id]?.length ?? 0) > 0;
               const r = isXchg ? XCHG_R : DOT_R;
               const stTransits = transits[station.id] ?? [];
@@ -1212,7 +1385,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     // ── Horizontal linear layout ──────────────────────────────────────────
 
     if (orientation === "horizontal") {
-      const canvasW = Math.max(300, PADDING * 2 + (n - 1) * hSpacing);
+      const hFadeLen = Math.round(hSpacing / 3);
+      const hFadeExtra = hFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const hExtraL = hasMoreBefore ? hFadeExtra : 0;
+      const hExtraR = hasMoreAfter ? hFadeExtra : 0;
+      const canvasW = Math.max(
+        300,
+        PADDING + hExtraL + (n - 1) * hSpacing + PADDING + hExtraR,
+      );
       const canvasH = H_HEIGHT;
 
       return (
@@ -1230,7 +1410,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
             {/* Line title */}
             <Text
-              x={PADDING}
+              x={PADDING + hExtraL}
               y={8}
               text={line.name}
               fontSize={LINE_TITLE_FONT}
@@ -1242,9 +1422,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             {/* Track */}
             <KonvaLine
               points={[
-                PADDING,
+                PADDING + hExtraL,
                 H_TRACK_Y,
-                PADDING + (n - 1) * hSpacing,
+                PADDING + hExtraL + (n - 1) * hSpacing,
                 H_TRACK_Y,
               ]}
               stroke={lc}
@@ -1252,9 +1432,74 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               lineCap="round"
             />
 
+            {/* Fade extension + dots — before first station */}
+            {hasMoreBefore && (
+              <Fragment>
+                <KonvaLine
+                  points={[
+                    PADDING + hExtraL,
+                    H_TRACK_Y,
+                    PADDING + hExtraL - hFadeLen,
+                    H_TRACK_Y,
+                  ]}
+                  stroke={lc}
+                  strokeWidth={TRACK_W}
+                  lineCap="round"
+                />
+                {FADE_OPACITIES.map((opacity, idx) => (
+                  <Circle
+                    key={`fade-before-${idx}`}
+                    x={
+                      PADDING +
+                      hExtraL -
+                      hFadeLen -
+                      FADE_DOT_SPACING * (idx + 1)
+                    }
+                    y={H_TRACK_Y}
+                    radius={FADE_DOT_R}
+                    fill={lc}
+                    opacity={opacity}
+                  />
+                ))}
+              </Fragment>
+            )}
+
+            {/* Fade extension + dots — after last station */}
+            {hasMoreAfter && (
+              <Fragment>
+                <KonvaLine
+                  points={[
+                    PADDING + hExtraL + (n - 1) * hSpacing,
+                    H_TRACK_Y,
+                    PADDING + hExtraL + (n - 1) * hSpacing + hFadeLen,
+                    H_TRACK_Y,
+                  ]}
+                  stroke={lc}
+                  strokeWidth={TRACK_W}
+                  lineCap="round"
+                />
+                {FADE_OPACITIES.map((opacity, idx) => (
+                  <Circle
+                    key={`fade-after-${idx}`}
+                    x={
+                      PADDING +
+                      hExtraL +
+                      (n - 1) * hSpacing +
+                      hFadeLen +
+                      FADE_DOT_SPACING * (idx + 1)
+                    }
+                    y={H_TRACK_Y}
+                    radius={FADE_DOT_R}
+                    fill={lc}
+                    opacity={opacity}
+                  />
+                ))}
+              </Fragment>
+            )}
+
             {/* Stations */}
             {stations.map((station, i) => {
-              const x = PADDING + i * hSpacing;
+              const x = PADDING + hExtraL + i * hSpacing;
               const isXchg = (transits[station.id]?.length ?? 0) > 0;
               const r = isXchg ? XCHG_R : DOT_R;
               const above = i % 2 === 0;
@@ -1448,7 +1693,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         maxNameW +
         V_RIGHT_MARGIN,
     );
-    const canvasH = Math.max(200, PADDING * 2 + (n - 1) * vSpacing);
+    const vFadeLen = Math.round(vSpacing / 3);
+    const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+    const vExtraT = hasMoreBefore ? vFadeExtra : 0;
+    const vExtraB = hasMoreAfter ? vFadeExtra : 0;
+    const canvasH = Math.max(
+      200,
+      PADDING + vExtraT + (n - 1) * vSpacing + PADDING + vExtraB,
+    );
 
     return (
       <Stage
@@ -1478,18 +1730,80 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
           <KonvaLine
             points={[
               V_TRACK_X,
-              PADDING,
+              PADDING + vExtraT,
               V_TRACK_X,
-              PADDING + (n - 1) * vSpacing,
+              PADDING + vExtraT + (n - 1) * vSpacing,
             ]}
             stroke={lc}
             strokeWidth={TRACK_W}
             lineCap="round"
           />
 
+          {/* Fade extension + dots — before first station */}
+          {hasMoreBefore && (
+            <Fragment>
+              <KonvaLine
+                points={[
+                  V_TRACK_X,
+                  PADDING + vExtraT,
+                  V_TRACK_X,
+                  PADDING + vExtraT - vFadeLen,
+                ]}
+                stroke={lc}
+                strokeWidth={TRACK_W}
+                lineCap="round"
+              />
+              {FADE_OPACITIES.map((opacity, idx) => (
+                <Circle
+                  key={`fade-before-${idx}`}
+                  x={V_TRACK_X}
+                  y={
+                    PADDING + vExtraT - vFadeLen - FADE_DOT_SPACING * (idx + 1)
+                  }
+                  radius={FADE_DOT_R}
+                  fill={lc}
+                  opacity={opacity}
+                />
+              ))}
+            </Fragment>
+          )}
+
+          {/* Fade extension + dots — after last station */}
+          {hasMoreAfter && (
+            <Fragment>
+              <KonvaLine
+                points={[
+                  V_TRACK_X,
+                  PADDING + vExtraT + (n - 1) * vSpacing,
+                  V_TRACK_X,
+                  PADDING + vExtraT + (n - 1) * vSpacing + vFadeLen,
+                ]}
+                stroke={lc}
+                strokeWidth={TRACK_W}
+                lineCap="round"
+              />
+              {FADE_OPACITIES.map((opacity, idx) => (
+                <Circle
+                  key={`fade-after-${idx}`}
+                  x={V_TRACK_X}
+                  y={
+                    PADDING +
+                    vExtraT +
+                    (n - 1) * vSpacing +
+                    vFadeLen +
+                    FADE_DOT_SPACING * (idx + 1)
+                  }
+                  radius={FADE_DOT_R}
+                  fill={lc}
+                  opacity={opacity}
+                />
+              ))}
+            </Fragment>
+          )}
+
           {/* Stations */}
           {stations.map((station, i) => {
-            const y = PADDING + i * vSpacing;
+            const y = PADDING + vExtraT + i * vSpacing;
             const isXchg = (transits[station.id]?.length ?? 0) > 0;
             const r = isXchg ? XCHG_R : DOT_R;
             const stTransits = transits[station.id] ?? [];
