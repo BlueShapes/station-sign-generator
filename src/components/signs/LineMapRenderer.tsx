@@ -101,6 +101,12 @@ export interface LineMapRendererProps {
   serviceStops?: ServiceStopMap;
   /** When false, stations where no selected service stops are hidden. Default: true */
   showPassedStations?: boolean;
+  /**
+   * How to display the single-service name next to the line title.
+   *   "paren"  — append （サービス名） in the service colour (default)
+   *   "badge"  — coloured rectangle with white text
+   */
+  serviceNameStyle?: "paren" | "badge";
 }
 
 export const CIRCULAR_FONT_DEFAULT = 9;
@@ -664,6 +670,67 @@ export function measureTextWidth(
   return node.width();
 }
 
+// ── Service-name label helper ────────────────────────────────────────────────
+
+/** Width of the service-name label (including any padding / parens). */
+function serviceNameLabelWidth(name: string, style: "paren" | "badge"): number {
+  if (style === "badge") {
+    return measureTextWidth(name, LINE_TITLE_FONT - 1) + 6; // 3px pad each side
+  }
+  return measureTextWidth(`（${name}）`, LINE_TITLE_FONT);
+}
+
+/** Render the service-name label at (x, y) where y is the text baseline top. */
+function ServiceNameLabel({
+  x,
+  y,
+  name,
+  color,
+  style,
+}: {
+  x: number;
+  y: number;
+  name: string;
+  color: string;
+  style: "paren" | "badge";
+}) {
+  if (style === "badge") {
+    const tw = measureTextWidth(name, LINE_TITLE_FONT - 1);
+    const bw = tw + 6;
+    const bh = LINE_TITLE_FONT + 2;
+    return (
+      <Fragment>
+        <Rect
+          x={x}
+          y={y - 1}
+          width={bw}
+          height={bh}
+          fill={color}
+          cornerRadius={2}
+        />
+        <Text
+          x={x + 3}
+          y={y}
+          text={name}
+          fontSize={LINE_TITLE_FONT - 1}
+          fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+          fill="white"
+        />
+      </Fragment>
+    );
+  }
+  return (
+    <Text
+      x={x}
+      y={y}
+      text={`（${name}）`}
+      fontSize={LINE_TITLE_FONT}
+      fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+      fill={color}
+    />
+  );
+}
+
 // ── Renderer ────────────────────────────────────────────────────────────────
 
 const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
@@ -689,6 +756,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       services,
       serviceStops = {},
       showPassedStations = true,
+      serviceNameStyle = "paren",
     },
     ref,
   ) => {
@@ -1197,9 +1265,23 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const vnFadeExtra = vnFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
       const vnExtraL = hasMoreBefore ? vnFadeExtra : 0;
       const vnExtraR = hasMoreAfter ? vnFadeExtra : 0;
+
+      // Extra left space to fit long service name labels (rendered at x=4, right-aligned)
+      const svcLabelFontSize = 8;
+      const maxSvcLabelW = Math.max(
+        0,
+        ...services.map((svc) => measureTextWidth(svc.name, svcLabelFontSize)),
+      );
+      const svcExtraL = Math.max(
+        0,
+        4 + maxSvcLabelW + SVC_DOT_R + 10 - PADDING - vnExtraL,
+      );
+      // Effective track start X
+      const tL = PADDING + vnExtraL + svcExtraL;
+
       const vnCanvasW = Math.max(
         300,
-        PADDING + vnExtraL + (n - 1) * hSpacing + PADDING + vnExtraR,
+        tL + (n - 1) * hSpacing + PADDING + vnExtraR,
       );
       const d = nameStyle === "above" ? -1 : 1;
 
@@ -1232,14 +1314,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             {/* Line title */}
             {showLineBadge && (
               <LineIndicatorBadge
-                x={PADDING + vnExtraL}
+                x={tL}
                 y={8}
                 color={lc}
                 prefix={line.prefix}
               />
             )}
             <Text
-              x={PADDING + vnExtraL + (showLineBadge ? LI_SIZE + LI_GAP : 0)}
+              x={tL + (showLineBadge ? LI_SIZE + LI_GAP : 0)}
               y={showLineBadge ? 8 + (LI_SIZE - LINE_TITLE_FONT) / 2 : 8}
               text={line.name}
               fontSize={LINE_TITLE_FONT}
@@ -1251,10 +1333,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             {/* Service labels at track start (in left padding area) */}
             {services.map((svc, si) => {
               const ty = trackYs[si];
-              const lx = PADDING + vnExtraL;
-              const labelFont = 8;
-              // right edge must clear the dot: lx - SVC_DOT_R - 6 gap
-              const labelW = Math.max(20, lx - SVC_DOT_R - 10);
+              const labelFont = svcLabelFontSize;
+              // right edge must clear the dot: tL - SVC_DOT_R - 6 gap
+              const labelW = Math.max(20, tL - SVC_DOT_R - 10);
               return (
                 <Text
                   key={`svclab-${svc.id}`}
@@ -1276,12 +1357,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               return (
                 <Fragment key={`svctrack-${svc.id}`}>
                   <KonvaLine
-                    points={[
-                      PADDING + vnExtraL,
-                      ty,
-                      PADDING + vnExtraL + (n - 1) * hSpacing,
-                      ty,
-                    ]}
+                    points={[tL, ty, tL + (n - 1) * hSpacing, ty]}
                     stroke={svc.color}
                     strokeWidth={SVC_TRACK_W}
                     lineCap="round"
@@ -1289,12 +1365,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   {hasMoreBefore && (
                     <Fragment>
                       <KonvaLine
-                        points={[
-                          PADDING + vnExtraL,
-                          ty,
-                          PADDING + vnExtraL - vnFadeLen,
-                          ty,
-                        ]}
+                        points={[tL, ty, tL - vnFadeLen, ty]}
                         stroke={svc.color}
                         strokeWidth={SVC_TRACK_W}
                         lineCap="round"
@@ -1302,12 +1373,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       {FADE_OPACITIES.map((opacity, idx) => (
                         <Circle
                           key={`fb-${si}-${idx}`}
-                          x={
-                            PADDING +
-                            vnExtraL -
-                            vnFadeLen -
-                            FADE_DOT_SPACING * (idx + 1)
-                          }
+                          x={tL - vnFadeLen - FADE_DOT_SPACING * (idx + 1)}
                           y={ty}
                           radius={FADE_DOT_R}
                           fill={svc.color}
@@ -1320,9 +1386,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     <Fragment>
                       <KonvaLine
                         points={[
-                          PADDING + vnExtraL + (n - 1) * hSpacing,
+                          tL + (n - 1) * hSpacing,
                           ty,
-                          PADDING + vnExtraL + (n - 1) * hSpacing + vnFadeLen,
+                          tL + (n - 1) * hSpacing + vnFadeLen,
                           ty,
                         ]}
                         stroke={svc.color}
@@ -1333,8 +1399,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         <Circle
                           key={`fa-${si}-${idx}`}
                           x={
-                            PADDING +
-                            vnExtraL +
+                            tL +
                             (n - 1) * hSpacing +
                             vnFadeLen +
                             FADE_DOT_SPACING * (idx + 1)
@@ -1353,7 +1418,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
             {/* Station labels + per-service dots */}
             {stations.map((station, i) => {
-              const x = PADDING + vnExtraL + i * hSpacing;
+              const x = tL + i * hSpacing;
               const stopsHere = services.some(
                 (svc) => !!serviceStops[station.id]?.[svc.id],
               );
@@ -1683,6 +1748,21 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               fontStyle="bold"
               fill={lc}
             />
+            {services?.length === 1 && (
+              <ServiceNameLabel
+                x={
+                  PADDING +
+                  vnExtraL +
+                  (showLineBadge ? LI_SIZE + LI_GAP : 0) +
+                  measureTextWidth(line.name, LINE_TITLE_FONT, "bold") +
+                  4
+                }
+                y={showLineBadge ? 8 + (LI_SIZE - LINE_TITLE_FONT) / 2 : 8}
+                name={services[0].name}
+                color={services[0].color}
+                style={serviceNameStyle}
+              />
+            )}
 
             {/* Track */}
             <KonvaLine
@@ -1838,17 +1918,59 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               // below (d=+1): align block top with JP block top (nearest track)
               const secTopY = d === -1 ? jpTopY + jpTextH - actualSecH : jpTopY;
 
+              // For passed dot-replace: anchor badge VN_DOT_GAP away from track,
+              // then push the name further out so it clears the badge.
+              let passedBadgeY = 0;
+              let effectiveJpTopY = jpTopY;
+              let effectiveEnCenterY = enCenterY;
+              let effectiveSecTopY = secTopY;
+              if (isPassed && showSnDot && snDotDims) {
+                if (d === -1) {
+                  // "above": badge bottom sits VN_DOT_GAP above track stroke top
+                  passedBadgeY =
+                    vnTrackY - TRACK_W / 2 - VN_DOT_GAP - snDotDims.h * 0.85;
+                  // name bottom = badge top - VN_ITEM_GAP
+                  effectiveJpTopY = passedBadgeY - VN_ITEM_GAP - jpTextH;
+                } else {
+                  // "below": badge top sits VN_DOT_GAP below track stroke bottom
+                  passedBadgeY = vnTrackY + TRACK_W / 2 + VN_DOT_GAP;
+                  // name top = badge bottom + VN_ITEM_GAP
+                  effectiveJpTopY =
+                    passedBadgeY + snDotDims.h * 0.85 + VN_ITEM_GAP;
+                }
+                effectiveEnCenterY =
+                  d === -1
+                    ? effectiveJpTopY + jpTextH - enW / 2
+                    : effectiveJpTopY + enW / 2;
+                effectiveSecTopY =
+                  d === -1
+                    ? effectiveJpTopY + jpTextH - actualSecH
+                    : effectiveJpTopY;
+              }
+
               return (
                 <Fragment key={station.id}>
-                  {/* Passed replace-dot badge: full opacity, 0.85 scale, left of name */}
+                  {/* Passed replace-dot badge: VN_DOT_GAP from track, centered on x */}
                   {isPassed && showSnDot && snDotDims && (
                     <SnBadge
-                      x={x - JP_FONT / 2 - SN_BADGE_GAP - snDotDims.w * 0.85}
-                      y={jpTopY + jpTextH / 2 - (snDotDims.h * 0.85) / 2}
+                      x={x - (snDotDims.w * 0.85) / 2}
+                      y={passedBadgeY}
                       color={lc}
                       prefix={snNum!.prefix}
                       value={snNum!.value}
                       trc={snNum!.threeLetterCode}
+                      scale={0.85}
+                    />
+                  )}
+                  {/* SN badge (badge mode) for passed stations — full opacity outside the faded group */}
+                  {isPassed && showSnBadge && snNum && (
+                    <SnBadge
+                      x={x - (snDims.w * 0.85) / 2}
+                      y={snBadgeY + (snDims.h * (1 - 0.85)) / 2}
+                      color={lc}
+                      prefix={snNum.prefix}
+                      value={snNum.value}
+                      trc={snNum.threeLetterCode}
                       scale={0.85}
                     />
                   )}
@@ -1903,20 +2025,15 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       );
                     })}
 
-                    {/* SN badge (badge mode) — upright, centered on x */}
-                    {showSnBadge && snNum && (
+                    {/* SN badge (badge mode) — upright, centered on x; passed case rendered above */}
+                    {!isPassed && showSnBadge && snNum && (
                       <SnBadge
-                        x={x - (snDims.w * (isPassed ? 0.85 : 1)) / 2}
-                        y={
-                          snBadgeY +
-                          (snDims.h * (1 - (isPassed ? 0.85 : 1))) / 2
-                        }
+                        x={x - snDims.w / 2}
+                        y={snBadgeY}
                         color={lc}
                         prefix={snNum.prefix}
                         value={snNum.value}
                         trc={snNum.threeLetterCode}
-                        scale={isPassed ? 0.85 : 1}
-                        forceFullRender={isPassed}
                       />
                     )}
 
@@ -1924,7 +2041,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       Horizontal glyphs (ー, 〜, …) are rotated 90° around
                       their cell centre so they render as vertical strokes. */}
                     {jpChars.map((char, ci) => {
-                      const charTopY = jpTopY + ci * (JP_FONT + 1);
+                      const charTopY = effectiveJpTopY + ci * (JP_FONT + 1);
                       // Hyphens/dashes: draw as a precisely centred vertical bar
                       // (thin vertical line spanning the cell) for 縦書き layout.
                       if (char in VJ_LINE_WIDTHS) {
@@ -1979,7 +2096,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       (/[a-zA-Z]/.test(secondaryName) ? (
                         <Text
                           x={enX}
-                          y={enCenterY}
+                          y={effectiveEnCenterY}
                           offsetX={enW / 2}
                           offsetY={EN_FONT / 2}
                           rotation={90}
@@ -1991,7 +2108,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       ) : (
                         <Fragment>
                           {secChars.map((char, ci) => {
-                            const charTopY = secTopY + ci * (EN_FONT + 1);
+                            const charTopY =
+                              effectiveSecTopY + ci * (EN_FONT + 1);
                             if (char in VJ_LINE_WIDTHS) {
                               const barLen = VJ_LINE_WIDTHS[char] * EN_FONT;
                               return (
@@ -2092,6 +2210,21 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               fontStyle="bold"
               fill={lc}
             />
+            {services?.length === 1 && (
+              <ServiceNameLabel
+                x={
+                  PADDING +
+                  hExtraL +
+                  (showLineBadge ? LI_SIZE + LI_GAP : 0) +
+                  measureTextWidth(line.name, LINE_TITLE_FONT, "bold") +
+                  4
+                }
+                y={showLineBadge ? 8 + (LI_SIZE - LINE_TITLE_FONT) / 2 : 8}
+                name={services[0].name}
+                color={services[0].color}
+                style={serviceNameStyle}
+              />
+            )}
 
             {/* Track */}
             <KonvaLine
@@ -2283,6 +2416,18 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       scale={0.85}
                     />
                   )}
+                  {/* SN badge (badge mode) for passed stations — full opacity outside the faded group */}
+                  {isPassed && showSnBadge && snNum && (
+                    <SnBadge
+                      x={snBadgeX + (snDims.w * (1 - 0.85)) / 2}
+                      y={snBadgeY + (snDims.h * (1 - 0.85)) / 2}
+                      color={lc}
+                      prefix={snNum.prefix}
+                      value={snNum.value}
+                      trc={snNum.threeLetterCode}
+                      scale={0.85}
+                    />
+                  )}
                   <Group opacity={isPassed ? 0.5 : 1}>
                     {/* Dot or replace-dot badge (non-passed only) */}
                     {!isPassed &&
@@ -2306,23 +2451,15 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         />
                       ))}
 
-                    {/* SN badge inline to the left of the JP name */}
-                    {showSnBadge && snNum && (
+                    {/* SN badge inline to the left of the JP name; passed case rendered above */}
+                    {!isPassed && showSnBadge && snNum && (
                       <SnBadge
-                        x={
-                          snBadgeX +
-                          (snDims.w * (1 - (isPassed ? 0.85 : 1))) / 2
-                        }
-                        y={
-                          snBadgeY +
-                          (snDims.h * (1 - (isPassed ? 0.85 : 1))) / 2
-                        }
+                        x={snBadgeX}
+                        y={snBadgeY}
                         color={lc}
                         prefix={snNum.prefix}
                         value={snNum.value}
                         trc={snNum.threeLetterCode}
-                        scale={isPassed ? 0.85 : 1}
-                        forceFullRender={isPassed}
                       />
                     )}
 
@@ -2826,6 +2963,20 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             fontStyle="bold"
             fill={lc}
           />
+          {services?.length === 1 && (
+            <ServiceNameLabel
+              x={
+                titleBaseX +
+                (showLineBadge ? LI_SIZE + LI_GAP : 0) +
+                measureTextWidth(line.name, LINE_TITLE_FONT, "bold") +
+                4
+              }
+              y={showLineBadge ? 8 + (LI_SIZE - LINE_TITLE_FONT) / 2 : 8}
+              name={services[0].name}
+              color={services[0].color}
+              style={serviceNameStyle}
+            />
+          )}
 
           {/* Track */}
           <KonvaLine
@@ -2958,24 +3109,50 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               nameAlign = "right";
             }
 
+            // Passed dot-replace layout: badge sits between track and name.
+            // Right side: badge just right of track, name further right.
+            // Left side: badge just left of track, name to the left of badge.
+            let passedDotX = 0;
+            let effectiveNameX = nameX;
+            let effectiveNameTextWidth = nameTextWidth;
+            if (isPassed && showSnDot && snDotDims) {
+              if (verticalNameSide === "right") {
+                passedDotX = trackX + r + SN_BADGE_GAP;
+                effectiveNameX = passedDotX + snDotDims.w * 0.85 + SN_BADGE_GAP;
+                effectiveNameTextWidth = undefined;
+              } else {
+                passedDotX = trackX - r - SN_BADGE_GAP - snDotDims.w * 0.85;
+                effectiveNameX = V_RIGHT_MARGIN;
+                effectiveNameTextWidth = Math.max(
+                  0,
+                  passedDotX - SN_BADGE_GAP - V_RIGHT_MARGIN,
+                );
+              }
+            }
+
             return (
               <Fragment key={station.id}>
-                {/* Passed replace-dot badge: full opacity, 0.85 scale, left of name */}
+                {/* Passed replace-dot badge: between track and name, clear of track line */}
                 {isPassed && showSnDot && snDotDims && (
                   <SnBadge
-                    x={
-                      verticalNameSide === "right"
-                        ? nameX - SN_BADGE_GAP - snDotDims.w * 0.85
-                        : Math.max(
-                            0,
-                            V_RIGHT_MARGIN - SN_BADGE_GAP - snDotDims.w * 0.85,
-                          )
-                    }
+                    x={passedDotX}
                     y={y - (snDotDims.h * 0.85) / 2}
                     color={lc}
                     prefix={snNum!.prefix}
                     value={snNum!.value}
                     trc={snNum!.threeLetterCode}
+                    scale={0.85}
+                  />
+                )}
+                {/* SN badge (badge mode) for passed stations — full opacity outside the faded group */}
+                {isPassed && showSnBadge && snNum && (
+                  <SnBadge
+                    x={snBadgeX + (snDims.w * (1 - 0.85)) / 2}
+                    y={y - (snDims.h * 0.85) / 2}
+                    color={lc}
+                    prefix={snNum.prefix}
+                    value={snNum.value}
+                    trc={snNum.threeLetterCode}
                     scale={0.85}
                   />
                 )}
@@ -3029,45 +3206,41 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     );
                   })}
 
-                  {/* Station number badge */}
-                  {showSnBadge && snNum && (
+                  {/* Station number badge; passed case rendered above */}
+                  {!isPassed && showSnBadge && snNum && (
                     <SnBadge
-                      x={
-                        snBadgeX + (snDims.w * (1 - (isPassed ? 0.85 : 1))) / 2
-                      }
-                      y={y - (snDims.h * (isPassed ? 0.85 : 1)) / 2}
+                      x={snBadgeX}
+                      y={y - snDims.h / 2}
                       color={lc}
                       prefix={snNum.prefix}
                       value={snNum.value}
                       trc={snNum.threeLetterCode}
-                      scale={isPassed ? 0.85 : 1}
-                      forceFullRender={isPassed}
                     />
                   )}
 
                   {/* Primary name */}
                   <Text
-                    x={nameX}
+                    x={effectiveNameX}
                     y={jpNameY}
                     text={stationName(station, primaryLangField)}
                     fontSize={isPassed ? Math.round(JP_FONT * 0.85) : JP_FONT}
                     fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                     fill="#222"
                     align={nameAlign}
-                    width={nameTextWidth}
+                    width={effectiveNameTextWidth}
                   />
 
                   {/* Secondary name */}
                   {showSecondaryLang && station[secondaryLangField] && (
                     <Text
-                      x={nameX}
+                      x={effectiveNameX}
                       y={enNameY}
                       text={station[secondaryLangField]!}
                       fontSize={isPassed ? Math.round(EN_FONT * 0.85) : EN_FONT}
                       fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                       fill="#666"
                       align={nameAlign}
-                      width={nameTextWidth}
+                      width={effectiveNameTextWidth}
                     />
                   )}
                 </Group>

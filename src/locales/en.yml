@@ -270,6 +270,9 @@ route:
     passed-show: Show (faded)
     passed-hide-gap: Hide (gap)
     passed-hide-trim: Hide (trim)
+    service-name-style: Service name style
+    service-name-paren: （parentheses）
+    service-name-badge: Badge
 
 footer:
   notice: This is a fan-made website. All trademarks are the property of their respective railway companies. This site is not affiliated with or endorsed by any railway company. Sample data and initial values may contain fake values.

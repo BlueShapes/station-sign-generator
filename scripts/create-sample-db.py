@@ -377,7 +377,7 @@ def main():
                 (f"area-jk{jk_num:02d}-{zone_id.replace('zone-', '')}", station_id, zone_id, i),
             )
 
-    # ── JK 快速 service ───────────────────────────────────────────────────────
+    # ── JK services (普通 + 快速) ─────────────────────────────────────────────
     # Build the full ordered list of (jk_num, station_id) for the JK line
     jk_all = []
     for (jy_num, jk_num) in SHARED_JY_JK:
@@ -385,6 +385,19 @@ def main():
     for (jk_num, *rest) in JK_ONLY_STATIONS:
         jk_all.append((jk_num, f"station-jk{jk_num:02d}"))
 
+    # 普通: stops at all JK stations
+    jk_futsuu_id = "svc-jk-futsuu"
+    c.execute(
+        "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+        (jk_futsuu_id, jk_line_id, "普通", "#8cc800", 0),
+    )
+    for (jk_num, station_id) in jk_all:
+        c.execute(
+            "INSERT INTO station_service_stops VALUES (?, ?, ?, ?)",
+            (f"sss-jk-futsuu-{jk_num:02d}", station_id, jk_futsuu_id, "stop"),
+        )
+
+    # 快速: passes 新橋(24), 有楽町(25), 鶯谷(31), 日暮里(32), 西日暮里(33); 御徒町(29) is special
     jk_kaisoku_id = "svc-jk-kaisoku"
     c.execute(
         "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
@@ -493,7 +506,7 @@ def main():
     print(f"  - 1 company (JR東日本, color #3a9200, style jreast)")
     print(f"  - 4 lines:")
     print(f"      山手線          (JY, #8cc800,  is_loop=1): {len(YAMANOTE_STATIONS)} stations")
-    print(f"      京浜東北線・根岸線 (JK, #5f9de9, is_loop=0): {jk_shared} shared + {jk_exclusive} exclusive = {jk_shared + jk_exclusive} total; 1 service (快速)")
+    print(f"      京浜東北線・根岸線 (JK, #5f9de9, is_loop=0): {jk_shared} shared + {jk_exclusive} exclusive = {jk_shared + jk_exclusive} total; 2 services (普通, 快速)")
     print(f"      根岸線          (no prefix, #8bd900, is_loop=0): {len(NEGISHI_JK_NUMS)} stations (shared with JK, no station numbers)")
     print(f"      湘南新宿ライン  (JS, #c61c1b,  is_loop=0): {len(JS_STATIONS)} stations ({js_new} new + {js_reuse} reused); 4 services")
 

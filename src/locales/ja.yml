@@ -270,6 +270,9 @@ route:
     passed-show: 表示（半透明）
     passed-hide-gap: 非表示（余白）
     passed-hide-trim: 非表示（切り詰め）
+    service-name-style: 種別名の表示スタイル
+    service-name-paren: （括弧）
+    service-name-badge: バッジ
 
 footer:
   notice: このサイトはファンサイトです。商標は各鉄道会社に帰属します。当サイトは各鉄道会社とは一切関係ありません。また、開発者は鉄道オタクではなく、サンプルデータや初期値は誤りを含む場合があります。

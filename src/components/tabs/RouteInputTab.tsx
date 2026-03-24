@@ -16,6 +16,7 @@ import type { Database } from "sql.js";
 import {
   Alert,
   Button,
+  Divider,
   Grid,
   Group,
   Box,
@@ -189,6 +190,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapServiceStops, setMapServiceStops] = useState<ServiceStopMap>({});
   type PassedStationMode = "show" | "hide-gap" | "hide-trim";
   const [mapPassedMode, setMapPassedMode] = useState<PassedStationMode>("show");
+  const [mapServiceNameStyle, setMapServiceNameStyle] = useState<
+    "paren" | "badge"
+  >("paren");
 
   // Load lines when db becomes available
   useEffect(() => {
@@ -252,13 +256,29 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
   }, [mapOrientation, mapNameStyle]);
 
-  // Enforce constraints when 2+ services selected
+  // Enforce constraints when services have passed stations
   useEffect(() => {
-    if (mapSelectedServiceIds.length >= 2) {
-      if (mapNameStyle === "normal") setMapNameStyle("above");
-      if (mapStationNumberMode === "dot") setMapStationNumberMode("none");
-    }
-  }, [mapSelectedServiceIds.length]);
+    if (mapSelectedServiceIds.length === 0) return;
+    const startIdx = mapStartId
+      ? stations.findIndex((s) => s.id === mapStartId)
+      : 0;
+    const endIdx = mapEndId
+      ? stations.findIndex((s) => s.id === mapEndId)
+      : stations.length - 1;
+    const lo = Math.min(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
+    const hi = Math.max(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
+    const rangeStations = stations.slice(lo, hi + 1);
+    const hasPassedStations =
+      mapSelectedServiceIds.length >= 2 ||
+      rangeStations.some(
+        (s) =>
+          !mapSelectedServiceIds.some((id) => !!mapServiceStops[s.id]?.[id]),
+      );
+    if (hasPassedStations)
+      setMapNameStyle((s) => (s === "normal" ? "above" : s));
+    if (mapSelectedServiceIds.length >= 2)
+      setMapStationNumberMode((s) => (s === "dot" ? "none" : s));
+  }, [mapSelectedServiceIds, stations, mapStartId, mapEndId, mapServiceStops]);
 
   // Build sign data when station changes
   useEffect(() => {
@@ -501,6 +521,20 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapServiceInfos.some((svc) => !!mapServiceStops[s.id]?.[svc.id]),
     );
   }, [mapPassedMode, mapStations, mapServiceInfos, mapServiceStops]);
+
+  // True when any selected service skips at least one station in the current range
+  const mapHasPassedStations = useMemo(() => {
+    if (mapSelectedServiceIds.length === 0) return false;
+    if (mapSelectedServiceIds.length >= 2) return true;
+    return mapStations.some(
+      (s) => !mapServiceInfos.some((svc) => !!mapServiceStops[s.id]?.[svc.id]),
+    );
+  }, [
+    mapSelectedServiceIds.length,
+    mapStations,
+    mapServiceInfos,
+    mapServiceStops,
+  ]);
 
   // Build label map: stationId -> "[JY01] 東京" format for dropdowns
   const stationLabelMap = useMemo(() => {
@@ -944,8 +978,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         {/* ── Line map mode controls ────────────────────────────────────── */}
         {tabMode === "linemap" && (
           <>
+            {/* ── Route ── */}
             <Grid gutter="md">
-              {/* Line selector */}
               <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
                 <Select
                   label={t("route.line.title")}
@@ -959,8 +993,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   clearable
                 />
               </Grid.Col>
-
-              {/* Range: start station */}
               <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
                 <Select
                   label={t("route.linemap.range-start")}
@@ -978,8 +1010,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   disabled={!selectedLineId}
                 />
               </Grid.Col>
-
-              {/* Swap from/to */}
               <Grid.Col
                 span={{ base: 12, sm: 6, md: 1 }}
                 style={{ display: "flex", alignItems: "flex-end" }}
@@ -998,8 +1028,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   <IconArrowsLeftRight size={16} />
                 </Button>
               </Grid.Col>
-
-              {/* Range: end station */}
               <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
                 <Select
                   label={t("route.linemap.range-end")}
@@ -1017,375 +1045,426 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   disabled={!selectedLineId}
                 />
               </Grid.Col>
-
-              {/* Service selector — shown when the line has services */}
-              {mapServices.length >= 2 && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <MultiSelect
-                    label={t("route.linemap.services")}
-                    value={mapSelectedServiceIds}
-                    onChange={setMapSelectedServiceIds}
-                    data={mapServices.map((s) => ({
-                      value: s.id,
-                      label: s.name,
-                    }))}
-                    placeholder={t("route.linemap.services-placeholder")}
-                  />
-                </Grid.Col>
-              )}
-
-              {/* Passed stations display mode — shown when any service is selected */}
-              {mapSelectedServiceIds.length >= 1 && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <Text size="sm" fw={500} mb={4}>
-                    {t("route.linemap.show-passed-stations")}
-                  </Text>
-                  <SegmentedControl
-                    value={mapPassedMode}
-                    onChange={(v) => setMapPassedMode(v as PassedStationMode)}
-                    data={[
-                      {
-                        label: t("route.linemap.passed-show"),
-                        value: "show",
-                      },
-                      {
-                        label: t("route.linemap.passed-hide-gap"),
-                        value: "hide-gap",
-                      },
-                      {
-                        label: t("route.linemap.passed-hide-trim"),
-                        value: "hide-trim",
-                      },
-                    ]}
-                    size="xs"
-                    fullWidth
-                  />
-                </Grid.Col>
-              )}
-
-              {/* Linear-mode toggle — loop lines only */}
-              {isLoopLine && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <Text size="sm" fw={500} mb={4}>
-                    {t("route.linemap.loop-render-mode")}
-                  </Text>
-                  <Switch
-                    label={t("route.linemap.loop-as-linear")}
-                    checked={mapForceLinear}
-                    onChange={(e) => setMapForceLinear(e.currentTarget.checked)}
-                  />
-                </Grid.Col>
-              )}
-
-              {/* Orientation toggle — non-loop, or loop rendered as linear */}
-              {(!isLoopLine || mapForceLinear) && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <Text size="sm" fw={500} mb={4}>
-                    {t("route.linemap.orientation")}
-                  </Text>
-                  <SegmentedControl
-                    value={mapOrientation}
-                    onChange={(v) => setMapOrientation(v as MapOrientation)}
-                    data={[
-                      {
-                        value: "horizontal",
-                        label: (
-                          <Group gap={4}>
-                            <IconLayoutRows size={16} />
-                            {t("route.linemap.horizontal")}
-                          </Group>
-                        ),
-                      },
-                      {
-                        value: "vertical",
-                        label: (
-                          <Group gap={4}>
-                            <IconLayoutColumns size={16} />
-                            {t("route.linemap.vertical")}
-                          </Group>
-                        ),
-                      },
-                    ]}
-                  />
-                </Grid.Col>
-              )}
-
-              {/* Name side toggle — vertical, non-loop or loop-as-linear */}
-              {(!isLoopLine || mapForceLinear) &&
-                mapOrientation === "vertical" && (
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                    <Text size="sm" fw={500} mb={4}>
-                      {t("route.linemap.name-side")}
-                    </Text>
-                    <SegmentedControl
-                      value={mapVerticalNameSide}
-                      onChange={(v) =>
-                        setMapVerticalNameSide(v as "left" | "right")
-                      }
-                      data={[
-                        {
-                          value: "left",
-                          label: (
-                            <Group gap={4}>
-                              <IconArrowLeft size={16} />
-                              {t("route.linemap.name-side-left")}
-                            </Group>
-                          ),
-                        },
-                        {
-                          value: "right",
-                          label: (
-                            <Group gap={4}>
-                              {t("route.linemap.name-side-right")}
-                              <IconArrowRight size={16} />
-                            </Group>
-                          ),
-                        },
-                      ]}
-                    />
-                  </Grid.Col>
-                )}
-
-              {/* Name style toggle — horizontal, non-loop or loop-as-linear */}
-              {(!isLoopLine || mapForceLinear) &&
-                mapOrientation === "horizontal" && (
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                    <Text size="sm" fw={500} mb={4}>
-                      {t("route.linemap.name-style")}
-                    </Text>
-                    <SegmentedControl
-                      value={mapNameStyle}
-                      onChange={(v) =>
-                        setMapNameStyle(v as "normal" | "above" | "below")
-                      }
-                      data={[
-                        {
-                          value: "normal",
-                          label: t("route.linemap.name-style-normal"),
-                          disabled: mapSelectedServiceIds.length >= 2,
-                        },
-                        {
-                          value: "above",
-                          label: t("route.linemap.name-style-above"),
-                        },
-                        {
-                          value: "below",
-                          label: t("route.linemap.name-style-below"),
-                        },
-                      ]}
-                    />
-                  </Grid.Col>
-                )}
-
-              {/* Primary language */}
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Select
-                  label={t("route.linemap.primary-lang")}
-                  value={mapPrimaryLang}
-                  onChange={(v) =>
-                    v && setMapPrimaryLang(v as StationNameField)
-                  }
-                  data={[
-                    {
-                      value: "primary_name",
-                      label: t("route.linemap.lang-1st"),
-                    },
-                    {
-                      value: "secondary_name",
-                      label: t("route.linemap.lang-2nd"),
-                    },
-                    {
-                      value: "tertiary_name",
-                      label: t("route.linemap.lang-3rd"),
-                    },
-                    {
-                      value: "quaternary_name",
-                      label: t("route.linemap.lang-4th"),
-                    },
-                  ]}
-                />
-                {mapStations.length > 0 && (
-                  <Text size="xs" c="dimmed" mt={4} truncate>
-                    {mapStations
-                      .slice(0, 3)
-                      .map((s) => s[mapPrimaryLang] || "—")
-                      .join(" · ")}
-                  </Text>
-                )}
-              </Grid.Col>
-
-              {/* Secondary language */}
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Select
-                  label={t("route.linemap.secondary-lang")}
-                  value={mapSecondaryLang}
-                  onChange={(v) =>
-                    v && setMapSecondaryLang(v as StationNameField)
-                  }
-                  disabled={!mapShowSecondaryLang}
-                  data={[
-                    {
-                      value: "primary_name",
-                      label: t("route.linemap.lang-1st"),
-                    },
-                    {
-                      value: "secondary_name",
-                      label: t("route.linemap.lang-2nd"),
-                    },
-                    {
-                      value: "tertiary_name",
-                      label: t("route.linemap.lang-3rd"),
-                    },
-                    {
-                      value: "quaternary_name",
-                      label: t("route.linemap.lang-4th"),
-                    },
-                  ]}
-                />
-                <Group mt={6} gap="xs">
-                  <Switch
-                    label={t("route.linemap.show-secondary-lang")}
-                    checked={mapShowSecondaryLang}
-                    onChange={(e) =>
-                      setMapShowSecondaryLang(e.currentTarget.checked)
-                    }
-                    size="xs"
-                  />
-                </Group>
-                {mapShowSecondaryLang && mapStations.length > 0 && (
-                  <Text size="xs" c="dimmed" mt={2} truncate>
-                    {mapStations
-                      .slice(0, 3)
-                      .map((s) => s[mapSecondaryLang] || "—")
-                      .join(" · ")}
-                  </Text>
-                )}
-              </Grid.Col>
-
-              {/* Transit line filter — only shown when there are transit lines */}
-              {allTransitLines.length > 0 && (
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                  <MultiSelect
-                    label={t("route.linemap.transit-filter")}
-                    value={mapTransitFilter ?? allTransitLines.map((l) => l.id)}
-                    onChange={(v) =>
-                      setMapTransitFilter(
-                        v.length === allTransitLines.length ? null : v,
-                      )
-                    }
-                    data={allTransitLines.map((l) => ({
-                      value: l.id,
-                      label: `[${l.prefix}] ${l.name}`,
-                    }))}
-                  />
-                </Grid.Col>
-              )}
             </Grid>
 
-            {/* Font size slider — circular maps only (not when shown as linear) */}
-            {effectiveIsLoop && selectedLine && (
-              <Box
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}
-              >
-                <IconRuler size={20} style={{ flexShrink: 0 }} />
-                <Slider
-                  value={mapFontSize}
-                  label={(v) => `${v}px`}
-                  labelAlwaysOn
-                  step={1}
-                  min={6}
-                  max={16}
-                  style={{ width: "100%" }}
-                  onChange={setMapFontSize}
+            {/* ── Services ── */}
+            {mapServices.length >= 2 && (
+              <>
+                <Divider
+                  label={t("route.linemap.services")}
+                  labelPosition="left"
                 />
-              </Box>
+                <Grid gutter="md">
+                  <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                    <MultiSelect
+                      label={t("route.linemap.services")}
+                      value={mapSelectedServiceIds}
+                      onChange={setMapSelectedServiceIds}
+                      data={mapServices.map((s) => ({
+                        value: s.id,
+                        label: s.name,
+                      }))}
+                      placeholder={t("route.linemap.services-placeholder")}
+                    />
+                  </Grid.Col>
+                  {mapSelectedServiceIds.length >= 1 && (
+                    <Grid.Col span={{ base: 12, sm: 6, md: 5 }}>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("route.linemap.show-passed-stations")}
+                      </Text>
+                      <SegmentedControl
+                        value={mapPassedMode}
+                        onChange={(v) =>
+                          setMapPassedMode(v as PassedStationMode)
+                        }
+                        data={[
+                          {
+                            label: t("route.linemap.passed-show"),
+                            value: "show",
+                          },
+                          {
+                            label: t("route.linemap.passed-hide-gap"),
+                            value: "hide-gap",
+                          },
+                          {
+                            label: t("route.linemap.passed-hide-trim"),
+                            value: "hide-trim",
+                          },
+                        ]}
+                        size="xs"
+                        fullWidth
+                      />
+                    </Grid.Col>
+                  )}
+                  {mapSelectedServiceIds.length === 1 && (
+                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("route.linemap.service-name-style")}
+                      </Text>
+                      <SegmentedControl
+                        value={mapServiceNameStyle}
+                        onChange={(v) =>
+                          setMapServiceNameStyle(v as "paren" | "badge")
+                        }
+                        data={[
+                          {
+                            label: t("route.linemap.service-name-paren"),
+                            value: "paren",
+                          },
+                          {
+                            label: t("route.linemap.service-name-badge"),
+                            value: "badge",
+                          },
+                        ]}
+                        size="xs"
+                      />
+                    </Grid.Col>
+                  )}
+                </Grid>
+              </>
             )}
 
-            {/* Station spacing slider — non-circular or loop-as-linear */}
-            {!effectiveIsLoop && selectedLine && (
-              <Box>
-                <Text size="sm" fw={500} mb={8}>
-                  {t("route.linemap.station-spacing")}
-                </Text>
-                <Box
-                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
-                >
-                  <IconRuler size={20} style={{ flexShrink: 0 }} />
-                  <Slider
-                    value={mapStationSpacing}
-                    label={(v) => `${v}`}
-                    labelAlwaysOn
-                    step={1}
-                    min={30}
-                    max={150}
-                    style={{ width: "100%" }}
-                    onChange={setMapStationSpacing}
-                    marks={[
-                      { value: 60, label: "60" },
-                      { value: 90, label: "90" },
-                    ]}
-                  />
-                </Box>
-              </Box>
+            {/* ── Layout ── */}
+            {selectedLine && (
+              <>
+                <Divider
+                  label={t("route.linemap.orientation")}
+                  labelPosition="left"
+                />
+                <Grid gutter="md">
+                  {isLoopLine && (
+                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("route.linemap.loop-render-mode")}
+                      </Text>
+                      <Switch
+                        label={t("route.linemap.loop-as-linear")}
+                        checked={mapForceLinear}
+                        onChange={(e) =>
+                          setMapForceLinear(e.currentTarget.checked)
+                        }
+                      />
+                    </Grid.Col>
+                  )}
+                  {(!isLoopLine || mapForceLinear) && (
+                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("route.linemap.orientation")}
+                      </Text>
+                      <SegmentedControl
+                        value={mapOrientation}
+                        onChange={(v) => setMapOrientation(v as MapOrientation)}
+                        data={[
+                          {
+                            value: "horizontal",
+                            label: (
+                              <Group gap={4}>
+                                <IconLayoutRows size={16} />
+                                {t("route.linemap.horizontal")}
+                              </Group>
+                            ),
+                          },
+                          {
+                            value: "vertical",
+                            label: (
+                              <Group gap={4}>
+                                <IconLayoutColumns size={16} />
+                                {t("route.linemap.vertical")}
+                              </Group>
+                            ),
+                          },
+                        ]}
+                      />
+                    </Grid.Col>
+                  )}
+                  {(!isLoopLine || mapForceLinear) &&
+                    mapOrientation === "horizontal" && (
+                      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                        <Text size="sm" fw={500} mb={4}>
+                          {t("route.linemap.name-style")}
+                        </Text>
+                        <SegmentedControl
+                          value={mapNameStyle}
+                          onChange={(v) =>
+                            setMapNameStyle(v as "normal" | "above" | "below")
+                          }
+                          data={[
+                            {
+                              value: "normal",
+                              label: t("route.linemap.name-style-normal"),
+                              disabled: mapHasPassedStations,
+                            },
+                            {
+                              value: "above",
+                              label: t("route.linemap.name-style-above"),
+                            },
+                            {
+                              value: "below",
+                              label: t("route.linemap.name-style-below"),
+                            },
+                          ]}
+                        />
+                      </Grid.Col>
+                    )}
+                  {(!isLoopLine || mapForceLinear) &&
+                    mapOrientation === "vertical" && (
+                      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                        <Text size="sm" fw={500} mb={4}>
+                          {t("route.linemap.name-side")}
+                        </Text>
+                        <SegmentedControl
+                          value={mapVerticalNameSide}
+                          onChange={(v) =>
+                            setMapVerticalNameSide(v as "left" | "right")
+                          }
+                          data={[
+                            {
+                              value: "left",
+                              label: (
+                                <Group gap={4}>
+                                  <IconArrowLeft size={16} />
+                                  {t("route.linemap.name-side-left")}
+                                </Group>
+                              ),
+                            },
+                            {
+                              value: "right",
+                              label: (
+                                <Group gap={4}>
+                                  {t("route.linemap.name-side-right")}
+                                  <IconArrowRight size={16} />
+                                </Group>
+                              ),
+                            },
+                          ]}
+                        />
+                      </Grid.Col>
+                    )}
+                  {effectiveIsLoop && (
+                    <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                      <Text size="sm" fw={500} mb={8}>
+                        {t("route.linemap.font-size")}
+                      </Text>
+                      <Box
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                        }}
+                      >
+                        <IconRuler size={20} style={{ flexShrink: 0 }} />
+                        <Slider
+                          value={mapFontSize}
+                          label={(v) => `${v}px`}
+                          labelAlwaysOn
+                          step={1}
+                          min={6}
+                          max={16}
+                          style={{ width: "100%" }}
+                          onChange={setMapFontSize}
+                        />
+                      </Box>
+                    </Grid.Col>
+                  )}
+                  {!effectiveIsLoop && (
+                    <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                      <Text size="sm" fw={500} mb={8}>
+                        {t("route.linemap.station-spacing")}
+                      </Text>
+                      <Box
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                        }}
+                      >
+                        <IconRuler size={20} style={{ flexShrink: 0 }} />
+                        <Slider
+                          value={mapStationSpacing}
+                          label={(v) => `${v}`}
+                          labelAlwaysOn
+                          step={1}
+                          min={30}
+                          max={150}
+                          style={{ width: "100%" }}
+                          onChange={setMapStationSpacing}
+                          marks={[
+                            { value: 60, label: "60" },
+                            { value: 90, label: "90" },
+                          ]}
+                        />
+                      </Box>
+                    </Grid.Col>
+                  )}
+                </Grid>
+              </>
             )}
 
-            {/* Station number display mode */}
-            <Box>
-              <Text size="sm" fw={500} mb={4}>
-                {t("route.linemap.station-number-mode")}
-              </Text>
-              <SegmentedControl
-                value={mapStationNumberMode}
-                onChange={(v) =>
-                  setMapStationNumberMode(v as StationNumberMode)
-                }
-                data={[
-                  {
-                    value: "none",
-                    label: t("route.linemap.station-number-none"),
-                  },
-                  {
-                    value: "badge",
-                    label: t("route.linemap.station-number-badge"),
-                  },
-                  {
-                    value: "dot",
-                    label: t("route.linemap.station-number-dot"),
-                    disabled: mapSelectedServiceIds.length >= 2,
-                  },
-                ]}
-              />
-            </Box>
-
-            {/* Continuation indicator toggles — only shown when the map range is cut off */}
-            {(mapHasMoreBefore || mapHasMoreAfter) && (
-              <Box>
-                <Text size="sm" fw={500} mb={6}>
-                  {t("route.linemap.continuation")}
-                </Text>
-                <Group gap="md">
-                  {mapHasMoreBefore && (
-                    <Switch
-                      label={t("route.linemap.continuation-before")}
-                      checked={mapShowFadeBefore}
-                      onChange={(e) =>
-                        setMapShowFadeBefore(e.currentTarget.checked)
+            {/* ── Display ── */}
+            {selectedLine && (
+              <>
+                <Divider
+                  label={t("route.linemap.station-number-mode")}
+                  labelPosition="left"
+                />
+                <Grid gutter="md">
+                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Select
+                      label={t("route.linemap.primary-lang")}
+                      value={mapPrimaryLang}
+                      onChange={(v) =>
+                        v && setMapPrimaryLang(v as StationNameField)
                       }
-                      size="xs"
+                      data={[
+                        {
+                          value: "primary_name",
+                          label: t("route.linemap.lang-1st"),
+                        },
+                        {
+                          value: "secondary_name",
+                          label: t("route.linemap.lang-2nd"),
+                        },
+                        {
+                          value: "tertiary_name",
+                          label: t("route.linemap.lang-3rd"),
+                        },
+                        {
+                          value: "quaternary_name",
+                          label: t("route.linemap.lang-4th"),
+                        },
+                      ]}
                     />
-                  )}
-                  {mapHasMoreAfter && (
-                    <Switch
-                      label={t("route.linemap.continuation-after")}
-                      checked={mapShowFadeAfter}
-                      onChange={(e) =>
-                        setMapShowFadeAfter(e.currentTarget.checked)
+                    {mapStations.length > 0 && (
+                      <Text size="xs" c="dimmed" mt={4} truncate>
+                        {mapStations
+                          .slice(0, 3)
+                          .map((s) => s[mapPrimaryLang] || "—")
+                          .join(" · ")}
+                      </Text>
+                    )}
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Select
+                      label={t("route.linemap.secondary-lang")}
+                      value={mapSecondaryLang}
+                      onChange={(v) =>
+                        v && setMapSecondaryLang(v as StationNameField)
                       }
-                      size="xs"
+                      disabled={!mapShowSecondaryLang}
+                      data={[
+                        {
+                          value: "primary_name",
+                          label: t("route.linemap.lang-1st"),
+                        },
+                        {
+                          value: "secondary_name",
+                          label: t("route.linemap.lang-2nd"),
+                        },
+                        {
+                          value: "tertiary_name",
+                          label: t("route.linemap.lang-3rd"),
+                        },
+                        {
+                          value: "quaternary_name",
+                          label: t("route.linemap.lang-4th"),
+                        },
+                      ]}
                     />
+                    <Group mt={6} gap="xs">
+                      <Switch
+                        label={t("route.linemap.show-secondary-lang")}
+                        checked={mapShowSecondaryLang}
+                        onChange={(e) =>
+                          setMapShowSecondaryLang(e.currentTarget.checked)
+                        }
+                        size="xs"
+                      />
+                    </Group>
+                    {mapShowSecondaryLang && mapStations.length > 0 && (
+                      <Text size="xs" c="dimmed" mt={2} truncate>
+                        {mapStations
+                          .slice(0, 3)
+                          .map((s) => s[mapSecondaryLang] || "—")
+                          .join(" · ")}
+                      </Text>
+                    )}
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Text size="sm" fw={500} mb={4}>
+                      {t("route.linemap.station-number-mode")}
+                    </Text>
+                    <SegmentedControl
+                      value={mapStationNumberMode}
+                      onChange={(v) =>
+                        setMapStationNumberMode(v as StationNumberMode)
+                      }
+                      data={[
+                        {
+                          value: "none",
+                          label: t("route.linemap.station-number-none"),
+                        },
+                        {
+                          value: "badge",
+                          label: t("route.linemap.station-number-badge"),
+                        },
+                        {
+                          value: "dot",
+                          label: t("route.linemap.station-number-dot"),
+                          disabled: mapSelectedServiceIds.length >= 2,
+                        },
+                      ]}
+                    />
+                  </Grid.Col>
+                  {allTransitLines.length > 0 && (
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <MultiSelect
+                        label={t("route.linemap.transit-filter")}
+                        value={
+                          mapTransitFilter ?? allTransitLines.map((l) => l.id)
+                        }
+                        onChange={(v) =>
+                          setMapTransitFilter(
+                            v.length === allTransitLines.length ? null : v,
+                          )
+                        }
+                        data={allTransitLines.map((l) => ({
+                          value: l.id,
+                          label: `[${l.prefix}] ${l.name}`,
+                        }))}
+                      />
+                    </Grid.Col>
                   )}
-                </Group>
-              </Box>
+                  {(mapHasMoreBefore || mapHasMoreAfter) && (
+                    <Grid.Col span={{ base: 12 }}>
+                      <Text size="sm" fw={500} mb={6}>
+                        {t("route.linemap.continuation")}
+                      </Text>
+                      <Group gap="md">
+                        {mapHasMoreBefore && (
+                          <Switch
+                            label={t("route.linemap.continuation-before")}
+                            checked={mapShowFadeBefore}
+                            onChange={(e) =>
+                              setMapShowFadeBefore(e.currentTarget.checked)
+                            }
+                            size="xs"
+                          />
+                        )}
+                        {mapHasMoreAfter && (
+                          <Switch
+                            label={t("route.linemap.continuation-after")}
+                            checked={mapShowFadeAfter}
+                            onChange={(e) =>
+                              setMapShowFadeAfter(e.currentTarget.checked)
+                            }
+                            size="xs"
+                          />
+                        )}
+                      </Group>
+                    </Grid.Col>
+                  )}
+                </Grid>
+              </>
             )}
 
             {/* Overlap warning */}
@@ -1450,6 +1529,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     }
                     serviceStops={mapServiceStops}
                     showPassedStations={mapPassedMode !== "hide-gap"}
+                    serviceNameStyle={mapServiceNameStyle}
                   />
                 </Box>
 
