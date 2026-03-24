@@ -1,4 +1,4 @@
--- Station Sign Generator — SQLite Schema (v0.2.0)
+-- Station Sign Generator — SQLite Schema (v0.4.0)
 -- All data is browser-only (sql.js / WebAssembly). No server storage.
 
 CREATE TABLE IF NOT EXISTS db_metadata (
@@ -70,4 +70,19 @@ CREATE TABLE IF NOT EXISTS current_sign_configurations (
   ratio      REAL DEFAULT 4.5,
   direction  TEXT DEFAULT 'left',
   sign_style TEXT
+);
+
+CREATE TABLE IF NOT EXISTS services (
+  id         TEXT PRIMARY KEY,
+  line_id    TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  color      TEXT NOT NULL DEFAULT '#8cc800',
+  sort_order INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS station_service_stops (
+  id         TEXT PRIMARY KEY,
+  station_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+  status     TEXT NOT NULL DEFAULT 'stop'
 );

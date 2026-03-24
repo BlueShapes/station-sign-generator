@@ -3,6 +3,8 @@ import type { SqlJsStatic, Database } from "sql.js";
 import { DB_VERSION } from "../config";
 import migrateV001toV010 from "./migrations/v0.0.1_to_v0.1.0";
 import migrateV010toV020 from "./migrations/v0.1.0_to_v0.2.0";
+import migrateV021toV030 from "./migrations/v0.2.1_to_v0.3.0";
+import migrateV030toV040 from "./migrations/v0.3.0_to_v0.4.0";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -77,6 +79,21 @@ CREATE TABLE IF NOT EXISTS current_sign_configurations (
   direction  TEXT DEFAULT 'left',
   sign_style TEXT
 );
+
+CREATE TABLE IF NOT EXISTS services (
+  id         TEXT PRIMARY KEY,
+  line_id    TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  color      TEXT NOT NULL DEFAULT '#8cc800',
+  sort_order INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS station_service_stops (
+  id         TEXT PRIMARY KEY,
+  station_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+  status     TEXT NOT NULL DEFAULT 'stop'
+);
 `;
 
 let SQL: SqlJsStatic | null = null;
@@ -88,7 +105,12 @@ let db: Database | null = null;
  */
 function migrateDatabase(database: Database): void {
   // Migrations run in order; each is idempotent (safe to re-run)
-  const migrations = [migrateV001toV010, migrateV010toV020];
+  const migrations = [
+    migrateV001toV010,
+    migrateV010toV020,
+    migrateV021toV030,
+    migrateV030toV040,
+  ];
 
   for (const migrate of migrations) {
     migrate(database);
@@ -153,15 +175,17 @@ const REQUIRED_SCHEMA: Record<string, string[]> = {
   station_numbers: ["id", "station_id", "line_id", "value"],
   special_zones: ["id", "name", "abbreviation", "is_black"],
   station_areas: ["id", "station_id", "zone_id", "sort_order"],
+  services: ["id", "line_id", "name", "color", "sort_order"],
+  station_service_stops: ["id", "station_id", "service_id", "status"],
 };
 
 export type ValidationResult =
   | { valid: true }
   | {
-    valid: false;
-    reason: "invalid-file" | "missing-table" | "missing-column";
-    detail?: string;
-  };
+      valid: false;
+      reason: "invalid-file" | "missing-table" | "missing-column";
+      detail?: string;
+    };
 
 /**
  * Migrate an imported binary database to the current schema.
@@ -245,6 +269,8 @@ const MERGE_TABLES = [
   "station_numbers",
   "special_zones",
   "station_areas",
+  "services",
+  "station_service_stops",
 ] as const;
 
 /**

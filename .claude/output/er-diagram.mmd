@@ -8,6 +8,7 @@ erDiagram
         TEXT id PK
         TEXT name
         TEXT company_color "hex default #3a9200"
+        TEXT station_number_style "default jreast"
     }
 
     lines {
@@ -68,6 +69,21 @@ erDiagram
         TEXT sign_style "e.g. jreast"
     }
 
+    services {
+        TEXT id PK
+        TEXT line_id FK "NOT NULL - lines.id CASCADE"
+        TEXT name "NOT NULL - e.g. 普通, 快速"
+        TEXT color "hex default #8cc800"
+        INTEGER sort_order "default 0"
+    }
+
+    station_service_stops {
+        TEXT id PK
+        TEXT station_id FK "NOT NULL - stations.id CASCADE"
+        TEXT service_id FK "NOT NULL - services.id CASCADE"
+        TEXT status "stop or special default stop"
+    }
+
     companies |o--o{ lines : "has lines"
     lines ||--o{ station_lines : "belongs to"
     stations ||--o{ station_lines : "serves"
@@ -75,3 +91,6 @@ erDiagram
     special_zones ||--o{ station_areas : "defines badge"
     stations ||--o{ station_areas : "has area badges"
     stations ||--o| current_sign_configurations : "is configured as"
+    lines ||--o{ services : "has services"
+    services ||--o{ station_service_stops : "defines stops"
+    stations ||--o{ station_service_stops : "has stop status"

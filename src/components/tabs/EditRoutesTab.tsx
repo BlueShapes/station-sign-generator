@@ -34,6 +34,7 @@ import {
   IconAlertCircle,
   IconDatabaseImport,
   IconLink,
+  IconX,
 } from "@tabler/icons-react";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
@@ -49,6 +50,14 @@ import {
   deleteCompany,
 } from "@/db/repositories/companies";
 import { getAllLines, upsertLine, deleteLine } from "@/db/repositories/lines";
+import {
+  getServicesByLine,
+  upsertService,
+  deleteService,
+  getServiceStopsByLine,
+  upsertStationServiceStop,
+  setStationServiceStop,
+} from "@/db/repositories/services";
 import {
   getAllSpecialZones,
   upsertSpecialZone,
@@ -72,6 +81,8 @@ import type {
   Station,
   StationArea,
   SpecialZone,
+  Service,
+  ServiceStopStatus,
 } from "@/db/types";
 
 interface EditRoutesTabProps {
@@ -470,16 +481,71 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
   );
   const [isLoop, setIsLoop] = useState((line?.is_loop ?? 0) === 1);
 
+  const [draftServices, setDraftServices] = useState<
+    { id: string | null; name: string; color: string }[]
+  >(() =>
+    line
+      ? getServicesByLine(db, line.id).map((s) => ({
+          id: s.id,
+          name: s.name,
+          color: s.color,
+        }))
+      : [{ id: null, name: t("route.service.local"), color: color }],
+  );
+  const [deletedServiceIds, setDeletedServiceIds] = useState<string[]>([]);
+  const [newSvcName, setNewSvcName] = useState("");
+
+  const handleAddSvc = () => {
+    if (!newSvcName.trim()) return;
+    setDraftServices((prev) => [
+      ...prev,
+      { id: null, name: newSvcName.trim(), color: color },
+    ]);
+    setNewSvcName("");
+  };
+
+  const handleRemoveSvc = (idx: number) => {
+    const svc = draftServices[idx];
+    if (svc?.id) setDeletedServiceIds((prev) => [...prev, svc.id!]);
+    setDraftServices((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const handleSave = () => {
     if (!name.trim()) return;
+    const lineId = line?.id ?? uuidv7();
     upsertLine(db, {
-      id: line?.id ?? uuidv7(),
+      id: lineId,
       name: name.trim(),
       prefix: prefix.trim(),
       line_color: color,
       company_id: companyId,
       priority: priority === "" ? null : Number(priority),
       is_loop: isLoop ? 1 : 0,
+    });
+    for (const id of deletedServiceIds) {
+      deleteService(db, id);
+    }
+    const stationsOnLine = line ? getStationsByLine(db, lineId) : [];
+    draftServices.forEach((svc, i) => {
+      const svcId = svc.id ?? uuidv7();
+      upsertService(db, {
+        id: svcId,
+        line_id: lineId,
+        name: svc.name.trim() || t("route.service.local"),
+        color: svc.color,
+        sort_order: i,
+      });
+      // For newly added services on an existing line, seed stops for all stations
+      if (!svc.id && line) {
+        for (const station of stationsOnLine) {
+          upsertStationServiceStop(db, {
+            id: uuidv7(),
+            station_id: station.id,
+            service_id: svcId,
+            status: "stop",
+          });
+        }
+      }
     });
     onSave();
     onClose();
@@ -539,6 +605,62 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
         checked={isLoop}
         onChange={(e) => setIsLoop(e.currentTarget.checked)}
       />
+      <Divider label={t("route.service.title")} labelPosition="left" />
+      <Stack gap="xs">
+        {draftServices.map((svc, i) => (
+          <Group key={i} gap="xs" align="center">
+            <ColorInput
+              size="xs"
+              value={svc.color}
+              onChange={(c) => {
+                const updated = [...draftServices];
+                updated[i] = { ...updated[i]!, color: c };
+                setDraftServices(updated);
+              }}
+              format="hex"
+              withEyeDropper={false}
+              style={{ width: 100 }}
+            />
+            <TextInput
+              size="xs"
+              value={svc.name}
+              onChange={(e) => {
+                const updated = [...draftServices];
+                updated[i] = { ...updated[i]!, name: e.target.value };
+                setDraftServices(updated);
+              }}
+              style={{ flex: 1 }}
+            />
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="red"
+              onClick={() => handleRemoveSvc(i)}
+            >
+              <IconX size={14} />
+            </ActionIcon>
+          </Group>
+        ))}
+        <Group gap="xs">
+          <TextInput
+            size="xs"
+            placeholder={t("route.service.add-placeholder")}
+            value={newSvcName}
+            onChange={(e) => setNewSvcName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAddSvc();
+            }}
+            style={{ flex: 1 }}
+          />
+          <ActionIcon
+            size="sm"
+            onClick={handleAddSvc}
+            disabled={!newSvcName.trim()}
+          >
+            <IconPlus size={12} />
+          </ActionIcon>
+        </Group>
+      </Stack>
       <Group justify="flex-end" mt="md">
         <Button variant="default" onClick={onClose}>
           {t("common.close")}
@@ -633,7 +755,7 @@ function StationForm({
       sort_order: station?.sort_order ?? null,
     });
 
-    // If new station, add to line
+    // If new station, add to line and seed service stops
     if (!station) {
       upsertStationLine(db, {
         id: uuidv7(),
@@ -641,6 +763,14 @@ function StationForm({
         line_id: lineId,
         sort_order: maxSortOrder + 1,
       });
+      for (const svc of getServicesByLine(db, lineId)) {
+        upsertStationServiceStop(db, {
+          id: uuidv7(),
+          station_id: stationId,
+          service_id: svc.id,
+          status: "stop",
+        });
+      }
     }
 
     // Upsert station number for this line
@@ -828,6 +958,14 @@ function LinkExistingStationForm({
       line_id: lineId,
       sort_order: maxSortOrder + 1,
     });
+    for (const svc of getServicesByLine(db, lineId)) {
+      upsertStationServiceStop(db, {
+        id: uuidv7(),
+        station_id: selectedId,
+        service_id: svc.id,
+        status: "stop",
+      });
+    }
     if (stationNumber.trim()) {
       db.run(
         `DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`,
@@ -1063,6 +1201,24 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     undefined,
   );
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const [newServiceName, setNewServiceName] = useState("");
+
+  // Shared confirm modal
+  const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
+    useDisclosure(false);
+  const [confirmPending, setConfirmPending] = useState<{
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+  const openConfirmModal = (message: string, onConfirm: () => void) => {
+    setConfirmPending({ message, onConfirm });
+    openConfirm();
+  };
+  const handleConfirmOk = () => {
+    confirmPending?.onConfirm();
+    setConfirmPending(null);
+    closeConfirm();
+  };
 
   if (!db) {
     return (
@@ -1089,29 +1245,79 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     : [];
   const alreadyOnLineIds = new Set(stationsInLine.map((s) => s.id));
   const selectedLine = allLines.find((l) => l.id === selectedLineId);
+  const lineServices: Service[] = selectedLineId
+    ? getServicesByLine(db, selectedLineId)
+    : [];
+  const serviceStopMap = new Map<string, ServiceStopStatus>(
+    (selectedLineId ? getServiceStopsByLine(db, selectedLineId) : []).map(
+      (s) => [`${s.station_id}:${s.service_id}`, s.status],
+    ),
+  );
 
   const handleDeleteZone = (id: string) => {
-    if (!window.confirm(t("route.special-zone.delete-confirm"))) return;
-    deleteSpecialZone(db, id);
-    refresh();
+    openConfirmModal(t("route.special-zone.delete-confirm"), () => {
+      deleteSpecialZone(db, id);
+      refresh();
+    });
   };
 
   const handleDeleteCompany = (id: string) => {
-    if (!window.confirm(t("route.company.delete-confirm"))) return;
-    deleteCompany(db, id);
-    refresh();
+    openConfirmModal(t("route.company.delete-confirm"), () => {
+      deleteCompany(db, id);
+      refresh();
+    });
   };
 
   const handleDeleteLine = (id: string) => {
-    if (!window.confirm(t("route.line.delete-confirm"))) return;
-    deleteLine(db, id);
-    refresh();
+    openConfirmModal(t("route.line.delete-confirm"), () => {
+      deleteLine(db, id);
+      refresh();
+    });
   };
 
   const handleDeleteStation = (stationId: string) => {
     if (!selectedLineId) return;
-    if (!window.confirm(t("route.station.delete-confirm"))) return;
-    deleteStationFromLine(db, stationId, selectedLineId);
+    openConfirmModal(t("route.station.delete-confirm"), () => {
+      deleteStationFromLine(db, stationId, selectedLineId);
+      refresh();
+    });
+  };
+
+  const handleAddService = () => {
+    if (!selectedLineId || !newServiceName.trim()) return;
+    const serviceId = uuidv7();
+    upsertService(db, {
+      id: serviceId,
+      line_id: selectedLineId,
+      name: newServiceName.trim(),
+      color: selectedLine?.line_color ?? "#8cc800",
+      sort_order: lineServices.length,
+    });
+    for (const station of stationsInLine) {
+      upsertStationServiceStop(db, {
+        id: uuidv7(),
+        station_id: station.id,
+        service_id: serviceId,
+        status: "stop",
+      });
+    }
+    setNewServiceName("");
+    refresh();
+  };
+
+  const handleDeleteService = (serviceId: string) => {
+    openConfirmModal(t("route.service.delete-confirm"), () => {
+      deleteService(db, serviceId);
+      refresh();
+    });
+  };
+
+  const handleSetServiceStop = (
+    stationId: string,
+    serviceId: string,
+    status: "pass" | ServiceStopStatus,
+  ) => {
+    setStationServiceStop(db, uuidv7(), stationId, serviceId, status);
     refresh();
   };
 
@@ -1528,6 +1734,66 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             clearable
           />
 
+          {selectedLineId && (
+            <Box mb="md">
+              <Group gap="xs" align="center" wrap="wrap">
+                <Text size="sm" fw={600}>
+                  {t("route.service.title")}:
+                </Text>
+                {lineServices.map((svc) => (
+                  <Group
+                    key={svc.id}
+                    gap={4}
+                    px="xs"
+                    py={2}
+                    style={{
+                      border: "1px solid var(--mantine-color-default-border)",
+                      borderRadius: "var(--mantine-radius-sm)",
+                    }}
+                  >
+                    <Box
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: svc.color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Text size="xs">{svc.name}</Text>
+                    <ActionIcon
+                      size="xs"
+                      variant="transparent"
+                      color="red"
+                      onClick={() => handleDeleteService(svc.id)}
+                    >
+                      <IconX size={10} />
+                    </ActionIcon>
+                  </Group>
+                ))}
+                <Group gap={4}>
+                  <TextInput
+                    size="xs"
+                    placeholder={t("route.service.add-placeholder")}
+                    value={newServiceName}
+                    onChange={(e) => setNewServiceName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleAddService();
+                    }}
+                    style={{ width: 120 }}
+                  />
+                  <ActionIcon
+                    size="sm"
+                    onClick={handleAddService}
+                    disabled={!newServiceName.trim()}
+                  >
+                    <IconPlus size={12} />
+                  </ActionIcon>
+                </Group>
+              </Group>
+            </Box>
+          )}
+
           {!selectedLineId ? (
             <Text c="dimmed" size="sm">
               {t("route.station.empty")}
@@ -1568,7 +1834,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                     <Table
                       withTableBorder
                       withColumnBorders
-                      style={{ minWidth: 380 }}
+                      style={{
+                        minWidth: 380 + lineServices.length * 100,
+                      }}
                     >
                       <Table.Thead>
                         <Table.Tr>
@@ -1577,6 +1845,27 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                             {t("route.station.number")}
                           </Table.Th>
                           <Table.Th>{t("route.station.name")}</Table.Th>
+                          {lineServices.map((svc) => (
+                            <Table.Th
+                              key={svc.id}
+                              style={{ width: 100, textAlign: "center" }}
+                            >
+                              <Group justify="center" gap={4}>
+                                <Box
+                                  style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: "50%",
+                                    backgroundColor: svc.color,
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <Text size="xs" fw={600}>
+                                  {svc.name}
+                                </Text>
+                              </Group>
+                            </Table.Th>
+                          ))}
                           <Table.Th style={{ width: 140 }}></Table.Th>
                         </Table.Tr>
                       </Table.Thead>
@@ -1646,6 +1935,78 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   )}
                                 </Stack>
                               </Table.Td>
+                              {lineServices.map((svc) => {
+                                const stopStatus: "pass" | ServiceStopStatus =
+                                  serviceStopMap.get(
+                                    `${station.id}:${svc.id}`,
+                                  ) ?? "pass";
+                                return (
+                                  <Table.Td
+                                    key={svc.id}
+                                    style={{ textAlign: "center" }}
+                                  >
+                                    <Button.Group>
+                                      <Button
+                                        size="compact-xs"
+                                        variant={
+                                          stopStatus === "pass"
+                                            ? "filled"
+                                            : "subtle"
+                                        }
+                                        color="gray"
+                                        onClick={() =>
+                                          handleSetServiceStop(
+                                            station.id,
+                                            svc.id,
+                                            "pass",
+                                          )
+                                        }
+                                        px={6}
+                                      >
+                                        ×
+                                      </Button>
+                                      <Button
+                                        size="compact-xs"
+                                        variant={
+                                          stopStatus === "stop"
+                                            ? "filled"
+                                            : "subtle"
+                                        }
+                                        color={svc.color}
+                                        onClick={() =>
+                                          handleSetServiceStop(
+                                            station.id,
+                                            svc.id,
+                                            "stop",
+                                          )
+                                        }
+                                        px={6}
+                                      >
+                                        ○
+                                      </Button>
+                                      <Button
+                                        size="compact-xs"
+                                        variant={
+                                          stopStatus === "special"
+                                            ? "filled"
+                                            : "subtle"
+                                        }
+                                        color="orange"
+                                        onClick={() =>
+                                          handleSetServiceStop(
+                                            station.id,
+                                            svc.id,
+                                            "special",
+                                          )
+                                        }
+                                        px={6}
+                                      >
+                                        ◇
+                                      </Button>
+                                    </Button.Group>
+                                  </Table.Td>
+                                );
+                              })}
                               <Table.Td>
                                 <Group gap="xs">
                                   <ActionIcon
@@ -1843,6 +2204,27 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
           />
         </Modal>
       )}
+
+      {/* ── Confirm modal ── */}
+      <Modal
+        opened={confirmOpened}
+        onClose={closeConfirm}
+        title={t("common.confirm-title")}
+        centered
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text size="sm">{confirmPending?.message}</Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeConfirm}>
+              {t("common.cancel")}
+            </Button>
+            <Button color="red" onClick={handleConfirmOk}>
+              {t("common.delete")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Box>
   );
 }

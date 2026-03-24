@@ -81,6 +81,7 @@ common:
   add: 追加
   cancel: キャンセル
   confirm: リセットする
+  confirm-title: 確認
   theme-dark: ダークモードに切り替え
   theme-light: ライトモードに切り替え
   loading: 読み込み中...
@@ -188,6 +189,11 @@ route:
     all: すべての会社
     delete-confirm: この路線を削除しますか？
     prefix-preview: 路線インジケータバッジのプレビュー
+  service:
+    title: 種別
+    local: 各駅停車
+    add-placeholder: 種別名
+    delete-confirm: この種別を削除しますか？停車データもすべて削除されます。
   station:
     title: 駅
     add: 駅を追加
@@ -255,6 +261,15 @@ route:
     swap: 始点と終点を入れ替え
     loop-render-mode: 環状線の表示
     loop-as-linear: 通常路線として表示
+    name-side: 駅名の側
+    name-side-left: 左
+    name-side-right: 右
+    services: 種別
+    services-placeholder: 全種別（1本線）
+    show-passed-stations: 通過駅
+    passed-show: 表示（半透明）
+    passed-hide-gap: 非表示（余白）
+    passed-hide-trim: 非表示（切り詰め）
 
 footer:
   notice: このサイトはファンサイトです。商標は各鉄道会社に帰属します。当サイトは各鉄道会社とは一切関係ありません。また、開発者は鉄道オタクではなく、サンプルデータや初期値は誤りを含む場合があります。

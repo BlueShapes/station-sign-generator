@@ -56,6 +56,23 @@ export interface StationArea {
   sort_order: number;
 }
 
+export interface Service {
+  id: string;
+  line_id: string;
+  name: string;
+  color: string;
+  sort_order: number;
+}
+
+export type ServiceStopStatus = "stop" | "special";
+
+export interface StationServiceStop {
+  id: string;
+  station_id: string;
+  service_id: string;
+  status: ServiceStopStatus;
+}
+
 export interface StationAreaWithZone {
   id: string;
   station_id: string;

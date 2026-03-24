@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generate a sample SQLite database pre-populated with Yamanote Line and
-Keihin-Tohoku / Negishi Line data."""
+"""Generate a sample SQLite database pre-populated with Yamanote Line,
+Keihin-Tohoku / Negishi Line, and Shonan-Shinjuku Line data."""
 
 import sqlite3
 import os
@@ -12,9 +12,10 @@ CREATE TABLE IF NOT EXISTS db_metadata (
 );
 
 CREATE TABLE IF NOT EXISTS companies (
-  id            TEXT PRIMARY KEY,
-  name          TEXT NOT NULL,
-  company_color TEXT NOT NULL DEFAULT '#3a9200'
+  id                   TEXT PRIMARY KEY,
+  name                 TEXT NOT NULL,
+  company_color        TEXT NOT NULL DEFAULT '#3a9200',
+  station_number_style TEXT NOT NULL DEFAULT 'jreast'
 );
 
 CREATE TABLE IF NOT EXISTS lines (
@@ -75,11 +76,26 @@ CREATE TABLE IF NOT EXISTS current_sign_configurations (
   direction  TEXT DEFAULT 'left',
   sign_style TEXT
 );
+
+CREATE TABLE IF NOT EXISTS services (
+  id         TEXT PRIMARY KEY,
+  line_id    TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  color      TEXT NOT NULL DEFAULT '#8cc800',
+  sort_order INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS station_service_stops (
+  id         TEXT PRIMARY KEY,
+  station_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+  status     TEXT NOT NULL DEFAULT 'stop'
+);
 """
 
 # ── Special zones ─────────────────────────────────────────────────────────────
 # 山: 山手線内 (white fill), 区: 東京23区内 (black fill)
-# 宮: さいたま市内 (black fill), 浜: 横浜市内 (black fill)
+# 浜: 横浜市内 (black fill)
 SPECIAL_ZONES = [
     ("zone-yamanote",  "山手線内",    "山", 0),
     ("zone-tokyo23ku", "東京23区内",  "区", 1),
@@ -113,7 +129,7 @@ YAMANOTE_STATIONS = [
     (21, "恵比寿",          "えびす",                "Ebisu",            "에비스",                "恵比寿",        "EBS"),
     (22, "目黒",            "めぐろ",                "Meguro",           "메지로",                "目黒",          None),
     (23, "五反田",          "ごたんだ",              "Gotanda",          "고탄다",                "五反田",        None),
-    (24, "大崎",            "おおきき",              "Osaki",            "오사키",                "大崎",          "OSK"),
+    (24, "大崎",            "おおさき",              "Osaki",            "오사키",                "大崎",          "OSK"),
     (25, "品川",            "しながわ",              "Shinagawa",        "시나가와",              "品川",          "SGW"),
     (26, "高輪ゲートウェイ", "たかなわげーとうぇい",  "Takanawa Gateway", "다카나와 게이트웨이",   "高轮Gateway",   "TGW"),
     (27, "田町",            "たまち",                "Tamachi",          "다마치",                "田町",          None),
@@ -146,13 +162,9 @@ SHARED_JY_JK = [
 
 # ── Keihin-Tohoku / Negishi Line exclusive stations ───────────────────────────
 # (jk_num, primary_name, furigana, english, korean, chinese, tlc, [zone_ids])
-# Zones applied:
-#   zone-tokyo23ku  → Tokyo 23-ward stations
-#   zone-saitama    → さいたま市内 stations
-#   zone-yokohama   → 横浜市内 stations
 JK_ONLY_STATIONS = [
     # ── Southern section: Ofuna → Oimachi (JK01 - JK19) ──────────────────────
-    ( 1, "大船",            "おおふな",             "Ōfuna",            "오후나",                "大船",            None, []),
+    ( 1, "大船",            "おおふな",             "Ōfuna",            "오후나",                "大船",            "OFN", []),
     ( 2, "本郷台",          "ほんごうだい",         "Hongōdai",         "혼고다이",              "本郷台",          None, ["zone-yokohama"]),
     ( 3, "港南台",          "こうなんだい",         "Kōnandai",         "고난다이",              "港南台",          None, ["zone-yokohama"]),
     ( 4, "洋光台",          "ようこうだい",         "Yōkōdai",          "요코다이",              "洋光台",          None, ["zone-yokohama"]),
@@ -182,7 +194,7 @@ JK_ONLY_STATIONS = [
     (39, "川口",            "かわぐち",             "Kawaguchi",        "가와구치",              "川口",            None, []),
     (40, "西川口",          "にしかわぐち",         "Nishi-Kawaguchi",  "니시카와구치",          "西川口",          None, []),
     (41, "蕨",              "わらび",               "Warabi",           "와라비",                "蕨",              None, []),
-    (42, "南浦和",          "みなみうらわ",         "Minami-Urawa",     "미な미우라와",          "南浦和",          None, []),
+    (42, "南浦和",          "みなみうらわ",         "Minami-Urawa",     "미나미우라와",          "南浦和",          None, []),
     (43, "浦和",            "うらわ",               "Urawa",            "우라와",                "浦和",            "URW", []),
     (44, "北浦和",          "きたうらわ",           "Kita-Urawa",       "기타우라와",            "北浦和",          None, []),
     (45, "与野",            "よの",                 "Yono",             "요노",                  "与野",            None, []),
@@ -195,6 +207,66 @@ JK_ONLY_STATIONS = [
 # No station numbers for Negishi Line.
 # sort_order mirrors JK number.
 NEGISHI_JK_NUMS = list(range(1, 13))  # JK01 to JK12
+
+# ── JK 快速 service ──────────────────────────────────────────────────────────
+# 快速 passes: 新橋(JK24), 有楽町(JK25), 鶯谷(JK31), 日暮里(JK32), 西日暮里(JK33)
+# 快速 special: 御徒町(JK29)
+# All other JK stations: stop
+JK_KAISOKU_PASS = {24, 25, 31, 32, 33}   # JK numbers that are passed
+JK_KAISOKU_SPECIAL = {29}                 # JK numbers with special status
+
+# ── Shonan-Shinjuku Line (JS) ─────────────────────────────────────────────────
+# (js_num, primary_name, furigana, english, korean, chinese, tlc, [zone_ids], reuse_station_id_or_None)
+# Stations reusing existing records: provide the existing station ID.
+# New stations: reuse_station_id = None → a new station-js{num:02d} record is created.
+JS_STATIONS = [
+    # js_num, name, furigana, en, ko, zh, tlc, zones, reuse_id
+    ( 6, "逗子",       "ずし",           "Zushi",         "즈시",      "逗子",     None,  [],                          None),
+    ( 7, "鎌倉",       "かまくら",       "Kamakura",      "가마쿠라",  "镰仓",     None,  [],                          None),
+    ( 8, "北鎌倉",     "きたかまくら",   "Kita-Kamakura", "기타가마쿠라","北鎌倉", None,  [],                          None),
+    ( 9, "大船",       "おおふな",       "Ōfuna",         "오후나",    "大船",     "OFN", [],                          "station-jk01"),
+    (10, "戸塚",       "とつか",         "Totsuka",       "도쓰카",    "户冢",     "TTK", ["zone-yokohama"],           None),
+    (11, "東戸塚",     "ひがしとつか",   "Higashi-Totsuka","히가시도쓰카","東户冢", None,  ["zone-yokohama"],           None),
+    (12, "保土ヶ谷",   "ほどがや",       "Hodogaya",      "호도가야",  "保土谷",   None,  ["zone-yokohama"],           None),
+    (13, "横浜",       "よこはま",       "Yokohama",      "요코하마",  "横浜",     "YHM", ["zone-yokohama"],           "station-jk12"),
+    (14, "新川崎",     "しんかわさき",   "Shin-Kawasaki", "신카와사키","新川崎",   None,  [],                          None),
+    (15, "武蔵小杉",   "むさしこすぎ",   "Musashi-Kosugi","무사시코스기","武蔵小杉","MKG", [],                         None),
+    (16, "西大井",     "にしおおい",     "Nishi-Ōi",      "니시오이",  "西大井",   None,  ["zone-tokyo23ku"],          None),
+    (17, "大崎",       "おおさき",       "Osaki",         "오사키",    "大崎",     "OSK", ["zone-yamanote", "zone-tokyo23ku"], "station-jy24"),
+    (18, "恵比寿",     "えびす",         "Ebisu",         "에비스",    "恵比寿",   "EBS", ["zone-yamanote", "zone-tokyo23ku"], "station-jy21"),
+    (19, "渋谷",       "しぶや",         "Shibuya",       "시부야",    "涩谷",     "SBY", ["zone-yamanote", "zone-tokyo23ku"], "station-jy20"),
+    (20, "新宿",       "しんじゅく",     "Shinjuku",      "신주쿠",    "新宿",     "SJK", ["zone-yamanote", "zone-tokyo23ku"], "station-jy17"),
+    (21, "池袋",       "いけぶくろ",     "Ikebukuro",     "이케부쿠로","池袋",     "IKB", ["zone-yamanote", "zone-tokyo23ku"], "station-jy13"),
+    (22, "赤羽",       "あかばね",       "Akabane",       "아카바네",  "赤羽",     "ABN", ["zone-tokyo23ku"],          "station-jk38"),
+    (23, "浦和",       "うらわ",         "Urawa",         "우라와",    "浦和",     "URW", [],                          "station-jk43"),
+    (24, "大宮",       "おおみや",       "Ōmiya",         "오미야",    "大宮",     "OMY", [],                          "station-jk47"),
+]
+
+# JS service stop data: (js_num, service_key) for each stop
+# service_key: "futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"
+# Absence = pass
+JS_SERVICE_STOPS = {
+    # (js_num: set of service_keys)
+     6: {"futsuu", "kaisoku_u"},
+     7: {"futsuu", "kaisoku_u"},
+     8: {"futsuu", "kaisoku_u"},
+     9: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    10: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    11: {"futsuu", "kaisoku_u"},
+    12: {"futsuu", "kaisoku_u"},
+    13: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    14: {"futsuu", "kaisoku_u"},
+    15: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    16: {"futsuu", "kaisoku_u"},
+    17: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    18: {"futsuu", "kaisoku_u", "kaisoku_y"},
+    19: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    20: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    21: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    22: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    23: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+    24: {"futsuu", "kaisoku_u", "kaisoku_y", "tokkaisu"},
+}
 
 
 def main():
@@ -210,7 +282,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.1.0')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.4.0')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -219,11 +291,11 @@ def main():
             (zone_id, name, abbreviation, is_black),
         )
 
-    # Company — color matches default #3a9200
+    # Company — color matches default #3a9200, station_number_style = jreast
     company_id = "company-jreast"
     c.execute(
-        "INSERT INTO companies VALUES (?, ?, ?)",
-        (company_id, "JR東日本", "#3a9200"),
+        "INSERT INTO companies VALUES (?, ?, ?, ?)",
+        (company_id, "JR東日本", "#3a9200", "jreast"),
     )
 
     # ── Yamanote Line ─────────────────────────────────────────────────────────
@@ -305,6 +377,28 @@ def main():
                 (f"area-jk{jk_num:02d}-{zone_id.replace('zone-', '')}", station_id, zone_id, i),
             )
 
+    # ── JK 快速 service ───────────────────────────────────────────────────────
+    # Build the full ordered list of (jk_num, station_id) for the JK line
+    jk_all = []
+    for (jy_num, jk_num) in SHARED_JY_JK:
+        jk_all.append((jk_num, f"station-jy{jy_num:02d}"))
+    for (jk_num, *rest) in JK_ONLY_STATIONS:
+        jk_all.append((jk_num, f"station-jk{jk_num:02d}"))
+
+    jk_kaisoku_id = "svc-jk-kaisoku"
+    c.execute(
+        "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+        (jk_kaisoku_id, jk_line_id, "快速", "#006ab7", 1),
+    )
+    for (jk_num, station_id) in jk_all:
+        if jk_num in JK_KAISOKU_PASS:
+            continue  # passed — no record
+        status = "special" if jk_num in JK_KAISOKU_SPECIAL else "stop"
+        c.execute(
+            "INSERT INTO station_service_stops VALUES (?, ?, ?, ?)",
+            (f"sss-jk-kaisoku-{jk_num:02d}", station_id, jk_kaisoku_id, status),
+        )
+
     # ── Negishi Line ───────────────────────────────────────────────────────────
     negishi_line_id = "line-negishi"
     c.execute(
@@ -320,6 +414,67 @@ def main():
             (f"sl-negishi{jk_num:02d}", station_id, negishi_line_id, jk_num),
         )
 
+    # ── Shonan-Shinjuku Line ──────────────────────────────────────────────────
+    js_line_id = "line-shonan-shinjuku"
+    c.execute(
+        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (js_line_id, company_id, "湘南新宿ライン", "#c61c1b", "JS", 4, 0),
+    )
+
+    # JS services
+    js_services = {
+        "futsuu":    ("svc-js-futsuu",    "普通",                 "#2b5152", 1),
+        "kaisoku_u": ("svc-js-kaisoku-u", "快速（宇都宮線内）",   "#2e5500", 2),
+        "kaisoku_y": ("svc-js-kaisoku-y", "快速（横須賀線・品鶴線内）", "#3b4000", 3),
+        "tokkaisu":  ("svc-js-tokkaisu",  "特別快速",             "#491615", 4),
+    }
+    for key, (svc_id, name, color, sort_order) in js_services.items():
+        c.execute(
+            "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+            (svc_id, js_line_id, name, color, sort_order),
+        )
+
+    # Track which station IDs have already been inserted as new records
+    inserted_station_ids = set()
+
+    for (js_num, primary_name, furigana, english, korean, chinese, tlc, zones, reuse_id) in JS_STATIONS:
+        if reuse_id is not None:
+            station_id = reuse_id
+        else:
+            station_id = f"station-js{js_num:02d}"
+            if station_id not in inserted_station_ids:
+                c.execute(
+                    "INSERT INTO stations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (station_id, primary_name, furigana, english, korean, chinese, None, None, tlc, js_num),
+                )
+                inserted_station_ids.add(station_id)
+
+        c.execute(
+            "INSERT INTO station_lines VALUES (?, ?, ?, ?)",
+            (f"sl-js{js_num:02d}", station_id, js_line_id, js_num),
+        )
+        c.execute(
+            "INSERT INTO station_numbers VALUES (?, ?, ?, ?)",
+            (f"sn-js{js_num:02d}", station_id, js_line_id, f"{js_num:02d}"),
+        )
+
+        # Station areas — only add for new stations (reused stations already have areas)
+        if reuse_id is None:
+            for i, zone_id in enumerate(zones):
+                c.execute(
+                    "INSERT INTO station_areas VALUES (?, ?, ?, ?)",
+                    (f"area-js{js_num:02d}-{zone_id.replace('zone-', '')}", station_id, zone_id, i),
+                )
+
+        # Service stops for this JS station
+        stops_for_station = JS_SERVICE_STOPS.get(js_num, set())
+        for key, (svc_id, _, _, _) in js_services.items():
+            if key in stops_for_station:
+                c.execute(
+                    "INSERT INTO station_service_stops VALUES (?, ?, ?, ?)",
+                    (f"sss-js{js_num:02d}-{key}", station_id, svc_id, "stop"),
+                )
+
     conn.commit()
     conn.close()
 
@@ -329,15 +484,18 @@ def main():
 
     jk_exclusive = len(JK_ONLY_STATIONS)
     jk_shared = len(SHARED_JY_JK)
+    js_new = sum(1 for s in JS_STATIONS if s[8] is None)
+    js_reuse = sum(1 for s in JS_STATIONS if s[8] is not None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.1.0")
-    print(f"  - 4 special zones (山手線内, 東京23区内, さいたま市内, 横浜市内)")
-    print(f"  - 1 company (JR東日本, color #3a9200)")
-    print(f"  - 3 lines:")
-    print(f"      山手線         (JY, #8cc800,  is_loop=1): {len(YAMANOTE_STATIONS)} stations")
-    print(f"      京浜東北線・根岸線 (JK, #5f9de9, is_loop=0): {jk_shared} shared + {jk_exclusive} exclusive = {jk_shared + jk_exclusive} total")
-    print(f"      根岸線         (no prefix, #8bd900, is_loop=0): {len(NEGISHI_JK_NUMS)} stations (shared with JK, no station numbers)")
+    print(f"  - version: 0.4.0")
+    print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
+    print(f"  - 1 company (JR東日本, color #3a9200, style jreast)")
+    print(f"  - 4 lines:")
+    print(f"      山手線          (JY, #8cc800,  is_loop=1): {len(YAMANOTE_STATIONS)} stations")
+    print(f"      京浜東北線・根岸線 (JK, #5f9de9, is_loop=0): {jk_shared} shared + {jk_exclusive} exclusive = {jk_shared + jk_exclusive} total; 1 service (快速)")
+    print(f"      根岸線          (no prefix, #8bd900, is_loop=0): {len(NEGISHI_JK_NUMS)} stations (shared with JK, no station numbers)")
+    print(f"      湘南新宿ライン  (JS, #c61c1b,  is_loop=0): {len(JS_STATIONS)} stations ({js_new} new + {js_reuse} reused); 4 services")
 
 
 if __name__ == "__main__":

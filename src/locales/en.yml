@@ -81,6 +81,7 @@ common:
   add: Add
   cancel: Cancel
   confirm: Reset
+  confirm-title: Confirm
   theme-dark: Switch to dark mode
   theme-light: Switch to light mode
   loading: Loading...
@@ -188,6 +189,11 @@ route:
     all: All Companies
     delete-confirm: Delete this line?
     prefix-preview: Line indicator badge preview
+  service:
+    title: Services
+    local: Local
+    add-placeholder: Service name
+    delete-confirm: Delete this service? All stop data will be lost.
   station:
     title: Stations
     add: Add Station
@@ -255,6 +261,15 @@ route:
     swap: Swap start and end
     loop-render-mode: Loop Display Mode
     loop-as-linear: Show as linear route
+    name-side: Name Side
+    name-side-left: Left
+    name-side-right: Right
+    services: Services
+    services-placeholder: All services (single track)
+    show-passed-stations: Passed Stations
+    passed-show: Show (faded)
+    passed-hide-gap: Hide (gap)
+    passed-hide-trim: Hide (trim)
 
 footer:
   notice: This is a fan-made website. All trademarks are the property of their respective railway companies. This site is not affiliated with or endorsed by any railway company. Sample data and initial values may contain fake values.

@@ -54,7 +54,11 @@ import {
   getStationNumbers,
   getStationAreasWithZones,
 } from "@/db/repositories/stations";
-import type { Line, Station } from "@/db/types";
+import {
+  getServicesByLine,
+  getServiceStopsByLine,
+} from "@/db/repositories/services";
+import type { Line, Station, Service } from "@/db/types";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import type { Direction } from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
@@ -80,11 +84,14 @@ import LineMapRenderer, {
   type StationNumberMode,
   type StationNumberMap,
   type StationNameField,
+  type ServiceInfo,
+  type ServiceStopMap,
 } from "@/components/signs/LineMapRenderer";
 
 type SignStyle = "jreast" | "jrwest" | "jrwestlarge";
 type TabMode = "sign" | "linemap";
 type MapOrientation = "horizontal" | "vertical";
+type PassedStationMode = "show" | "hide-gap" | "hide-trim";
 
 const SIGN_STYLES: Record<
   SignStyle,
@@ -172,6 +179,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     useState<StationNameField>("secondary_name");
   const [mapShowSecondaryLang, setMapShowSecondaryLang] = useState(true);
   const [mapForceLinear, setMapForceLinear] = useState(false);
+  const [mapVerticalNameSide, setMapVerticalNameSide] = useState<
+    "left" | "right"
+  >("right");
+  const [mapServices, setMapServices] = useState<Service[]>([]);
+  const [mapSelectedServiceIds, setMapSelectedServiceIds] = useState<string[]>(
+    [],
+  );
+  const [mapServiceStops, setMapServiceStops] = useState<ServiceStopMap>({});
+  type PassedStationMode = "show" | "hide-gap" | "hide-trim";
+  const [mapPassedMode, setMapPassedMode] = useState<PassedStationMode>("show");
 
   // Load lines when db becomes available
   useEffect(() => {
@@ -196,6 +213,27 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setMapTransitFilter(null);
   }, [db, selectedLineId]);
 
+  // Load services and service stops when line changes
+  useEffect(() => {
+    if (!db || !selectedLineId) {
+      setMapServices([]);
+      setMapSelectedServiceIds([]);
+      setMapServiceStops({});
+      return;
+    }
+    const svcs = getServicesByLine(db, selectedLineId);
+    setMapServices(svcs);
+    setMapSelectedServiceIds([]);
+    // Build serviceStops map: stationId → serviceId → status
+    const rawStops = getServiceStopsByLine(db, selectedLineId);
+    const stopMap: ServiceStopMap = {};
+    for (const s of rawStops) {
+      if (!stopMap[s.station_id]) stopMap[s.station_id] = {};
+      stopMap[s.station_id][s.service_id] = s.status;
+    }
+    setMapServiceStops(stopMap);
+  }, [db, selectedLineId]);
+
   // Reset center square line selection when station or primary line changes
   useEffect(() => {
     setCenterSquareLineIds(
@@ -213,6 +251,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       setMapStationSpacing(90);
     }
   }, [mapOrientation, mapNameStyle]);
+
+  // Enforce constraints when 2+ services selected
+  useEffect(() => {
+    if (mapSelectedServiceIds.length >= 2) {
+      if (mapNameStyle === "normal") setMapNameStyle("above");
+      if (mapStationNumberMode === "dot") setMapStationNumberMode("none");
+    }
+  }, [mapSelectedServiceIds.length]);
 
   // Build sign data when station changes
   useEffect(() => {
@@ -437,6 +483,24 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     return getAllCompanies(db).find((c) => c.id === selectedLine.company_id)
       ?.station_number_style;
   }, [db, selectedLine?.company_id]);
+
+  // Derive ServiceInfo list (1+ services) for renderer
+  const mapServiceInfos = useMemo((): ServiceInfo[] => {
+    if (mapSelectedServiceIds.length < 1) return [];
+    return mapSelectedServiceIds
+      .map((id) => mapServices.find((s) => s.id === id))
+      .filter((s): s is Service => !!s)
+      .map((s) => ({ id: s.id, name: s.name, color: s.color }));
+  }, [mapSelectedServiceIds, mapServices]);
+
+  // Filter stations for "hide-trim" mode: exclude passed stations from the list
+  const mapDisplayStations = useMemo(() => {
+    if (mapPassedMode !== "hide-trim" || mapServiceInfos.length === 0)
+      return mapStations;
+    return mapStations.filter((s) =>
+      mapServiceInfos.some((svc) => !!mapServiceStops[s.id]?.[svc.id]),
+    );
+  }, [mapPassedMode, mapStations, mapServiceInfos, mapServiceStops]);
 
   // Build label map: stationId -> "[JY01] 東京" format for dropdowns
   const stationLabelMap = useMemo(() => {
@@ -954,6 +1018,51 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 />
               </Grid.Col>
 
+              {/* Service selector — shown when the line has services */}
+              {mapServices.length >= 2 && (
+                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <MultiSelect
+                    label={t("route.linemap.services")}
+                    value={mapSelectedServiceIds}
+                    onChange={setMapSelectedServiceIds}
+                    data={mapServices.map((s) => ({
+                      value: s.id,
+                      label: s.name,
+                    }))}
+                    placeholder={t("route.linemap.services-placeholder")}
+                  />
+                </Grid.Col>
+              )}
+
+              {/* Passed stations display mode — shown when any service is selected */}
+              {mapSelectedServiceIds.length >= 1 && (
+                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Text size="sm" fw={500} mb={4}>
+                    {t("route.linemap.show-passed-stations")}
+                  </Text>
+                  <SegmentedControl
+                    value={mapPassedMode}
+                    onChange={(v) => setMapPassedMode(v as PassedStationMode)}
+                    data={[
+                      {
+                        label: t("route.linemap.passed-show"),
+                        value: "show",
+                      },
+                      {
+                        label: t("route.linemap.passed-hide-gap"),
+                        value: "hide-gap",
+                      },
+                      {
+                        label: t("route.linemap.passed-hide-trim"),
+                        value: "hide-trim",
+                      },
+                    ]}
+                    size="xs"
+                    fullWidth
+                  />
+                </Grid.Col>
+              )}
+
               {/* Linear-mode toggle — loop lines only */}
               {isLoopLine && (
                 <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
@@ -1001,6 +1110,42 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 </Grid.Col>
               )}
 
+              {/* Name side toggle — vertical, non-loop or loop-as-linear */}
+              {(!isLoopLine || mapForceLinear) &&
+                mapOrientation === "vertical" && (
+                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Text size="sm" fw={500} mb={4}>
+                      {t("route.linemap.name-side")}
+                    </Text>
+                    <SegmentedControl
+                      value={mapVerticalNameSide}
+                      onChange={(v) =>
+                        setMapVerticalNameSide(v as "left" | "right")
+                      }
+                      data={[
+                        {
+                          value: "left",
+                          label: (
+                            <Group gap={4}>
+                              <IconArrowLeft size={16} />
+                              {t("route.linemap.name-side-left")}
+                            </Group>
+                          ),
+                        },
+                        {
+                          value: "right",
+                          label: (
+                            <Group gap={4}>
+                              {t("route.linemap.name-side-right")}
+                              <IconArrowRight size={16} />
+                            </Group>
+                          ),
+                        },
+                      ]}
+                    />
+                  </Grid.Col>
+                )}
+
               {/* Name style toggle — horizontal, non-loop or loop-as-linear */}
               {(!isLoopLine || mapForceLinear) &&
                 mapOrientation === "horizontal" && (
@@ -1017,6 +1162,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         {
                           value: "normal",
                           label: t("route.linemap.name-style-normal"),
+                          disabled: mapSelectedServiceIds.length >= 2,
                         },
                         {
                           value: "above",
@@ -1205,6 +1351,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   {
                     value: "dot",
                     label: t("route.linemap.station-number-dot"),
+                    disabled: mapSelectedServiceIds.length >= 2,
                   },
                 ]}
               />
@@ -1273,12 +1420,13 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 <Box className="map-preview" style={{ overflowX: "auto" }}>
                   <LineMapRenderer
                     ref={mapRef}
-                    stations={mapStations}
+                    stations={mapDisplayStations}
                     line={selectedLine}
                     isLoop={effectiveIsLoop}
                     transits={filteredMapTransits}
                     orientation={mapOrientation}
                     nameStyle={mapNameStyle}
+                    verticalNameSide={mapVerticalNameSide}
                     circularFontSize={mapFontSize}
                     stationNumberMode={mapStationNumberMode}
                     stationNumbers={mapStationNumbers}
@@ -1297,6 +1445,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         : mapHasMoreAfter && mapShowFadeAfter
                     }
                     companyStyle={mapCompanyStyle}
+                    services={
+                      mapServiceInfos.length >= 1 ? mapServiceInfos : undefined
+                    }
+                    serviceStops={mapServiceStops}
+                    showPassedStations={mapPassedMode !== "hide-gap"}
                   />
                 </Box>
 
