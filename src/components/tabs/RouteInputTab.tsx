@@ -245,17 +245,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     );
   }, [selectedStationId, selectedLineId]);
 
-  // Reset station spacing to sensible defaults when orientation/nameStyle changes
-  useEffect(() => {
-    if (mapOrientation === "vertical") {
-      setMapStationSpacing(62);
-    } else if (mapNameStyle === "above" || mapNameStyle === "below") {
-      setMapStationSpacing(60);
-    } else {
-      setMapStationSpacing(90);
-    }
-  }, [mapOrientation, mapNameStyle]);
-
   // Enforce constraints when services have passed stations
   useEffect(() => {
     if (mapSelectedServiceIds.length === 0) return;

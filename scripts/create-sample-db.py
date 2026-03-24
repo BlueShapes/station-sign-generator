@@ -436,10 +436,10 @@ def main():
 
     # JS services
     js_services = {
-        "futsuu":    ("svc-js-futsuu",    "普通",                 "#2b5152", 1),
-        "kaisoku_u": ("svc-js-kaisoku-u", "快速（宇都宮線内）",   "#2e5500", 2),
-        "kaisoku_y": ("svc-js-kaisoku-y", "快速（横須賀線・品鶴線内）", "#3b4000", 3),
-        "tokkaisu":  ("svc-js-tokkaisu",  "特別快速",             "#491615", 4),
+        "futsuu":    ("svc-js-futsuu",    "普通",                 "#5b9ea0", 1),
+        "kaisoku_u": ("svc-js-kaisoku-u", "快速（宇都宮線内）",   "#6aaa00", 2),
+        "kaisoku_y": ("svc-js-kaisoku-y", "快速（横須賀線・品鶴線内）", "#2a6db5", 3),
+        "tokkaisu":  ("svc-js-tokkaisu",  "特別快速",             "#e8392a", 4),
     }
     for key, (svc_id, name, color, sort_order) in js_services.items():
         c.execute(
