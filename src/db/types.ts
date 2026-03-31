@@ -13,6 +13,7 @@ export interface Line {
   prefix: string;
   priority: number | null;
   is_loop: number;
+  parent_line_id: string | null;
 }
 
 export interface Station {

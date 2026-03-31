@@ -521,6 +521,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
       company_id: companyId,
       priority: priority === "" ? null : Number(priority),
       is_loop: isLoop ? 1 : 0,
+      parent_line_id: line?.parent_line_id ?? null,
     });
     for (const id of deletedServiceIds) {
       deleteService(db, id);

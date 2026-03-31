@@ -5,6 +5,7 @@ import migrateV001toV010 from "./migrations/v0.0.1_to_v0.1.0";
 import migrateV010toV020 from "./migrations/v0.1.0_to_v0.2.0";
 import migrateV021toV030 from "./migrations/v0.2.1_to_v0.3.0";
 import migrateV030toV040 from "./migrations/v0.3.0_to_v0.4.0";
+import migrateV040toV050 from "./migrations/v0.4.0_to_v0.5.0";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -22,13 +23,14 @@ CREATE TABLE IF NOT EXISTS companies (
 );
 
 CREATE TABLE IF NOT EXISTS lines (
-  id         TEXT PRIMARY KEY,
-  company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
-  name       TEXT NOT NULL,
-  line_color TEXT NOT NULL DEFAULT '#8cc800',
-  prefix     TEXT NOT NULL,
-  priority   INTEGER,
-  is_loop    INTEGER NOT NULL DEFAULT 0
+  id             TEXT PRIMARY KEY,
+  company_id     TEXT REFERENCES companies(id) ON DELETE SET NULL,
+  name           TEXT NOT NULL,
+  line_color     TEXT NOT NULL DEFAULT '#8cc800',
+  prefix         TEXT NOT NULL,
+  priority       INTEGER,
+  is_loop        INTEGER NOT NULL DEFAULT 0,
+  parent_line_id TEXT REFERENCES lines(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS stations (
@@ -110,6 +112,7 @@ function migrateDatabase(database: Database): void {
     migrateV010toV020,
     migrateV021toV030,
     migrateV030toV040,
+    migrateV040toV050,
   ];
 
   for (const migrate of migrations) {
@@ -169,7 +172,7 @@ export function persistDatabase(database: Database): void {
 // Minimum required columns per table (subset that the app actively reads/writes)
 const REQUIRED_SCHEMA: Record<string, string[]> = {
   companies: ["id", "name", "company_color", "station_number_style"],
-  lines: ["id", "name", "line_color", "prefix"],
+  lines: ["id", "name", "line_color", "prefix", "parent_line_id"],
   stations: ["id", "primary_name"],
   station_lines: ["id", "station_id", "line_id", "sort_order"],
   station_numbers: ["id", "station_id", "line_id", "value"],

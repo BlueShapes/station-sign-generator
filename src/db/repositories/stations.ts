@@ -114,23 +114,54 @@ export function getStationNumbers(
   stationId: string,
   lineId?: string,
 ): StationNumber[] {
-  let stmt;
-  if (lineId !== undefined) {
-    stmt = db.prepare(
-      `SELECT id, station_id, line_id, value FROM station_numbers WHERE station_id = ? AND line_id = ?`,
-    );
-    stmt.bind([stationId, lineId]);
-  } else {
-    stmt = db.prepare(
+  if (lineId === undefined) {
+    const stmt = db.prepare(
       `SELECT id, station_id, line_id, value FROM station_numbers WHERE station_id = ?`,
     );
     stmt.bind([stationId]);
+    const results: StationNumber[] = [];
+    while (stmt.step()) {
+      results.push(stmt.getAsObject() as unknown as StationNumber);
+    }
+    stmt.free();
+    return results;
   }
+
+  // Try the requested line first
+  const stmt = db.prepare(
+    `SELECT id, station_id, line_id, value FROM station_numbers WHERE station_id = ? AND line_id = ?`,
+  );
+  stmt.bind([stationId, lineId]);
   const results: StationNumber[] = [];
   while (stmt.step()) {
     results.push(stmt.getAsObject() as unknown as StationNumber);
   }
   stmt.free();
+
+  if (results.length > 0) return results;
+
+  // Fall back to parent line's station number if the line has a parent
+  const parentStmt = db.prepare(
+    `SELECT parent_line_id FROM lines WHERE id = ?`,
+  );
+  parentStmt.bind([lineId]);
+  let parentLineId: string | null = null;
+  if (parentStmt.step()) {
+    const row = parentStmt.getAsObject() as { parent_line_id: string | null };
+    parentLineId = row.parent_line_id;
+  }
+  parentStmt.free();
+
+  if (!parentLineId) return results;
+
+  const fallbackStmt = db.prepare(
+    `SELECT id, station_id, line_id, value FROM station_numbers WHERE station_id = ? AND line_id = ?`,
+  );
+  fallbackStmt.bind([stationId, parentLineId]);
+  while (fallbackStmt.step()) {
+    results.push(fallbackStmt.getAsObject() as unknown as StationNumber);
+  }
+  fallbackStmt.free();
   return results;
 }
 

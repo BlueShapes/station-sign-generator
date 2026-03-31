@@ -3,7 +3,7 @@ import type { Line } from "@/db/types";
 
 export function getAllLines(db: Database): Line[] {
   const stmt = db.prepare(
-    `SELECT id, company_id, name, line_color, prefix, priority, is_loop FROM lines ORDER BY priority ASC, name ASC`,
+    `SELECT id, company_id, name, line_color, prefix, priority, is_loop, parent_line_id FROM lines ORDER BY priority ASC, name ASC`,
   );
   const results: Line[] = [];
   while (stmt.step()) {
@@ -15,6 +15,7 @@ export function getAllLines(db: Database): Line[] {
       prefix: string;
       priority: number | null;
       is_loop: number;
+      parent_line_id: string | null;
     };
     results.push({
       id: row.id,
@@ -24,6 +25,7 @@ export function getAllLines(db: Database): Line[] {
       prefix: row.prefix,
       priority: row.priority,
       is_loop: row.is_loop ?? 0,
+      parent_line_id: row.parent_line_id ?? null,
     });
   }
   stmt.free();
@@ -32,7 +34,7 @@ export function getAllLines(db: Database): Line[] {
 
 export function getLinesByCompany(db: Database, companyId: string): Line[] {
   const stmt = db.prepare(
-    `SELECT id, company_id, name, line_color, prefix, priority, is_loop FROM lines WHERE company_id = ? ORDER BY priority ASC, name ASC`,
+    `SELECT id, company_id, name, line_color, prefix, priority, is_loop, parent_line_id FROM lines WHERE company_id = ? ORDER BY priority ASC, name ASC`,
   );
   stmt.bind([companyId]);
   const results: Line[] = [];
@@ -45,6 +47,7 @@ export function getLinesByCompany(db: Database, companyId: string): Line[] {
       prefix: string;
       priority: number | null;
       is_loop: number;
+      parent_line_id: string | null;
     };
     results.push({
       id: row.id,
@@ -54,6 +57,7 @@ export function getLinesByCompany(db: Database, companyId: string): Line[] {
       prefix: row.prefix,
       priority: row.priority,
       is_loop: row.is_loop ?? 0,
+      parent_line_id: row.parent_line_id ?? null,
     });
   }
   stmt.free();
@@ -62,7 +66,7 @@ export function getLinesByCompany(db: Database, companyId: string): Line[] {
 
 export function upsertLine(db: Database, line: Line): void {
   db.run(
-    `INSERT OR REPLACE INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT OR REPLACE INTO lines (id, company_id, name, line_color, prefix, priority, is_loop, parent_line_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       line.id,
       line.company_id,
@@ -71,6 +75,7 @@ export function upsertLine(db: Database, line: Line): void {
       line.prefix,
       line.priority,
       line.is_loop,
+      line.parent_line_id,
     ],
   );
 }
