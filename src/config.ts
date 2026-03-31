@@ -10,4 +10,4 @@ export const APP_VERSION = "2026.3.0-beta17";
  * - Minor version should be updated on compatible (migratable) structural changes
  * - Patch version should be updated on minor compatible changes (e.g. new default data, index tweaks)
  */
-export const DB_VERSION = "0.5.0";
+export const DB_VERSION = "0.5.1";

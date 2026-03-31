@@ -361,6 +361,15 @@ const V_RIGHT_MARGIN = 30;
 // Station number badge — all proportions derived from the JR East reference.
 // Reference coordinate system: inner badge = 30×30 sign units.
 // Every measurement below is (reference sign-unit value) × SN_S.
+
+/**
+ * Module-level variable set by LineMapRenderer at the beginning of each render so that
+ * SnBadge can read the current company style without prop threading. React renders within
+ * a single component tree are synchronous, so this is safe as long as SnBadge is only
+ * ever called inside a LineMapRenderer render.
+ */
+let _snBadgeStyle = "jreast";
+
 const SN_INNER = 20; // inner badge size in Konva units (= 30 ref × SN_S)
 const SN_S = SN_INNER / 30; // scale factor from 30-unit reference
 const SN_BADGE_GAP = 4; // gap between badge and station name (Konva units)
@@ -446,7 +455,10 @@ function SnBadge({
   // Inner square top-left
   const ix = hasTrc ? x + _snOuterPadX * s : x;
   const iy = hasTrc ? y + _snTrcH * s : y;
-  const font = "HindSemiBold, Arial, sans-serif";
+  const font =
+    _snBadgeStyle === "tokyometro"
+      ? '"JostTrispaceHybrid", Arial, sans-serif'
+      : '"HindSemiBold", Arial, sans-serif';
 
   return (
     <Fragment>
@@ -521,29 +533,39 @@ function SnBadge({
           />
         </>
       )}
-      {/* Inner white square with colored outline.
-          When hasTrc: top corners rounded (backed by the extended TRC strip),
-          bottom corners concentric with outer frame (outerCorner − pad).
-          When no TRC: uniform _snCornerInner. */}
-      <Rect
-        x={ix}
-        y={iy}
-        width={SN_INNER * s}
-        height={SN_INNER * s}
-        fill="white"
-        stroke={color}
-        strokeWidth={_snStroke * s}
-        cornerRadius={
-          hasTrc
-            ? [
-                _snCornerInner * s,
-                _snCornerInner * s,
-                (_snCornerOuter - _snOuterPadX) * s,
-                (_snCornerOuter - _snOuterPadX) * s,
-              ]
-            : _snCornerInner * s
-        }
-      />
+      {/* Inner badge shape — circle for tokyometro, rounded square otherwise.
+          When hasTrc: top corners rounded, bottom corners concentric with outer frame.
+          When no TRC and jreast: uniform _snCornerInner. */}
+      {_snBadgeStyle === "tokyometro" ? (
+        <Circle
+          x={ix + (SN_INNER * s) / 2}
+          y={iy + (SN_INNER * s) / 2}
+          radius={(SN_INNER * s) / 2}
+          fill="white"
+          stroke={color}
+          strokeWidth={_snStroke * s}
+        />
+      ) : (
+        <Rect
+          x={ix}
+          y={iy}
+          width={SN_INNER * s}
+          height={SN_INNER * s}
+          fill="white"
+          stroke={color}
+          strokeWidth={_snStroke * s}
+          cornerRadius={
+            hasTrc
+              ? [
+                  _snCornerInner * s,
+                  _snCornerInner * s,
+                  (_snCornerOuter - _snOuterPadX) * s,
+                  (_snCornerOuter - _snOuterPadX) * s,
+                ]
+              : _snCornerInner * s
+          }
+        />
+      )}
       {/* Prefix: 11 ref-unit font, 4 ref units from inner top (textBaseline=top) */}
       <Text
         x={ix}
@@ -591,12 +613,12 @@ const LI_GAP = 5; // gap between badge and line name text
  * We measure the actual rendered glyph bounds using a temporary canvas so the
  * result is exact regardless of font metrics.
  */
-function liTextY(): number {
+function liTextY(fontFamily: string): number {
   if (typeof document === "undefined") return LI_SIZE / 2 - LI_FONT * 0.35;
   const cv = document.createElement("canvas");
   const ctx = cv.getContext("2d");
   if (!ctx) return LI_SIZE / 2 - LI_FONT * 0.35;
-  const fontSpec = `600 ${LI_FONT}px "HindSemiBold", Arial, sans-serif`;
+  const fontSpec = `600 ${LI_FONT}px ${fontFamily}`;
 
   // Glyph bounds measured from the alphabetic baseline
   ctx.textBaseline = "alphabetic";
@@ -620,13 +642,19 @@ function LineIndicatorBadge({
   y,
   color,
   prefix,
+  style = "jreast",
 }: {
   x: number;
   y: number;
   color: string;
   prefix: string;
+  style?: string;
 }) {
-  const ty = liTextY();
+  const fontFamily =
+    style === "tokyometro"
+      ? '"JostTrispaceHybrid", Arial, sans-serif'
+      : '"HindSemiBold", Arial, sans-serif';
+  const ty = liTextY(fontFamily);
   return (
     <Fragment>
       <Rect
@@ -645,7 +673,7 @@ function LineIndicatorBadge({
         width={LI_SIZE}
         text={prefix}
         fontSize={LI_FONT}
-        fontFamily="HindSemiBold, Arial, sans-serif"
+        fontFamily={fontFamily}
         fontStyle="bold"
         fill="black"
         align="center"
@@ -760,6 +788,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     },
     ref,
   ) => {
+    // Expose the company style to SnBadge via the module-level variable
+    _snBadgeStyle = companyStyle ?? "jreast";
+
     const multiService = (services?.length ?? 0) >= 2;
     const hSpacing = stationSpacing ?? H_SPACING;
     const vSpacing = stationSpacing ?? V_SPACING;
@@ -886,6 +917,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 y={C_CY - (LI_SIZE + LI_GAP + LINE_TITLE_FONT) / 2}
                 color={lc}
                 prefix={line.prefix}
+                style={companyStyle}
               />
             )}
             <Text
@@ -1318,6 +1350,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 y={8}
                 color={lc}
                 prefix={line.prefix}
+                style={companyStyle}
               />
             )}
             <Text
@@ -1737,6 +1770,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 y={8}
                 color={lc}
                 prefix={line.prefix}
+                style={companyStyle}
               />
             )}
             <Text
@@ -2199,6 +2233,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 y={8}
                 color={lc}
                 prefix={line.prefix}
+                style={companyStyle}
               />
             )}
             <Text
@@ -2592,6 +2627,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 y={8}
                 color={lc}
                 prefix={line.prefix}
+                style={companyStyle}
               />
             )}
             <Text
@@ -2952,6 +2988,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               y={8}
               color={lc}
               prefix={line.prefix}
+              style={companyStyle}
             />
           )}
           <Text

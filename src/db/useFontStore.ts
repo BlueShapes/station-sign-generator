@@ -25,6 +25,7 @@ export const BUILTIN_FONTS: BuiltinFontDef[] = [
   { id: 'noto-sans-kr', name: 'Noto Sans KR', family: 'NotoSansKR', spec: '1em NotoSansKR', sizeApprox: 10_400_000 },
   { id: 'overused-grotesk', name: 'Overused Grotesk', family: 'OverusedGrotesk', spec: '1em OverusedGrotesk', sizeApprox: 217_000 },
   { id: 'hind-semibold', name: 'Hind SemiBold', family: 'HindSemiBold', spec: '600 1em HindSemiBold', sizeApprox: 274_000 },
+  { id: 'jost-trispace-hybrid', name: 'Jost Trispace Hybrid', family: 'JostTrispaceHybrid', spec: '600 1em JostTrispaceHybrid', sizeApprox: 8_124 },
 ];
 
 // ── IndexedDB helpers ────────────────────────────────────────────────────────

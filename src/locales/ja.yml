@@ -162,6 +162,7 @@ route:
     color: 会社カラー
     station-number-style: 駅番号スタイル
     station-number-style-jreast: JR東日本風
+    station-number-style-tokyometro: 東京メトロ・都営地下鉄風
     station-number-style-preview: サンプルバッジ（会社カラーを路線カラーとして使用）
     empty: 会社がありません
     delete-confirm: この会社を削除しますか？関連する路線も削除されます。

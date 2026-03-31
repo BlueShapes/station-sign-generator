@@ -162,6 +162,7 @@ route:
     color: Company Color
     station-number-style: Station Number Style
     station-number-style-jreast: JR East style
+    station-number-style-tokyometro: Tokyo Metro / Toei Subway style
     station-number-style-preview: Sample badge (using company color as line color)
     empty: No companies yet
     delete-confirm: Delete this company? Associated lines will also be deleted.

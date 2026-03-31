@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect, forwardRef } from "react";
 import type StationProps from "./DirectInputStationProps";
-import { Rect, Layer, Stage, Text, Line } from "react-konva";
+import { Rect, Layer, Stage, Text, Line, Ellipse } from "react-konva";
 import Konva from "konva";
 import { v7 as uuidv7 } from "uuid";
 import { isMobile } from "react-device-detect";
@@ -49,6 +49,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       if (!prefix) return "#000000";
       return localLines?.find((l) => l.prefix === prefix)?.color ?? "#000000";
     };
+    const stationBadgeFontFamily =
+      stationNumberStyle === "tokyometro"
+        ? "JostTrispaceHybrid"
+        : "HindSemiBold";
     const leftPrimaryName = left[0]?.primaryName ?? "";
     const leftSecondaryName = left[0]?.secondaryName ?? "";
     const leftNumberPrimaryPrefix = left[0]?.numberPrimaryPrefix;
@@ -291,21 +295,32 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   />
                   {leftNumberPrimaryValue && (
                     <>
-                      <Rect
-                        stroke={getLineColor(leftNumberPrimaryPrefix)}
-                        strokeWidth={2}
-                        x={44}
-                        y={yOffset + 97}
-                        width={15}
-                        height={15}
-                        cornerRadius={2}
-                      />
+                      {stationNumberStyle === "tokyometro" ? (
+                        <Ellipse
+                          x={44 + 7.5}
+                          y={yOffset + 97 + 7.5}
+                          radiusX={7.5}
+                          radiusY={7.5}
+                          stroke={getLineColor(leftNumberPrimaryPrefix)}
+                          strokeWidth={2}
+                        />
+                      ) : (
+                        <Rect
+                          stroke={getLineColor(leftNumberPrimaryPrefix)}
+                          strokeWidth={2}
+                          x={44}
+                          y={yOffset + 97}
+                          width={15}
+                          height={15}
+                          cornerRadius={2}
+                        />
+                      )}
                       <Text
                         text={leftNumberPrimaryPrefix}
                         fill="black"
                         x={41.5}
                         fontSize={6}
-                        fontFamily={"HindSemiBold"}
+                        fontFamily={stationBadgeFontFamily}
                         fontStyle="600"
                         y={yOffset + 99}
                         width={20}
@@ -317,7 +332,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         fill="black"
                         x={41.5}
                         fontSize={9}
-                        fontFamily={"HindSemiBold"}
+                        fontFamily={stationBadgeFontFamily}
                         fontStyle="600"
                         y={yOffset + 104}
                         width={20}
@@ -328,21 +343,32 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   )}
                   {leftNumberSecondaryValue && (
                     <>
-                      <Rect
-                        stroke={getLineColor(leftNumberSecondaryPrefix)}
-                        strokeWidth={2}
-                        x={24}
-                        y={yOffset + 97}
-                        width={15}
-                        height={15}
-                        cornerRadius={2}
-                      />
+                      {stationNumberStyle === "tokyometro" ? (
+                        <Ellipse
+                          x={24 + 7.5}
+                          y={yOffset + 97 + 7.5}
+                          radiusX={7.5}
+                          radiusY={7.5}
+                          stroke={getLineColor(leftNumberSecondaryPrefix)}
+                          strokeWidth={2}
+                        />
+                      ) : (
+                        <Rect
+                          stroke={getLineColor(leftNumberSecondaryPrefix)}
+                          strokeWidth={2}
+                          x={24}
+                          y={yOffset + 97}
+                          width={15}
+                          height={15}
+                          cornerRadius={2}
+                        />
+                      )}
                       <Text
                         text={leftNumberSecondaryPrefix}
                         fill="black"
                         x={21.5}
                         fontSize={6}
-                        fontFamily={"HindSemiBold"}
+                        fontFamily={stationBadgeFontFamily}
                         fontStyle="600"
                         y={yOffset + 99}
                         width={20}
@@ -354,7 +380,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         fill="black"
                         x={21.5}
                         fontSize={9}
-                        fontFamily={"HindSemiBold"}
+                        fontFamily={stationBadgeFontFamily}
                         fontStyle="600"
                         y={yOffset + 104}
                         width={20}
@@ -390,21 +416,32 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   />
                   {rightNumberPrimaryValue && (
                     <>
-                      <Rect
-                        stroke={getLineColor(rightNumberPrimaryPrefix)}
-                        strokeWidth={2}
-                        x={width - 60}
-                        y={yOffset + 97}
-                        width={15}
-                        height={15}
-                        cornerRadius={2}
-                      />
+                      {stationNumberStyle === "tokyometro" ? (
+                        <Ellipse
+                          x={width - 60 + 7.5}
+                          y={yOffset + 97 + 7.5}
+                          radiusX={7.5}
+                          radiusY={7.5}
+                          stroke={getLineColor(rightNumberPrimaryPrefix)}
+                          strokeWidth={2}
+                        />
+                      ) : (
+                        <Rect
+                          stroke={getLineColor(rightNumberPrimaryPrefix)}
+                          strokeWidth={2}
+                          x={width - 60}
+                          y={yOffset + 97}
+                          width={15}
+                          height={15}
+                          cornerRadius={2}
+                        />
+                      )}
                       <Text
                         text={rightNumberPrimaryPrefix}
                         fill="black"
                         x={width - 62.5}
                         fontSize={6}
-                        fontFamily={"HindSemiBold"}
+                        fontFamily={stationBadgeFontFamily}
                         fontStyle="600"
                         y={yOffset + 99}
                         width={20}
@@ -416,7 +453,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         fill="black"
                         x={width - 62.5}
                         fontSize={9}
-                        fontFamily={"HindSemiBold"}
+                        fontFamily={stationBadgeFontFamily}
                         fontStyle="600"
                         y={yOffset + 104}
                         width={20}
@@ -427,21 +464,32 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   )}
                   {rightNumberSecondaryValue && (
                     <>
-                      <Rect
-                        stroke={getLineColor(rightNumberSecondaryPrefix)}
-                        strokeWidth={2}
-                        x={width - 40}
-                        y={yOffset + 97}
-                        width={15}
-                        height={15}
-                        cornerRadius={2}
-                      />
+                      {stationNumberStyle === "tokyometro" ? (
+                        <Ellipse
+                          x={width - 40 + 7.5}
+                          y={yOffset + 97 + 7.5}
+                          radiusX={7.5}
+                          radiusY={7.5}
+                          stroke={getLineColor(rightNumberSecondaryPrefix)}
+                          strokeWidth={2}
+                        />
+                      ) : (
+                        <Rect
+                          stroke={getLineColor(rightNumberSecondaryPrefix)}
+                          strokeWidth={2}
+                          x={width - 40}
+                          y={yOffset + 97}
+                          width={15}
+                          height={15}
+                          cornerRadius={2}
+                        />
+                      )}
                       <Text
                         text={rightNumberSecondaryPrefix}
                         fill="black"
                         x={width - 42.5}
                         fontSize={6}
-                        fontFamily={"HindSemiBold"}
+                        fontFamily={stationBadgeFontFamily}
                         fontStyle="600"
                         y={yOffset + 99}
                         width={20}
@@ -453,7 +501,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         fill="black"
                         x={width - 42.5}
                         fontSize={9}
-                        fontFamily={"HindSemiBold"}
+                        fontFamily={stationBadgeFontFamily}
                         fontStyle="600"
                         y={yOffset + 104}
                         width={20}
@@ -733,7 +781,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                             (width - stationNameWidth) / 2
                           }
                           fontSize={12.2}
-                          fontFamily={"HindSemiBold"}
+                          fontFamily={stationBadgeFontFamily}
                           fontStyle="800"
                           y={yOffset + yOffsetWithNote + 18}
                           width={66}
@@ -749,7 +797,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                             (width - stationNameWidth) / 2
                           }
                           fontSize={11}
-                          fontFamily={"HindSemiBold"}
+                          fontFamily={stationBadgeFontFamily}
                           fontStyle="600"
                           y={yOffset + yOffsetWithNote + 33}
                           width={30}
@@ -765,7 +813,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                             (width - stationNameWidth) / 2
                           }
                           fontSize={17}
-                          fontFamily={"HindSemiBold"}
+                          fontFamily={stationBadgeFontFamily}
                           fontStyle="600"
                           y={yOffset + yOffsetWithNote + 43}
                           width={30}
@@ -780,7 +828,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           fill="white"
                           x={xOffsetWithNote + (width - stationNameWidth) / 2}
                           fontSize={12.2}
-                          fontFamily={"HindSemiBold"}
+                          fontFamily={stationBadgeFontFamily}
                           fontStyle="800"
                           y={yOffset + yOffsetWithNote + 18}
                           width={30}
@@ -794,7 +842,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       fill="black"
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={11}
-                      fontFamily={"HindSemiBold"}
+                      fontFamily={stationBadgeFontFamily}
                       fontStyle="600"
                       y={yOffset + yOffsetWithNote + 33}
                       width={30}
@@ -806,7 +854,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       fill="black"
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={17}
-                      fontFamily={"HindSemiBold"}
+                      fontFamily={stationBadgeFontFamily}
                       fontStyle="600"
                       y={yOffset + yOffsetWithNote + 43}
                       width={30}
@@ -816,21 +864,34 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   </>
                 ) : (
                   <>
-                    <Rect
-                      stroke={getLineColor(numberPrimaryPrefix)}
-                      strokeWidth={3}
-                      x={xOffsetWithNote + (width - stationNameWidth) / 2}
-                      y={yOffset + yOffsetWithNote + 18}
-                      width={30}
-                      height={30}
-                      cornerRadius={2}
-                    />
+                    {stationNumberStyle === "tokyometro" ? (
+                      <Ellipse
+                        x={
+                          xOffsetWithNote + (width - stationNameWidth) / 2 + 15
+                        }
+                        y={yOffset + yOffsetWithNote + 33}
+                        radiusX={15}
+                        radiusY={15}
+                        stroke={getLineColor(numberPrimaryPrefix)}
+                        strokeWidth={3}
+                      />
+                    ) : (
+                      <Rect
+                        stroke={getLineColor(numberPrimaryPrefix)}
+                        strokeWidth={3}
+                        x={xOffsetWithNote + (width - stationNameWidth) / 2}
+                        y={yOffset + yOffsetWithNote + 18}
+                        width={30}
+                        height={30}
+                        cornerRadius={2}
+                      />
+                    )}
                     <Text
                       text={numberPrimaryPrefix}
                       fill="black"
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={11}
-                      fontFamily={"HindSemiBold"}
+                      fontFamily={stationBadgeFontFamily}
                       fontStyle="600"
                       y={yOffset + yOffsetWithNote + 22}
                       width={30}
@@ -842,7 +903,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       fill="black"
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={17}
-                      fontFamily={"HindSemiBold"}
+                      fontFamily={stationBadgeFontFamily}
                       fontStyle="600"
                       y={yOffset + yOffsetWithNote + 32}
                       width={30}
@@ -851,19 +912,35 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     />
                     {numberSecondaryPrefix && (
                       <>
-                        <Rect
-                          stroke={getLineColor(numberSecondaryPrefix)}
-                          strokeWidth={3}
-                          x={
-                            xOffsetWithNote -
-                            37 +
-                            (width - stationNameWidth) / 2
-                          }
-                          y={yOffset + yOffsetWithNote + 18}
-                          width={30}
-                          height={30}
-                          cornerRadius={2}
-                        />
+                        {stationNumberStyle === "tokyometro" ? (
+                          <Ellipse
+                            x={
+                              xOffsetWithNote -
+                              37 +
+                              (width - stationNameWidth) / 2 +
+                              15
+                            }
+                            y={yOffset + yOffsetWithNote + 33}
+                            radiusX={15}
+                            radiusY={15}
+                            stroke={getLineColor(numberSecondaryPrefix)}
+                            strokeWidth={3}
+                          />
+                        ) : (
+                          <Rect
+                            stroke={getLineColor(numberSecondaryPrefix)}
+                            strokeWidth={3}
+                            x={
+                              xOffsetWithNote -
+                              37 +
+                              (width - stationNameWidth) / 2
+                            }
+                            y={yOffset + yOffsetWithNote + 18}
+                            width={30}
+                            height={30}
+                            cornerRadius={2}
+                          />
+                        )}
                         <Text
                           text={numberSecondaryPrefix}
                           fill="black"
@@ -873,7 +950,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                             (width - stationNameWidth) / 2
                           }
                           fontSize={11}
-                          fontFamily={"HindSemiBold"}
+                          fontFamily={stationBadgeFontFamily}
                           fontStyle="600"
                           y={yOffset + yOffsetWithNote + 22}
                           width={30}
@@ -889,7 +966,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                             (width - stationNameWidth) / 2
                           }
                           fontSize={17}
-                          fontFamily={"HindSemiBold"}
+                          fontFamily={stationBadgeFontFamily}
                           fontStyle="600"
                           y={yOffset + yOffsetWithNote + 32}
                           width={30}

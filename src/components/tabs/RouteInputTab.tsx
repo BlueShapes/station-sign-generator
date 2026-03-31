@@ -47,6 +47,7 @@ import {
 } from "@tabler/icons-react";
 import Konva from "konva";
 import { useTranslations } from "@/i18n/useTranslation";
+import { waitForCanvasFonts } from "@/lib/fonts";
 import { getAllLines } from "@/db/repositories/lines";
 import { getAllCompanies } from "@/db/repositories/companies";
 import {
@@ -659,9 +660,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapShowSecondaryLang,
   ]);
 
-  const handleSaveSign = () => {
+  const handleSaveSign = async () => {
     if (!signData) return;
     if (signRef.current) {
+      await waitForCanvasFonts();
       const { scale: baseScale } = SIGN_STYLES[signStyle];
       const uri = signRef.current.toDataURL({
         pixelRatio: saveSize / baseScale,
@@ -677,8 +679,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
   };
 
-  const handleSaveMap = () => {
+  const handleSaveMap = async () => {
     if (!mapRef.current || !selectedLine) return;
+    await waitForCanvasFonts();
     const uri = mapRef.current.toDataURL({
       pixelRatio: mapSaveSize / LineMapScale,
     });

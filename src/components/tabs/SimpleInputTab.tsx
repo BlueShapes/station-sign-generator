@@ -31,6 +31,7 @@ import Footer from "@/components/Footer";
 import { useTranslations } from "@/i18n/useTranslation";
 import { useDatabase } from "@/db/useDatabase";
 import { DEFAULT_DATA } from "@/db/seed";
+import { waitForCanvasFonts } from "@/lib/fonts";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 
@@ -224,8 +225,9 @@ export default function SimpleInputTab() {
     setSaveSizeList(result);
   }, [currentCanvasWidth, currentCanvasHeight]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (ref.current) {
+      await waitForCanvasFonts();
       const uri = ref.current.toDataURL({
         pixelRatio: saveSize / currentBaseScale,
       });

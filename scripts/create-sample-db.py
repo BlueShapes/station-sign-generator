@@ -19,13 +19,14 @@ CREATE TABLE IF NOT EXISTS companies (
 );
 
 CREATE TABLE IF NOT EXISTS lines (
-  id         TEXT PRIMARY KEY,
-  company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
-  name       TEXT NOT NULL,
-  line_color TEXT NOT NULL DEFAULT '#8cc800',
-  prefix     TEXT NOT NULL,
-  priority   INTEGER,
-  is_loop    INTEGER NOT NULL DEFAULT 0
+  id             TEXT PRIMARY KEY,
+  company_id     TEXT REFERENCES companies(id) ON DELETE SET NULL,
+  name           TEXT NOT NULL,
+  line_color     TEXT NOT NULL DEFAULT '#8cc800',
+  prefix         TEXT NOT NULL,
+  priority       INTEGER,
+  is_loop        INTEGER NOT NULL DEFAULT 0,
+  parent_line_id TEXT REFERENCES lines(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS stations (
@@ -269,6 +270,48 @@ JS_SERVICE_STOPS = {
 }
 
 
+# ── Marunouchi Line (M) ───────────────────────────────────────────────────────
+# (m_num, primary_name, furigana, english)
+MARUNOUCHI_STATIONS = [
+    ( 1, "荻窪",        "おぎくぼ",        "Ogikubo"),
+    ( 2, "南阿佐ヶ谷",  "みなみあさがや",  "Minami-Asagaya"),
+    ( 3, "新高円寺",    "しんこうえんじ",  "Shin-Koenji"),
+    ( 4, "東高円寺",    "ひがしこうえんじ","Higashi-Koenji"),
+    ( 5, "新中野",      "しんなかの",      "Shin-Nakano"),
+    ( 6, "中野坂上",    "なかのさかうえ",  "Nakano-Sakaue"),
+    ( 7, "西新宿",      "にししんじゅく",  "Nishi-Shinjuku"),
+    ( 8, "新宿",        "しんじゅく",      "Shinjuku"),
+    ( 9, "新宿三丁目",  "しんじゅくさんちょうめ", "Shinjuku-Sanchome"),
+    (10, "新宿御苑前",  "しんじゅくぎょえんまえ", "Shinjukugyoen-mae"),
+    (11, "四谷三丁目",  "よつやさんちょうめ",     "Yotsuya-Sanchome"),
+    (12, "四ツ谷",      "よつや",          "Yotsuya"),
+    (13, "赤坂見附",    "あかさかみつけ",  "Akasaka-Mitsuke"),
+    (14, "国会議事堂前","こっかいぎじどうまえ",   "Kokkai-Gijidomae"),
+    (15, "霞ヶ関",      "かすみがせき",    "Kasumigaseki"),
+    (16, "銀座",        "ぎんざ",          "Ginza"),
+    (17, "東京",        "とうきょう",      "Tokyo"),
+    (18, "大手町",      "おおてまち",      "Otemachi"),
+    (19, "淡路町",      "あわじちょう",    "Awajicho"),
+    (20, "御茶ノ水",    "おちゃのみず",    "Ochanomizu"),
+    (21, "本郷三丁目",  "ほんごうさんちょうめ",   "Hongo-Sanchome"),
+    (22, "後楽園",      "こうらくえん",    "Korakuen"),
+    (23, "茗荷谷",      "みょうがだに",    "Myogadani"),
+    (24, "新大塚",      "しんおおつか",    "Shin-Otsuka"),
+    (25, "池袋",        "いけぶくろ",      "Ikebukuro"),
+]
+
+# ── Marunouchi Line Branch (Mb) — 方南町支線 ─────────────────────────────────
+# M06 中野坂上 is shared with the main line (station ID: station-m06).
+# Mb03–Mb05 are unique to the branch.
+# (mb_num, primary_name, furigana, english, reuse_station_id_or_None)
+MARUNOUCHI_BRANCH_STATIONS = [
+    (None, "中野坂上",      "なかのさかうえ",   "Nakano-Sakaue",   "station-m06"),  # shared M06
+    (  5,  "中野新橋",      "なかのしんばし",   "Nakano-Shimbashi",  None),
+    (  4,  "中野富士見町",  "なかのふじみちょう","Nakano-Fujimicho", None),
+    (  3,  "方南町",        "ほうなんちょう",   "Honancho",          None),
+]
+
+
 def main():
     script_dir = os.path.dirname(__file__)
     out_path = os.path.normpath(os.path.join(script_dir, "..", ".claude", "output", "sample-yamanote-keihintouhoku-negishi.sqlite"))
@@ -282,7 +325,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.4.0')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.5.0')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -488,6 +531,96 @@ def main():
                     (f"sss-js{js_num:02d}-{key}", station_id, svc_id, "stop"),
                 )
 
+    # ── Tokyo Metro (東京メトロ) ───────────────────────────────────────────────
+    company_metro_id = "company-tokyometro"
+    c.execute(
+        "INSERT INTO companies VALUES (?, ?, ?, ?)",
+        (company_metro_id, "東京メトロ", "#00a3d9", "tokyometro"),
+    )
+
+    # ── Marunouchi Line (丸ノ内線) ────────────────────────────────────────────
+    m_line_id = "line-marunouchi"
+    c.execute(
+        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop, parent_line_id)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (m_line_id, company_metro_id, "丸ノ内線", "#dd3839", "M", 1, 0, None),
+    )
+
+    # 普通 service for Marunouchi main line
+    m_futsuu_id = "svc-m-futsuu"
+    c.execute(
+        "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+        (m_futsuu_id, m_line_id, "普通", "#dd3839", 0),
+    )
+
+    for (m_num, primary_name, furigana, english) in MARUNOUCHI_STATIONS:
+        station_id = f"station-m{m_num:02d}"
+        c.execute(
+            "INSERT INTO stations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (station_id, primary_name, furigana, english, None, None, None, None, None, m_num),
+        )
+        c.execute(
+            "INSERT INTO station_lines VALUES (?, ?, ?, ?)",
+            (f"sl-m{m_num:02d}", station_id, m_line_id, m_num),
+        )
+        c.execute(
+            "INSERT INTO station_numbers VALUES (?, ?, ?, ?)",
+            (f"sn-m{m_num:02d}", station_id, m_line_id, f"{m_num:02d}"),
+        )
+        c.execute(
+            "INSERT INTO station_service_stops VALUES (?, ?, ?, ?)",
+            (f"sss-m-futsuu-{m_num:02d}", station_id, m_futsuu_id, "stop"),
+        )
+
+    # ── Marunouchi Branch Line (丸ノ内線 方南町支線) ──────────────────────────
+    mb_line_id = "line-marunouchi-branch"
+    c.execute(
+        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop, parent_line_id)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (mb_line_id, company_metro_id, "丸ノ内線（方南町支線）", "#dd3839", "Mb", 2, 0, m_line_id),
+    )
+
+    # 普通 service for branch line
+    mb_futsuu_id = "svc-mb-futsuu"
+    c.execute(
+        "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+        (mb_futsuu_id, mb_line_id, "普通", "#dd3839", 0),
+    )
+
+    mb_sort = 0
+    for (mb_num, primary_name, furigana, english, reuse_id) in MARUNOUCHI_BRANCH_STATIONS:
+        if reuse_id is not None:
+            station_id = reuse_id
+            # Shared station M06 — reuse record, just add a new station_lines entry
+            c.execute(
+                "INSERT INTO station_lines VALUES (?, ?, ?, ?)",
+                (f"sl-mb-m06", station_id, mb_line_id, mb_sort),
+            )
+            # Reuse existing station number (M06 keeps "M06" numbering on the branch too)
+            c.execute(
+                "INSERT INTO station_numbers VALUES (?, ?, ?, ?)",
+                (f"sn-mb-m06", station_id, mb_line_id, "06"),
+            )
+        else:
+            station_id = f"station-mb{mb_num:02d}"
+            c.execute(
+                "INSERT INTO stations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (station_id, primary_name, furigana, english, None, None, None, None, None, mb_num),
+            )
+            c.execute(
+                "INSERT INTO station_lines VALUES (?, ?, ?, ?)",
+                (f"sl-mb{mb_num:02d}", station_id, mb_line_id, mb_sort),
+            )
+            c.execute(
+                "INSERT INTO station_numbers VALUES (?, ?, ?, ?)",
+                (f"sn-mb{mb_num:02d}", station_id, mb_line_id, f"{mb_num:02d}"),
+            )
+        c.execute(
+            "INSERT INTO station_service_stops VALUES (?, ?, ?, ?)",
+            (f"sss-mb-futsuu-{mb_sort:02d}", station_id, mb_futsuu_id, "stop"),
+        )
+        mb_sort += 1
+
     conn.commit()
     conn.close()
 
@@ -499,16 +632,19 @@ def main():
     jk_shared = len(SHARED_JY_JK)
     js_new = sum(1 for s in JS_STATIONS if s[8] is None)
     js_reuse = sum(1 for s in JS_STATIONS if s[8] is not None)
+    mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.4.0")
+    print(f"  - version: 0.5.1")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
-    print(f"  - 1 company (JR東日本, color #3a9200, style jreast)")
-    print(f"  - 4 lines:")
+    print(f"  - 2 companies (JR東日本 jreast, 東京メトロ tokyometro)")
+    print(f"  - 6 lines:")
     print(f"      山手線          (JY, #8cc800,  is_loop=1): {len(YAMANOTE_STATIONS)} stations")
     print(f"      京浜東北線・根岸線 (JK, #5f9de9, is_loop=0): {jk_shared} shared + {jk_exclusive} exclusive = {jk_shared + jk_exclusive} total; 2 services (普通, 快速)")
     print(f"      根岸線          (no prefix, #8bd900, is_loop=0): {len(NEGISHI_JK_NUMS)} stations (shared with JK, no station numbers)")
     print(f"      湘南新宿ライン  (JS, #c61c1b,  is_loop=0): {len(JS_STATIONS)} stations ({js_new} new + {js_reuse} reused); 4 services")
+    print(f"      丸ノ内線        (M,  #dd3839,  is_loop=0): {len(MARUNOUCHI_STATIONS)} stations; 1 service")
+    print(f"      丸ノ内線（方南町支線）(Mb, #dd3839, is_loop=0): {len(MARUNOUCHI_BRANCH_STATIONS)} stations (1 shared + {mb_new} new); 1 service")
 
 
 if __name__ == "__main__":

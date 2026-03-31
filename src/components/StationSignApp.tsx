@@ -22,6 +22,7 @@ import Header from "@/components/Header";
 import { TranslationProvider } from "@/i18n/TranslationProvider";
 import { useTranslations } from "@/i18n/useTranslation";
 import { useRouteDb } from "@/db/useRouteDb";
+import { waitForCanvasFonts } from "@/lib/fonts";
 import SimpleInputTab from "@/components/tabs/SimpleInputTab";
 import RouteInputTab from "@/components/tabs/RouteInputTab";
 import EditRoutesTab from "@/components/tabs/EditRoutesTab";
@@ -55,13 +56,9 @@ function AppContent({
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      document.fonts.load("900 1em NotoSansJP"),
-      document.fonts.load("1em NotoSansTC"),
-      document.fonts.load("1em NotoSansKR"),
-      document.fonts.load("1em OverusedGrotesk"),
-      document.fonts.load("600 1em HindSemiBold"),
-    ]).then(() => setFontsLoaded(true));
+    waitForCanvasFonts()
+      .catch(() => undefined)
+      .then(() => setFontsLoaded(true));
   }, []);
 
   if (!fontsLoaded) {

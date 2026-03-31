@@ -134,3 +134,13 @@ html.theme-ready *::after {
   font-family: 'HindSemiBold';
   src: url('../fonts/Hind-SemiBold.ttf') format('truetype');
 }
+
+@font-face {
+  font-family: 'Jost';
+  src: url('../fonts/Jost-VariableFont_wght.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'JostTrispaceHybrid';
+  src: url('../fonts/JostTrispaceHybrid-600.ttf') format('truetype');
+}

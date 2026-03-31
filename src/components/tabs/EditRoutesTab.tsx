@@ -38,6 +38,7 @@ import {
 } from "@tabler/icons-react";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
+import { waitForCanvasFonts } from "@/lib/fonts";
 import {
   downloadDatabase,
   overwriteDatabaseInPlace,
@@ -84,6 +85,8 @@ import type {
   Service,
   ServiceStopStatus,
 } from "@/db/types";
+
+const TOKYO_METRO_COLOR = "#00a3d9";
 
 interface EditRoutesTabProps {
   db: Database | null;
@@ -196,8 +199,45 @@ function StationNumberBadgePreview({
       ctx.save();
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, cssW, cssH);
+      const badgeFont =
+        style === "tokyometro"
+          ? '"JostTrispaceHybrid", Arial, sans-serif'
+          : '"HindSemiBold", Arial, sans-serif';
 
-      if (style === "jreast") {
+      if (style === "tokyometro") {
+        const radius = badgeSize / 2;
+        const cx = cssW / 2;
+        const cy = cssH / 2;
+        const strokeWidth = 3 * scale + 1;
+        const strokeRadius = radius - strokeWidth / 2;
+        const metroTextSize = 11 * scale;
+        const metroValueTextSize = metroTextSize - 0;
+        const metroTextOffsetY = 1 * scale;
+
+        // White fill circle
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Colored stroke — same 3-unit thickness as JR East
+        ctx.strokeStyle = color;
+        ctx.lineWidth = strokeWidth;
+        ctx.beginPath();
+        ctx.arc(cx, cy, strokeRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Prefix text at top of circle
+          ctx.fillStyle = "#000000";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.font = `600 ${metroTextSize}px ${badgeFont}`;
+          ctx.fillText(prefix, cx, cy - radius + 5 * scale + metroTextOffsetY);
+
+          // Number text below prefix
+          ctx.font = `700 ${metroValueTextSize}px ${badgeFont}`;
+          ctx.fillText(value, cx, cy - radius + 14 * scale + metroTextOffsetY);
+      } else if (style === "jreast") {
         if (threeLetterCode) {
           // Outer frame: 36×45 sign units → (badgeSize + 2*outerPadX) × (trcH + badgeSize + outerPadBot)
           const outerW = badgeSize + 2 * outerPadX;
@@ -285,7 +325,7 @@ function StationNumberBadgePreview({
       ctx.restore();
     };
 
-    document.fonts.ready.then(draw);
+    waitForCanvasFonts().then(draw).catch(draw);
   }, [color, style, prefix, value, threeLetterCode, compact]);
 
   return <canvas ref={canvasRef} style={{ display: "block" }} />;
@@ -304,7 +344,6 @@ function LineIndicatorBadgePreview({
   style: string;
   compact?: boolean;
 }) {
-  if (style !== "jreast") return null;
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -329,51 +368,75 @@ function LineIndicatorBadgePreview({
 
       const bx = (cssSize - badgeSize) / 2;
       const by = (cssSize - badgeSize) / 2;
+      const strokeWidth = 3 * scale;
 
-      // White rounded background with narrow padding
-      const pad = 3 * scale;
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.roundRect(
-        bx - pad,
-        by - pad,
-        badgeSize + pad * 2,
-        badgeSize + pad * 2,
-        4 * scale,
-      );
-      ctx.fill();
+      if (style === "tokyometro") {
+        const radius = badgeSize / 2;
+        const cx = cssSize / 2;
+        const cy = cssSize / 2;
+        const outerPad = 2.5 * scale;
+        const metroStrokeWidth = strokeWidth * 2.5;
+        const strokeRadius = radius - metroStrokeWidth / 2;
 
-      // White fill
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
-      ctx.fill();
+        // White margin around the badge keeps it legible on dark themes.
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius + outerPad, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Colored outline
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 3 * scale;
-      ctx.beginPath();
-      ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
-      ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Prefix text centered
+        ctx.strokeStyle = color;
+        ctx.lineWidth = metroStrokeWidth;
+        ctx.beginPath();
+        ctx.arc(cx, cy, strokeRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        // White rounded background with narrow padding
+        const pad = 3 * scale;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.roundRect(
+          bx - pad,
+          by - pad,
+          badgeSize + pad * 2,
+          badgeSize + pad * 2,
+          4 * scale,
+        );
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
+        ctx.fill();
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = strokeWidth;
+        ctx.beginPath();
+        ctx.roundRect(bx, by, badgeSize, badgeSize, 2 * scale);
+        ctx.stroke();
+      }
+
       ctx.fillStyle = "#000000";
       ctx.textAlign = "center";
       ctx.textBaseline = "alphabetic";
-      ctx.font = `600 ${21 * scale}px "HindSemiBold", Arial, sans-serif`;
+      ctx.font = `${style === "tokyometro" ? 700 : 600} ${style === "tokyometro" ? 13.6 * scale : 21 * scale}px ${style === "tokyometro" ? '"JostTrispaceHybrid", Arial, sans-serif' : '"HindSemiBold", Arial, sans-serif'}`;
       const m = ctx.measureText(prefix);
       const textH = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
       ctx.fillText(
         prefix,
-        bx + badgeSize / 2,
-        by + badgeSize / 2 + m.actualBoundingBoxAscent - textH / 2,
+        cssSize / 2,
+        cssSize / 2 + m.actualBoundingBoxAscent - textH / 2,
       );
 
       ctx.restore();
     };
 
-    document.fonts.ready.then(draw);
-  }, [color, prefix, compact]);
+    waitForCanvasFonts().then(draw).catch(draw);
+  }, [color, prefix, style, compact]);
 
   return <canvas ref={canvasRef} style={{ display: "block" }} />;
 }
@@ -390,10 +453,19 @@ interface CompanyFormProps {
 function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
   const t = useTranslations();
   const [name, setName] = useState(company?.name ?? "");
-  const [color, setColor] = useState(company?.company_color ?? "#3a9200");
+  const [color, setColor] = useState(
+    company?.company_color ??
+    (company?.name === "東京メトロ" ? TOKYO_METRO_COLOR : "#3a9200"),
+  );
+  const [colorDirty, setColorDirty] = useState(false);
   const [stationNumberStyle, setStationNumberStyle] = useState(
     company?.station_number_style ?? "jreast",
   );
+
+  useEffect(() => {
+    if (company || colorDirty) return;
+    setColor(name.trim() === "東京メトロ" ? TOKYO_METRO_COLOR : "#3a9200");
+  }, [company, colorDirty, name]);
 
   const handleSave = () => {
     if (!name.trim()) return;
@@ -418,13 +490,17 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
       <ColorInput
         label={t("route.company.color")}
         value={color}
-        onChange={setColor}
+        onChange={(value) => {
+          setColorDirty(true);
+          setColor(value);
+        }}
         format="hex"
         swatches={[
           "#3a9200",
           "#005bac",
           "#e60012",
           "#f97f00",
+          TOKYO_METRO_COLOR,
           "#000000",
           "#ffffff",
         ]}
@@ -437,6 +513,10 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
           {
             value: "jreast",
             label: t("route.company.station-number-style-jreast"),
+          },
+          {
+            value: "tokyometro",
+            label: t("route.company.station-number-style-tokyometro"),
           },
         ]}
       />
@@ -486,10 +566,10 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
   >(() =>
     line
       ? getServicesByLine(db, line.id).map((s) => ({
-          id: s.id,
-          name: s.name,
-          color: s.color,
-        }))
+        id: s.id,
+        name: s.name,
+        color: s.color,
+      }))
       : [{ id: null, name: t("route.service.local"), color: color }],
   );
   const [deletedServiceIds, setDeletedServiceIds] = useState<string[]>([]);
@@ -1116,11 +1196,11 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             ? t("route.import-error.invalid-file")
             : result.reason === "missing-table"
               ? t("route.import-error.missing-table", {
-                  detail: result.detail ?? "",
-                })
+                detail: result.detail ?? "",
+              })
               : t("route.import-error.missing-column", {
-                  detail: result.detail ?? "",
-                });
+                detail: result.detail ?? "",
+              });
         setImportError(msg);
         return;
       }
@@ -1353,12 +1433,12 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const maxSortOrder =
     stationsInLine.length > 0
       ? Math.max(
-          ...stationsInLine.map((s) => {
-            const sls = getStationLines(db, s.id);
-            const sl = sls.find((sl) => sl.line_id === selectedLineId);
-            return sl?.sort_order ?? 0;
-          }),
-        )
+        ...stationsInLine.map((s) => {
+          const sls = getStationLines(db, s.id);
+          const sl = sls.find((sl) => sl.line_id === selectedLineId);
+          return sl?.sort_order ?? 0;
+        }),
+      )
       : 0;
 
   return (
@@ -1631,8 +1711,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                       <Table.Tr key={line.id}>
                         <Table.Td>{line.name}</Table.Td>
                         <Table.Td>
-                          {line.prefix &&
-                          company?.station_number_style === "jreast" ? (
+                          {line.prefix && company?.station_number_style ? (
                             <LineIndicatorBadgePreview
                               color={line.line_color}
                               prefix={line.prefix}
