@@ -211,6 +211,11 @@ route:
     note: Note
     trc: Three Letter Code
     number: Station Number
+    number-source: Station Number Display Line
+    number-source-help: Choose which line code should be used for this line's station number badge.
+    number-source-current-only: Only the current line code is available for this line.
+    number-source-current: "Use current line [{prefix}] {name}"
+    number-source-parent: "Use parent line [{prefix}] {name}"
     areas: Fare Zone Badges
     empty: Select a line to view stations
     no-station: No stations yet

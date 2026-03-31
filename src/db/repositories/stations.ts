@@ -7,6 +7,15 @@ import type {
   StationAreaWithZone,
 } from "@/db/types";
 
+export interface ResolvedStationNumber {
+  id: string;
+  station_id: string;
+  line_id: string | null;
+  value: string;
+  prefix: string;
+  line_color: string;
+}
+
 // ── Stations ──────────────────────────────────────────────────────────────────
 
 export function getAllStations(db: Database): Station[] {
@@ -163,6 +172,39 @@ export function getStationNumbers(
   }
   fallbackStmt.free();
   return results;
+}
+
+export function getResolvedStationNumber(
+  db: Database,
+  stationId: string,
+  lineId: string,
+): ResolvedStationNumber | null {
+  const nums = getStationNumbers(db, stationId, lineId);
+  const stationNumber = nums[0];
+  if (!stationNumber) return null;
+
+  const lineStmt = db.prepare(
+    `SELECT prefix, line_color FROM lines WHERE id = ?`,
+  );
+  lineStmt.bind([stationNumber.line_id]);
+
+  let prefix = "";
+  let lineColor = "#000000";
+  if (lineStmt.step()) {
+    const row = lineStmt.getAsObject() as {
+      prefix: string | null;
+      line_color: string | null;
+    };
+    prefix = row.prefix ?? "";
+    lineColor = row.line_color ?? "#000000";
+  }
+  lineStmt.free();
+
+  return {
+    ...stationNumber,
+    prefix,
+    line_color: lineColor,
+  };
 }
 
 export function upsertStationNumber(db: Database, sn: StationNumber): void {

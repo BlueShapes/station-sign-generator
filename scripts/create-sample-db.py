@@ -596,11 +596,6 @@ def main():
                 "INSERT INTO station_lines VALUES (?, ?, ?, ?)",
                 (f"sl-mb-m06", station_id, mb_line_id, mb_sort),
             )
-            # Reuse existing station number (M06 keeps "M06" numbering on the branch too)
-            c.execute(
-                "INSERT INTO station_numbers VALUES (?, ?, ?, ?)",
-                (f"sn-mb-m06", station_id, mb_line_id, "06"),
-            )
         else:
             station_id = f"station-mb{mb_num:02d}"
             c.execute(

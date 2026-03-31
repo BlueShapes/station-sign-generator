@@ -211,6 +211,11 @@ route:
     note: 備考
     trc: スリーレターコード
     number: 駅番号
+    number-source: 駅番号の表示路線
+    number-source-help: この路線の駅番号バッジに使う路線記号を選択します。
+    number-source-current-only: この路線では現在の路線記号のみ使用できます。
+    number-source-current: "この路線を使用 [{prefix}] {name}"
+    number-source-parent: "親路線を使用 [{prefix}] {name}"
     areas: 特定都区市内
     empty: 路線を選択してください
     no-station: 駅がありません

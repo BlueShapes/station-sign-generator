@@ -28,7 +28,12 @@ export type StationNumberMode = "none" | "badge" | "dot";
 
 export type StationNumberMap = Record<
   string,
-  { prefix: string; value: string; threeLetterCode?: string | null }
+  {
+    prefix: string;
+    value: string;
+    threeLetterCode?: string | null;
+    color?: string;
+  }
 >;
 
 /** A service (train type) that runs on a line, e.g. 普通 or 快速. */
@@ -70,7 +75,12 @@ export interface LineMapRendererProps {
   /** Map from stationId to its station number for the current line */
   stationNumbers?: Record<
     string,
-    { prefix: string; value: string; threeLetterCode?: string | null }
+    {
+      prefix: string;
+      value: string;
+      threeLetterCode?: string | null;
+      color?: string;
+    }
   >;
   /** Override the gap between stations in canvas units (defaults: 90 horizontal, 62 vertical) */
   stationSpacing?: number;

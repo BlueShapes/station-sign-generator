@@ -53,7 +53,7 @@ import { getAllCompanies } from "@/db/repositories/companies";
 import {
   getStationsByLine,
   getStationLines,
-  getStationNumbers,
+  getResolvedStationNumber,
   getStationAreasWithZones,
 } from "@/db/repositories/stations";
 import {
@@ -168,7 +168,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapStationNumbers, setMapStationNumbers] = useState<
     Record<
       string,
-      { prefix: string; value: string; threeLetterCode?: string | null }
+      {
+        prefix: string;
+        value: string;
+        threeLetterCode?: string | null;
+        color?: string;
+      }
     >
   >({});
   const [mapNameStyle, setMapNameStyle] = useState<
@@ -303,17 +308,17 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           : null;
 
     // Get station numbers
-    const currentNums = getStationNumbers(
+    const currentNum = getResolvedStationNumber(
       db,
       currentStation.id,
       selectedLineId,
     );
-    const leftNums = leftStation
-      ? getStationNumbers(db, leftStation.id, selectedLineId)
-      : [];
-    const rightNums = rightStation
-      ? getStationNumbers(db, rightStation.id, selectedLineId)
-      : [];
+    const leftNum = leftStation
+      ? getResolvedStationNumber(db, leftStation.id, selectedLineId)
+      : null;
+    const rightNum = rightStation
+      ? getResolvedStationNumber(db, rightStation.id, selectedLineId)
+      : null;
 
     // Get station areas with zone details
     const areas = getStationAreasWithZones(db, currentStation.id);
@@ -329,8 +334,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         stationNumberStyle = company.station_number_style;
       }
     }
-
-    const linePrefix = line?.prefix ?? "";
 
     // All lines this station belongs to
     const stationLineRecords = getStationLines(db, currentStation.id);
@@ -357,8 +360,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       quaternaryName: currentStation.quaternary_name ?? undefined,
       note: currentStation.note ?? "",
       threeLetterCode: currentStation.three_letter_code ?? undefined,
-      numberPrimaryPrefix: linePrefix,
-      numberPrimaryValue: currentNums[0]?.value ?? "",
+      numberPrimaryPrefix: currentNum?.prefix ?? "",
+      numberPrimaryValue: currentNum?.value ?? "",
       stationAreas: areas.map((a) => ({
         id: a.id,
         name: a.zone_abbreviation,
@@ -374,9 +377,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 "",
               secondaryName:
                 (flipped ? rightStation : leftStation)!.secondary_name ?? "",
-              numberPrimaryPrefix: linePrefix,
-              numberPrimaryValue:
-                (flipped ? rightNums : leftNums)[0]?.value ?? "",
+              numberPrimaryPrefix:
+                (flipped ? rightNum : leftNum)?.prefix ?? "",
+              numberPrimaryValue: (flipped ? rightNum : leftNum)?.value ?? "",
             },
           ]
         : [],
@@ -390,9 +393,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 "",
               secondaryName:
                 (flipped ? leftStation : rightStation)!.secondary_name ?? "",
-              numberPrimaryPrefix: linePrefix,
-              numberPrimaryValue:
-                (flipped ? leftNums : rightNums)[0]?.value ?? "",
+              numberPrimaryPrefix:
+                (flipped ? leftNum : rightNum)?.prefix ?? "",
+              numberPrimaryValue: (flipped ? leftNum : rightNum)?.value ?? "",
             },
           ]
         : [],
@@ -530,16 +533,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const stationLabelMap = useMemo(() => {
     if (!db || !selectedLineId || stations.length === 0)
       return {} as Record<string, string>;
-    const prefix = selectedLine?.prefix ?? "";
     const result: Record<string, string> = {};
     for (const s of stations) {
-      const nums = getStationNumbers(db, s.id, selectedLineId);
-      const num = nums[0];
-      const badge = num && prefix ? `[${prefix}${num.value}] ` : "";
+      const num = getResolvedStationNumber(db, s.id, selectedLineId);
+      const badge = num?.prefix ? `[${num.prefix}${num.value}] ` : "";
       result[s.id] = `${badge}${s.primary_name}`;
     }
     return result;
-  }, [db, selectedLineId, selectedLine?.prefix, stations]);
+  }, [db, selectedLineId, stations]);
 
   // Load station numbers for map range
   useEffect(() => {
@@ -547,23 +548,28 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       setMapStationNumbers({});
       return;
     }
-    const linePrefix = lines.find((l) => l.id === selectedLineId)?.prefix ?? "";
     const result: Record<
       string,
-      { prefix: string; value: string; threeLetterCode?: string | null }
+      {
+        prefix: string;
+        value: string;
+        threeLetterCode?: string | null;
+        color?: string;
+      }
     > = {};
     for (const station of mapStations) {
-      const nums = getStationNumbers(db, station.id, selectedLineId);
-      if (nums.length > 0) {
+      const num = getResolvedStationNumber(db, station.id, selectedLineId);
+      if (num) {
         result[station.id] = {
-          prefix: linePrefix,
-          value: nums[0].value,
+          prefix: num.prefix,
+          value: num.value,
           threeLetterCode: station.three_letter_code,
+          color: num.line_color,
         };
       }
     }
     setMapStationNumbers(result);
-  }, [db, selectedLineId, mapStations, lines]);
+  }, [db, selectedLineId, mapStations]);
 
   // All unique transit lines that appear in the current map range
   const allTransitLines = useMemo(() => {

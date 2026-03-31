@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import type { Database } from "sql.js";
 import {
   Button,
@@ -72,6 +72,7 @@ import {
   getStationLines,
   upsertStationLine,
   getStationNumbers,
+  getResolvedStationNumber,
   upsertStationNumber,
   getStationAreas,
   syncStationAreas,
@@ -87,6 +88,34 @@ import type {
 } from "@/db/types";
 
 const TOKYO_METRO_COLOR = "#00a3d9";
+
+function buildStationNumberSourceOptions(
+  currentLine: Line | undefined,
+  parentLine: Line | undefined,
+  t: ReturnType<typeof useTranslations>,
+) {
+  const options = [
+    {
+      value: currentLine?.id ?? "",
+      label: t("route.station.number-source-current", {
+        prefix: currentLine?.prefix || "—",
+        name: currentLine?.name ?? "—",
+      }),
+    },
+  ];
+
+  if (parentLine) {
+    options.push({
+      value: parentLine.id,
+      label: t("route.station.number-source-parent", {
+        prefix: parentLine.prefix || "—",
+        name: parentLine.name,
+      }),
+    });
+  }
+
+  return options;
+}
 
 interface EditRoutesTabProps {
   db: Database | null;
@@ -179,15 +208,16 @@ function StationNumberBadgePreview({
     if (!canvas) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const scale = compact ? 1.125 : 1.5;
+    const isMetroCompact = compact && style === "tokyometro";
+    const scale = isMetroCompact ? 1.45 : compact ? 1.125 : 1.5;
     const badgeSize = 30 * scale; // inner badge = 30×30 sign units
     // With TRC: outer frame adds 12 above + 3 below the inner badge (sign units)
     const trcH = 12 * scale;
     const outerPadX = 3 * scale;
     const outerPadBot = 3 * scale;
     const trcExtension = threeLetterCode ? Math.ceil(trcH + outerPadBot) : 0;
-    const cssW = compact ? 75 : 120;
-    const cssH = (compact ? 57 : 75) + trcExtension;
+    const cssW = isMetroCompact ? 94 : compact ? 75 : 120;
+    const cssH = (isMetroCompact ? 68 : compact ? 57 : 75) + trcExtension;
     canvas.width = cssW * dpr;
     canvas.height = cssH * dpr;
     canvas.style.width = `${cssW}px`;
@@ -207,12 +237,12 @@ function StationNumberBadgePreview({
       if (style === "tokyometro") {
         const radius = badgeSize / 2;
         const cx = cssW / 2;
-        const cy = cssH / 2;
+        const cy = isMetroCompact ? cssH / 2 - 1.5 : cssH / 2;
         const strokeWidth = 3 * scale + 1;
         const strokeRadius = radius - strokeWidth / 2;
         const metroTextSize = 11 * scale;
         const metroValueTextSize = metroTextSize - 0;
-        const metroTextOffsetY = 1 * scale;
+        const metroTextOffsetY = isMetroCompact ? 0.5 * scale : 1 * scale;
 
         // White fill circle
         ctx.fillStyle = "#ffffff";
@@ -351,9 +381,10 @@ function LineIndicatorBadgePreview({
     if (!canvas) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const scale = compact ? 1.125 : 1.5;
+    const isMetroCompact = compact && style === "tokyometro";
+    const scale = isMetroCompact ? 1.25 : compact ? 1.125 : 1.5;
     const badgeSize = 30 * scale;
-    const cssSize = compact ? 48 : 64;
+    const cssSize = isMetroCompact ? 46 : compact ? 48 : 64;
     canvas.width = cssSize * dpr;
     canvas.height = cssSize * dpr;
     canvas.style.width = `${cssSize}px`;
@@ -374,7 +405,7 @@ function LineIndicatorBadgePreview({
         const radius = badgeSize / 2;
         const cx = cssSize / 2;
         const cy = cssSize / 2;
-        const outerPad = 2.5 * scale;
+        const outerPad = isMetroCompact ? 1.2 * scale : 2.5 * scale;
         const metroStrokeWidth = strokeWidth * 2.5;
         const strokeRadius = radius - metroStrokeWidth / 2;
 
@@ -776,8 +807,16 @@ function StationForm({
   onClose,
 }: StationFormProps) {
   const t = useTranslations();
+  const allLines = useMemo(() => getAllLines(db), [db]);
+  const currentLine = allLines.find((l) => l.id === lineId);
+  const parentLine = currentLine?.parent_line_id
+    ? allLines.find((l) => l.id === currentLine.parent_line_id)
+    : undefined;
 
   const existingNums = station ? getStationNumbers(db, station.id, lineId) : [];
+  const resolvedNum = station
+    ? getResolvedStationNumber(db, station.id, lineId)
+    : null;
   const existingAreas = station ? getStationAreas(db, station.id) : [];
 
   const [primaryName, setPrimaryName] = useState(station?.primary_name ?? "");
@@ -796,10 +835,22 @@ function StationForm({
   const [note, setNote] = useState(station?.note ?? "");
   const [trc, setTrc] = useState(station?.three_letter_code ?? "");
   const [stationNumber, setStationNumber] = useState(
-    existingNums[0]?.value ?? "",
+    existingNums[0]?.value ?? resolvedNum?.value ?? "",
+  );
+  const [stationNumberSourceLineId, setStationNumberSourceLineId] = useState(
+    existingNums[0]?.line_id ??
+      resolvedNum?.line_id ??
+      currentLine?.id ??
+      lineId,
   );
   const [areas, setAreas] = useState<StationArea[]>(existingAreas);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+
+  const stationNumberSourceOptions = buildStationNumberSourceOptions(
+    currentLine,
+    parentLine,
+    t,
+  );
 
   const handleAddZone = () => {
     if (!selectedZoneId) return;
@@ -854,23 +905,25 @@ function StationForm({
       }
     }
 
-    // Upsert station number for this line
+    // Clear the direct number for this line before applying the selected source.
+    // When the parent line is selected, the current line should resolve via fallback.
+    db.run(
+      `DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`,
+      [stationId, lineId],
+    );
+
+    // Upsert station number for the selected display line
     if (stationNumber.trim()) {
       db.run(
         `DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`,
-        [stationId, lineId],
+        [stationId, stationNumberSourceLineId],
       );
       upsertStationNumber(db, {
         id: uuidv7(),
         station_id: stationId,
-        line_id: lineId,
+        line_id: stationNumberSourceLineId,
         value: stationNumber.trim(),
       });
-    } else {
-      db.run(
-        `DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`,
-        [stationId, lineId],
-      );
     }
 
     // Sync areas
@@ -934,6 +987,20 @@ function StationForm({
         label={t("route.station.number")}
         value={stationNumber}
         onChange={(e) => setStationNumber(e.target.value)}
+      />
+      <Select
+        label={t("route.station.number-source")}
+        data={stationNumberSourceOptions}
+        value={stationNumberSourceLineId}
+        onChange={(value) =>
+          setStationNumberSourceLineId(value ?? currentLine?.id ?? lineId)
+        }
+        disabled={stationNumberSourceOptions.length <= 1}
+        description={
+          stationNumberSourceOptions.length <= 1
+            ? t("route.station.number-source-current-only")
+            : t("route.station.number-source-help")
+        }
       />
 
       <Divider label={t("route.station.areas")} labelPosition="left" />
@@ -1020,16 +1087,29 @@ function LinkExistingStationForm({
   onClose,
 }: LinkExistingStationFormProps) {
   const t = useTranslations();
+  const allLines = useMemo(() => getAllLines(db), [db]);
+  const currentLine = allLines.find((l) => l.id === lineId);
+  const parentLine = currentLine?.parent_line_id
+    ? allLines.find((l) => l.id === currentLine.parent_line_id)
+    : undefined;
   const allStations = getAllStations(db);
   const available = allStations.filter((s) => !alreadyOnLineIds.has(s.id));
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [stationNumber, setStationNumber] = useState("");
+  const [stationNumberSourceLineId, setStationNumberSourceLineId] = useState(
+    currentLine?.id ?? lineId,
+  );
 
   const selectedStation = available.find((s) => s.id === selectedId) ?? null;
   const selectedAreas = selectedStation
     ? getStationAreas(db, selectedStation.id)
     : [];
+  const stationNumberSourceOptions = buildStationNumberSourceOptions(
+    currentLine,
+    parentLine,
+    t,
+  );
 
   const handleSave = () => {
     if (!selectedId) return;
@@ -1047,15 +1127,19 @@ function LinkExistingStationForm({
         status: "stop",
       });
     }
+    db.run(`DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`, [
+      selectedId,
+      lineId,
+    ]);
     if (stationNumber.trim()) {
       db.run(
         `DELETE FROM station_numbers WHERE station_id = ? AND line_id = ?`,
-        [selectedId, lineId],
+        [selectedId, stationNumberSourceLineId],
       );
       upsertStationNumber(db, {
         id: uuidv7(),
         station_id: selectedId,
-        line_id: lineId,
+        line_id: stationNumberSourceLineId,
         value: stationNumber.trim(),
       });
     }
@@ -1145,6 +1229,20 @@ function LinkExistingStationForm({
         label={t("route.station.number")}
         value={stationNumber}
         onChange={(e) => setStationNumber(e.target.value)}
+      />
+      <Select
+        label={t("route.station.number-source")}
+        data={stationNumberSourceOptions}
+        value={stationNumberSourceLineId}
+        onChange={(value) =>
+          setStationNumberSourceLineId(value ?? currentLine?.id ?? lineId)
+        }
+        disabled={stationNumberSourceOptions.length <= 1}
+        description={
+          stationNumberSourceOptions.length <= 1
+            ? t("route.station.number-source-current-only")
+            : t("route.station.number-source-help")
+        }
       />
 
       <Group justify="flex-end" mt="md">
@@ -1966,7 +2064,13 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   {nums[0]?.value ? (
                                     <StationNumberBadgePreview
                                       color={
-                                        selectedLine?.line_color ?? "#000000"
+                                        getResolvedStationNumber(
+                                          db,
+                                          station.id,
+                                          selectedLineId!,
+                                        )?.line_color ??
+                                        selectedLine?.line_color ??
+                                        "#000000"
                                       }
                                       style={
                                         companies.find(
@@ -1974,7 +2078,13 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                             c.id === selectedLine?.company_id,
                                         )?.station_number_style ?? "jreast"
                                       }
-                                      prefix={selectedLine?.prefix ?? ""}
+                                      prefix={
+                                        getResolvedStationNumber(
+                                          db,
+                                          station.id,
+                                          selectedLineId!,
+                                        )?.prefix ?? selectedLine?.prefix ?? ""
+                                      }
                                       value={nums[0].value}
                                       threeLetterCode={
                                         station.three_letter_code
