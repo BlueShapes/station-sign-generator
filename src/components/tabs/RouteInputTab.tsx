@@ -62,8 +62,11 @@ import {
 } from "@/db/repositories/services";
 import type { Line, Station, Service } from "@/db/types";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
-import type { Direction } from "@/components/signs/DirectInputStationProps";
-import type { MetroLongSubTextMode } from "@/components/signs/DirectInputStationProps";
+import type {
+  AdjacentStationProps,
+  Direction,
+  MetroLongSubTextMode,
+} from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 
 import JrEastSign, {
@@ -99,6 +102,14 @@ type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
 type TabMode = "sign" | "linemap";
 type MapOrientation = "horizontal" | "vertical";
 type PassedStationMode = "show" | "hide-gap" | "hide-trim";
+type AdjacentSide = "left" | "right";
+
+type AdjacentCandidate = AdjacentStationProps & {
+  optionValue: string;
+  lineId: string;
+  lineName: string;
+  side: AdjacentSide;
+};
 
 const SIGN_STYLES: Record<
   SignStyle,
@@ -158,6 +169,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<
     { label: string; value: number }[]
+  >([]);
+  const [selectedLeftAdjacentIds, setSelectedLeftAdjacentIds] = useState<
+    string[]
+  >([]);
+  const [selectedRightAdjacentIds, setSelectedRightAdjacentIds] = useState<
+    string[]
   >([]);
 
   // ── Line map mode state ──────────────────────────────────────────────────
@@ -263,6 +280,83 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     );
   }, [selectedStationId, selectedLineId]);
 
+  const adjacentOptions = useMemo(() => {
+    if (!db || !selectedStationId) {
+      return {
+        left: [] as AdjacentCandidate[],
+        right: [] as AdjacentCandidate[],
+      };
+    }
+
+    const stationLineRecords = getStationLines(db, selectedStationId);
+    const result: Record<AdjacentSide, AdjacentCandidate[]> = {
+      left: [],
+      right: [],
+    };
+
+    for (const stationLine of stationLineRecords) {
+      const line = lines.find((candidate) => candidate.id === stationLine.line_id);
+      if (!line) continue;
+
+      const lineStations = getStationsByLine(db, line.id);
+      const stationIndex = lineStations.findIndex((s) => s.id === selectedStationId);
+      if (stationIndex === -1) continue;
+
+      const isLoop = line.is_loop === 1;
+      const previousStation =
+        stationIndex > 0
+          ? lineStations[stationIndex - 1]
+          : isLoop
+            ? lineStations[lineStations.length - 1]
+            : null;
+      const nextStation =
+        stationIndex < lineStations.length - 1
+          ? lineStations[stationIndex + 1]
+          : isLoop
+            ? lineStations[0]
+            : null;
+
+      const buildCandidate = (
+        station: Station | null,
+        side: AdjacentSide,
+      ): AdjacentCandidate | null => {
+        if (!station) return null;
+        const stationNumber = getResolvedStationNumber(db, station.id, line.id);
+        return {
+          optionValue: `${side}:${line.id}:${station.id}`,
+          lineId: line.id,
+          lineName: line.name,
+          side,
+          id: `${line.id}:${station.id}`,
+          primaryName: station.primary_name,
+          primaryNameFurigana: station.primary_name_furigana ?? "",
+          secondaryName: station.secondary_name ?? "",
+          numberPrimaryPrefix: stationNumber?.prefix ?? "",
+          numberPrimaryValue: stationNumber?.value ?? "",
+        };
+      };
+
+      const leftCandidate = buildCandidate(previousStation, "left");
+      const rightCandidate = buildCandidate(nextStation, "right");
+      if (leftCandidate) result.left.push(leftCandidate);
+      if (rightCandidate) result.right.push(rightCandidate);
+    }
+
+    return result;
+  }, [db, selectedStationId, lines]);
+
+  useEffect(() => {
+    const defaultLeft =
+      adjacentOptions.left.find((candidate) => candidate.lineId === selectedLineId)
+        ?.optionValue ?? null;
+    const defaultRight =
+      adjacentOptions.right.find((candidate) => candidate.lineId === selectedLineId)
+        ?.optionValue ?? null;
+
+    setSelectedLeftAdjacentIds(defaultLeft ? [defaultLeft] : []);
+    setSelectedRightAdjacentIds(defaultRight ? [defaultRight] : []);
+  }, [adjacentOptions, selectedLineId, selectedStationId]);
+
   // Enforce constraints when services have passed stations
   useEffect(() => {
     if (mapSelectedServiceIds.length === 0) return;
@@ -303,21 +397,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
     const currentStation = stations[idx];
     const line = lines.find((l) => l.id === selectedLineId);
-    const isLoop = line?.is_loop === 1;
-
-    // For loop lines, wrap around at the ends
-    const leftStation =
-      idx > 0
-        ? stations[idx - 1]
-        : isLoop
-          ? stations[stations.length - 1]
-          : null;
-    const rightStation =
-      idx < stations.length - 1
-        ? stations[idx + 1]
-        : isLoop
-          ? stations[0]
-          : null;
 
     // Get station numbers
     const currentNum = getResolvedStationNumber(
@@ -325,12 +404,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       currentStation.id,
       selectedLineId,
     );
-    const leftNum = leftStation
-      ? getResolvedStationNumber(db, leftStation.id, selectedLineId)
-      : null;
-    const rightNum = rightStation
-      ? getResolvedStationNumber(db, rightStation.id, selectedLineId)
-      : null;
 
     // Get station areas with zone details
     const areas = getStationAreasWithZones(db, currentStation.id);
@@ -364,6 +437,19 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           ? [line.line_color]
           : [];
 
+    const selectedLeftStations = selectedLeftAdjacentIds
+      .map((optionValue) =>
+        adjacentOptions.left.find((candidate) => candidate.optionValue === optionValue),
+      )
+      .filter((candidate): candidate is AdjacentCandidate => !!candidate)
+      .slice(0, 2);
+    const selectedRightStations = selectedRightAdjacentIds
+      .map((optionValue) =>
+        adjacentOptions.right.find((candidate) => candidate.optionValue === optionValue),
+      )
+      .filter((candidate): candidate is AdjacentCandidate => !!candidate)
+      .slice(0, 2);
+
     const data: DirectInputStationProps = {
       primaryName: currentStation.primary_name,
       primaryNameFurigana: currentStation.primary_name_furigana ?? "",
@@ -379,38 +465,26 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         name: a.zone_abbreviation,
         isWhite: a.zone_is_black === 0,
       })),
-      left: (flipped ? rightStation : leftStation)
-        ? [
-            {
-              id: (flipped ? rightStation : leftStation)!.id,
-              primaryName: (flipped ? rightStation : leftStation)!.primary_name,
-              primaryNameFurigana:
-                (flipped ? rightStation : leftStation)!.primary_name_furigana ??
-                "",
-              secondaryName:
-                (flipped ? rightStation : leftStation)!.secondary_name ?? "",
-              numberPrimaryPrefix:
-                (flipped ? rightNum : leftNum)?.prefix ?? "",
-              numberPrimaryValue: (flipped ? rightNum : leftNum)?.value ?? "",
-            },
-          ]
-        : [],
-      right: (flipped ? leftStation : rightStation)
-        ? [
-            {
-              id: (flipped ? leftStation : rightStation)!.id,
-              primaryName: (flipped ? leftStation : rightStation)!.primary_name,
-              primaryNameFurigana:
-                (flipped ? leftStation : rightStation)!.primary_name_furigana ??
-                "",
-              secondaryName:
-                (flipped ? leftStation : rightStation)!.secondary_name ?? "",
-              numberPrimaryPrefix:
-                (flipped ? leftNum : rightNum)?.prefix ?? "",
-              numberPrimaryValue: (flipped ? leftNum : rightNum)?.value ?? "",
-            },
-          ]
-        : [],
+      left: (flipped ? selectedRightStations : selectedLeftStations).map(
+        (station) => ({
+          id: station.id,
+          primaryName: station.primaryName,
+          primaryNameFurigana: station.primaryNameFurigana,
+          secondaryName: station.secondaryName,
+          numberPrimaryPrefix: station.numberPrimaryPrefix,
+          numberPrimaryValue: station.numberPrimaryValue,
+        }),
+      ),
+      right: (flipped ? selectedLeftStations : selectedRightStations).map(
+        (station) => ({
+          id: station.id,
+          primaryName: station.primaryName,
+          primaryNameFurigana: station.primaryNameFurigana,
+          secondaryName: station.secondaryName,
+          numberPrimaryPrefix: station.numberPrimaryPrefix,
+          numberPrimaryValue: station.numberPrimaryValue,
+        }),
+      ),
       baseColor,
       stationNumberStyle,
       centerSquareColors: centerColors,
@@ -435,6 +509,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     metroLongSubTextMode,
     flipped,
     centerSquareLineIds,
+    adjacentOptions,
+    selectedLeftAdjacentIds,
+    selectedRightAdjacentIds,
   ]);
 
   // Update canvas size list
@@ -879,6 +956,38 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   />
                 </Grid.Col>
               )}
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <MultiSelect
+                  label={t("route.sign.prev-station")}
+                  value={selectedLeftAdjacentIds}
+                  onChange={(value) => setSelectedLeftAdjacentIds(value.slice(0, 2))}
+                  data={adjacentOptions.left.map((candidate) => ({
+                    value: candidate.optionValue,
+                    label: `${candidate.primaryName}（${candidate.lineName}）`,
+                  }))}
+                  placeholder={t("route.sign.adjacent-select")}
+                  disabled={!selectedStationId}
+                  maxValues={2}
+                  clearable
+                />
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <MultiSelect
+                  label={t("route.sign.next-station")}
+                  value={selectedRightAdjacentIds}
+                  onChange={(value) =>
+                    setSelectedRightAdjacentIds(value.slice(0, 2))
+                  }
+                  data={adjacentOptions.right.map((candidate) => ({
+                    value: candidate.optionValue,
+                    label: `${candidate.primaryName}（${candidate.lineName}）`,
+                  }))}
+                  placeholder={t("route.sign.adjacent-select")}
+                  disabled={!selectedStationId}
+                  maxValues={2}
+                  clearable
+                />
+              </Grid.Col>
             </Grid>
 
             {/* Station navigation + flip */}

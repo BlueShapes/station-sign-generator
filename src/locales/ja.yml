@@ -228,6 +228,7 @@ route:
     flip: 方向を反転
     prev-station: 前の駅
     next-station: 次の駅
+    adjacent-select: 駅を選択してください（最大2件）
     jreast: JR東日本風
     jrwest: JR西日本風
     jrwestlarge: JR西日本風（大）

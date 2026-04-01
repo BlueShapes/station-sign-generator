@@ -228,6 +228,7 @@ route:
     flip: Flip direction
     prev-station: Previous station
     next-station: Next station
+    adjacent-select: Select up to 2 stations
     jreast: JR East Style
     jrwest: JR West Style
     jrwestlarge: JR West Style (Large)

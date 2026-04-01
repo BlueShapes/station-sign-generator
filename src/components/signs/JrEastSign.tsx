@@ -55,18 +55,50 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
         : "HindSemiBold";
     const metroStandardBadgeMetrics = getTokyoMetroStationNumberMetrics(30);
     const metroLargeStrokeWidth = metroStandardBadgeMetrics.strokeWidth + 1;
-    const leftPrimaryName = left[0]?.primaryName ?? "";
-    const leftSecondaryName = left[0]?.secondaryName ?? "";
-    const leftNumberPrimaryPrefix = left[0]?.numberPrimaryPrefix;
-    const leftNumberPrimaryValue = left[0]?.numberPrimaryValue;
-    const leftNumberSecondaryPrefix = left[0]?.numberSecondaryPrefix;
-    const leftNumberSecondaryValue = left[0]?.numberSecondaryValue;
-    const rightPrimaryName = right[0]?.primaryName ?? "";
-    const rightSecondaryName = right[0]?.secondaryName ?? "";
-    const rightNumberPrimaryPrefix = right[0]?.numberPrimaryPrefix;
-    const rightNumberPrimaryValue = right[0]?.numberPrimaryValue;
-    const rightNumberSecondaryPrefix = right[0]?.numberSecondaryPrefix;
-    const rightNumberSecondaryValue = right[0]?.numberSecondaryValue;
+    const mergeAdjacentStations = (stations: StationProps["left"]) => {
+      if (stations.length === 0) {
+        return {
+          primaryName: "",
+          secondaryName: "",
+          numberPrimaryPrefix: undefined,
+          numberPrimaryValue: undefined,
+          numberSecondaryPrefix: undefined,
+          numberSecondaryValue: undefined,
+        };
+      }
+      if (stations.length === 1) {
+        return {
+          primaryName: stations[0].primaryName,
+          secondaryName: stations[0].secondaryName,
+          numberPrimaryPrefix: stations[0].numberPrimaryPrefix,
+          numberPrimaryValue: stations[0].numberPrimaryValue,
+          numberSecondaryPrefix: stations[0].numberSecondaryPrefix,
+          numberSecondaryValue: stations[0].numberSecondaryValue,
+        };
+      }
+      return {
+        primaryName: `${stations[0].primaryName}／${stations[1].primaryName}`,
+        secondaryName: `${stations[0].secondaryName}／${stations[1].secondaryName}`,
+        numberPrimaryPrefix: stations[0].numberPrimaryPrefix,
+        numberPrimaryValue: stations[0].numberPrimaryValue,
+        numberSecondaryPrefix: stations[1].numberPrimaryPrefix,
+        numberSecondaryValue: stations[1].numberPrimaryValue,
+      };
+    };
+    const leftMerged = mergeAdjacentStations(left);
+    const rightMerged = mergeAdjacentStations(right);
+    const leftPrimaryName = leftMerged.primaryName;
+    const leftSecondaryName = leftMerged.secondaryName;
+    const leftNumberPrimaryPrefix = leftMerged.numberPrimaryPrefix;
+    const leftNumberPrimaryValue = leftMerged.numberPrimaryValue;
+    const leftNumberSecondaryPrefix = leftMerged.numberSecondaryPrefix;
+    const leftNumberSecondaryValue = leftMerged.numberSecondaryValue;
+    const rightPrimaryName = rightMerged.primaryName;
+    const rightSecondaryName = rightMerged.secondaryName;
+    const rightNumberPrimaryPrefix = rightMerged.numberPrimaryPrefix;
+    const rightNumberPrimaryValue = rightMerged.numberPrimaryValue;
+    const rightNumberSecondaryPrefix = rightMerged.numberSecondaryPrefix;
+    const rightNumberSecondaryValue = rightMerged.numberSecondaryValue;
     const spacedStationName = (() => {
       const str = primaryName;
       switch (str.length) {
