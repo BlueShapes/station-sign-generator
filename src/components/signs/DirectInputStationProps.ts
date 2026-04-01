@@ -14,6 +14,7 @@ type StationArea = {
 };
 
 export type Direction = "left" | "right" | "both";
+export type MetroLongSubTextMode = "furigana" | "secondary";
 
 export type AdjacentStationProps = {
   id: string;
@@ -51,6 +52,7 @@ interface DirectInputStationProps {
   localLines?: LocalLine[];
   ratio: number;
   direction?: Direction;
+  subTextMode?: MetroLongSubTextMode;
   ref?: RefObject<Konva.Stage>;
 }
 

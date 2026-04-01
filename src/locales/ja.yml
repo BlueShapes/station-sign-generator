@@ -231,6 +231,10 @@ route:
     jreast: JR東日本風
     jrwest: JR西日本風
     jrwestlarge: JR西日本風（大）
+    metrolong: 東京メトロ・都営地下鉄風（横長）
+    metrolong-subtext: サブテキスト
+    metrolong-subtext-furigana: ふりがな
+    metrolong-subtext-secondary: 第二言語
     center-colors: 中央四角の色
   mode:
     sign: 駅名標

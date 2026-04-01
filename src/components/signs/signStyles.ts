@@ -44,6 +44,40 @@ interface SignStyleFieldSpec {
 }
 
 export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
+  metrolong: {
+    primaryName: "required",
+    primaryNameFurigana: "optional",
+    secondaryName: "optional",
+    tertiaryName: "hidden",
+    quaternaryName: "hidden",
+    note: "hidden",
+    numberPrimary: "required",
+    numberSecondary: "hidden",
+    threeLetterCode: "hidden",
+    stationAreas: "hidden",
+    left: {
+      primaryName: "required",
+      primaryNameFurigana: "optional",
+      secondaryName: "optional",
+      numberPrimary: "required",
+      numberSecondary: "hidden",
+    },
+    right: {
+      primaryName: "required",
+      primaryNameFurigana: "optional",
+      secondaryName: "optional",
+      numberPrimary: "required",
+      numberSecondary: "hidden",
+    },
+    maxAdjacentCount: 2,
+    baseColor: "hidden",
+    centerSquareColors: "hidden",
+    ratio: "hidden",
+    fixedRatio: 7.2,
+    direction: "required",
+    localLinesMax: 1,
+    localLinesMin: 1,
+  },
   jrwestlarge: {
     // Current station
     primaryName: "required",

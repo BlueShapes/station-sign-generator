@@ -894,7 +894,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={
                         stationNumberStyle === "tokyometro"
-                          ? metroStandardBadgeMetrics.prefixFontSize
+                          ? metroStandardBadgeMetrics.prefixFontSize + 1
                           : 11
                       }
                       fontFamily={stationBadgeFontFamily}
@@ -907,7 +907,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                         yOffset +
                         yOffsetWithNote +
                         (stationNumberStyle === "tokyometro"
-                          ? 18 + metroStandardBadgeMetrics.prefixYOffset
+                          ? 17 + metroStandardBadgeMetrics.prefixYOffset
                           : 22)
                       }
                       width={30}
@@ -920,7 +920,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       x={xOffsetWithNote + (width - stationNameWidth) / 2}
                       fontSize={
                         stationNumberStyle === "tokyometro"
-                          ? metroStandardBadgeMetrics.valueFontSize
+                          ? metroStandardBadgeMetrics.valueFontSize + 1
                           : 17
                       }
                       fontFamily={stationBadgeFontFamily}
@@ -981,7 +981,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           }
                           fontSize={
                             stationNumberStyle === "tokyometro"
-                              ? metroStandardBadgeMetrics.prefixFontSize
+                              ? metroStandardBadgeMetrics.prefixFontSize + 1
                               : 11
                           }
                           fontFamily={stationBadgeFontFamily}
@@ -994,7 +994,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                             yOffset +
                             yOffsetWithNote +
                             (stationNumberStyle === "tokyometro"
-                              ? 18 + metroStandardBadgeMetrics.prefixYOffset
+                              ? 17 + metroStandardBadgeMetrics.prefixYOffset
                               : 22)
                           }
                           width={30}
@@ -1011,7 +1011,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           }
                           fontSize={
                             stationNumberStyle === "tokyometro"
-                              ? metroStandardBadgeMetrics.valueFontSize
+                              ? metroStandardBadgeMetrics.valueFontSize + 1
                               : 17
                           }
                           fontFamily={stationBadgeFontFamily}

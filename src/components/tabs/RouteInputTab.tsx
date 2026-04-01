@@ -63,6 +63,7 @@ import {
 import type { Line, Station, Service } from "@/db/types";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import type { Direction } from "@/components/signs/DirectInputStationProps";
+import type { MetroLongSubTextMode } from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 
 import JrEastSign, {
@@ -77,6 +78,10 @@ import JrWestSignLarge, {
   height as JrWestSignLargeHeight,
   scale as JrWestSignLargeBaseScale,
 } from "@/components/signs/JrWestSignLarge";
+import MetroLongSign, {
+  height as MetroLongSignHeight,
+  scale as MetroLongSignBaseScale,
+} from "@/components/signs/MetroLongSign";
 import LineMapRenderer, {
   scale as LineMapScale,
   CIRCULAR_FONT_DEFAULT,
@@ -90,7 +95,7 @@ import LineMapRenderer, {
   type ServiceStopMap,
 } from "@/components/signs/LineMapRenderer";
 
-type SignStyle = "jreast" | "jrwest" | "jrwestlarge";
+type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
 type TabMode = "sign" | "linemap";
 type MapOrientation = "horizontal" | "vertical";
 type PassedStationMode = "show" | "hide-gap" | "hide-trim";
@@ -113,6 +118,11 @@ const SIGN_STYLES: Record<
     Component: JrWestSignLarge,
     height: JrWestSignLargeHeight,
     scale: JrWestSignLargeBaseScale,
+  },
+  metrolong: {
+    Component: MetroLongSign,
+    height: MetroLongSignHeight,
+    scale: MetroLongSignBaseScale,
   },
 };
 
@@ -143,6 +153,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [centerSquareLineIds, setCenterSquareLineIds] = useState<string[]>([]);
   const [stationLines, setStationLines] = useState<Line[]>([]);
   const [signStyle, setSignStyle] = useState<SignStyle>("jreast");
+  const [metroLongSubTextMode, setMetroLongSubTextMode] =
+    useState<MetroLongSubTextMode>("furigana");
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<
     { label: string; value: number }[]
@@ -408,6 +420,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ].map((l) => ({ id: l.id, prefix: l.prefix, color: l.line_color })),
       ratio,
       direction,
+      subTextMode: metroLongSubTextMode,
     };
 
     setSignData(data);
@@ -419,6 +432,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     lines,
     ratio,
     direction,
+    metroLongSubTextMode,
     flipped,
     centerSquareLineIds,
   ]);
@@ -769,6 +783,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       value: "jrwestlarge",
                       label: t("route.sign.jrwestlarge"),
                     },
+                    {
+                      value: "metrolong",
+                      label: t("route.sign.metrolong"),
+                    },
                   ]}
                 />
               </Grid.Col>
@@ -820,6 +838,27 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   ]}
                 />
               </Grid.Col>
+              {signStyle === "metrolong" && (
+                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Select
+                    label={t("route.sign.metrolong-subtext")}
+                    value={metroLongSubTextMode}
+                    onChange={(v) =>
+                      v && setMetroLongSubTextMode(v as MetroLongSubTextMode)
+                    }
+                    data={[
+                      {
+                        value: "furigana",
+                        label: t("route.sign.metrolong-subtext-furigana"),
+                      },
+                      {
+                        value: "secondary",
+                        label: t("route.sign.metrolong-subtext-secondary"),
+                      },
+                    ]}
+                  />
+                </Grid.Col>
+              )}
               {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
                 "hidden" && (
                 <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>

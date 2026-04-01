@@ -47,8 +47,12 @@ import JrWestSignLarge, {
   height as JrWestSignLargeHeight,
   scale as JrWestSignLargeBaseScale,
 } from "@/components/signs/JrWestSignLarge";
+import MetroLongSign, {
+  height as MetroLongSignHeight,
+  scale as MetroLongSignBaseScale,
+} from "@/components/signs/MetroLongSign";
 
-type SignStyle = "jreast" | "jrwest" | "jrwestlarge";
+type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
 
 const SIGN_STYLES: Record<
   SignStyle,
@@ -68,6 +72,11 @@ const SIGN_STYLES: Record<
     Component: JrWestSignLarge,
     height: JrWestSignLargeHeight,
     scale: JrWestSignLargeBaseScale,
+  },
+  metrolong: {
+    Component: MetroLongSign,
+    height: MetroLongSignHeight,
+    scale: MetroLongSignBaseScale,
   },
 };
 
@@ -330,6 +339,7 @@ export default function SimpleInputTab() {
             { value: "jreast", label: t("route.sign.jreast") },
             { value: "jrwest", label: t("route.sign.jrwest") },
             { value: "jrwestlarge", label: t("route.sign.jrwestlarge") },
+            { value: "metrolong", label: t("route.sign.metrolong") },
           ]}
           style={{ maxWidth: 240 }}
         />
