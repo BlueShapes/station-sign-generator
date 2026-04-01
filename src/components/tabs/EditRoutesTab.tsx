@@ -238,10 +238,10 @@ function StationNumberBadgePreview({
         const radius = badgeSize / 2;
         const cx = cssW / 2;
         const cy = isMetroCompact ? cssH / 2 - 1.5 : cssH / 2;
-        const strokeWidth = 3 * scale + 1;
-        const strokeRadius = radius - strokeWidth / 2;
+        const strokeWidth = 3 * scale + 1 + (isMetroCompact ? 0 : 1);
+        const strokeRadius = radius - strokeWidth / 2 + (isMetroCompact ? 0 : 0.5);
         const metroTextSize = 11 * scale;
-        const metroValueTextSize = metroTextSize - 0;
+        const metroValueTextSize = metroTextSize - (isMetroCompact ? 2 : 0);
         const metroTextOffsetY = isMetroCompact ? 0.5 * scale : 1 * scale;
 
         // White fill circle

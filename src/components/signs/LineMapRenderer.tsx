@@ -11,6 +11,7 @@ import {
 } from "react-konva";
 import Konva from "konva";
 import type { Station, Line } from "@/db/types";
+import { getTokyoMetroStationNumberMetrics } from "@/components/signs/stationNumberBadgeMetrics";
 
 export const scale = 2;
 
@@ -423,7 +424,6 @@ const _snPrefixFont = 11 * SN_S;
 const _snPrefixY = 4 * SN_S;
 const _snValueFont = 17 * SN_S;
 const _snValueY = 14 * SN_S;
-
 function snBadgeDims(hasTrc: boolean): { w: number; h: number } {
   if (hasTrc) {
     return {
@@ -448,6 +448,7 @@ function SnBadge({
   trc,
   scale = 1,
   forceFullRender = false,
+  strokeWidthAdjust = 0,
 }: {
   x: number;
   y: number;
@@ -457,6 +458,7 @@ function SnBadge({
   trc?: string | null;
   scale?: number;
   forceFullRender?: boolean;
+  strokeWidthAdjust?: number;
 }) {
   const s = scale;
   const hasTrc = !!trc;
@@ -465,10 +467,32 @@ function SnBadge({
   // Inner square top-left
   const ix = hasTrc ? x + _snOuterPadX * s : x;
   const iy = hasTrc ? y + _snTrcH * s : y;
+  const metroMetrics = getTokyoMetroStationNumberMetrics(SN_INNER * s);
   const font =
     _snBadgeStyle === "tokyometro"
       ? '"JostTrispaceHybrid", Arial, sans-serif'
       : '"HindSemiBold", Arial, sans-serif';
+  const strokeWidth =
+    (_snBadgeStyle === "tokyometro" ? metroMetrics.strokeWidth : _snStroke * s) +
+    (_snBadgeStyle === "tokyometro" ? strokeWidthAdjust : 0);
+  const prefixFont =
+    _snBadgeStyle === "tokyometro"
+      ? metroMetrics.prefixFontSize
+      : _snPrefixFont * s;
+  const prefixY =
+    iy +
+    (_snBadgeStyle === "tokyometro"
+      ? metroMetrics.prefixYOffset
+      : _snPrefixY * s);
+  const valueFont =
+    _snBadgeStyle === "tokyometro"
+      ? metroMetrics.valueFontSize
+      : _snValueFont * s;
+  const valueY =
+    iy +
+    (_snBadgeStyle === "tokyometro"
+      ? metroMetrics.valueYOffset
+      : _snValueY * s);
 
   return (
     <Fragment>
@@ -553,7 +577,7 @@ function SnBadge({
           radius={(SN_INNER * s) / 2}
           fill="white"
           stroke={color}
-          strokeWidth={_snStroke * s}
+          strokeWidth={strokeWidth}
         />
       ) : (
         <Rect
@@ -563,7 +587,7 @@ function SnBadge({
           height={SN_INNER * s}
           fill="white"
           stroke={color}
-          strokeWidth={_snStroke * s}
+          strokeWidth={strokeWidth}
           cornerRadius={
             hasTrc
               ? [
@@ -579,24 +603,32 @@ function SnBadge({
       {/* Prefix: 11 ref-unit font, 4 ref units from inner top (textBaseline=top) */}
       <Text
         x={ix}
-        y={iy + _snPrefixY * s}
+        y={prefixY}
         width={SN_INNER * s}
         text={prefix}
-        fontSize={_snPrefixFont * s}
+        fontSize={prefixFont}
         fontFamily={font}
-        fontStyle="bold"
+        fontStyle={
+          _snBadgeStyle === "tokyometro"
+            ? metroMetrics.prefixFontWeight
+            : "bold"
+        }
         fill="black"
         align="center"
       />
       {/* Value: 17 ref-unit font, 14 ref units from inner top (textBaseline=top) */}
       <Text
         x={ix}
-        y={iy + _snValueY * s}
+        y={valueY}
         width={SN_INNER * s}
         text={value}
-        fontSize={_snValueFont * s}
+        fontSize={valueFont}
         fontFamily={font}
-        fontStyle="bold"
+        fontStyle={
+          _snBadgeStyle === "tokyometro"
+            ? metroMetrics.valueFontWeight
+            : "bold"
+        }
         fill="black"
         align="center"
       />
@@ -1047,6 +1079,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   prefix={snNum!.prefix}
                   value={snNum!.value}
                   trc={snNum!.threeLetterCode}
+                  strokeWidthAdjust={1}
                 />
               ) : (
                 <Circle
@@ -2004,6 +2037,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       value={snNum!.value}
                       trc={snNum!.threeLetterCode}
                       scale={0.85}
+                      strokeWidthAdjust={1}
                     />
                   )}
                   {/* SN badge (badge mode) for passed stations — full opacity outside the faded group */}
@@ -2029,6 +2063,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           prefix={snNum!.prefix}
                           value={snNum!.value}
                           trc={snNum!.threeLetterCode}
+                          strokeWidthAdjust={1}
                         />
                       ) : (
                         <Circle
@@ -2459,6 +2494,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       value={snNum!.value}
                       trc={snNum!.threeLetterCode}
                       scale={0.85}
+                      strokeWidthAdjust={1}
                     />
                   )}
                   {/* SN badge (badge mode) for passed stations — full opacity outside the faded group */}
@@ -2484,6 +2520,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           prefix={snNum!.prefix}
                           value={snNum!.value}
                           trc={snNum!.threeLetterCode}
+                          strokeWidthAdjust={1}
                         />
                       ) : (
                         <Circle
@@ -3189,6 +3226,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     value={snNum!.value}
                     trc={snNum!.threeLetterCode}
                     scale={0.85}
+                    strokeWidthAdjust={1}
                   />
                 )}
                 {/* SN badge (badge mode) for passed stations — full opacity outside the faded group */}
@@ -3213,6 +3251,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         prefix={snNum!.prefix}
                         value={snNum!.value}
                         trc={snNum!.threeLetterCode}
+                        strokeWidthAdjust={1}
                       />
                     ) : (
                       <Circle
