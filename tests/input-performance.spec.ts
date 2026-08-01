@@ -29,20 +29,36 @@ test.describe("Input performance", () => {
     await stationInput.fill("");
 
     const testText = "TestStationPerformance20";
-    const delayPerChar = 20; // ms between keystrokes
 
-    const start = Date.now();
-    await stationInput.pressSequentially(testText, { delay: delayPerChar });
-    const elapsed = Date.now() - start;
+    // Measure in the browser so Playwright transport and worker scheduling do
+    // not count as UI latency. One animation frame per character still lets
+    // React render each controlled-input update.
+    const elapsed = await stationInput.evaluate(async (input, text) => {
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      if (!valueSetter) throw new Error("HTMLInputElement.value setter missing");
 
-    // Minimum time: testText.length * delayPerChar
-    // With the fix, UI overhead should be < 800ms for 24 chars.
-    // Old code would take 3-5s due to Konva re-render on every keystroke.
-    const minExpected = testText.length * delayPerChar;
-    const maxAllowed = minExpected + 800;
+      const start = performance.now();
+      let value = "";
+      for (const character of text) {
+        value += character;
+        valueSetter.call(input, value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => resolve()),
+        );
+      }
+      return performance.now() - start;
+    }, testText);
+
+    // A healthy controlled input should process 24 updates well below 1s.
+    // The previous synchronous Konva rendering path took 3-5s.
+    const maxAllowed = 1000;
 
     console.log(
-      `Typing ${testText.length} chars: ${elapsed}ms (min: ${minExpected}ms, max allowed: ${maxAllowed}ms)`,
+      `Typing ${testText.length} chars: ${elapsed}ms (max allowed: ${maxAllowed}ms)`,
     );
     expect(elapsed).toBeLessThan(maxAllowed);
     await expect(stationInput).toHaveValue(testText);

@@ -92,7 +92,6 @@ import LineMapRenderer, {
   detectCircularOverlaps,
   getMapCanvasDimensions,
   type StationNumberMode,
-  type StationNumberMap,
   type StationNameField,
   type ServiceInfo,
   type ServiceStopMap,
@@ -101,7 +100,6 @@ import LineMapRenderer, {
 type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
 type TabMode = "sign" | "linemap";
 type MapOrientation = "horizontal" | "vertical";
-type PassedStationMode = "show" | "hide-gap" | "hide-trim";
 type AdjacentSide = "left" | "right";
 
 type AdjacentCandidate = AdjacentStationProps & {

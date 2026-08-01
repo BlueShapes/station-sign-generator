@@ -1,4 +1,4 @@
-import { type ChangeEvent, useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import {
   Button,
   TextInput,
