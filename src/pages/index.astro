@@ -6,7 +6,9 @@ import {
   DEFAULT_LOCALE,
   SUPPORTED_LOCALE_CODES,
   getLocalePath,
+  getManifestPath,
 } from "../i18n/locales";
+import { getLocalizedSiteMetadata } from "../i18n/siteMetadata";
 import { loadTranslations } from "../i18n/translations";
 
 const lang = DEFAULT_LOCALE;
@@ -14,24 +16,11 @@ const allMessages = Object.fromEntries(
   SUPPORTED_LOCALE_CODES.map((locale) => [locale, loadTranslations(locale)]),
 );
 const messages = allMessages[lang];
+const metadata = getLocalizedSiteMetadata(messages);
 
 const siteOrigin =
   import.meta.env.SITE ?? "https://stationsigngen.aosankaku.net";
-const siteName =
-  (messages as Record<string, string>)?.["$site-name"] ??
-  "駅名標ジェネレーター";
-const title =
-  (messages as Record<string, Record<string, string>>)?.meta?.title ??
-  "駅名標ジェネレーター";
-const description =
-  (messages as Record<string, Record<string, string>>)?.meta?.description ?? "";
-const ogImagePath =
-  (messages as Record<string, string>)?.["$og-image-path"] ??
-  "/images/ja/ogp.png";
-const ogImageAlt =
-  (messages as Record<string, Record<string, string>>)?.meta?.["og-image-alt"] ??
-  title;
-const ogImageUrl = `${siteOrigin}${ogImagePath}`;
+const ogImageUrl = `${siteOrigin}${metadata.ogImagePath}`;
 const canonical = `${siteOrigin}/`;
 
 const alternates = [
@@ -43,15 +32,16 @@ const alternates = [
 ];
 ---
 
-<BaseLayout title={title} description={description} locale={lang}>
+<BaseLayout title={metadata.title} description={metadata.description} locale={lang}>
   <Fragment slot="head">
     <HeadSeo
-      siteName={siteName}
-      title={title}
-      description={description}
+      siteName={metadata.siteName}
+      title={metadata.title}
+      description={metadata.description}
       locale={lang}
       ogImageUrl={ogImageUrl}
-      ogImageAlt={ogImageAlt}
+      ogImageAlt={metadata.ogImageAlt}
+      manifestUrl={getManifestPath(lang)}
       canonical={canonical}
       alternates={alternates}
     />
