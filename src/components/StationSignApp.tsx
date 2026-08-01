@@ -27,7 +27,8 @@ import SimpleInputTab from "@/components/tabs/SimpleInputTab";
 import RouteInputTab from "@/components/tabs/RouteInputTab";
 import EditRoutesTab from "@/components/tabs/EditRoutesTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
-import { getLocalePath } from "@/i18n/locales";
+import { getLocaleFromPathname, getLocalePath } from "@/i18n/locales";
+import { syncDocumentMetadata } from "@/i18n/syncDocumentMetadata";
 
 const theme = createTheme({});
 const colorSchemeManager = localStorageColorSchemeManager({
@@ -125,10 +126,21 @@ export default function StationSignApp({
   const handleSwitchLocale = (newLocale: string) => {
     setCurrentLocale(newLocale);
     history.pushState({}, "", getLocalePath(newLocale));
-    document.documentElement.lang = newLocale;
   };
 
   const messages = allMessages[currentLocale] ?? allMessages[locale] ?? {};
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentLocale(getLocaleFromPathname(window.location.pathname));
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    syncDocumentMetadata(currentLocale, messages);
+  }, [currentLocale, messages]);
 
   return (
     <TranslationProvider messages={messages} locale={currentLocale}>

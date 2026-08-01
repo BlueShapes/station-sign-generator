@@ -1,6 +1,11 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "id": "/",
+  "name": "駅名標ジェネレーター 青三角版",
+  "short_name": "駅名標",
+  "description": "JR東日本、JR西日本、東京メトロ・都営地下鉄風の駅名標と路線図を作成できます。",
+  "lang": "ja",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",

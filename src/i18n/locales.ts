@@ -25,3 +25,16 @@ export const SUPPORTED_LOCALE_CODES = SUPPORTED_LOCALES.map(
 export function getLocalePath(locale: string): string {
   return locale === DEFAULT_LOCALE ? "/" : `/${locale}/`;
 }
+
+export function getManifestPath(locale: string): string {
+  return `/manifests/${locale}.webmanifest`;
+}
+
+export function getLocaleFromPathname(pathname: string): string {
+  const locale = pathname.split("/").filter(Boolean)[0];
+  return SUPPORTED_LOCALE_CODES.includes(
+    locale as (typeof SUPPORTED_LOCALE_CODES)[number],
+  )
+    ? locale
+    : DEFAULT_LOCALE;
+}
