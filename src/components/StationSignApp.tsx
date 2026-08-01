@@ -27,16 +27,12 @@ import SimpleInputTab from "@/components/tabs/SimpleInputTab";
 import RouteInputTab from "@/components/tabs/RouteInputTab";
 import EditRoutesTab from "@/components/tabs/EditRoutesTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
+import { getLocalePath } from "@/i18n/locales";
 
 const theme = createTheme({});
 const colorSchemeManager = localStorageColorSchemeManager({
   key: "ssg-color-scheme",
 });
-
-const LOCALE_URLS: Record<string, string> = {
-  ja: "/",
-  en: "/en/",
-};
 
 interface StationSignAppProps {
   locale: string;
@@ -128,8 +124,7 @@ export default function StationSignApp({
 
   const handleSwitchLocale = (newLocale: string) => {
     setCurrentLocale(newLocale);
-    const url = LOCALE_URLS[newLocale] ?? `/${newLocale}/`;
-    history.pushState({}, "", url);
+    history.pushState({}, "", getLocalePath(newLocale));
     document.documentElement.lang = newLocale;
   };
 

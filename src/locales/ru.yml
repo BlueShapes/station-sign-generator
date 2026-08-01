@@ -1,0 +1,296 @@
+$site-name: Генератор знаков станции
+$og-image-path: /ogp.png
+meta:
+  title: Генератор железнодорожных знаков | Blue Triangle Edition (стиль JR East/West)
+  description: Бесплатный и полезный инструмент для создания табличек с названиями железнодорожных станций.
+  og-image-alt: Пример изображения знака станции (стиль JR East)
+  pwa:
+    name: Генератор знаков станции Blue Triangle Edition
+    short-name: Знак станции
+header:
+  title: Генератор знаков станции
+  edition: Издание «Синий треугольник»
+  tooltip:
+    lang: Изменить локаль
+    share: Поделитесь этим инструментом
+    share-options:
+      twitter: Твиттер (ранее X)
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
+      copy: Копировать URL
+    copy: Скопирован URL в буфер обмена.
+    share-message: Используйте {name} для создания великолепных железнодорожных знаков!
+input:
+  save: Сохранить как изображение
+  image-size: Размер изображения
+  direct:
+    swaplr: Поменяйте местами лево и право
+    reset: Сброс входов
+    reset-title: Сбросить все входы
+    reset-confirm: Вы уверены, что хотите сбросить все входы? Это действие невозможно отменить.
+    base-color: Цвет компании
+    line-color: Цвет линии
+    local-lines: Линии
+    local-lines-prefix: Сокращение имени линии
+    local-lines-add: Добавить строку
+    local-lines-empty: Добавьте строки выше, чтобы выбрать здесь префикс
+    lstation: Название левой станции
+    lread: Подтекст левой станции
+    len: Альтернативное название левой станции
+    lnum: Номер левой станции (основной)
+    lnum2: Номер левой станции (вторичный)
+    station: Название станции
+    read: Подтекст станции
+    en: Название станции Второй язык (английский)
+    ch: Название станции Третий язык (китайский)
+    kp: Название станции Четвертый язык (корейский)
+    num: Номер станции (основной)
+    num2: Номер станции (вторичный)
+    trc: Код станции
+    note: Примечание о станции (крупный текст под названием станции)
+    rstation: Название правой станции
+    rread: Подтекст правой станции
+    ren: Подтекст правой станции
+    rnum: Номер правой станции (основной)
+    rnum2: Номер правой станции (вторичный)
+    input-left: Информация о левой станции
+    input-current: Информация о текущей станции
+    input-right: Информация о правой станции
+    area: Зона тарифов станции
+    area-name: Название региона
+    center-colors: Цвета центральной площади
+    export-copy: Копировать JSON
+    export-copy-done: Скопировано!
+    export-download: Скачать JSON
+    import: Импортировать JSON
+    import-modal-title: Импортировать данные JSON
+    import-paste-label: Вставить JSON
+    import-paste-placeholder: Вставьте сюда экспортированный JSON...
+    import-file-label: Загрузите файл JSON
+    import-submit: Импорт
+    import-error: "Неверные данные: {detail}."
+common:
+  preview: Предварительный просмотр
+  add: Добавить
+  cancel: Отмена
+  confirm: Сброс
+  confirm-title: Подтвердить
+  theme-dark: Переключиться в темный режим
+  theme-light: Переключиться в светлый режим
+  loading: Загрузка...
+  loading-fonts: Загрузка шрифтов...
+  edit: Редактировать
+  delete: Удалить
+  save: Сохранить
+  close: Закрыть
+error:
+  on-save: Функция handleSave не удалась. Это совершенно неожиданное поведение, поскольку холст всегда отображается.
+  corrupted-cache: Сохраненные данные были повреждены и были сброшены к значениям по умолчанию. Вы можете продолжать использовать приложение в обычном режиме.
+tabs:
+  simple: Простой ввод
+  route-input: От маршрута
+  route-edit: Редактировать маршруты
+  settings: Настройки
+settings:
+  storage:
+    title: Хранение шрифтов
+    indexeddb: IndexedDB (постоянный)
+    memory: Только память (сеанс)
+    memory-warning: Пользовательские шрифты, загруженные в этом сеансе, будут потеряны при закрытии страницы.
+  fonts:
+    builtin-title: Предустановленные шрифты
+    builtin-desc: Необходимые шрифты для знаков станций. Невозможно удалить.
+    preload: Предварительная загрузка
+    user-title: Пользовательские шрифты
+    upload: Загрузить шрифт
+    upload-modal-title: Загрузить шрифт
+    select-file: Выберите файл шрифта (.ttf, .otf, .woff, .woff2).
+    display-name: Отображаемое имя
+    family-name: Название семейства шрифтов CSS
+    family-hint: Используется в конфигурации стиля. Пространства не допускаются.
+    upload-submit: Загрузить
+    empty: Пользовательские шрифты пока не загружены.
+    remove-all: Удалить все
+    remove-all-confirm: Удалить все пользовательские шрифты? Это также удаляет их из IndexedDB и не может быть отменено.
+    status:
+      idle: Не загружено
+      loading: Загрузка...
+      loaded: Загружено
+      error: Ошибка
+  images:
+    title: Изображения
+    upload: Загрузить изображение
+    upload-modal-title: Загрузить изображение
+    select-file: Выберите файл изображения
+    display-name: Имя изображения
+    upload-submit: Загрузить
+    empty: Изображения пока не загружены.
+    remove-all: Удалить все
+    remove-all-confirm: Удалить все загруженные изображения? Это также удаляет их из IndexedDB и не может быть отменено.
+route:
+  download-sqlite: Скачать SQLite
+  import-sqlite: Импортировать SQLite
+  import-sample: Загрузка выборочных данных (линия Яманотэ)
+  import-error:
+    invalid-file: Выбранный файл не является допустимой базой данных SQLite.
+    missing-table: "В базе данных отсутствует необходимая таблица: {detail}."
+    missing-column: "В базе данных отсутствует обязательный столбец: {detail}."
+  import-modal:
+    title: Импортировать базу данных
+    description: Существующая база данных уже присутствует. Как бы вы хотели импортировать?
+    overwrite-desc: "Перезаписать: заменить все существующие данные импортированными."
+    merge-desc: "Объединить: добавить импортированные данные в существующую базу данных. Конфликтующие записи будут обновлены."
+    overwrite: Перезаписать
+    merge: Объединить
+  no-routes: Маршруты не найдены. Пожалуйста, создавайте маршруты на вкладке «Редактировать маршруты».
+  company:
+    title: Компании
+    add: Добавить компанию
+    edit: Редактировать компанию
+    name: Название компании
+    color: Цвет компании
+    station-number-style: Стиль номера станции
+    station-number-style-jreast: JR Восточный стиль
+    station-number-style-tokyometro: Токийское метро / стиль метро Toei
+    station-number-style-preview: Образец значка (с использованием цвета компании в качестве цвета линии)
+    empty: Пока нет компаний
+    delete-confirm: Удалить эту компанию? Связанные строки также будут удалены.
+  special-zone:
+    title: Особые зоны
+    add: Добавить зону
+    edit: Редактировать зону
+    name: Имя зоны
+    abbreviation: Аббревиатура (1 символ)
+    is-black: Черная заливка
+    empty: Зон пока нет
+    delete-confirm: Удалить эту зону? Все станции, использующие его, потеряют этот значок.
+  line:
+    title: Линии
+    add: Добавить строку
+    edit: Редактировать строку
+    name: Имя линии
+    color: Цвет линии
+    prefix: Сокращение имени линии
+    priority: Приоритет
+    company: Компания
+    is-loop: Кольцевая линия (круговой маршрут)
+    empty: Очередей пока нет
+    select: Выберите линию
+    all: Все компании
+    delete-confirm: Удалить эту строку?
+    prefix-preview: Предварительный просмотр значка линейного индикатора
+  service:
+    title: Услуги
+    local: Местный
+    add-placeholder: Название службы
+    delete-confirm: Удалить эту услугу? Все данные остановки будут потеряны.
+  station:
+    title: Станции
+    add: Добавить станцию
+    add-existing: Добавить из существующей станции
+    link-title: Добавить существующую станцию в линию
+    select-existing: Выберите станцию для добавления
+    inherited-info: Унаследованная информация (только для чтения)
+    edit: Редактировать станцию
+    name: Название станции
+    furigana: Чтение (Хирагана)
+    en: Английское имя
+    ko: Корейское имя
+    zh: Китайское имя
+    note: Примечание
+    trc: Трехбуквенный код
+    number: Номер станции
+    number-source: Строка отображения номера станции
+    number-source-help: Выберите, какой код линии следует использовать для значка номера станции этой линии.
+    number-source-current-only: Для этой линии доступен только текущий код линии.
+    number-source-current: Использовать текущую строку [{prefix}] {name}
+    number-source-parent: Использовать родительскую строку [{prefix}] {name}
+    areas: Значки тарифных зон
+    empty: Выберите линию для просмотра станций
+    no-station: Пока нет станций
+    duplicate-number-warning: "Повторяющиеся номера станций в этой строке: {numbers}."
+    delete-confirm: Убрать эту станцию с линии?
+    select: Выберите станцию
+  sign:
+    style: Стиль
+    direction: Направление
+    flip: Изменить направление
+    prev-station: Предыдущая станция
+    next-station: Следующая станция
+    adjacent-select: Выберите до 2 станций
+    jreast: JR Восточный стиль
+    jrwest: JR Вест Стиль
+    jrwestlarge: JR West Style (большой)
+    metrolong: Токийское метро / стиль метро Toei (широкий)
+    metrolong-subtext: Подтекст
+    metrolong-subtext-furigana: Фуригана
+    metrolong-subtext-secondary: Второй язык
+    center-colors: Цвета центральной площади
+  mode:
+    sign: Знак станции
+    linemap: Линейная карта
+  linemap:
+    orientation: Ориентация
+    horizontal: Горизонтальный
+    vertical: Вертикальный
+    range-start: От
+    range-end: Чтобы
+    transit-filter: Показать транзитные линии
+    font-size: Название станции Размер шрифта
+    overlap-warning-title: Обнаружено перекрытие этикеток
+    overlap-warning: Названия некоторых станций совпадают. Попробуйте уменьшить размер шрифта.
+    station-number-mode: Отображение номера станции
+    station-number-none: Нет
+    station-number-badge: Значок
+    station-number-dot: Заменить точку
+    name-style: Имя Стиль
+    name-style-normal: Нормальный
+    name-style-above: Выше
+    name-style-below: Ниже
+    station-spacing: Расстояние между станциями
+    primary-lang: Основной язык
+    secondary-lang: Второй язык
+    show-secondary-lang: Показать
+    lang-1st: первое имя
+    lang-2nd: второе имя
+    lang-3rd: 3-е имя
+    lang-4th: 4-е имя
+    continuation: Индикаторы продолжения
+    continuation-before: Показать в начале
+    continuation-after: Показать в конце
+    swap: Поменяйте местами начало и конец
+    loop-render-mode: Режим отображения цикла
+    loop-as-linear: Показать как линейный маршрут
+    name-side: Название Сторона
+    name-side-left: Левый
+    name-side-right: Правильно
+    services: Услуги
+    services-placeholder: Все услуги (один путь)
+    show-passed-stations: Пройденные станции
+    passed-show: Показать (бледнеет)
+    passed-hide-gap: Скрыть (пробел)
+    passed-hide-trim: Скрыть (обрезать)
+    service-name-style: Стиль имени службы
+    service-name-paren: (круглые скобки)
+    service-name-badge: Значок
+footer:
+  links:
+    title: Ссылки
+    description: Сайт автора и профили в социальных сетях
+    website: Веб-сайт
+  development:
+    title: Ресурсы для развития
+    description: Исходный код, отчеты об ошибках и запросы функций.
+    repository: Репозиторий GitHub
+    repository-description: Исходный код и выпуски
+    issues: Проблемы
+    issues-description: Отчеты об ошибках и запросы функций
+  notice: Это фанатский сайт. Все товарные знаки являются собственностью соответствующих железнодорожных компаний. Этот сайт не связан и не одобрен какой-либо железнодорожной компанией. Выборочные данные и начальные значения могут содержать поддельные значения.

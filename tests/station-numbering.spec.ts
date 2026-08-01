@@ -16,16 +16,32 @@ test.describe("Tokyo Metro branch numbering", () => {
         name: /sample data|サンプルデータを読み込む/i,
       })
       .click();
-    await page.waitForTimeout(1000);
 
-    await page.getByRole("tab", { name: /route input|路線入力/i }).click();
+    const importModal = page.getByRole("dialog");
+    await expect(importModal).toBeVisible();
+    await importModal
+      .getByRole("button", { name: /overwrite|上書き/i })
+      .click();
+    await expect(importModal).not.toBeVisible();
 
-    await page.getByLabel(/line|路線/i).first().click();
     await page
+      .getByRole("tab", { name: /from route|路線から入力/i })
+      .click();
+
+    const lineSelect = page.getByRole("textbox", {
+      name: /^line$|^路線$/i,
+    });
+    await lineSelect.click();
+    const lineListbox = page.getByRole("listbox");
+    await expect(lineListbox).toBeVisible();
+    await lineListbox
       .getByRole("option", { name: /\[Mb\].*方南町支線/i })
       .click();
 
-    await page.getByLabel(/station|駅/i).first().click();
+    const stationSelect = page.getByRole("textbox", {
+      name: /^station$|^駅$/i,
+    });
+    await stationSelect.click();
     await expect(
       page.getByRole("option", { name: /\[M06\] 中野坂上/ }),
     ).toBeVisible();

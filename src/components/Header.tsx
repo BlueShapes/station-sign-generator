@@ -10,12 +10,17 @@ import {
 } from "@mantine/core";
 import { IconShare, IconSun, IconMoon } from "@tabler/icons-react";
 import { IconTrain } from "@tabler/icons-react";
-import { JP, US } from "country-flag-icons/react/3x2";
-import { type ReactElement, useEffect, useState } from "react";
+import { BR, CN, CZ, DE, ES, GB, HK, IN, JP, MY, PL, PT, RO, RU, TW } from "country-flag-icons/react/3x2";
+import { createElement, type ReactElement, useEffect, useState } from "react";
 import { BsTwitter, BsCopy } from "react-icons/bs";
+import { FaFacebook, FaTelegramPlane, FaVk, FaWhatsapp } from "react-icons/fa";
 import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from "react-icons/si";
 import { useTranslations } from "@/i18n/useTranslation";
 import { APP_VERSION } from "@/config";
+import { getShareServices, type ShareService } from "@/config/shareServices";
+import { SUPPORTED_LOCALES } from "@/i18n/locales";
+
+const FLAG_COMPONENTS = { BR, CN, CZ, DE, ES, GB, HK, IN, JP, MY, PL, PT, RO, RU, TW };
 
 interface HeaderProps {
   locale: string;
@@ -26,84 +31,90 @@ const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
   const t = useTranslations("");
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
-  type Lang = { langName: string; lang: string; flag: ReactElement };
-  const langs: Lang[] = [
-    { langName: "日本語", lang: "ja", flag: <JP style={{ width: "2em" }} /> },
-    { langName: "English", lang: "en", flag: <US style={{ width: "2em" }} /> },
-  ];
-
   const [url, setUrl] = useState("https://example.com");
   useEffect(() => {
     setUrl(document.URL);
-  });
+  }, []);
 
   const shareText = t("header.tooltip.share-message", {
     name: t("header.title"),
   });
   const encodedShareText = encodeURIComponent(shareText);
+  const encodedUrl = encodeURIComponent(url);
+  const encodedMessage = encodeURIComponent(`${shareText}\n${url}`);
 
   type ShareOption = {
     name: string;
     link: string | (() => void);
     icon: ReactElement;
-    id: number;
   };
-  const shareOptions: ShareOption[] = [
-    {
+
+  const shareOptions: Record<ShareService, ShareOption> = {
+    copy: {
       name: t("header.tooltip.share-options.copy"),
       link: () => navigator.clipboard.writeText(`${shareText}\n${url}`),
       icon: <BsCopy />,
-      id: 201,
     },
-    {
+    twitter: {
       name: t("header.tooltip.share-options.twitter"),
-      link: `https://x.com/share?text=${encodedShareText}&url=${url}`,
+      link: `https://x.com/share?text=${encodedShareText}&url=${encodedUrl}`,
       icon: <BsTwitter />,
-      id: 1,
     },
-    {
+    x: {
       name: t("header.tooltip.share-options.x"),
-      link: `https://x.com/share?text=${encodedShareText}&url=${url}`,
+      link: `https://x.com/share?text=${encodedShareText}&url=${encodedUrl}`,
       icon: <SiX />,
-      id: 2,
     },
-    {
+    reddit: {
       name: t("header.tooltip.share-options.reddit"),
-      link: `https://www.reddit.com/submit?text=${encodedShareText}&url=${url}`,
+      link: `https://www.reddit.com/submit?title=${encodedShareText}&url=${encodedUrl}`,
       icon: <SiReddit />,
-      id: 12,
     },
-    {
+    misskey: {
       name: t("header.tooltip.share-options.misskey"),
-      link: `https://misskey-hub.net/share/?text=${encodedShareText}&url=${url}&visibility=public&localOnly=0`,
+      link: `https://misskey-hub.net/share/?text=${encodedShareText}&url=${encodedUrl}&visibility=public&localOnly=0`,
       icon: <SiMisskey />,
-      id: 21,
     },
-    {
+    mastodon: {
       name: t("header.tooltip.share-options.mastodon"),
-      link: `https://donshare.net/share.html?text=${encodedShareText}&url=${url}`,
+      link: `https://donshare.net/share.html?text=${encodedShareText}&url=${encodedUrl}`,
       icon: <SiMastodon />,
-      id: 22,
     },
-    {
+    line: {
       name: t("header.tooltip.share-options.line"),
-      link: `https://social-plugins.line.me/lineit/share?text=${encodedShareText}&url=${url}`,
+      link: `https://social-plugins.line.me/lineit/share?text=${encodedShareText}&url=${encodedUrl}`,
       icon: <SiLine />,
-      id: 101,
     },
-  ];
+    facebook: {
+      name: t("header.tooltip.share-options.facebook"),
+      link: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      icon: <FaFacebook />,
+    },
+    whatsapp: {
+      name: t("header.tooltip.share-options.whatsapp"),
+      link: `https://api.whatsapp.com/send?text=${encodedMessage}`,
+      icon: <FaWhatsapp />,
+    },
+    telegram: {
+      name: t("header.tooltip.share-options.telegram"),
+      link: `https://t.me/share/url?url=${encodedUrl}&text=${encodedShareText}`,
+      icon: <FaTelegramPlane />,
+    },
+    vk: {
+      name: t("header.tooltip.share-options.vk"),
+      link: `https://vk.com/share.php?url=${encodedUrl}&title=${encodedShareText}`,
+      icon: <FaVk />,
+    },
+  };
+
+  const visibleShareServices = getShareServices(locale);
 
   const [isCopyMessageOpen, setIsCopyMessageOpen] = useState(false);
 
-  const Flag = ({ country }: { country: string }) => {
-    switch (country) {
-      case "ja":
-        return <JP style={{ width: "1.5em" }} />;
-      case "en":
-        return <US style={{ width: "1.5em" }} />;
-      default:
-        return <US style={{ width: "1.5em" }} />;
-    }
+  const Flag = ({ locale, width }: { locale: string; width: string }) => {
+    const language = SUPPORTED_LOCALES.find(({ code }) => code === locale);
+    const FlagComponent = FLAG_COMPONENTS[language?.flag ?? "GB"];
+    return createElement(FlagComponent, { style: { width } });
   };
 
   return (
@@ -201,24 +212,24 @@ const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
                     size="lg"
                     aria-label={t("header.tooltip.lang")}
                   >
-                    <Flag country={locale} />
+                    <Flag locale={locale} width="1.5em" />
                   </ActionIcon>
                 </Menu.Target>
               </Tooltip>
-              <Menu.Dropdown>
-                {langs.map((e) => (
+              <Menu.Dropdown style={{ maxHeight: "70vh", overflowY: "auto" }}>
+                {SUPPORTED_LOCALES.map((language) => (
                   <Menu.Item
-                    key={e.lang}
-                    onClick={() => onSwitchLocale(e.lang)}
+                    key={language.code}
+                    onClick={() => onSwitchLocale(language.code)}
                     style={{
                       display: "flex",
                       gap: "10px",
                       alignItems: "center",
-                      fontWeight: e.lang === locale ? 700 : undefined,
+                      fontWeight: language.code === locale ? 700 : undefined,
                     }}
-                    leftSection={e.flag}
+                    leftSection={<Flag locale={language.code} width="2em" />}
                   >
-                    {e.langName}
+                    {language.nativeName}
                   </Menu.Item>
                 ))}
               </Menu.Dropdown>
@@ -238,22 +249,25 @@ const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
                 </Menu.Target>
               </Tooltip>
               <Menu.Dropdown>
-                {shareOptions.map((e) => (
-                  <Menu.Item
-                    key={e.id}
-                    leftSection={e.icon}
-                    onClick={() => {
-                      if (typeof e.link === "string") {
-                        window.open(e.link, "_blank");
-                      } else {
-                        setIsCopyMessageOpen(true);
-                        e.link();
-                      }
-                    }}
-                  >
-                    {e.name}
-                  </Menu.Item>
-                ))}
+                {visibleShareServices.map((service) => {
+                  const option = shareOptions[service];
+                  return (
+                    <Menu.Item
+                      key={service}
+                      leftSection={option.icon}
+                      onClick={() => {
+                        if (typeof option.link === "string") {
+                          window.open(option.link, "_blank", "noopener,noreferrer");
+                        } else {
+                          setIsCopyMessageOpen(true);
+                          option.link();
+                        }
+                      }}
+                    >
+                      {option.name}
+                    </Menu.Item>
+                  );
+                })}
               </Menu.Dropdown>
             </Menu>
           </Box>

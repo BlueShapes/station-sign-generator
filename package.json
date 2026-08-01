@@ -8,14 +8,17 @@
     "build": "astro build",
     "start": "astro preview --host",
     "check": "astro check",
+    "test": "bun run test:unit && bun run test:e2e",
+    "test:unit": "bun test scripts",
+    "test:e2e": "playwright test",
     "postinstall": "node scripts/copy-wasm.mjs"
   },
   "dependencies": {
-    "@astrojs/react": "^5.0.0",
+    "@astrojs/react": "6.0.2",
     "@mantine/core": "^7.0.0",
     "@mantine/hooks": "^7.0.0",
     "@tabler/icons-react": "^3.0.0",
-    "astro": "^6.0.0",
+    "astro": "7.1.6",
     "country-flag-icons": "^1.5.18",
     "konva": "^9.3.20",
     "react": "^19.0.0",
@@ -30,7 +33,7 @@
     "yaml": "^2.7.0"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.7",
+    "@astrojs/check": "0.9.10",
     "@playwright/test": "^1.58.2",
     "@types/node": "^20",
     "@types/react": "^19",

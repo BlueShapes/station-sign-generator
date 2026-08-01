@@ -6,7 +6,6 @@ import {
   Circle,
   Rect,
   Text,
-  Path as KonvaPath,
   Group,
 } from "react-konva";
 import Konva from "konva";
@@ -740,16 +739,6 @@ export function measureTextWidth(
   return node.width();
 }
 
-// ── Service-name label helper ────────────────────────────────────────────────
-
-/** Width of the service-name label (including any padding / parens). */
-function serviceNameLabelWidth(name: string, style: "paren" | "badge"): number {
-  if (style === "badge") {
-    return measureTextWidth(name, LINE_TITLE_FONT - 1) + 6; // 3px pad each side
-  }
-  return measureTextWidth(`（${name}）`, LINE_TITLE_FONT);
-}
-
 /** Render the service-name label at (x, y) where y is the text baseline top. */
 function ServiceNameLabel({
   x,
@@ -897,17 +886,12 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         // Radial extent of the (upright) badge in the outward direction.
         // For a rectangle this equals |cosA|×w/2 + |sinA|×h/2 — largest at
         // diagonal angles (~45°) and smallest at purely axial angles.
-        const snDotPush = 0;
         const dotEffectiveR = dotModeActive
           ? (Math.abs(cosA) * _snDims!.w) / 2 +
             (Math.abs(sinA) * _snDims!.h) / 2
           : r;
         // In badge mode the badge sits beside the text, centred at tickEnd.
         // Its radial extent from tickEnd must be added so labels start outside it.
-        const badgeModeActive = stationNumberMode === "badge" && !!snNum?.value;
-        const _badgeDims = badgeModeActive
-          ? snBadgeDims(!!snNum!.threeLetterCode)
-          : null;
         const badgeExtraPush = 0;
 
         // Alternate label radii to stagger adjacent stations and prevent overlap

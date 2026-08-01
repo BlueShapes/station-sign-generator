@@ -1,0 +1,305 @@
+$site-name: Bahnhofsschild-Generator
+$og-image-path: "/ogp.png"
+
+meta:
+  title: Bahnhofsschild- und Linienplan-Generator | Blaue-Dreieck-Ausgabe
+  description: Erstelle Bahnhofsschilder im Stil von JR East, JR West, Tokyo Metro und Toei Subway sowie eigene Linienpläne direkt im Browser.
+  og-image-alt: Beispiel eines Bahnhofsschilds im Stil von JR East
+  pwa:
+    name: Bahnhofsschild-Generator – Blaue-Dreieck-Ausgabe
+    short-name: Bahnhofsschild
+
+header:
+  title: Bahnhofsschild-Generator
+  edition: Blaue-Dreieck-Ausgabe
+  tooltip:
+    lang: Sprache ändern
+    share: Dieses Werkzeug teilen
+    share-options:
+      twitter: "Twitter (ehemals X)"
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
+      copy: URL kopieren
+    copy: URL wurde in die Zwischenablage kopiert.
+    share-message: Erstelle mit {name} tolle Bahnhofsschilder!
+
+input:
+  save: Als Bild speichern
+  image-size: Bildgröße
+  direct:
+    swaplr: Links und rechts tauschen
+    reset: Eingaben zurücksetzen
+    reset-title: Alle Eingaben zurücksetzen
+    reset-confirm: Alle Eingaben zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.
+    base-color: Unternehmensfarbe
+    line-color: Linienfarbe
+    local-lines: Linien
+    local-lines-prefix: Linienkürzel
+    local-lines-add: Linie hinzufügen
+    local-lines-empty: Füge oben Linien hinzu, um hier ein Kürzel auszuwählen
+    lstation: Name der linken Station
+    lread: Untertext der linken Station
+    len: Alternativer Name der linken Station
+    lnum: Nummer der linken Station (primär)
+    lnum2: Nummer der linken Station (sekundär)
+    station: Stationsname
+    read: Stationsuntertext
+    en: Stationsname in der zweiten Sprache (Englisch)
+    ch: Stationsname in der dritten Sprache (Chinesisch)
+    kp: Stationsname in der vierten Sprache (Koreanisch)
+    num: Stationsnummer (primär)
+    num2: Stationsnummer (sekundär)
+    trc: Stationscode
+    note: Stationshinweis (größerer Text unter dem Stationsnamen)
+    rstation: Name der rechten Station
+    rread: Untertext der rechten Station
+    ren: Alternativer Name der rechten Station
+    rnum: Nummer der rechten Station (primär)
+    rnum2: Nummer der rechten Station (sekundär)
+    input-left: Informationen zur linken Station
+    input-current: Informationen zur aktuellen Station
+    input-right: Informationen zur rechten Station
+    area: Fahrpreisgebiet
+    area-name: Gebietsname
+    center-colors: Farben der mittleren Quadrate
+    export-copy: JSON kopieren
+    export-copy-done: Kopiert!
+    export-download: JSON herunterladen
+    import: JSON importieren
+    import-modal-title: JSON-Daten importieren
+    import-paste-label: JSON einfügen
+    import-paste-placeholder: "Exportiertes JSON hier einfügen …"
+    import-file-label: JSON-Datei hochladen
+    import-submit: Importieren
+    import-error: "Ungültige Daten: {detail}"
+
+common:
+  preview: Vorschau
+  add: Hinzufügen
+  cancel: Abbrechen
+  confirm: Zurücksetzen
+  confirm-title: Bestätigen
+  theme-dark: Zum dunklen Modus wechseln
+  theme-light: Zum hellen Modus wechseln
+  loading: Wird geladen …
+  loading-fonts: Schriftarten werden geladen …
+  edit: Bearbeiten
+  delete: Löschen
+  save: Speichern
+  close: Schließen
+
+error:
+  on-save: Speichern fehlgeschlagen. Wenn das Schild angezeigt wird, melde diesen unerwarteten Fehler bitte dem Entwickler.
+  corrupted-cache: Gespeicherte Daten waren beschädigt und wurden zurückgesetzt. Die App kann normal weiterverwendet werden.
+
+tabs:
+  simple: Einfache Eingabe
+  route-input: Aus Linie übernehmen
+  route-edit: Linien bearbeiten
+  settings: Einstellungen
+
+settings:
+  storage:
+    title: Schriftartenspeicher
+    indexeddb: IndexedDB (dauerhaft)
+    memory: Nur Arbeitsspeicher (Sitzung)
+    memory-warning: In dieser Sitzung hochgeladene Schriftarten gehen beim Schließen der Seite verloren.
+  fonts:
+    builtin-title: Vorinstallierte Schriftarten
+    builtin-desc: Erforderliche Schriftarten für Bahnhofsschilder. Sie können nicht entfernt werden.
+    preload: Vorladen
+    user-title: Benutzerdefinierte Schriftarten
+    upload: Schriftart hochladen
+    upload-modal-title: Schriftart hochladen
+    select-file: Schriftdatei auswählen (.ttf, .otf, .woff, .woff2)
+    display-name: Anzeigename
+    family-name: CSS-Schriftfamilienname
+    family-hint: Wird in der Stilkonfiguration verwendet. Leerzeichen sind nicht erlaubt.
+    upload-submit: Hochladen
+    empty: Noch keine benutzerdefinierten Schriftarten vorhanden.
+    remove-all: Alle entfernen
+    remove-all-confirm: Alle benutzerdefinierten Schriftarten entfernen? Sie werden auch aus IndexedDB gelöscht. Dies kann nicht rückgängig gemacht werden.
+    status:
+      idle: Nicht geladen
+      loading: Wird geladen …
+      loaded: Geladen
+      error: Fehler
+  images:
+    title: Bilder
+    upload: Bild hochladen
+    upload-modal-title: Bild hochladen
+    select-file: Bilddatei auswählen
+    display-name: Bildname
+    upload-submit: Hochladen
+    empty: Noch keine Bilder vorhanden.
+    remove-all: Alle entfernen
+    remove-all-confirm: Alle hochgeladenen Bilder entfernen? Sie werden auch aus IndexedDB gelöscht. Dies kann nicht rückgängig gemacht werden.
+
+route:
+  download-sqlite: SQLite herunterladen
+  import-sqlite: SQLite importieren
+  import-sample: Beispieldaten laden (Yamanote-Linie)
+  import-error:
+    invalid-file: Die ausgewählte Datei ist keine gültige SQLite-Datenbank.
+    missing-table: "In der Datenbank fehlt eine erforderliche Tabelle: {detail}"
+    missing-column: "In der Datenbank fehlt eine erforderliche Spalte: {detail}"
+  import-modal:
+    title: Datenbank importieren
+    description: Es ist bereits eine Datenbank vorhanden. Wie soll importiert werden?
+    overwrite-desc: "Überschreiben: Alle vorhandenen Daten durch die importierten Daten ersetzen."
+    merge-desc: "Zusammenführen: Importierte Daten hinzufügen und widersprüchliche Datensätze aktualisieren."
+    overwrite: Überschreiben
+    merge: Zusammenführen
+  no-routes: Keine Linien gefunden. Erstelle eine Linie unter „Linien bearbeiten“.
+  company:
+    title: Unternehmen
+    add: Unternehmen hinzufügen
+    edit: Unternehmen bearbeiten
+    name: Unternehmensname
+    color: Unternehmensfarbe
+    station-number-style: Stil der Stationsnummer
+    station-number-style-jreast: Stil von JR East
+    station-number-style-tokyometro: Stil von Tokyo Metro / Toei Subway
+    station-number-style-preview: Beispielplakette (Unternehmensfarbe als Linienfarbe)
+    empty: Noch keine Unternehmen vorhanden
+    delete-confirm: Dieses Unternehmen löschen? Zugehörige Linien werden ebenfalls gelöscht.
+  special-zone:
+    title: Sonderzonen
+    add: Zone hinzufügen
+    edit: Zone bearbeiten
+    name: Zonenname
+    abbreviation: Abkürzung (1 Zeichen)
+    is-black: Schwarz ausfüllen
+    empty: Noch keine Zonen vorhanden
+    delete-confirm: Diese Zone löschen? Stationen, die sie verwenden, verlieren diese Plakette.
+  line:
+    title: Linien
+    add: Linie hinzufügen
+    edit: Linie bearbeiten
+    name: Linienname
+    color: Linienfarbe
+    prefix: Linienkürzel
+    priority: Priorität
+    company: Unternehmen
+    is-loop: Ringlinie
+    empty: Noch keine Linien vorhanden
+    select: Linie auswählen
+    all: Alle Unternehmen
+    delete-confirm: Diese Linie löschen?
+    prefix-preview: Vorschau der Linienplakette
+  service:
+    title: Zugarten
+    local: Nahverkehr
+    add-placeholder: Name der Zugart
+    delete-confirm: Diese Zugart löschen? Alle Haltedaten gehen verloren.
+  station:
+    title: Stationen
+    add: Station hinzufügen
+    add-existing: Vorhandene Station hinzufügen
+    link-title: Vorhandene Station zur Linie hinzufügen
+    select-existing: Hinzuzufügende Station auswählen
+    inherited-info: Übernommene Informationen (schreibgeschützt)
+    edit: Station bearbeiten
+    name: Stationsname
+    furigana: Lesung (Hiragana)
+    en: Englischer Name
+    ko: Koreanischer Name
+    zh: Chinesischer Name
+    note: Hinweis
+    trc: Drei-Buchstaben-Code
+    number: Stationsnummer
+    number-source: Linie für die Stationsnummer
+    number-source-help: Wähle den Liniencode für die Stationsnummernplakette dieser Linie.
+    number-source-current-only: Für diese Linie ist nur der aktuelle Liniencode verfügbar.
+    number-source-current: "Aktuelle Linie verwenden [{prefix}] {name}"
+    number-source-parent: "Übergeordnete Linie verwenden [{prefix}] {name}"
+    areas: Fahrpreisgebietsplaketten
+    empty: Wähle eine Linie, um Stationen anzuzeigen
+    no-station: Noch keine Stationen vorhanden
+    duplicate-number-warning: "Doppelte Stationsnummern in dieser Linie: {numbers}"
+    delete-confirm: Diese Station aus der Linie entfernen?
+    select: Station auswählen
+  sign:
+    style: Stil
+    direction: Richtung
+    flip: Richtung umkehren
+    prev-station: Vorherige Station
+    next-station: Nächste Station
+    adjacent-select: Bis zu 2 Stationen auswählen
+    jreast: Stil von JR East
+    jrwest: Stil von JR West
+    jrwestlarge: Stil von JR West (groß)
+    metrolong: Stil von Tokyo Metro / Toei Subway (breit)
+    metrolong-subtext: Untertext
+    metrolong-subtext-furigana: Furigana
+    metrolong-subtext-secondary: Zweitsprache
+    center-colors: Farben der mittleren Quadrate
+  mode:
+    sign: Bahnhofsschild
+    linemap: Linienplan
+  linemap:
+    orientation: Ausrichtung
+    horizontal: Horizontal
+    vertical: Vertikal
+    range-start: Von
+    range-end: Bis
+    transit-filter: Umsteigelinien anzeigen
+    font-size: Schriftgröße des Stationsnamens
+    overlap-warning-title: Überlappende Beschriftungen erkannt
+    overlap-warning: Einige Stationsnamen überlappen sich. Verkleinere die Schrift.
+    station-number-mode: Anzeige der Stationsnummer
+    station-number-none: Keine
+    station-number-badge: Plakette
+    station-number-dot: Punkt ersetzen
+    name-style: Namensstil
+    name-style-normal: Normal
+    name-style-above: Oben
+    name-style-below: Unten
+    station-spacing: Stationsabstand
+    primary-lang: Primärsprache
+    secondary-lang: Sekundärsprache
+    show-secondary-lang: Anzeigen
+    lang-1st: 1. Name
+    lang-2nd: 2. Name
+    lang-3rd: 3. Name
+    lang-4th: 4. Name
+    continuation: Fortsetzungsanzeigen
+    continuation-before: Am Anfang anzeigen
+    continuation-after: Am Ende anzeigen
+    swap: Anfang und Ende tauschen
+    loop-render-mode: Darstellungsmodus der Ringlinie
+    loop-as-linear: Als lineare Strecke anzeigen
+    name-side: Namensseite
+    name-side-left: Links
+    name-side-right: Rechts
+    services: Zugarten
+    services-placeholder: Alle Zugarten (eine Linie)
+    show-passed-stations: Durchfahrene Stationen
+    passed-show: Anzeigen (verblasst)
+    passed-hide-gap: Ausblenden (Lücke)
+    passed-hide-trim: Ausblenden (kürzen)
+    service-name-style: Stil des Zugartnamens
+    service-name-paren: （Klammern）
+    service-name-badge: Plakette
+
+footer:
+  links:
+    title: Links
+    description: Website und soziale Profile des Erstellers
+    website: Website
+  development:
+    title: Entwicklungsressourcen
+    description: Quellcode, Fehlerberichte und Funktionswünsche
+    repository: GitHub-Repository
+    repository-description: Quellcode und Veröffentlichungen
+    issues: Issues
+    issues-description: Fehlerberichte und Funktionswünsche
+  notice: Dies ist eine von Fans erstellte Website. Alle Marken gehören den jeweiligen Eisenbahnunternehmen. Diese Website ist mit keinem Eisenbahnunternehmen verbunden. Beispieldaten und Anfangswerte können erfundene Angaben enthalten.
