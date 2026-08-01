@@ -1,4 +1,5 @@
 export const CANVAS_FONT_SPECS = [
+  "1em NotoSansJP",
   "900 1em NotoSansJP",
   "1em NotoSansTC",
   "1em NotoSansKR",

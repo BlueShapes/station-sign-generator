@@ -113,21 +113,25 @@ html.theme-ready *::after {
 @font-face {
   font-family: 'NotoSansJP';
   src: url('../fonts/NotoSansJP-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
 }
 
 @font-face {
   font-family: 'NotoSansTC';
   src: url('../fonts/NotoSansTC-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
 }
 
 @font-face {
   font-family: 'NotoSansKR';
   src: url('../fonts/NotoSansKR-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
 }
 
 @font-face {
   font-family: 'OverusedGrotesk';
   src: url('../fonts/OverusedGrotesk-VF.ttf') format('truetype');
+  font-weight: 100 900;
 }
 
 @font-face {
@@ -138,6 +142,7 @@ html.theme-ready *::after {
 @font-face {
   font-family: 'Jost';
   src: url('../fonts/Jost-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
 }
 
 @font-face {

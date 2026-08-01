@@ -473,7 +473,9 @@ function SnBadge({
       ? '"JostTrispaceHybrid", Arial, sans-serif'
       : '"HindSemiBold", Arial, sans-serif';
   const strokeWidth =
-    (_snBadgeStyle === "tokyometro" ? metroMetrics.strokeWidth : _snStroke * s) +
+    (_snBadgeStyle === "tokyometro"
+      ? metroMetrics.strokeWidth
+      : _snStroke * s) +
     (_snBadgeStyle === "tokyometro" ? strokeWidthAdjust : 0);
   const prefixFont =
     _snBadgeStyle === "tokyometro"
@@ -625,9 +627,7 @@ function SnBadge({
         fontSize={valueFont}
         fontFamily={font}
         fontStyle={
-          _snBadgeStyle === "tokyometro"
-            ? metroMetrics.valueFontWeight
-            : "bold"
+          _snBadgeStyle === "tokyometro" ? metroMetrics.valueFontWeight : "bold"
         }
         fill="black"
         align="center"
@@ -1646,8 +1646,6 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         fontSize={JP_FONT}
                         fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                         fill="#222"
-                        width={JP_FONT}
-                        align="center"
                       />
                     );
                   })}
@@ -1710,8 +1708,6 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                               fontSize={EN_FONT}
                               fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                               fill="#666"
-                              width={EN_FONT}
-                              align="center"
                             />
                           );
                         })}
@@ -2163,8 +2159,6 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           fontSize={JP_FONT}
                           fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                           fill="#222"
-                          width={JP_FONT}
-                          align="center"
                         />
                       );
                     })}
@@ -2229,8 +2223,6 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                                 fontSize={EN_FONT}
                                 fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                                 fill="#666"
-                                width={EN_FONT}
-                                align="center"
                               />
                             );
                           })}

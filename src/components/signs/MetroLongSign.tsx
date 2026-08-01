@@ -107,8 +107,8 @@ const MetroLongSign = forwardRef<Konva.Stage, StationProps>(
       innerSize = mainBadgeInner,
       strokeWidth = mainBadgeStroke,
       metrics = mainBadgeMetrics,
-      prefixFontSizeDelta = 1,
-      valueFontSizeDelta = 3,
+      prefixFontSizeDelta = 0,
+      valueFontSizeDelta = 0,
       prefixYOffsetDelta = 0,
       valueYOffsetDelta = 0,
       prefixXOffsetDelta = 0,
@@ -298,6 +298,12 @@ const MetroLongSign = forwardRef<Konva.Stage, StationProps>(
               sideBadgeInner,
               sideBadgeStroke,
               sideBadgeMetrics,
+              0,
+              3,
+              0,
+              0.5,
+              0,
+              0.6,
             )}
         </>
       );
@@ -359,6 +365,12 @@ const MetroLongSign = forwardRef<Konva.Stage, StationProps>(
                     sideBadgeInner,
                     sideBadgeStroke,
                     sideBadgeMetrics,
+                    0,
+                    3,
+                    0,
+                    0.5,
+                    0,
+                    0.6,
                   )}
               </Fragment>
             );
