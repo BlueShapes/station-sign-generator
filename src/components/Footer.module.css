@@ -1,0 +1,156 @@
+.footer {
+  margin-top: 32px;
+  padding: 0 16px 88px;
+}
+
+.shell {
+  position: relative;
+  overflow: hidden;
+  background: var(--mantine-color-body);
+  box-shadow: var(--mantine-shadow-xs);
+}
+
+.routeLine {
+  position: relative;
+  height: 4px;
+  background: var(--mantine-color-green-6);
+}
+
+.routeLine::before {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 50%;
+  content: "";
+  background: var(--mantine-color-blue-6);
+}
+
+.linkSection {
+  padding: 24px;
+}
+
+.linkSection + .linkSection {
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+.route {
+  --route-color: var(--mantine-color-green-6);
+
+  position: relative;
+}
+
+.route::before {
+  position: absolute;
+  top: 28px;
+  bottom: 28px;
+  left: 19px;
+  width: 2px;
+  content: "";
+  background: var(--route-color);
+  border-radius: 999px;
+}
+
+.profileRoute {
+  --route-color: var(--mantine-color-green-6);
+}
+
+.developmentRoute {
+  --route-color: var(--mantine-color-blue-6);
+}
+
+.stationLink {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 20px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px 8px 6px 0;
+  border-radius: var(--mantine-radius-md);
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.stationLink:hover {
+  background: var(--mantine-color-default-hover);
+  transform: translateX(2px);
+}
+
+.stationLink:focus-visible {
+  outline: 2px solid var(--route-color);
+  outline-offset: 2px;
+}
+
+.stationMarker {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 auto;
+  color: var(--route-color);
+  background: var(--mantine-color-body);
+  border: 3px solid var(--route-color);
+  box-shadow: 0 0 0 3px var(--mantine-color-body);
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
+}
+
+.stationLink:hover .stationMarker {
+  color: var(--mantine-color-white);
+  background: var(--route-color);
+}
+
+.circleMarker {
+  border-radius: 50%;
+}
+
+.squareMarker {
+  border-radius: 7px;
+}
+
+.stationLabel {
+  min-width: 0;
+}
+
+.externalIcon {
+  color: var(--mantine-color-dimmed);
+}
+
+.legal {
+  padding: 20px 24px;
+  background: var(--mantine-color-default-hover);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.notice {
+  max-width: 78ch;
+  line-height: 1.65;
+}
+
+@media (max-width: 48em) {
+  .linkSection {
+    padding: 20px;
+  }
+
+  .linkSection + .linkSection {
+    border-top: 1px solid var(--mantine-color-default-border);
+    border-left: 0;
+  }
+
+  .legal {
+    padding: 18px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stationLink,
+  .stationMarker {
+    transition: none;
+  }
+
+  .stationLink:hover {
+    transform: none;
+  }
+}
