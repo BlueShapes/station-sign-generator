@@ -1,0 +1,292 @@
+$site-name: Generador de señales de estación
+$og-image-path: /ogp.png
+meta:
+  title: Generador de señales ferroviarias | Edición Blue Triangle (estilo JR Este/Oeste)
+  description: Una herramienta gratuita y útil para generar carteles con nombres de estaciones de tren.
+  og-image-alt: Imagen de letrero de estación de muestra (estilo JR East)
+  pwa:
+    name: Generador de señales de estación Edición Triángulo Azul
+    short-name: Señal de estación
+header:
+  title: Generador de señales de estación
+  edition: Edición Triángulo Azul
+  tooltip:
+    lang: Cambiar configuración regional
+    share: Comparte esta herramienta
+    share-options:
+      twitter: Twitter (anteriormente X)
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      copy: Copiar URL
+    copy: Copia la URL en tu portapapeles.
+    share-message: ¡Utilice {name} para generar excelentes señales ferroviarias!
+input:
+  save: Guardar como imagen
+  image-size: Tamaño de imagen
+  direct:
+    swaplr: Intercambiar izquierda y derecha
+    reset: Restablecer entradas
+    reset-title: Restablecer todas las entradas
+    reset-confirm: ¿Está seguro de que desea restablecer todas las entradas? Esta acción no se puede deshacer.
+    base-color: Color de la empresa
+    line-color: Color de línea
+    local-lines: Líneas
+    local-lines-prefix: Taquigrafía del nombre de línea
+    local-lines-add: Agregar línea
+    local-lines-empty: Agregue líneas arriba para seleccionar un prefijo aquí
+    lstation: Nombre de la estación izquierda
+    lread: Subtexto de la estación izquierda
+    len: Nombre alternativo de la estación izquierda
+    lnum: Número de estación izquierda (principal)
+    lnum2: Número de estación izquierda (secundaria)
+    station: Nombre de la estación
+    read: Subtexto de la estación
+    en: Nombre de la estación Segundo idioma (inglés)
+    ch: Nombre de la estación Tercer idioma (chino)
+    kp: Nombre de la estación Cuarto idioma (coreano)
+    num: Número de estación (principal)
+    num2: Número de estación (secundaria)
+    trc: Código de estación
+    note: Nota de estación (texto más grande debajo del nombre de la estación)
+    rstation: Nombre de la estación derecha
+    rread: Subtexto de la estación derecha
+    ren: Subtexto de la estación derecha
+    rnum: Número de estación derecha (principal)
+    rnum2: Número de estación derecha (secundaria)
+    input-left: Información de la estación izquierda
+    input-current: Información de la estación actual
+    input-right: Información de la estación derecha
+    area: Área de tarifas de la estación
+    area-name: Nombre del área
+    center-colors: Colores del cuadrado central
+    export-copy: Copiar JSON
+    export-copy-done: ¡Copiado!
+    export-download: Descargar JSON
+    import: Importar JSON
+    import-modal-title: Importar datos JSON
+    import-paste-label: Pegar JSON
+    import-paste-placeholder: Pegue el JSON exportado aquí...
+    import-file-label: Subir archivo JSON
+    import-submit: Importar
+    import-error: "Datos no válidos: {detail}"
+common:
+  preview: Vista previa
+  add: Añadir
+  cancel: Cancelar
+  confirm: Reiniciar
+  confirm-title: Confirmar
+  theme-dark: Cambiar al modo oscuro
+  theme-light: Cambiar al modo de luz
+  loading: Cargando...
+  loading-fonts: Cargando fuentes...
+  edit: Editar
+  delete: Eliminar
+  save: Guardar
+  close: Cerrar
+error:
+  on-save: La función handleSave falló. Este es un comportamiento completamente inesperado ya que el lienzo siempre se representa.
+  corrupted-cache: Los datos guardados estaban dañados y se restablecieron los valores predeterminados. Puedes seguir usando la aplicación normalmente.
+tabs:
+  simple: Entrada sencilla
+  route-input: Desde la ruta
+  route-edit: Editar rutas
+  settings: Configuración
+settings:
+  storage:
+    title: Almacenamiento de fuentes
+    indexeddb: IndexedDB (persistente)
+    memory: Sólo memoria (sesión)
+    memory-warning: Las fuentes personalizadas cargadas en esta sesión se perderán cuando se cierre la página.
+  fonts:
+    builtin-title: Fuentes preinstaladas
+    builtin-desc: Fuentes requeridas para señales de estaciones. No se puede eliminar.
+    preload: Precarga
+    user-title: Fuentes personalizadas
+    upload: Subir fuente
+    upload-modal-title: Subir fuente
+    select-file: Seleccione el archivo de fuente (.ttf, .otf, .woff, .woff2)
+    display-name: Nombre para mostrar
+    family-name: Nombre de familia de fuentes CSS
+    family-hint: Utilizado en la configuración de estilo. No se permiten espacios.
+    upload-submit: Subir
+    empty: Aún no se han cargado fuentes personalizadas.
+    remove-all: Quitar todo
+    remove-all-confirm: ¿Eliminar todas las fuentes personalizadas? Esto también los borra de IndexedDB y no se puede deshacer.
+    status:
+      idle: No cargado
+      loading: Cargando...
+      loaded: cargado
+      error: error
+  images:
+    title: Imágenes
+    upload: Subir imagen
+    upload-modal-title: Subir imagen
+    select-file: Seleccionar archivo de imagen
+    display-name: Nombre de la imagen
+    upload-submit: Subir
+    empty: Aún no se han subido imágenes.
+    remove-all: Quitar todo
+    remove-all-confirm: ¿Eliminar todas las imágenes cargadas? Esto también los borra de IndexedDB y no se puede deshacer.
+route:
+  download-sqlite: Descargar SQLite
+  import-sqlite: Importar SQLite
+  import-sample: Cargar datos de muestra (Línea Yamanote)
+  import-error:
+    invalid-file: El archivo seleccionado no es una base de datos SQLite válida.
+    missing-table: "A la base de datos le falta una tabla requerida: {detail}"
+    missing-column: "A la base de datos le falta una columna obligatoria: {detail}"
+  import-modal:
+    title: Importar base de datos
+    description: Ya existe una base de datos. ¿Cómo te gustaría importar?
+    overwrite-desc: "Sobrescribir: reemplaza todos los datos existentes con los datos importados."
+    merge-desc: "Fusionar: agregue datos importados a la base de datos existente. Se actualizarán los registros conflictivos."
+    overwrite: Sobrescribir
+    merge: fusionar
+  no-routes: No se encontraron rutas. Cree rutas en la pestaña "Editar rutas".
+  company:
+    title: Empresas
+    add: Agregar empresa
+    edit: Editar empresa
+    name: Nombre de la empresa
+    color: Color de la empresa
+    station-number-style: Estilo de número de estación
+    station-number-style-jreast: Estilo JR Este
+    station-number-style-tokyometro: Estilo Metro de Tokio / Metro Toei
+    station-number-style-preview: Insignia de muestra (usando el color de la empresa como color de línea)
+    empty: Aún no hay empresas
+    delete-confirm: ¿Eliminar esta empresa? Las líneas asociadas también se eliminarán.
+  special-zone:
+    title: Zonas Especiales
+    add: Agregar zona
+    edit: Editar zona
+    name: Nombre de zona
+    abbreviation: Abreviatura (1 carácter)
+    is-black: Relleno negro
+    empty: Aún no hay zonas
+    delete-confirm: ¿Eliminar esta zona? Todas las estaciones que lo utilicen perderán esta insignia.
+  line:
+    title: Líneas
+    add: Agregar línea
+    edit: Editar línea
+    name: Nombre de línea
+    color: Color de línea
+    prefix: Taquigrafía del nombre de línea
+    priority: Prioridad
+    company: Empresa
+    is-loop: Línea Loop (ruta circular)
+    empty: Aún no hay líneas
+    select: Seleccione una línea
+    all: Todas las empresas
+    delete-confirm: ¿Eliminar esta línea?
+    prefix-preview: Vista previa de la insignia del indicador de línea
+  service:
+    title: Servicios
+    local: locales
+    add-placeholder: Nombre del servicio
+    delete-confirm: ¿Eliminar este servicio? Se perderán todos los datos de parada.
+  station:
+    title: Estaciones
+    add: Agregar estación
+    add-existing: Agregar desde estación existente
+    link-title: Agregar estación existente a la línea
+    select-existing: Seleccione una estación para agregar
+    inherited-info: Información heredada (solo lectura)
+    edit: Editar estación
+    name: Nombre de la estación
+    furigana: Lectura (hiragana)
+    en: Nombre en inglés
+    ko: Nombre coreano
+    zh: Nombre chino
+    note: Nota
+    trc: Código de tres letras
+    number: Número de estación
+    number-source: Línea de visualización del número de estación
+    number-source-help: Elija qué código de línea debe usarse para la insignia del número de estación de esta línea.
+    number-source-current-only: Sólo el código de línea actual está disponible para esta línea.
+    number-source-current: Usar la línea actual [{prefix}] {name}
+    number-source-parent: Utilice la línea principal [{prefix}] {name}
+    areas: Insignias de zona tarifaria
+    empty: Seleccione una línea para ver estaciones
+    no-station: Aún no hay estaciones
+    duplicate-number-warning: "Números de estación duplicados en esta línea: {numbers}"
+    delete-confirm: ¿Quitar esta estación de la línea?
+    select: Seleccione una estación
+  sign:
+    style: Estilo
+    direction: Dirección
+    flip: Voltear dirección
+    prev-station: Estación anterior
+    next-station: Próxima estación
+    adjacent-select: Seleccione hasta 2 estaciones
+    jreast: Estilo JR Este
+    jrwest: Estilo JR Oeste
+    jrwestlarge: Estilo JR Oeste (Grande)
+    metrolong: Metro de Tokio/estilo de metro Toei (ancho)
+    metrolong-subtext: Subtexto
+    metrolong-subtext-furigana: Furigana
+    metrolong-subtext-secondary: idioma secundario
+    center-colors: Colores del cuadrado central
+  mode:
+    sign: Señal de estación
+    linemap: Mapa de líneas
+  linemap:
+    orientation: Orientación
+    horizontal: Horizontales
+    vertical: verticales
+    range-start: De
+    range-end: a
+    transit-filter: Mostrar líneas de tránsito
+    font-size: Tamaño de fuente del nombre de la estación
+    overlap-warning-title: Superposición de etiquetas detectada
+    overlap-warning: Algunos nombres de estaciones se superponen. Intente reducir el tamaño de la fuente.
+    station-number-mode: Visualización del número de estación
+    station-number-none: Ninguno
+    station-number-badge: Insignia
+    station-number-dot: Reemplazar punto
+    name-style: Estilo de nombre
+    name-style-normal: normales
+    name-style-above: arriba
+    name-style-below: Abajo
+    station-spacing: Espaciado de estaciones
+    primary-lang: Idioma principal
+    secondary-lang: Idioma secundario
+    show-secondary-lang: Mostrar
+    lang-1st: 1er nombre
+    lang-2nd: 2do nombre
+    lang-3rd: 3er nombre
+    lang-4th: 4to nombre
+    continuation: Indicadores de continuación
+    continuation-before: Mostrar al inicio
+    continuation-after: Mostrar al final
+    swap: Intercambiar inicio y fin
+    loop-render-mode: Modo de visualización de bucle
+    loop-as-linear: Mostrar como ruta lineal
+    name-side: Nombre Lado
+    name-side-left: Izquierda
+    name-side-right: Derecha
+    services: Servicios
+    services-placeholder: Todos los servicios (vía única)
+    show-passed-stations: Estaciones pasadas
+    passed-show: Mostrar (descolorido)
+    passed-hide-gap: Ocultar (brecha)
+    passed-hide-trim: Ocultar (recortar)
+    service-name-style: Estilo del nombre del servicio
+    service-name-paren: (paréntesis)
+    service-name-badge: Insignia
+footer:
+  links:
+    title: Enlaces
+    description: Sitio web del creador y perfiles sociales.
+    website: Sitio web
+  development:
+    title: Recursos de desarrollo
+    description: Código fuente, informes de errores y solicitudes de funciones
+    repository: repositorio de GitHub
+    repository-description: Código fuente y lanzamientos
+    issues: Problemas
+    issues-description: Informes de errores y solicitudes de funciones
+  notice: Este es un sitio web creado por fans. Todas las marcas comerciales son propiedad de sus respectivas compañías ferroviarias. Este sitio no está afiliado ni respaldado por ninguna compañía ferroviaria. Los datos de muestra y los valores iniciales pueden contener valores falsos.

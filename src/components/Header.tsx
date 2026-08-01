@@ -10,12 +10,15 @@ import {
 } from "@mantine/core";
 import { IconShare, IconSun, IconMoon } from "@tabler/icons-react";
 import { IconTrain } from "@tabler/icons-react";
-import { JP, US } from "country-flag-icons/react/3x2";
-import { type ReactElement, useEffect, useState } from "react";
+import { BR, CN, CZ, DE, ES, GB, HK, IN, JP, MY, PL, PT, RO, RU, TW } from "country-flag-icons/react/3x2";
+import { createElement, type ReactElement, useEffect, useState } from "react";
 import { BsTwitter, BsCopy } from "react-icons/bs";
 import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from "react-icons/si";
 import { useTranslations } from "@/i18n/useTranslation";
 import { APP_VERSION } from "@/config";
+import { SUPPORTED_LOCALES } from "@/i18n/locales";
+
+const FLAG_COMPONENTS = { BR, CN, CZ, DE, ES, GB, HK, IN, JP, MY, PL, PT, RO, RU, TW };
 
 interface HeaderProps {
   locale: string;
@@ -25,12 +28,6 @@ interface HeaderProps {
 const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
   const t = useTranslations("");
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-
-  type Lang = { langName: string; lang: string; flag: ReactElement };
-  const langs: Lang[] = [
-    { langName: "日本語", lang: "ja", flag: <JP style={{ width: "2em" }} /> },
-    { langName: "English", lang: "en", flag: <US style={{ width: "2em" }} /> },
-  ];
 
   const [url, setUrl] = useState("https://example.com");
   useEffect(() => {
@@ -95,15 +92,10 @@ const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
 
   const [isCopyMessageOpen, setIsCopyMessageOpen] = useState(false);
 
-  const Flag = ({ country }: { country: string }) => {
-    switch (country) {
-      case "ja":
-        return <JP style={{ width: "1.5em" }} />;
-      case "en":
-        return <US style={{ width: "1.5em" }} />;
-      default:
-        return <US style={{ width: "1.5em" }} />;
-    }
+  const Flag = ({ locale, width }: { locale: string; width: string }) => {
+    const language = SUPPORTED_LOCALES.find(({ code }) => code === locale);
+    const FlagComponent = FLAG_COMPONENTS[language?.flag ?? "GB"];
+    return createElement(FlagComponent, { style: { width } });
   };
 
   return (
@@ -201,24 +193,24 @@ const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
                     size="lg"
                     aria-label={t("header.tooltip.lang")}
                   >
-                    <Flag country={locale} />
+                    <Flag locale={locale} width="1.5em" />
                   </ActionIcon>
                 </Menu.Target>
               </Tooltip>
-              <Menu.Dropdown>
-                {langs.map((e) => (
+              <Menu.Dropdown style={{ maxHeight: "70vh", overflowY: "auto" }}>
+                {SUPPORTED_LOCALES.map((language) => (
                   <Menu.Item
-                    key={e.lang}
-                    onClick={() => onSwitchLocale(e.lang)}
+                    key={language.code}
+                    onClick={() => onSwitchLocale(language.code)}
                     style={{
                       display: "flex",
                       gap: "10px",
                       alignItems: "center",
-                      fontWeight: e.lang === locale ? 700 : undefined,
+                      fontWeight: language.code === locale ? 700 : undefined,
                     }}
-                    leftSection={e.flag}
+                    leftSection={<Flag locale={language.code} width="2em" />}
                   >
-                    {e.langName}
+                    {language.nativeName}
                   </Menu.Item>
                 ))}
               </Menu.Dropdown>

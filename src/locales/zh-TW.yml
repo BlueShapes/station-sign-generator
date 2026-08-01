@@ -1,0 +1,292 @@
+$site-name: 站名牌產生器
+$og-image-path: /ogp.png
+meta:
+  title: 站名牌與路線圖產生器｜藍三角版（JR東日本／西日本風格）
+  description: 在瀏覽器中快速製作 JR 東日本、JR 西日本、東京地下鐵及都營地下鐵風格的站名牌圖片，也能建立自訂路線和路線圖。
+  og-image-alt: JR 東日本風格的站名牌範例圖片
+  pwa:
+    name: 車站標誌生成器藍三角版
+    short-name: 車站標誌
+header:
+  title: 站名牌產生器
+  edition: 藍三角版
+  tooltip:
+    lang: 變更語言
+    share: 分享這個工具
+    share-options:
+      twitter: 推特（以前的 X）
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      copy: 複製網址
+    copy: 已將 URL 複製到剪貼簿。
+    share-message: 使用 {name} 產生精美的鐵路標誌！
+input:
+  save: 儲存為圖片
+  image-size: 影像尺寸
+  direct:
+    swaplr: 左右交換
+    reset: 重設輸入
+    reset-title: 重置所有輸入
+    reset-confirm: 您確定要重置所有輸入嗎？此操作無法撤銷。
+    base-color: 公司顏色
+    line-color: 線條顏色
+    local-lines: 線路
+    local-lines-prefix: 線路名稱簡寫
+    local-lines-add: 新增線路
+    local-lines-empty: 新增上面的行以在此處選擇前綴
+    lstation: 左站名稱
+    lread: 左站潛台詞
+    len: 左站別名
+    lnum: 左站號碼（主要）
+    lnum2: 左站號碼（中學）
+    station: 車站名稱
+    read: 車站潛台詞
+    en: 站名 第二語言（英語）
+    ch: 站名 第三語言（中文）
+    kp: 站名第四語言（韓語）
+    num: 站號（主要）
+    num2: 站號（次要）
+    trc: 車站代碼
+    note: 車站註（車站名稱下方較大文字）
+    rstation: 正確的站名
+    rread: 右站潛台詞
+    ren: 右站潛台詞
+    rnum: 右站號（主要）
+    rnum2: 右站號（次要）
+    input-left: 左站訊息
+    input-current: 目前車站資訊
+    input-right: 正確的車站資訊
+    area: 車站收費區
+    area-name: 區域名稱
+    center-colors: 中心方形顏色
+    export-copy: 複製 JSON
+    export-copy-done: 複製了！
+    export-download: 下載 JSON
+    import: 導入 JSON
+    import-modal-title: 導入 JSON 數據
+    import-paste-label: 貼 JSON
+    import-paste-placeholder: 將匯出的 JSON 貼到此處...
+    import-file-label: 上傳 JSON 檔案
+    import-submit: 進口
+    import-error: 無效資料：{detail}
+common:
+  preview: 預覽
+  add: 新增
+  cancel: 取消
+  confirm: 重置
+  confirm-title: 確認
+  theme-dark: 切換到深色模式
+  theme-light: 切換到燈光模式
+  loading: 加載中...
+  loading-fonts: 正在加載字體...
+  edit: 編輯
+  delete: 刪除
+  save: 儲存
+  close: 關閉
+error:
+  on-save: 函數handleSave失敗。這是完全出乎意料的行為，因為畫布始終處於渲染狀態。
+  corrupted-cache: 儲存的資料已損壞並已重設為預設值。您可以繼續正常使用該應用程式。
+tabs:
+  simple: 簡單輸入
+  route-input: 從路線
+  route-edit: 編輯路線
+  settings: 設定
+settings:
+  storage:
+    title: 字體存儲
+    indexeddb: IndexedDB（持久）
+    memory: 僅記憶體（會話）
+    memory-warning: 當頁面關閉時，在此會話中上傳的自訂字體將會遺失。
+  fonts:
+    builtin-title: 預先安裝字體
+    builtin-desc: 車站標誌所需的字體。無法移除。
+    preload: 預載
+    user-title: 自訂字體
+    upload: 上傳字體
+    upload-modal-title: 上傳字體
+    select-file: 選擇字體檔案（.ttf、.otf、.woff、.woff2）
+    display-name: 顯示名稱
+    family-name: CSS 字型系列名稱
+    family-hint: 用於樣式配置。不允許有空格。
+    upload-submit: 上傳
+    empty: 尚未上傳自訂字體。
+    remove-all: 全部刪除
+    remove-all-confirm: 刪除所有自訂字體？這也會將它們從 IndexedDB 中清除，並且無法撤銷。
+    status:
+      idle: 未載入
+      loading: 加載中...
+      loaded: 已載入
+      error: 錯誤
+  images:
+    title: 圖片
+    upload: 上傳圖片
+    upload-modal-title: 上傳圖片
+    select-file: 選擇圖像檔案
+    display-name: 圖片名稱
+    upload-submit: 上傳
+    empty: 尚未上傳圖片。
+    remove-all: 全部刪除
+    remove-all-confirm: 刪除所有上傳的圖片？這也會將它們從 IndexedDB 中清除，並且無法撤銷。
+route:
+  download-sqlite: 下載SQLite
+  import-sqlite: 導入SQLite
+  import-sample: 載入樣本資料（山手線）
+  import-error:
+    invalid-file: 所選檔案不是有效的 SQLite 資料庫。
+    missing-table: 資料庫缺少所需的表：{detail}
+    missing-column: 資料庫缺少必要的欄位：{detail}
+  import-modal:
+    title: 導入資料庫
+    description: 現有資料庫已經存在。您想如何匯入？
+    overwrite-desc: 覆蓋：用匯入的資料取代所有現有資料。
+    merge-desc: 合併：將匯入的資料新增至現有資料庫。衝突的記錄將會被更新。
+    overwrite: 覆蓋
+    merge: 合併
+  no-routes: 沒有找到路線。請在「編輯路線」標籤中建立路線。
+  company:
+    title: 公司
+    add: 新增公司
+    edit: 編輯公司
+    name: 公司名稱
+    color: 公司顏色
+    station-number-style: 站號樣式
+    station-number-style-jreast: JR東日本風格
+    station-number-style-tokyometro: 東京地鐵/都營地鐵風格
+    station-number-style-preview: 徽章範例（使用公司顏色作為線條顏色）
+    empty: 還沒有公司
+    delete-confirm: 刪除這家公司？相關行也將刪除。
+  special-zone:
+    title: 特區
+    add: 新增區域
+    edit: 編輯區
+    name: 區域名稱
+    abbreviation: 縮寫（1 個字元）
+    is-black: 黑色填充
+    empty: 還沒有區域
+    delete-confirm: 刪除這個區域？所有使用它的電台都將失去此徽章。
+  line:
+    title: 線路
+    add: 新增線路
+    edit: 編輯行
+    name: 線路名稱
+    color: 線條顏色
+    prefix: 線路名稱簡寫
+    priority: 優先權
+    company: 公司簡介
+    is-loop: 環線（循環路線）
+    empty: 還沒有線路
+    select: 選取一行
+    all: 所有公司
+    delete-confirm: 刪除這一行嗎？
+    prefix-preview: 線路指示器徽章預覽
+  service:
+    title: 服務
+    local: 本地
+    add-placeholder: 服務名稱
+    delete-confirm: 刪除這個服務嗎？所有停止資料都將遺失。
+  station:
+    title: 車站
+    add: 新增車站
+    add-existing: 從現有車站新增
+    link-title: 將現有車站新增到線路中
+    select-existing: 選擇要新增的電台
+    inherited-info: 繼承資訊（唯讀）
+    edit: 編輯站
+    name: 車站名稱
+    furigana: 閱讀（平假名）
+    en: 英文名稱
+    ko: 韓文名字
+    zh: 中文名稱
+    note: 注意事項
+    trc: 三字母代碼
+    number: 站號
+    number-source: 站號顯示線
+    number-source-help: 選擇該線路的站號標誌應使用哪個線路代碼。
+    number-source-current-only: 僅當前行代碼可用於該行。
+    number-source-current: 使用目前行 [{prefix}] {name}
+    number-source-parent: 使用父行 [{prefix}] {name}
+    areas: 票價區徽章
+    empty: 選擇線路查看車站
+    no-station: 還沒有車站
+    duplicate-number-warning: 此行中重複的站號：{numbers}
+    delete-confirm: 從線路中刪除該站嗎？
+    select: 選擇電台
+  sign:
+    style: 風格
+    direction: 方向
+    flip: 翻轉方向
+    prev-station: 上一站
+    next-station: 下一站
+    adjacent-select: 最多選擇 2 個電台
+    jreast: JR東日本風格
+    jrwest: JR西日本風格
+    jrwestlarge: JR西日本風（大）
+    metrolong: 東京地鐵/都營地鐵風格（寬幅）
+    metrolong-subtext: 潛台詞
+    metrolong-subtext-furigana: 漢字註假名
+    metrolong-subtext-secondary: 第二語言
+    center-colors: 中心方形顏色
+  mode:
+    sign: 車站標誌
+    linemap: 線路圖
+  linemap:
+    orientation: 方向
+    horizontal: 水平
+    vertical: 垂直
+    range-start: 來自
+    range-end: 至
+    transit-filter: 顯示公車線路
+    font-size: 站名字體型大小
+    overlap-warning-title: 偵測到標籤重疊
+    overlap-warning: 有些站名重疊。嘗試減小字體大小。
+    station-number-mode: 站號顯示
+    station-number-none: 無
+    station-number-badge: 徽章
+    station-number-dot: 替換點
+    name-style: 名稱風格
+    name-style-normal: 正常
+    name-style-above: 以上
+    name-style-below: 下面
+    station-spacing: 站間距
+    primary-lang: 主要語言
+    secondary-lang: 第二語言
+    show-secondary-lang: 顯示
+    lang-1st: 第一個名字
+    lang-2nd: 第二個名字
+    lang-3rd: 第三個名字
+    lang-4th: 第四個名字
+    continuation: 持續指標
+    continuation-before: 在開始時顯示
+    continuation-after: 顯示在最後
+    swap: 交換開始和結束
+    loop-render-mode: 循環顯示模式
+    loop-as-linear: 顯示為線性路線
+    name-side: 名稱面
+    name-side-left: 左
+    name-side-right: 右
+    services: 服務
+    services-placeholder: 所有服務（單軌）
+    show-passed-stations: 經過的車站
+    passed-show: 顯示（褪色）
+    passed-hide-gap: 隱藏（間隙）
+    passed-hide-trim: 隱藏（修剪）
+    service-name-style: 服務名稱樣式
+    service-name-paren: （括號）
+    service-name-badge: 徽章
+footer:
+  links:
+    title: 友情連結
+    description: 創作者網站和社群資料
+    website: 網站
+  development:
+    title: 開發資源
+    description: 原始碼、錯誤報告和功能請求
+    repository: GitHub 儲存庫
+    repository-description: 原始碼和發布
+    issues: 問題
+    issues-description: 錯誤報告和功能請求
+  notice: 這是一個粉絲製作的網站。所有商標均為其各自鐵路公司的財產。本網站不隸屬於任何鐵路公司，也不受任何鐵路公司認可。樣本資料和初始值可能包含假值。

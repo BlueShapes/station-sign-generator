@@ -1,0 +1,292 @@
+$site-name: 站名牌生成器
+$og-image-path: /ogp.png
+meta:
+  title: 站名牌及线路图生成器｜蓝三角版（JR东日本／西日本风格）
+  description: 在浏览器中快速生成 JR 东日本、JR 西日本、东京地铁及都营地铁风格的站名牌图片，也可创建原创线路和线路图。
+  og-image-alt: JR 东日本风格的站名牌示例图片
+  pwa:
+    name: 车站标志生成器蓝色三角版
+    short-name: 车站标志
+header:
+  title: 站名牌生成器
+  edition: 蓝三角版
+  tooltip:
+    lang: 切换语言
+    share: 分享这个工具
+    share-options:
+      twitter: 推特（以前的 X）
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      copy: 复制网址
+    copy: 已将 URL 复制到剪贴板。
+    share-message: 使用 {name} 生成精美的铁路标志！
+input:
+  save: 另存为图像
+  image-size: 图像尺寸
+  direct:
+    swaplr: 左右交换
+    reset: 复位输入
+    reset-title: 重置所有输入
+    reset-confirm: 您确定要重置所有输入吗？此操作无法撤消。
+    base-color: 公司颜色
+    line-color: 线条颜色
+    local-lines: 线路
+    local-lines-prefix: 线路名称简写
+    local-lines-add: 添加线路
+    local-lines-empty: 添加上面的行以在此处选择前缀
+    lstation: 左站名称
+    lread: 左站潜台词
+    len: 左站别名
+    lnum: 左站号码（主要）
+    lnum2: 左站号码（中学）
+    station: 车站名称
+    read: 车站潜台词
+    en: 站名 第二语言（英语）
+    ch: 站名 第三语言（中文）
+    kp: 站名第四语言（韩语）
+    num: 站号（主要）
+    num2: 站号（次要）
+    trc: 车站代码
+    note: 车站注释（车站名称下方较大文字）
+    rstation: 正确的站名
+    rread: 右站潜台词
+    ren: 右站潜台词
+    rnum: 右站号（主要）
+    rnum2: 右站号（次要）
+    input-left: 左站信息
+    input-current: 当前车站信息
+    input-right: 正确的车站信息
+    area: 车站收费区
+    area-name: 区域名称
+    center-colors: 中心正方形颜色
+    export-copy: 复制 JSON
+    export-copy-done: 复制了！
+    export-download: 下载 JSON
+    import: 导入 JSON
+    import-modal-title: 导入 JSON 数据
+    import-paste-label: 粘贴 JSON
+    import-paste-placeholder: 将导出的 JSON 粘贴到此处...
+    import-file-label: 上传 JSON 文件
+    import-submit: 进口
+    import-error: 无效数据：{detail}
+common:
+  preview: 预览
+  add: 添加
+  cancel: 取消
+  confirm: 重置
+  confirm-title: 确认
+  theme-dark: 切换到深色模式
+  theme-light: 切换到灯光模式
+  loading: 加载中...
+  loading-fonts: 正在加载字体...
+  edit: 编辑
+  delete: 删除
+  save: 保存
+  close: 关闭
+error:
+  on-save: 函数handleSave失败。这是完全出乎意料的行为，因为画布始终处于渲染状态。
+  corrupted-cache: 保存的数据已损坏并已重置为默认值。您可以继续正常使用该应用程序。
+tabs:
+  simple: 简单输入
+  route-input: 从路线
+  route-edit: 编辑路线
+  settings: 设置
+settings:
+  storage:
+    title: 字体存储
+    indexeddb: IndexedDB（持久）
+    memory: 仅内存（会话）
+    memory-warning: 当页面关闭时，在此会话中上传的自定义字体将会丢失。
+  fonts:
+    builtin-title: 预装字体
+    builtin-desc: 车站标志所需的字体。无法移除。
+    preload: 预载
+    user-title: 自定义字体
+    upload: 上传字体
+    upload-modal-title: 上传字体
+    select-file: 选择字体文件（.ttf、.otf、.woff、.woff2）
+    display-name: 显示名称
+    family-name: CSS 字体系列名称
+    family-hint: 用于样式配置。不允许有空格。
+    upload-submit: 上传
+    empty: 尚未上传自定义字体。
+    remove-all: 全部删除
+    remove-all-confirm: 删除所有自定义字体？这也会将它们从 IndexedDB 中清除，并且无法撤消。
+    status:
+      idle: 未加载
+      loading: 加载中...
+      loaded: 已加载
+      error: 错误
+  images:
+    title: 图片
+    upload: 上传图片
+    upload-modal-title: 上传图片
+    select-file: 选择图像文件
+    display-name: 图片名称
+    upload-submit: 上传
+    empty: 尚未上传图片。
+    remove-all: 全部删除
+    remove-all-confirm: 删除所有上传的图片？这也会将它们从 IndexedDB 中清除，并且无法撤消。
+route:
+  download-sqlite: 下载SQLite
+  import-sqlite: 导入SQLite
+  import-sample: 加载样本数据（山手线）
+  import-error:
+    invalid-file: 所选文件不是有效的 SQLite 数据库。
+    missing-table: 数据库缺少所需的表：{detail}
+    missing-column: 数据库缺少必需的列：{detail}
+  import-modal:
+    title: 导入数据库
+    description: 现有数据库已经存在。您想如何导入？
+    overwrite-desc: 覆盖：用导入的数据替换所有现有数据。
+    merge-desc: 合并：将导入的数据添加到现有数据库中。冲突的记录将被更新。
+    overwrite: 覆盖
+    merge: 合并
+  no-routes: 没有找到路线。请在“编辑路线”选项卡中创建路线。
+  company:
+    title: 公司
+    add: 添加公司
+    edit: 编辑公司
+    name: 公司名称
+    color: 公司颜色
+    station-number-style: 站号样式
+    station-number-style-jreast: JR东日本风格
+    station-number-style-tokyometro: 东京地铁/都营地铁风格
+    station-number-style-preview: 徽章示例（使用公司颜色作为线条颜色）
+    empty: 还没有公司
+    delete-confirm: 删除这家公司？相关行也将被删除。
+  special-zone:
+    title: 特区
+    add: 添加区域
+    edit: 编辑区
+    name: 区域名称
+    abbreviation: 缩写（1 个字符）
+    is-black: 黑色填充
+    empty: 还没有区域
+    delete-confirm: 删除这个区域？所有使用它的电台都将失去此徽章。
+  line:
+    title: 线路
+    add: 添加线路
+    edit: 编辑行
+    name: 线路名称
+    color: 线条颜色
+    prefix: 线路名称简写
+    priority: 优先级
+    company: 公司简介
+    is-loop: 环线（循环路线）
+    empty: 还没有线路
+    select: 选择一行
+    all: 所有公司
+    delete-confirm: 删除这一行吗？
+    prefix-preview: 线路指示器徽章预览
+  service:
+    title: 服务
+    local: 本地
+    add-placeholder: 服务名称
+    delete-confirm: 删除这个服务吗？所有停止数据都将丢失。
+  station:
+    title: 车站
+    add: 添加车站
+    add-existing: 从现有车站添加
+    link-title: 将现有车站添加到线路中
+    select-existing: 选择要添加的电台
+    inherited-info: 继承信息（只读）
+    edit: 编辑站
+    name: 车站名称
+    furigana: 阅读（平假名）
+    en: 英文名称
+    ko: 韩文名字
+    zh: 中文名称
+    note: 注意事项
+    trc: 三字母代码
+    number: 站号
+    number-source: 站号显示线
+    number-source-help: 选择此线路的站号标志应使用哪个线路代码。
+    number-source-current-only: 此线路仅可使用当前线路代码。
+    number-source-current: 使用当前线路 [{prefix}] {name}
+    number-source-parent: 使用上级线路 [{prefix}] {name}
+    areas: 票价区徽章
+    empty: 选择线路查看车站
+    no-station: 还没有车站
+    duplicate-number-warning: 此线路中有重复的车站编号：{numbers}
+    delete-confirm: 从线路中删除该站吗？
+    select: 选择电台
+  sign:
+    style: 风格
+    direction: 方向
+    flip: 翻转方向
+    prev-station: 上一站
+    next-station: 下一站
+    adjacent-select: 最多选择 2 个电台
+    jreast: JR东日本风格
+    jrwest: JR西日本风格
+    jrwestlarge: JR西日本风格（大）
+    metrolong: 东京地铁/都营地铁风格（宽幅）
+    metrolong-subtext: 潜台词
+    metrolong-subtext-furigana: 汉字注假名
+    metrolong-subtext-secondary: 第二语言
+    center-colors: 中心正方形颜色
+  mode:
+    sign: 车站标志
+    linemap: 线路图
+  linemap:
+    orientation: 方向
+    horizontal: 卧式
+    vertical: 垂直
+    range-start: 来自
+    range-end: 至
+    transit-filter: 显示公交线路
+    font-size: 站名字体大小
+    overlap-warning-title: 检测到标签重叠
+    overlap-warning: 有些站名重叠。尝试减小字体大小。
+    station-number-mode: 站号显示
+    station-number-none: 无
+    station-number-badge: 徽章
+    station-number-dot: 替换点
+    name-style: 名称风格
+    name-style-normal: 正常
+    name-style-above: 以上
+    name-style-below: 下面
+    station-spacing: 站间距
+    primary-lang: 主要语言
+    secondary-lang: 第二语言
+    show-secondary-lang: 显示
+    lang-1st: 第一个名字
+    lang-2nd: 第二个名字
+    lang-3rd: 第三个名字
+    lang-4th: 第四个名字
+    continuation: 持续指标
+    continuation-before: 在开始时显示
+    continuation-after: 显示在最后
+    swap: 交换开始和结束
+    loop-render-mode: 循环显示模式
+    loop-as-linear: 显示为线性路线
+    name-side: 名称面
+    name-side-left: 左
+    name-side-right: 右
+    services: 服务
+    services-placeholder: 所有服务（单轨）
+    show-passed-stations: 经过的车站
+    passed-show: 显示（褪色）
+    passed-hide-gap: 隐藏（间隙）
+    passed-hide-trim: 隐藏（修剪）
+    service-name-style: 服务名称样式
+    service-name-paren: （括号）
+    service-name-badge: 徽章
+footer:
+  links:
+    title: 友情链接
+    description: 创作者网站和社交资料
+    website: 网站
+  development:
+    title: 开发资源
+    description: 源代码、错误报告和功能请求
+    repository: GitHub 存储库
+    repository-description: 源代码和发布
+    issues: 问题
+    issues-description: 错误报告和功能请求
+  notice: 这是一个粉丝制作的网站。所有商标均为其各自铁路公司的财产。本网站不隶属于任何铁路公司，也不受任何铁路公司认可。样本数据和初始值可能包含假值。

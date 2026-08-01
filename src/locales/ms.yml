@@ -1,0 +1,292 @@
+$site-name: Penjana Tanda Stesen
+$og-image-path: /ogp.png
+meta:
+  title: Penjana Tanda Kereta Api | Edisi Segi Tiga Biru (gaya JR Timur/Barat)
+  description: Alat percuma dan berguna untuk menjana tanda nama stesen kereta api.
+  og-image-alt: Contoh imej papan tanda stesen (gaya JR East)
+  pwa:
+    name: Penjana Tanda Stesen Edisi Segitiga Biru
+    short-name: Tanda Stesen
+header:
+  title: Penjana Tanda Stesen
+  edition: Edisi Segi Tiga Biru
+  tooltip:
+    lang: Tukar Tempat
+    share: Kongsi Alat Ini
+    share-options:
+      twitter: Twitter (Dulu X)
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      copy: Salin URL
+    copy: URL disalin ke papan keratan anda.
+    share-message: Gunakan {name} untuk menjana papan tanda kereta api yang hebat!
+input:
+  save: Simpan sebagai Imej
+  image-size: Saiz Imej
+  direct:
+    swaplr: Tukar kiri dan kanan
+    reset: Tetapkan semula input
+    reset-title: Tetapkan semula semua input
+    reset-confirm: Adakah anda pasti mahu menetapkan semula semua input? Tindakan ini tidak boleh dibuat asal.
+    base-color: Warna Syarikat
+    line-color: Warna Garisan
+    local-lines: Garisan
+    local-lines-prefix: Nama Baris Shorthand
+    local-lines-add: Tambah Talian
+    local-lines-empty: Tambahkan baris di atas untuk memilih awalan di sini
+    lstation: Nama Stesen Kiri
+    lread: Subteks Stesen Kiri
+    len: Nama Alternatif Stesen Kiri
+    lnum: Nombor Stesen Kiri (Utama)
+    lnum2: Nombor Stesen Kiri (Menengah)
+    station: Nama Stesen
+    read: Subteks Stesen
+    en: Nama Stesen Bahasa Kedua (Bahasa Inggeris)
+    ch: Nama Stesen Bahasa Ketiga (Bahasa Cina)
+    kp: Nama Stesen Bahasa Keempat (Bahasa Korea)
+    num: Nombor Stesen (Utama)
+    num2: Nombor Stesen (Menengah)
+    trc: Kod Stesen
+    note: Nota Stesen (Teks Lebih Besar Di Bawah Nama Stesen)
+    rstation: Nama Stesen Kanan
+    rread: Subteks Stesen Kanan
+    ren: Subteks Stesen Kanan
+    rnum: Nombor Stesen Kanan (Utama)
+    rnum2: Nombor Stesen Kanan (Menengah)
+    input-left: Maklumat Stesen Kiri
+    input-current: Maklumat Stesen Semasa
+    input-right: Maklumat Stesen Kanan
+    area: Kawasan Tambang Stesen
+    area-name: Nama Kawasan
+    center-colors: Warna Segi Empat Tengah
+    export-copy: Salin JSON
+    export-copy-done: disalin!
+    export-download: Muat turun JSON
+    import: Import JSON
+    import-modal-title: Import Data JSON
+    import-paste-label: Tampal JSON
+    import-paste-placeholder: Tampalkan JSON yang dieksport di sini...
+    import-file-label: Muat naik fail JSON
+    import-submit: Import
+    import-error: "Data tidak sah: {detail}"
+common:
+  preview: Pratonton
+  add: Tambah
+  cancel: Batal
+  confirm: Tetapkan semula
+  confirm-title: sahkan
+  theme-dark: Tukar kepada mod gelap
+  theme-light: Tukar kepada mod cahaya
+  loading: Memuatkan...
+  loading-fonts: Memuatkan fon...
+  edit: Sunting
+  delete: Padam
+  save: Jimat
+  close: tutup
+error:
+  on-save: Pemegang fungsiSimpan gagal. Ini adalah tingkah laku yang tidak dijangka sama sekali kerana kanvas sentiasa dipaparkan.
+  corrupted-cache: Data yang disimpan telah rosak dan telah ditetapkan semula kepada lalai. Anda boleh terus menggunakan apl seperti biasa.
+tabs:
+  simple: Input Mudah
+  route-input: Dari Laluan
+  route-edit: Edit Laluan
+  settings: tetapan
+settings:
+  storage:
+    title: Storan Fon
+    indexeddb: IndexedDB (Persistent)
+    memory: Ingatan Sahaja (Sesi)
+    memory-warning: Fon tersuai yang dimuat naik dalam sesi ini akan hilang apabila halaman ditutup.
+  fonts:
+    builtin-title: Font yang diprapasang
+    builtin-desc: Fon yang diperlukan untuk tanda stesen. Tidak boleh dikeluarkan.
+    preload: Pramuat
+    user-title: Fon Tersuai
+    upload: Muat Naik Fon
+    upload-modal-title: Muat Naik Fon
+    select-file: Pilih fail fon (.ttf, .otf, .woff, .woff2)
+    display-name: Nama Paparan
+    family-name: Nama Keluarga Fon CSS
+    family-hint: Digunakan dalam konfigurasi gaya. Tiada ruang dibenarkan.
+    upload-submit: Muat naik
+    empty: Tiada fon tersuai dimuat naik lagi.
+    remove-all: Keluarkan Semua
+    remove-all-confirm: Alih keluar semua fon tersuai? Ini juga mengosongkan mereka daripada IndexedDB dan tidak boleh dibuat asal.
+    status:
+      idle: Tidak dimuatkan
+      loading: Memuatkan...
+      loaded: dimuatkan
+      error: ralat
+  images:
+    title: Imej
+    upload: Muat Naik Imej
+    upload-modal-title: Muat Naik Imej
+    select-file: Pilih fail imej
+    display-name: Nama Imej
+    upload-submit: Muat naik
+    empty: Tiada imej dimuat naik lagi.
+    remove-all: Keluarkan Semua
+    remove-all-confirm: Alih keluar semua imej yang dimuat naik? Ini juga mengosongkan mereka daripada IndexedDB dan tidak boleh dibuat asal.
+route:
+  download-sqlite: Muat turun SQLite
+  import-sqlite: Import SQLite
+  import-sample: Muatkan Data Contoh (Baris Yamanote)
+  import-error:
+    invalid-file: Fail yang dipilih bukan pangkalan data SQLite yang sah.
+    missing-table: "Pangkalan data tiada jadual yang diperlukan: {detail}"
+    missing-column: "Pangkalan data tiada lajur yang diperlukan: {detail}"
+  import-modal:
+    title: Import Pangkalan Data
+    description: Pangkalan data sedia ada sudah ada. Bagaimanakah anda ingin mengimport?
+    overwrite-desc: "Tulis ganti: Gantikan semua data sedia ada dengan data yang diimport."
+    merge-desc: "Gabung: Tambahkan data yang diimport ke pangkalan data sedia ada. Rekod yang bercanggah akan dikemas kini."
+    overwrite: Tulis ganti
+    merge: Bercantum
+  no-routes: Tiada laluan ditemui. Sila buat laluan dalam tab "Edit Laluan".
+  company:
+    title: Syarikat
+    add: Tambah Syarikat
+    edit: Edit Syarikat
+    name: Nama Syarikat
+    color: Warna Syarikat
+    station-number-style: Gaya Nombor Stesen
+    station-number-style-jreast: Gaya JR East
+    station-number-style-tokyometro: Gaya Tokyo Metro / Toei Subway
+    station-number-style-preview: Contoh lencana (menggunakan warna syarikat sebagai warna garis)
+    empty: Tiada syarikat lagi
+    delete-confirm: Padamkan syarikat ini? Baris yang berkaitan juga akan dipadamkan.
+  special-zone:
+    title: Zon Khas
+    add: Tambah Zon
+    edit: Edit Zon
+    name: Nama Zon
+    abbreviation: Singkatan (1 aksara)
+    is-black: Isi hitam
+    empty: Tiada zon lagi
+    delete-confirm: Padamkan zon ini? Semua stesen yang menggunakannya akan kehilangan lencana ini.
+  line:
+    title: Garisan
+    add: Tambah Talian
+    edit: Edit Baris
+    name: Nama Baris
+    color: Warna Garisan
+    prefix: Nama Baris Shorthand
+    priority: Keutamaan
+    company: Syarikat
+    is-loop: Talian Gelung (laluan bulat)
+    empty: Tiada baris lagi
+    select: Pilih satu baris
+    all: Semua Syarikat
+    delete-confirm: Padamkan baris ini?
+    prefix-preview: Pratonton lencana penunjuk baris
+  service:
+    title: Perkhidmatan
+    local: Tempatan
+    add-placeholder: Nama perkhidmatan
+    delete-confirm: Padamkan perkhidmatan ini? Semua data berhenti akan hilang.
+  station:
+    title: Stesen
+    add: Tambah Stesen
+    add-existing: Tambah dari Stesen Sedia Ada
+    link-title: Tambahkan Stesen Sedia Ada pada Laluan
+    select-existing: Pilih stesen untuk ditambah
+    inherited-info: Maklumat yang diwarisi (baca sahaja)
+    edit: Edit Stesen
+    name: Nama Stesen
+    furigana: Membaca (Hiragana)
+    en: Nama Inggeris
+    ko: Nama Korea
+    zh: Nama Cina
+    note: Nota
+    trc: Kod Tiga Huruf
+    number: Nombor Stesen
+    number-source: Garis Paparan Nombor Stesen
+    number-source-help: Pilih kod talian yang harus digunakan untuk lencana nombor stesen talian ini.
+    number-source-current-only: Hanya kod talian semasa tersedia untuk baris ini.
+    number-source-current: Gunakan baris semasa [{prefix}] {name}
+    number-source-parent: Gunakan baris induk [{prefix}] {name}
+    areas: Lencana Zon Tambang
+    empty: Pilih baris untuk melihat stesen
+    no-station: Tiada stesen lagi
+    duplicate-number-warning: "Nombor stesen pendua dalam baris ini: {numbers}"
+    delete-confirm: Alih keluar stesen ini daripada talian?
+    select: Pilih stesen
+  sign:
+    style: Gaya
+    direction: Arah
+    flip: Balik arah
+    prev-station: Stesen sebelumnya
+    next-station: Stesen seterusnya
+    adjacent-select: Pilih sehingga 2 stesen
+    jreast: Gaya JR Timur
+    jrwest: Gaya JR Barat
+    jrwestlarge: Gaya JR West (Besar)
+    metrolong: Metro Tokyo / Gaya Kereta Api Bawah Tanah Toei (Lebar)
+    metrolong-subtext: Subteks
+    metrolong-subtext-furigana: Furigana
+    metrolong-subtext-secondary: bahasa sekunder
+    center-colors: Warna Segi Empat Tengah
+  mode:
+    sign: Tanda Stesen
+    linemap: Peta Garisan
+  linemap:
+    orientation: Orientasi
+    horizontal: Mendatar
+    vertical: Menegak
+    range-start: daripada
+    range-end: Kepada
+    transit-filter: Tunjukkan Laluan Transit
+    font-size: Saiz Font Nama Stesen
+    overlap-warning-title: Pertindihan Label Dikesan
+    overlap-warning: Beberapa nama stesen bertindih. Cuba kecilkan saiz fon.
+    station-number-mode: Paparan Nombor Stesen
+    station-number-none: tiada
+    station-number-badge: Lencana
+    station-number-dot: Gantikan Dot
+    name-style: Gaya Nama
+    name-style-normal: Biasalah
+    name-style-above: Di atas
+    name-style-below: Di bawah
+    station-spacing: Jarak Stesen
+    primary-lang: Bahasa Utama
+    secondary-lang: Bahasa Menengah
+    show-secondary-lang: Tunjukkan
+    lang-1st: nama pertama
+    lang-2nd: nama ke-2
+    lang-3rd: nama ke-3
+    lang-4th: nama ke-4
+    continuation: Penunjuk Kesinambungan
+    continuation-before: Tunjukkan pada permulaan
+    continuation-after: Tunjukkan di penghujung
+    swap: Tukar permulaan dan akhir
+    loop-render-mode: Mod Paparan Gelung
+    loop-as-linear: Tunjukkan sebagai laluan linear
+    name-side: Nama Sebelah
+    name-side-left: kiri
+    name-side-right: Betul
+    services: Perkhidmatan
+    services-placeholder: Semua perkhidmatan (lagu tunggal)
+    show-passed-stations: Lulus Stesen
+    passed-show: Tunjukkan (pudar)
+    passed-hide-gap: Sembunyikan (jurang)
+    passed-hide-trim: Sembunyikan (trim)
+    service-name-style: Gaya nama perkhidmatan
+    service-name-paren: (tanda kurung)
+    service-name-badge: Lencana
+footer:
+  links:
+    title: Pautan
+    description: Laman web pencipta dan profil sosial
+    website: laman web
+  development:
+    title: Sumber pembangunan
+    description: Kod sumber, laporan pepijat dan permintaan ciri
+    repository: repositori GitHub
+    repository-description: Kod sumber dan keluaran
+    issues: Isu
+    issues-description: Laporan pepijat dan permintaan ciri
+  notice: Ini adalah laman web buatan peminat. Semua tanda dagangan adalah hak milik syarikat kereta api masing-masing. Laman web ini tidak bergabung dengan atau disokong oleh mana-mana syarikat kereta api. Data sampel dan nilai awal mungkin mengandungi nilai palsu.

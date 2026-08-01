@@ -10,11 +10,12 @@ interface Props {
   description: string;
   locale: string;
   ogImageUrl: string;
+  ogImageAlt: string;
   canonical: string;
   alternates: Alternate[];
 }
 
-const { siteName, title, description, locale, ogImageUrl, canonical, alternates } = Astro.props;
+const { siteName, title, description, locale, ogImageUrl, ogImageAlt, canonical, alternates } = Astro.props;
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -46,7 +47,7 @@ const structuredDataJson = JSON.stringify(structuredData).replace(/</g, "\\u003c
 <meta property="og:image" content={ogImageUrl} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content={title} />
+<meta property="og:image:alt" content={ogImageAlt} />
 <meta property="og:locale" content={locale} />
 <meta property="og:site_name" content={siteName} />
 {alternates.map(({ lang, href }) => (

@@ -1,5 +1,19 @@
 # Project Rules for Codex
 
+## Localization
+
+- Every locale file in `src/locales/` must contain the same complete set of
+  translation keys.
+- Whenever a translation key is added, removed, renamed, or moved, update all
+  locale files in the same change. Do not leave new keys translated in only a
+  subset of supported languages.
+- Preserve interpolation placeholders such as `{name}` and `{detail}` in every
+  translation.
+- Use the locale codes and metadata in `src/i18n/locales.ts` as the canonical
+  list of supported languages.
+- Keep Hong Kong Traditional Chinese (`zh-HK`) and Taiwanese Traditional
+  Chinese (`zh-TW`) as separate translations, using region-appropriate terms.
+
 ## Database schema changes
 
 ### 1. Update DB_VERSION

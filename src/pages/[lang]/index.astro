@@ -2,18 +2,24 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import HeadSeo from "../../components/HeadSeo.astro";
 import StationSignApp from "../../components/StationSignApp";
+import {
+  DEFAULT_LOCALE,
+  SUPPORTED_LOCALE_CODES,
+  getLocalePath,
+} from "../../i18n/locales";
 import { loadTranslations } from "../../i18n/translations";
 
 export function getStaticPaths() {
-  return [{ params: { lang: "en" } }];
+  return SUPPORTED_LOCALE_CODES.filter(
+    (locale) => locale !== DEFAULT_LOCALE,
+  ).map((locale) => ({ params: { lang: locale } }));
 }
 
 const { lang } = Astro.params;
-const allMessages = {
-  ja: loadTranslations("ja"),
-  en: loadTranslations("en"),
-};
-const messages = allMessages[lang as keyof typeof allMessages];
+const allMessages = Object.fromEntries(
+  SUPPORTED_LOCALE_CODES.map((locale) => [locale, loadTranslations(locale)]),
+);
+const messages = allMessages[lang ?? DEFAULT_LOCALE];
 
 const siteOrigin =
   import.meta.env.SITE ?? "https://stationsigngen.aosankaku.net";
@@ -28,12 +34,17 @@ const description =
 const ogImagePath =
   (messages as Record<string, string>)?.["$og-image-path"] ??
   "/images/en/ogp.png";
+const ogImageAlt =
+  (messages as Record<string, Record<string, string>>)?.meta?.["og-image-alt"] ??
+  title;
 const ogImageUrl = `${siteOrigin}${ogImagePath}`;
 const canonical = `${siteOrigin}/${lang}/`;
 
 const alternates = [
-  { lang: "ja", href: `${siteOrigin}/` },
-  { lang: "en", href: `${siteOrigin}/en/` },
+  ...SUPPORTED_LOCALE_CODES.map((locale) => ({
+    lang: locale,
+    href: `${siteOrigin}${getLocalePath(locale)}`,
+  })),
   { lang: "x-default", href: `${siteOrigin}/` },
 ];
 ---
@@ -46,6 +57,7 @@ const alternates = [
       description={description}
       locale={lang}
       ogImageUrl={ogImageUrl}
+      ogImageAlt={ogImageAlt}
       canonical={canonical}
       alternates={alternates}
     />

@@ -1,0 +1,292 @@
+$site-name: Generátor znamení stanice
+$og-image-path: /ogp.png
+meta:
+  title: Generátor železničních značek | Blue Triangle Edition (JR East/West style)
+  description: Bezplatný a užitečný nástroj pro generování názvů železničních stanic.
+  og-image-alt: Ukázkový obrázek stanice (ve stylu JR East)
+  pwa:
+    name: Generátor znamení stanice Blue Triangle Edition
+    short-name: Znamení stanice
+header:
+  title: Generátor znamení stanice
+  edition: Edice Blue Triangle
+  tooltip:
+    lang: Změnit národní prostředí
+    share: Sdílejte tento nástroj
+    share-options:
+      twitter: Twitter (dříve X)
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      copy: Kopírovat URL
+    copy: Adresa URL byla zkopírována do vaší schránky.
+    share-message: Použijte {name} ke generování skvělých železničních značek!
+input:
+  save: Uložit jako obrázek
+  image-size: Velikost obrázku
+  direct:
+    swaplr: Prohoďte doleva a doprava
+    reset: Resetovat vstupy
+    reset-title: Resetujte všechny vstupy
+    reset-confirm: Opravdu chcete resetovat všechny vstupy? Tuto akci nelze vrátit zpět.
+    base-color: Barva společnosti
+    line-color: Barva čáry
+    local-lines: Čáry
+    local-lines-prefix: Zkratka názvu řádku
+    local-lines-add: Přidat řádek
+    local-lines-empty: Chcete-li zde vybrat předponu, přidejte řádky výše
+    lstation: Levý název stanice
+    lread: Podtext levé stanice
+    len: Levý alternativní název stanice
+    lnum: Číslo levé stanice (primární)
+    lnum2: Číslo levé stanice (sekundární)
+    station: Název stanice
+    read: Subtext stanice
+    en: Druhý jazyk názvu stanice (angličtina)
+    ch: Třetí jazyk názvu stanice (čínština)
+    kp: Název stanice čtvrtý jazyk (korejština)
+    num: Číslo stanice (primární)
+    num2: Číslo stanice (sekundární)
+    trc: Kód stanice
+    note: Poznámka ke stanici (větší text pod názvem stanice)
+    rstation: Pravý název stanice
+    rread: Subtext pravé stanice
+    ren: Subtext pravé stanice
+    rnum: Správné číslo stanice (primární)
+    rnum2: Pravé číslo stanice (sekundární)
+    input-left: Informace o levé stanici
+    input-current: Aktuální informace o stanici
+    input-right: Informace o pravé stanici
+    area: Oblast jízdného na nádraží
+    area-name: Název oblasti
+    center-colors: Barvy středového čtverce
+    export-copy: Zkopírujte JSON
+    export-copy-done: Zkopírováno!
+    export-download: Stáhněte si JSON
+    import: Importujte JSON
+    import-modal-title: Importujte data JSON
+    import-paste-label: Vložte JSON
+    import-paste-placeholder: Sem vložte exportovaný JSON...
+    import-file-label: Nahrajte soubor JSON
+    import-submit: Importovat
+    import-error: "Neplatná data: {detail}"
+common:
+  preview: Náhled
+  add: Přidat
+  cancel: Zrušit
+  confirm: Resetovat
+  confirm-title: Potvrďte
+  theme-dark: Přepněte do tmavého režimu
+  theme-light: Přepněte do světelného režimu
+  loading: Načítání...
+  loading-fonts: Načítání písem...
+  edit: Upravit
+  delete: Smazat
+  save: Uložit
+  close: Zavřít
+error:
+  on-save: Funkce handleSave se nezdařila. Toto je zcela neočekávané chování, protože plátno je vždy vykresleno.
+  corrupted-cache: Uložená data byla poškozena a byla obnovena na výchozí hodnoty. Aplikaci můžete normálně používat.
+tabs:
+  simple: Jednoduchý vstup
+  route-input: Z Route
+  route-edit: Upravit trasy
+  settings: Nastavení
+settings:
+  storage:
+    title: Úložiště písem
+    indexeddb: Indexovaná databáze (trvalá)
+    memory: Pouze paměť (relace)
+    memory-warning: Vlastní písma nahraná v této relaci budou po zavření stránky ztracena.
+  fonts:
+    builtin-title: Předinstalovaná písma
+    builtin-desc: Požadované fonty pro staniční značky. Nelze odstranit.
+    preload: Předpětí
+    user-title: Vlastní písma
+    upload: Nahrát písmo
+    upload-modal-title: Nahrát písmo
+    select-file: Vyberte soubor písma (.ttf, .otf, .woff, .woff2)
+    display-name: Zobrazovaný název
+    family-name: Název rodiny písem CSS
+    family-hint: Používá se v konfiguraci stylu. Nejsou povoleny žádné mezery.
+    upload-submit: Nahrát
+    empty: Dosud nebyla nahrána žádná vlastní písma.
+    remove-all: Odebrat vše
+    remove-all-confirm: Odebrat všechna vlastní písma? Tím je také vymažete z IndexedDB a nelze to vrátit.
+    status:
+      idle: Nenačteno
+      loading: Načítání...
+      loaded: Nabito
+      error: Chyba
+  images:
+    title: Obrázky
+    upload: Nahrát obrázek
+    upload-modal-title: Nahrát obrázek
+    select-file: Vyberte soubor obrázku
+    display-name: Název obrázku
+    upload-submit: Nahrát
+    empty: Dosud nebyly nahrány žádné obrázky.
+    remove-all: Odebrat vše
+    remove-all-confirm: Odstranit všechny nahrané obrázky? Tím je také vymažete z IndexedDB a nelze to vrátit.
+route:
+  download-sqlite: Stáhněte si SQLite
+  import-sqlite: Importujte SQLite
+  import-sample: Načíst ukázková data (Yamanote Line)
+  import-error:
+    invalid-file: Vybraný soubor není platná databáze SQLite.
+    missing-table: "V databázi chybí požadovaná tabulka: {detail}"
+    missing-column: "V databázi chybí požadovaný sloupec: {detail}"
+  import-modal:
+    title: Importovat databázi
+    description: Již existuje existující databáze. Jak chcete importovat?
+    overwrite-desc: "Přepsat: Nahradí všechna existující data importovanými daty."
+    merge-desc: "Sloučit: Přidejte importovaná data do existující databáze. Konfliktní záznamy budou aktualizovány."
+    overwrite: Přepsat
+    merge: Sloučit
+  no-routes: Nebyly nalezeny žádné trasy. Vytvořte prosím trasy v záložce "Upravit trasy".
+  company:
+    title: Společnosti
+    add: Přidat společnost
+    edit: Upravit společnost
+    name: Název společnosti
+    color: Barva společnosti
+    station-number-style: Styl čísla stanice
+    station-number-style-jreast: JR východní styl
+    station-number-style-tokyometro: Styl tokijského metra / metra Toei
+    station-number-style-preview: Ukázka odznaku (jako barva čáry se používá barva společnosti)
+    empty: Zatím žádné společnosti
+    delete-confirm: Smazat tuto společnost? Přidružené řádky budou také smazány.
+  special-zone:
+    title: Speciální zóny
+    add: Přidat zónu
+    edit: Upravit zónu
+    name: Název zóny
+    abbreviation: Zkratka (1 znak)
+    is-black: Černá výplň
+    empty: Zatím žádné zóny
+    delete-confirm: Smazat tuto zónu? Všechny stanice, které jej používají, tento odznak ztratí.
+  line:
+    title: Čáry
+    add: Přidat řádek
+    edit: Upravit řádek
+    name: Název řádku
+    color: Barva čáry
+    prefix: Zkratka názvu řádku
+    priority: Priorita
+    company: Společnost
+    is-loop: Loop Line (kruhová trasa)
+    empty: Zatím žádné linky
+    select: Vyberte řádek
+    all: Všechny společnosti
+    delete-confirm: Smazat tento řádek?
+    prefix-preview: Náhled odznaku indikátoru čáry
+  service:
+    title: Služby
+    local: Místní
+    add-placeholder: Název služby
+    delete-confirm: Smazat tuto službu? Všechna data zastavení budou ztracena.
+  station:
+    title: Stanice
+    add: Přidat stanici
+    add-existing: Přidat ze stávající stanice
+    link-title: Přidat stávající stanici k lince
+    select-existing: Vyberte stanici, kterou chcete přidat
+    inherited-info: Zděděné informace (pouze pro čtení)
+    edit: Upravit stanici
+    name: Název stanice
+    furigana: čtení (Hiragana)
+    en: Anglický název
+    ko: Korejské jméno
+    zh: Čínské jméno
+    note: Poznámka
+    trc: Třípísmenný kód
+    number: Číslo stanice
+    number-source: Řádek zobrazení čísla stanice
+    number-source-help: Vyberte, který kód linky má být použit pro označení čísla stanice této linky.
+    number-source-current-only: Pro tuto linku je k dispozici pouze aktuální kód linky.
+    number-source-current: Použít aktuální řádek [{prefix}] {name}
+    number-source-parent: Použít nadřazený řádek [{prefix}] {name}
+    areas: Odznaky tarifní zóny
+    empty: Vyberte řádek pro zobrazení stanic
+    no-station: Zatím žádné stanice
+    duplicate-number-warning: "Duplicitní čísla stanic na této lince: {numbers}"
+    delete-confirm: Odstranit tuto stanici z linky?
+    select: Vyberte stanici
+  sign:
+    style: styl
+    direction: Směr
+    flip: Směr převrácení
+    prev-station: Předchozí stanice
+    next-station: Další stanice
+    adjacent-select: Vyberte až 2 stanice
+    jreast: JR východní styl
+    jrwest: JR West Style
+    jrwestlarge: JR West Style (velký)
+    metrolong: Tokijské metro / styl metra Toei (široký)
+    metrolong-subtext: Podtext
+    metrolong-subtext-furigana: Furigana
+    metrolong-subtext-secondary: Sekundární jazyk
+    center-colors: Barvy středového čtverce
+  mode:
+    sign: Znamení stanice
+    linemap: Linková mapa
+  linemap:
+    orientation: Orientace
+    horizontal: Horizontální
+    vertical: Vertikální
+    range-start: Od
+    range-end: Komu
+    transit-filter: Zobrazit linky veřejné dopravy
+    font-size: Název stanice Velikost písma
+    overlap-warning-title: Bylo zjištěno překrývání štítků
+    overlap-warning: Některé názvy stanic se překrývají. Zkuste zmenšit velikost písma.
+    station-number-mode: Zobrazení čísla stanice
+    station-number-none: žádný
+    station-number-badge: Odznak
+    station-number-dot: Nahradit tečku
+    name-style: Styl názvu
+    name-style-normal: Normální
+    name-style-above: Nahoře
+    name-style-below: Níže
+    station-spacing: Rozteč stanic
+    primary-lang: Primární jazyk
+    secondary-lang: Sekundární jazyk
+    show-secondary-lang: Zobrazit
+    lang-1st: 1. jméno
+    lang-2nd: 2. jméno
+    lang-3rd: 3. jméno
+    lang-4th: 4. jméno
+    continuation: Indikátory pokračování
+    continuation-before: Zobrazit na začátku
+    continuation-after: Zobrazit na konci
+    swap: Prohoďte začátek a konec
+    loop-render-mode: Režim zobrazení smyčky
+    loop-as-linear: Zobrazit jako lineární trasu
+    name-side: Jméno Strana
+    name-side-left: Vlevo
+    name-side-right: Správně
+    services: Služby
+    services-placeholder: Všechny služby (single track)
+    show-passed-stations: Projeté stanice
+    passed-show: Zobrazit (vybledlé)
+    passed-hide-gap: Skrýt (mezera)
+    passed-hide-trim: Skrýt (oříznout)
+    service-name-style: Styl názvu služby
+    service-name-paren: (závorky)
+    service-name-badge: Odznak
+footer:
+  links:
+    title: Odkazy
+    description: Tvůrce webových stránek a sociálních profilů
+    website: webové stránky
+  development:
+    title: Rozvojové zdroje
+    description: Zdrojový kód, zprávy o chybách a požadavky na funkce
+    repository: úložiště GitHub
+    repository-description: Zdrojový kód a vydání
+    issues: Problémy
+    issues-description: Hlášení chyb a požadavky na funkce
+  notice: Toto je fanouškovská stránka. Všechny ochranné známky jsou majetkem příslušných železničních společností. Tato stránka není přidružena ani podporována žádnou železniční společností. Ukázková data a počáteční hodnoty mohou obsahovat falešné hodnoty.

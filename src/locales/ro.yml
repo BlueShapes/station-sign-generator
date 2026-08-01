@@ -1,0 +1,292 @@
+$site-name: Generator de semne de stație
+$og-image-path: /ogp.png
+meta:
+  title: Generator de semne feroviare | Ediția triunghi albastru (stil JR Est/Vest)
+  description: Un instrument gratuit și util pentru generarea indicatoarelor cu numele gării.
+  og-image-alt: Exemplu de imagine indicatoare a stației (stil JR East)
+  pwa:
+    name: Generator de semne de stație Ediția triunghi albastru
+    short-name: Semnul stației
+header:
+  title: Generator de semne de stație
+  edition: Ediția Triunghi Albastru
+  tooltip:
+    lang: Schimbați localitatea
+    share: Distribuiți acest instrument
+    share-options:
+      twitter: Twitter (fost X)
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      copy: Copiați adresa URL
+    copy: Adresa URL a fost copiată în clipboard.
+    share-message: Utilizați {name} pentru a genera indicatoare feroviare grozave!
+input:
+  save: Salvați ca imagine
+  image-size: Dimensiunea imaginii
+  direct:
+    swaplr: Schimbați la stânga și la dreapta
+    reset: Resetați intrările
+    reset-title: Resetați toate intrările
+    reset-confirm: Sigur doriți să resetați toate intrările? Această acțiune nu poate fi anulată.
+    base-color: Culoare companie
+    line-color: Culoarea liniei
+    local-lines: Linii
+    local-lines-prefix: Stenografia numelui liniei
+    local-lines-add: Adăugați linie
+    local-lines-empty: Adăugați linii mai sus pentru a selecta un prefix aici
+    lstation: Numele stației din stânga
+    lread: Subtextul stației din stânga
+    len: Nume alternativ al stației din stânga
+    lnum: Numărul stației din stânga (primar)
+    lnum2: Numărul stației din stânga (secundar)
+    station: Numele stației
+    read: Subtext al stației
+    en: Numele stației a doua limbă (engleză)
+    ch: Numele postului a treia limbă (chineză)
+    kp: Numele postului A patra limbă (coreeană)
+    num: Numărul stației (principal)
+    num2: Numărul stației (secundar)
+    trc: Codul stației
+    note: Notă stație (text mai mare sub numele stației)
+    rstation: Numele stației din dreapta
+    rread: Subtextul stației din dreapta
+    ren: Subtextul stației din dreapta
+    rnum: Numărul stației din dreapta (primar)
+    rnum2: Numărul stației din dreapta (secundar)
+    input-left: Informații stație din stânga
+    input-current: Informații despre stația curentă
+    input-right: Informații stația din dreapta
+    area: Zona Tarifă Gară
+    area-name: Numele zonei
+    center-colors: Culori Piața Centrală
+    export-copy: Copiați JSON
+    export-copy-done: Copiat!
+    export-download: Descărcați JSON
+    import: Importați JSON
+    import-modal-title: Importați date JSON
+    import-paste-label: Lipiți JSON
+    import-paste-placeholder: Inserați aici JSON exportat...
+    import-file-label: Încărcați fișierul JSON
+    import-submit: Import
+    import-error: "Date nevalide: {detail}"
+common:
+  preview: Previzualizare
+  add: Adăugați
+  cancel: Anulează
+  confirm: Resetați
+  confirm-title: Confirmați
+  theme-dark: Comutați la modul întunecat
+  theme-light: Comutați în modul de lumină
+  loading: Se încarcă...
+  loading-fonts: Se încarcă fonturile...
+  edit: Editați
+  delete: Ștergeți
+  save: Salvați
+  close: Închide
+error:
+  on-save: Mânerul funcției Salvarea a eșuat. Acesta este un comportament complet neașteptat, deoarece pânza este întotdeauna redată.
+  corrupted-cache: Datele salvate au fost corupte și au fost resetate la valorile implicite. Puteți continua să utilizați aplicația în mod normal.
+tabs:
+  simple: Intrare simplă
+  route-input: Din traseu
+  route-edit: Editați rutele
+  settings: Setări
+settings:
+  storage:
+    title: Stocarea fonturilor
+    indexeddb: IndexedDB (persistent)
+    memory: Numai memorie (sesiune)
+    memory-warning: Fonturile personalizate încărcate în această sesiune se vor pierde când pagina este închisă.
+  fonts:
+    builtin-title: Fonturi preinstalate
+    builtin-desc: Fonturi necesare pentru indicatoarele de stație. Nu poate fi eliminat.
+    preload: Preîncărcare
+    user-title: Fonturi personalizate
+    upload: Încărcați font
+    upload-modal-title: Încărcați font
+    select-file: Selectați fișierul fontului (.ttf, .otf, .woff, .woff2)
+    display-name: Nume afișat
+    family-name: Nume de familie de fonturi CSS
+    family-hint: Folosit în configurația de stil. Nu sunt permise spații.
+    upload-submit: Încărcați
+    empty: Nu au fost încărcate fonturi personalizate încă.
+    remove-all: Eliminați tot
+    remove-all-confirm: Eliminați toate fonturile personalizate? Acest lucru le șterge și din IndexedDB și nu poate fi anulat.
+    status:
+      idle: Nu este încărcat
+      loading: Se încarcă...
+      loaded: Încărcat
+      error: Eroare
+  images:
+    title: Imagini
+    upload: Încărcați imaginea
+    upload-modal-title: Încărcați imaginea
+    select-file: Selectați fișierul imagine
+    display-name: Nume imagine
+    upload-submit: Încărcați
+    empty: Nu au fost încărcate imagini încă.
+    remove-all: Eliminați tot
+    remove-all-confirm: Eliminați toate imaginile încărcate? Acest lucru le șterge și din IndexedDB și nu poate fi anulat.
+route:
+  download-sqlite: Descărcați SQLite
+  import-sqlite: Importă SQLite
+  import-sample: Încărcați date eșantion (linia Yamanote)
+  import-error:
+    invalid-file: Fișierul selectat nu este o bază de date SQLite validă.
+    missing-table: "Din baza de date lipsește un tabel obligatoriu: {detail}"
+    missing-column: "Din baza de date lipsește o coloană obligatorie: {detail}"
+  import-modal:
+    title: Importă baza de date
+    description: O bază de date existentă este deja prezentă. Cum ați dori să importați?
+    overwrite-desc: "Suprascriere: înlocuiți toate datele existente cu datele importate."
+    merge-desc: "Îmbinare: Adăugați date importate în baza de date existentă. Înregistrările conflictuale vor fi actualizate."
+    overwrite: Suprascrie
+    merge: Îmbinați
+  no-routes: Nu au fost găsite rute. Creați rute în fila „Editați rute”.
+  company:
+    title: Companii
+    add: Adăugați o companie
+    edit: Editați compania
+    name: Numele companiei
+    color: Culoare companie
+    station-number-style: Stil de număr de stație
+    station-number-style-jreast: Stil JR East
+    station-number-style-tokyometro: Stilul Metrou Tokyo / Metrou Toei
+    station-number-style-preview: Exemplu de insignă (folosind culoarea companiei ca culoare de linie)
+    empty: Nu există companii încă
+    delete-confirm: Ștergeți această companie? Liniile asociate vor fi, de asemenea, șterse.
+  special-zone:
+    title: Zone speciale
+    add: Adăugați o zonă
+    edit: Editare zonă
+    name: Numele zonei
+    abbreviation: Abreviere (1 caracter)
+    is-black: Umplere neagră
+    empty: Nicio zonă încă
+    delete-confirm: Ștergeți această zonă? Toate posturile care îl folosesc vor pierde această insignă.
+  line:
+    title: Linii
+    add: Adăugați linie
+    edit: Editare linie
+    name: Nume de linie
+    color: Culoarea liniei
+    prefix: Stenografia numelui liniei
+    priority: Prioritate
+    company: Compania
+    is-loop: Linie buclă (rută circulară)
+    empty: Încă nu există linii
+    select: Selectați o linie
+    all: Toate Companiile
+    delete-confirm: Ștergeți această linie?
+    prefix-preview: Previzualizarea insignei cu indicator de linie
+  service:
+    title: Servicii
+    local: Local
+    add-placeholder: Nume serviciu
+    delete-confirm: Ștergeți acest serviciu? Toate datele de oprire se vor pierde.
+  station:
+    title: Statii
+    add: Adăugați stație
+    add-existing: Adăugați din stația existentă
+    link-title: Adăugați stația existentă la linie
+    select-existing: Selectați o stație de adăugat
+    inherited-info: Informații moștenite (numai citire)
+    edit: Editați stația
+    name: Numele stației
+    furigana: Citirea (Hiragana)
+    en: Nume englezesc
+    ko: Nume coreean
+    zh: Nume chinezesc
+    note: Notă
+    trc: Cod cu trei litere
+    number: Numărul stației
+    number-source: Linia de afișare a numărului stației
+    number-source-help: Alegeți codul de linie care trebuie utilizat pentru insigna cu numărul de stație a acestei linii.
+    number-source-current-only: Numai codul de linie curent este disponibil pentru această linie.
+    number-source-current: Utilizați linia curentă [{prefix}] {name}
+    number-source-parent: Utilizați linia părinte [{prefix}] {name}
+    areas: Insignele zonei tarifare
+    empty: Selectați o linie pentru a vizualiza posturile
+    no-station: Încă nu există stații
+    duplicate-number-warning: "Numerele stației duplicate în această linie: {numbers}"
+    delete-confirm: Eliminați această stație de pe linie?
+    select: Selectați o stație
+  sign:
+    style: Stil
+    direction: Direcția
+    flip: Întoarceți direcția
+    prev-station: Stația anterioară
+    next-station: Următoarea stație
+    adjacent-select: Selectați până la 2 posturi
+    jreast: JR East Style
+    jrwest: JR West Style
+    jrwestlarge: JR West Style (mare)
+    metrolong: Metrou din Tokyo/Stil de metrou Toei (lat)
+    metrolong-subtext: Subtext
+    metrolong-subtext-furigana: Furigana
+    metrolong-subtext-secondary: Limba secundară
+    center-colors: Culori Piața Centrală
+  mode:
+    sign: Semnul stației
+    linemap: Harta liniilor
+  linemap:
+    orientation: Orientare
+    horizontal: Orizontală
+    vertical: Pe verticală
+    range-start: De la
+    range-end: Pentru a
+    transit-filter: Afișați liniile de transport public
+    font-size: Nume stație Dimensiune font
+    overlap-warning-title: S-a detectat suprapunerea etichetelor
+    overlap-warning: Unele nume de stații se suprapun. Încercați să reduceți dimensiunea fontului.
+    station-number-mode: Afișarea numărului stației
+    station-number-none: Niciuna
+    station-number-badge: Insigna
+    station-number-dot: Înlocuiește Dot
+    name-style: Stilul numelui
+    name-style-normal: Normal
+    name-style-above: Mai sus
+    name-style-below: Mai jos
+    station-spacing: Spațierea stațiilor
+    primary-lang: Limba primară
+    secondary-lang: Limba secundară
+    show-secondary-lang: Arată
+    lang-1st: primul nume
+    lang-2nd: al 2-lea nume
+    lang-3rd: al 3-lea nume
+    lang-4th: al 4-lea nume
+    continuation: Indicatori de continuare
+    continuation-before: Arată la început
+    continuation-after: Arată la sfârșit
+    swap: Schimbați începutul și sfârșitul
+    loop-render-mode: Modul de afișare în buclă
+    loop-as-linear: Afișați ca traseu liniar
+    name-side: Partea numelui
+    name-side-left: Stânga
+    name-side-right: Corect
+    services: Servicii
+    services-placeholder: Toate serviciile (single track)
+    show-passed-stations: Stații trecute
+    passed-show: Afișează (decolorat)
+    passed-hide-gap: Ascunde (decalaj)
+    passed-hide-trim: Ascunde (decupează)
+    service-name-style: Stilul numelui serviciului
+    service-name-paren: （paranteze）
+    service-name-badge: Insigna
+footer:
+  links:
+    title: Legături
+    description: Site-ul creatorului și profiluri sociale
+    website: Site-ul web
+  development:
+    title: Resurse de dezvoltare
+    description: Cod sursă, rapoarte de erori și solicitări de funcții
+    repository: Depozitul GitHub
+    repository-description: Cod sursă și versiuni
+    issues: Probleme
+    issues-description: Rapoarte de erori și solicitări de funcții
+  notice: Acesta este un site web creat de fani. Toate mărcile comerciale sunt proprietatea companiilor feroviare respective. Acest site nu este afiliat sau susținut de nicio companie feroviară. Datele eșantioane și valorile inițiale pot conține valori false.

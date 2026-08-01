@@ -1,0 +1,292 @@
+$site-name: स्टेशन साइन जेनरेटर
+$og-image-path: /ogp.png
+meta:
+  title: रेलवे साइन जेनरेटर | नीला त्रिभुज संस्करण (जेआर पूर्व/पश्चिम शैली)
+  description: रेलवे स्टेशन के नाम चिन्ह बनाने के लिए एक निःशुल्क और उपयोगी उपकरण।
+  og-image-alt: नमूना स्टेशन साइन छवि (जेआर पूर्व शैली)
+  pwa:
+    name: स्टेशन साइन जेनरेटर नीला त्रिभुज संस्करण
+    short-name: स्टेशन चिन्ह
+header:
+  title: स्टेशन साइन जेनरेटर
+  edition: नीला त्रिभुज संस्करण
+  tooltip:
+    lang: स्थान बदलें
+    share: इस टूल को साझा करें
+    share-options:
+      twitter: ट्विटर (पूर्व में एक्स)
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      copy: यूआरएल कॉपी करें
+    copy: यूआरएल को आपके क्लिपबोर्ड पर कॉपी किया गया।
+    share-message: बेहतरीन रेलवे संकेत उत्पन्न करने के लिए {name} का उपयोग करें!
+input:
+  save: छवि के रूप में सहेजें
+  image-size: छवि का आकार
+  direct:
+    swaplr: बाएँ और दाएँ स्वैप करें
+    reset: इनपुट रीसेट करें
+    reset-title: सभी इनपुट रीसेट करें
+    reset-confirm: क्या आप वाकई सभी इनपुट रीसेट करना चाहते हैं? इस एक्शन को वापस नहीं किया जा सकता।
+    base-color: कंपनी का रंग
+    line-color: रेखा का रंग
+    local-lines: पंक्तियाँ
+    local-lines-prefix: पंक्ति नाम आशुलिपि
+    local-lines-add: पंक्ति जोड़ें
+    local-lines-empty: यहां एक उपसर्ग चुनने के लिए ऊपर पंक्तियाँ जोड़ें
+    lstation: बाएँ स्टेशन का नाम
+    lread: वाम स्टेशन सबटेक्स्ट
+    len: वाम स्टेशन वैकल्पिक नाम
+    lnum: बायां स्टेशन नंबर (प्राथमिक)
+    lnum2: बायां स्टेशन नंबर (माध्यमिक)
+    station: स्टेशन का नाम
+    read: स्टेशन सबटेक्स्ट
+    en: स्टेशन का नाम दूसरी भाषा (अंग्रेजी)
+    ch: स्टेशन का नाम तीसरी भाषा (चीनी)
+    kp: स्टेशन का नाम चौथी भाषा (कोरियाई)
+    num: स्टेशन संख्या (प्राथमिक)
+    num2: स्टेशन संख्या (माध्यमिक)
+    trc: स्टेशन कोड
+    note: स्टेशन नोट (स्टेशन नाम के नीचे बड़ा टेक्स्ट)
+    rstation: सही स्टेशन का नाम
+    rread: राइट स्टेशन सबटेक्स्ट
+    ren: राइट स्टेशन सबटेक्स्ट
+    rnum: सही स्टेशन नंबर (प्राथमिक)
+    rnum2: दायां स्टेशन नंबर (माध्यमिक)
+    input-left: वाम स्टेशन की जानकारी
+    input-current: वर्तमान स्टेशन की जानकारी
+    input-right: सही स्टेशन की जानकारी
+    area: स्टेशन किराया क्षेत्र
+    area-name: क्षेत्र का नाम
+    center-colors: केंद्र चौकोर रंग
+    export-copy: JSON कॉपी करें
+    export-copy-done: नकल की गई!
+    export-download: JSON डाउनलोड करें
+    import: JSON आयात करें
+    import-modal-title: JSON डेटा आयात करें
+    import-paste-label: JSON चिपकाएँ
+    import-paste-placeholder: निर्यातित JSON को यहां चिपकाएँ...
+    import-file-label: JSON फ़ाइल अपलोड करें
+    import-submit: आयात करें
+    import-error: "अमान्य डेटा: {detail}"
+common:
+  preview: पूर्वावलोकन
+  add: जोड़ें
+  cancel: रद्द करें
+  confirm: रीसेट करें
+  confirm-title: पुष्टि करें
+  theme-dark: डार्क मोड पर स्विच करें
+  theme-light: लाइट मोड पर स्विच करें
+  loading: लोड हो रहा है...
+  loading-fonts: फ़ॉन्ट लोड हो रहा है...
+  edit: संपादित करें
+  delete: हटाएँ
+  save: सहेजें
+  close: बंद करें
+error:
+  on-save: फ़ंक्शन हैंडलसेव विफल रहा. यह पूरी तरह से अप्रत्याशित व्यवहार है क्योंकि कैनवास हमेशा प्रस्तुत किया जाता है।
+  corrupted-cache: सहेजा गया डेटा दूषित हो गया था और डिफ़ॉल्ट पर रीसेट कर दिया गया है। आप ऐप का उपयोग सामान्य रूप से जारी रख सकते हैं।
+tabs:
+  simple: सरल इनपुट
+  route-input: रूट से
+  route-edit: मार्ग संपादित करें
+  settings: सेटिंग्स
+settings:
+  storage:
+    title: फ़ॉन्ट संग्रहण
+    indexeddb: IndexedDB (निरंतर)
+    memory: केवल मेमोरी (सत्र)
+    memory-warning: पृष्ठ बंद होने पर इस सत्र में अपलोड किए गए कस्टम फ़ॉन्ट खो जाएंगे।
+  fonts:
+    builtin-title: फ़ॉन्ट्स पहले से स्थापित
+    builtin-desc: स्टेशन चिह्नों के लिए आवश्यक फ़ॉन्ट. हटाया नहीं जा सकता.
+    preload: प्रीलोड
+    user-title: कस्टम फ़ॉन्ट्स
+    upload: फ़ॉन्ट अपलोड करें
+    upload-modal-title: फ़ॉन्ट अपलोड करें
+    select-file: फ़ॉन्ट फ़ाइल चुनें (.ttf, .otf, .woff, .woff2)
+    display-name: प्रदर्शन नाम
+    family-name: सीएसएस फ़ॉन्ट परिवार का नाम
+    family-hint: शैली विन्यास में उपयोग किया जाता है। किसी रिक्त स्थान की अनुमति नहीं है.
+    upload-submit: अपलोड करें
+    empty: अभी तक कोई कस्टम फ़ॉन्ट अपलोड नहीं किया गया है.
+    remove-all: सभी हटाएँ
+    remove-all-confirm: सभी कस्टम फ़ॉन्ट हटाएं? इससे वे IndexedDB से भी साफ़ हो जाते हैं और इन्हें पूर्ववत नहीं किया जा सकता।
+    status:
+      idle: लोड नहीं किया गया
+      loading: लोड हो रहा है...
+      loaded: लदा हुआ
+      error: त्रुटि
+  images:
+    title: छवियाँ
+    upload: छवि अपलोड करें
+    upload-modal-title: छवि अपलोड करें
+    select-file: छवि फ़ाइल का चयन करें
+    display-name: छवि का नाम
+    upload-submit: अपलोड करें
+    empty: अभी तक कोई चित्र अपलोड नहीं किया गया.
+    remove-all: सभी हटाएँ
+    remove-all-confirm: अपलोड की गई सभी छवियां हटाएं? इससे वे IndexedDB से भी साफ़ हो जाते हैं और इन्हें पूर्ववत नहीं किया जा सकता।
+route:
+  download-sqlite: SQLite डाउनलोड करें
+  import-sqlite: SQLite आयात करें
+  import-sample: नमूना डेटा लोड करें (यमानोट लाइन)
+  import-error:
+    invalid-file: चयनित फ़ाइल वैध SQLite डेटाबेस नहीं है।
+    missing-table: "डेटाबेस में एक आवश्यक तालिका गुम है: {detail}"
+    missing-column: "डेटाबेस में एक आवश्यक कॉलम गुम है: {detail}"
+  import-modal:
+    title: डेटाबेस आयात करें
+    description: एक मौजूदा डेटाबेस पहले से मौजूद है. आप कैसे आयात करना चाहेंगे?
+    overwrite-desc: "अधिलेखित करें: सभी मौजूदा डेटा को आयातित डेटा से बदलें।"
+    merge-desc: "मर्ज: आयातित डेटा को मौजूदा डेटाबेस में जोड़ें। परस्पर विरोधी रिकॉर्ड अद्यतन किए जाएंगे."
+    overwrite: अधिलेखित करें
+    merge: विलय
+  no-routes: कोई मार्ग नहीं मिला. कृपया "मार्ग संपादित करें" टैब में मार्ग बनाएं।
+  company:
+    title: कंपनियाँ
+    add: कंपनी जोड़ें
+    edit: कंपनी संपादित करें
+    name: कंपनी का नाम
+    color: कंपनी का रंग
+    station-number-style: स्टेशन संख्या शैली
+    station-number-style-jreast: जेआर पूर्व शैली
+    station-number-style-tokyometro: टोक्यो मेट्रो/टोई सबवे शैली
+    station-number-style-preview: नमूना बैज (लाइन रंग के रूप में कंपनी के रंग का उपयोग करके)
+    empty: अभी तक कोई कंपनी नहीं
+    delete-confirm: इस कंपनी को हटाएं? संबद्ध पंक्तियाँ भी हटा दी जाएंगी.
+  special-zone:
+    title: विशेष क्षेत्र
+    add: ज़ोन जोड़ें
+    edit: जोन संपादित करें
+    name: जोन का नाम
+    abbreviation: संक्षिप्तीकरण (1 अक्षर)
+    is-black: काला भराव
+    empty: अभी तक कोई जोन नहीं
+    delete-confirm: यह क्षेत्र हटाएं? इसका उपयोग करने वाले सभी स्टेशन यह बैज खो देंगे।
+  line:
+    title: पंक्तियाँ
+    add: पंक्ति जोड़ें
+    edit: पंक्ति संपादित करें
+    name: पंक्ति का नाम
+    color: रेखा का रंग
+    prefix: पंक्ति नाम आशुलिपि
+    priority: प्राथमिकता
+    company: कंपनी
+    is-loop: लूप लाइन (गोलाकार मार्ग)
+    empty: अभी तक कोई पंक्ति नहीं
+    select: एक पंक्ति चुनें
+    all: सभी कंपनियाँ
+    delete-confirm: यह पंक्ति हटाएं?
+    prefix-preview: लाइन सूचक बैज पूर्वावलोकन
+  service:
+    title: सेवाएँ
+    local: स्थानीय
+    add-placeholder: सेवा का नाम
+    delete-confirm: यह सेवा हटाएं? सभी स्टॉप डेटा नष्ट हो जाएंगे.
+  station:
+    title: स्टेशन
+    add: स्टेशन जोड़ें
+    add-existing: मौजूदा स्टेशन से जोड़ें
+    link-title: मौजूदा स्टेशन को लाइन में जोड़ें
+    select-existing: जोड़ने के लिए एक स्टेशन चुनें
+    inherited-info: विरासत में मिली जानकारी (केवल पढ़ने के लिए)
+    edit: स्टेशन संपादित करें
+    name: स्टेशन का नाम
+    furigana: पढ़ना (हीरागाना)
+    en: अंग्रेजी नाम
+    ko: कोरियाई नाम
+    zh: चीनी नाम
+    note: नोट
+    trc: तीन अक्षर का कोड
+    number: स्टेशन नंबर
+    number-source: स्टेशन नंबर डिस्प्ले लाइन
+    number-source-help: चुनें कि इस लाइन के स्टेशन नंबर बैज के लिए किस लाइन कोड का उपयोग किया जाना चाहिए।
+    number-source-current-only: इस लाइन के लिए केवल वर्तमान लाइन कोड ही उपलब्ध है।
+    number-source-current: वर्तमान लाइन का उपयोग करें [{prefix}] {name}
+    number-source-parent: मूल पंक्ति का उपयोग करें [{prefix}] {name}
+    areas: किराया क्षेत्र बैज
+    empty: स्टेशन देखने के लिए एक लाइन चुनें
+    no-station: अभी तक कोई स्टेशन नहीं
+    duplicate-number-warning: "इस लाइन में डुप्लिकेट स्टेशन नंबर: {numbers}"
+    delete-confirm: इस स्टेशन को लाइन से हटाएं?
+    select: एक स्टेशन चुनें
+  sign:
+    style: अंदाज
+    direction: दिशा
+    flip: दिशा पलटें
+    prev-station: पिछला स्टेशन
+    next-station: अगला स्टेशन
+    adjacent-select: अधिकतम 2 स्टेशन चुनें
+    jreast: जेआर ईस्ट स्टाइल
+    jrwest: जेआर वेस्ट स्टाइल
+    jrwestlarge: जेआर वेस्ट स्टाइल (बड़ा)
+    metrolong: टोक्यो मेट्रो / टोई सबवे शैली (चौड़ा)
+    metrolong-subtext: उपपाठ
+    metrolong-subtext-furigana: फुरिगाना
+    metrolong-subtext-secondary: द्वितीयक भाषा
+    center-colors: केंद्र चौकोर रंग
+  mode:
+    sign: स्टेशन चिन्ह
+    linemap: रेखा मानचित्र
+  linemap:
+    orientation: अभिमुखीकरण
+    horizontal: क्षैतिज
+    vertical: लंबवत
+    range-start: से
+    range-end: को
+    transit-filter: पारगमन रेखाएँ दिखाएँ
+    font-size: स्टेशन का नाम फ़ॉन्ट आकार
+    overlap-warning-title: लेबल ओवरलैप का पता चला
+    overlap-warning: कुछ स्टेशनों के नाम ओवरलैप होते हैं। फ़ॉन्ट का आकार कम करने का प्रयास करें.
+    station-number-mode: स्टेशन संख्या प्रदर्शन
+    station-number-none: कोई नहीं
+    station-number-badge: बिल्ला
+    station-number-dot: डॉट बदलें
+    name-style: नाम शैली
+    name-style-normal: सामान्य
+    name-style-above: ऊपर
+    name-style-below: नीचे
+    station-spacing: स्टेशन रिक्ति
+    primary-lang: प्राथमिक भाषा
+    secondary-lang: द्वितीयक भाषा
+    show-secondary-lang: दिखाओ
+    lang-1st: पहला नाम
+    lang-2nd: दूसरा नाम
+    lang-3rd: तीसरा नाम
+    lang-4th: चौथा नाम
+    continuation: निरंतरता संकेतक
+    continuation-before: प्रारंभ में दिखाएँ
+    continuation-after: अंत में दिखाएँ
+    swap: आरंभ और अंत की अदला-बदली करें
+    loop-render-mode: लूप डिस्प्ले मोड
+    loop-as-linear: रैखिक मार्ग के रूप में दिखाएँ
+    name-side: नाम पक्ष
+    name-side-left: वाम
+    name-side-right: ठीक है
+    services: सेवाएँ
+    services-placeholder: सभी सेवाएँ (एकल ट्रैक)
+    show-passed-stations: उत्तीर्ण स्टेशन
+    passed-show: दिखाएँ (फीका)
+    passed-hide-gap: छुपाएं (अंतराल)
+    passed-hide-trim: छिपाएँ (काट-छाँट)
+    service-name-style: सेवा नाम शैली
+    service-name-paren: (कोष्ठक)
+    service-name-badge: बिल्ला
+footer:
+  links:
+    title: कड़ियाँ
+    description: निर्माता वेबसाइट और सामाजिक प्रोफ़ाइल
+    website: वेबसाइट
+  development:
+    title: विकास संसाधन
+    description: स्रोत कोड, बग रिपोर्ट और सुविधा अनुरोध
+    repository: गिटहब रिपॉजिटरी
+    repository-description: स्रोत कोड और रिलीज़
+    issues: मुद्दे
+    issues-description: बग रिपोर्ट और सुविधा अनुरोध
+  notice: यह एक प्रशंसक-निर्मित वेबसाइट है। सभी ट्रेडमार्क उनकी संबंधित रेलवे कंपनियों की संपत्ति हैं। यह साइट किसी भी रेलवे कंपनी से संबद्ध या समर्थित नहीं है। नमूना डेटा और प्रारंभिक मूल्यों में नकली मान हो सकते हैं।

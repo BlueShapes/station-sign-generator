@@ -1,16 +1,17 @@
 $site-name: "Station Sign Generator"
-$site-description: "Let's create your new station sign!"
 $og-image-path: "/ogp.png"
 
 meta:
   title: Railway Sign Generator | Blue Triangle Edition (JR East/West style)
   description: A free and useful tool for generating railway station name signs.
+  og-image-alt: Sample station sign image (JR East style)
   pwa: 
     name: Station Sign Generator Blue Triangle Edition
     short-name: Station Sign
 
 header:
-  title: "Railway Sign Generator (Blue Triangle Edition)"
+  title: Station Sign Generator
+  edition: Blue Triangle Edition
   tooltip:
     lang: Change Locale
     share: Share This Tool
