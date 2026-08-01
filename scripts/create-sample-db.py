@@ -114,29 +114,29 @@ YAMANOTE_STATIONS = [
     (5,  "上野",            "うえの",                "Ueno",             "우에노",                "上野",          "UEN"),
     (6,  "鶯谷",            "うぐいすだに",          "Uguisudani",       "우구이스다니",          "莺谷",          None),
     (7,  "日暮里",          "にっぽり",              "Nippori",          "닛포리",                "日暮里",        "NPR"),
-    (8,  "西日暮里",        "にしにっぽり",          "Nishi-Nippori",    "니시닛포리",            "西日暮里",      None),
+    (8,  "西日暮里",        "にしにっぽり",          "Nishi-Nippori",    "니시 닛포리",           "西日暮里",      None),
     (9,  "田端",            "たばた",                "Tabata",           "다바타",                "田端",          None),
     (10, "駒込",            "こまごめ",              "Komagome",         "고마고메",              "驹込",          None),
-    (11, "巣鴨",            "すがも",                "Sugamo",           "스가모",                "巣鸭",          None),
-    (12, "大塚",            "おおつか",              "Otsuka",           "오쓰카",                "大塚",          None),
+    (11, "巣鴨",            "すがも",                "Sugamo",           "스가모",                "巢鸭",          None),
+    (12, "大塚",            "おおつか",              "Ōtsuka",           "오츠카",                "大塚",          None),
     (13, "池袋",            "いけぶくろ",            "Ikebukuro",        "이케부쿠로",            "池袋",          "IKB"),
     (14, "目白",            "めじろ",                "Mejiro",           "메지로",                "目白",          None),
     (15, "高田馬場",        "たかだのばば",          "Takadanobaba",     "다카다노바바",          "高田马场",      None),
-    (16, "新大久保",        "しんおおくぼ",          "Shin-Okubo",       "신오쿠보",              "新大久保",      None),
+    (16, "新大久保",        "しんおおくぼ",          "Shin-Ōkubo",       "신 오쿠보",             "新大久保",      None),
     (17, "新宿",            "しんじゅく",            "Shinjuku",         "신주쿠",                "新宿",          "SJK"),
     (18, "代々木",          "よよぎ",                "Yoyogi",           "요요기",                "代代木",        None),
     (19, "原宿",            "はらじゅく",            "Harajuku",         "하라주쿠",              "原宿",          None),
     (20, "渋谷",            "しぶや",                "Shibuya",          "시부야",                "涩谷",          "SBY"),
-    (21, "恵比寿",          "えびす",                "Ebisu",            "에비스",                "恵比寿",        "EBS"),
-    (22, "目黒",            "めぐろ",                "Meguro",           "메지로",                "目黒",          None),
+    (21, "恵比寿",          "えびす",                "Ebisu",            "에비스",                "惠比寿",        "EBS"),
+    (22, "目黒",            "めぐろ",                "Meguro",           "메구로",                "目黑",          None),
     (23, "五反田",          "ごたんだ",              "Gotanda",          "고탄다",                "五反田",        None),
-    (24, "大崎",            "おおさき",              "Osaki",            "오사키",                "大崎",          "OSK"),
+    (24, "大崎",            "おおさき",              "Ōsaki",            "오사키",                "大崎",          "OSK"),
     (25, "品川",            "しながわ",              "Shinagawa",        "시나가와",              "品川",          "SGW"),
     (26, "高輪ゲートウェイ", "たかなわげーとうぇい",  "Takanawa Gateway", "다카나와 게이트웨이",   "高轮Gateway",   "TGW"),
     (27, "田町",            "たまち",                "Tamachi",          "다마치",                "田町",          None),
-    (28, "浜松町",          "はままつちょう",        "Hamamatsuchō",     "하마마쓰초",            "滨松町",        "HMC"),
+    (28, "浜松町",          "はままつちょう",        "Hamamatsuchō",     "하마마츠초",            "滨松町",        "HMC"),
     (29, "新橋",            "しんばし",              "Shimbashi",        "신바시",                "新桥",          "SMB"),
-    (30, "有楽町",          "ゆうらくちょう",        "Yūrakucho",        "유라쿠초",              "有乐町",        None),
+    (30, "有楽町",          "ゆうらくちょう",        "Yūrakuchō",        "유라쿠초",              "有乐町",        None),
 ]
 
 # ── Keihin-Tohoku / Negishi Line shared stations ──────────────────────────────
@@ -166,20 +166,20 @@ SHARED_JY_JK = [
 JK_ONLY_STATIONS = [
     # ── Southern section: Ofuna → Oimachi (JK01 - JK19) ──────────────────────
     ( 1, "大船",            "おおふな",             "Ōfuna",            "오후나",                "大船",            "OFN", []),
-    ( 2, "本郷台",          "ほんごうだい",         "Hongōdai",         "혼고다이",              "本郷台",          None, ["zone-yokohama"]),
+    ( 2, "本郷台",          "ほんごうだい",         "Hongōdai",         "혼고다이",              "本乡台",          None, ["zone-yokohama"]),
     ( 3, "港南台",          "こうなんだい",         "Kōnandai",         "고난다이",              "港南台",          None, ["zone-yokohama"]),
     ( 4, "洋光台",          "ようこうだい",         "Yōkōdai",          "요코다이",              "洋光台",          None, ["zone-yokohama"]),
     ( 5, "新杉田",          "しんすぎた",           "Shin-Sugita",      "신스기타",              "新杉田",          None, ["zone-yokohama"]),
-    ( 6, "磯子",            "いそご",               "Isogo",            "이소고",                "磯子",            None, ["zone-yokohama"]),
+    ( 6, "磯子",            "いそご",               "Isogo",            "이소고",                "矶子",            None, ["zone-yokohama"]),
     ( 7, "根岸",            "ねぎし",               "Negishi",          "네기시",                "根岸",            None, ["zone-yokohama"]),
     ( 8, "山手",            "やまて",               "Yamate",           "야마테",                "山手",            None, ["zone-yokohama"]),
     ( 9, "石川町",          "いしかわちょう",       "Ishikawachō",      "이시카와초",            "石川町",          None, ["zone-yokohama"]),
-    (10, "関内",            "かんない",             "Kannai",           "간나이",                "関内",            None, ["zone-yokohama"]),
-    (11, "桜木町",          "さくらぎちょう",       "Sakuragichō",      "사쿠라기초",            "桜木町",          None, ["zone-yokohama"]),
-    (12, "横浜",            "よこはま",             "Yokohama",         "요코하마",              "横浜",            "YHM", ["zone-yokohama"]),
-    (13, "東神奈川",        "ひがしかながわ",       "Higashi-Kanagawa", "히가시카나가와",        "東神奈川",        None, ["zone-yokohama"]),
+    (10, "関内",            "かんない",             "Kannai",           "간나이",                "关内",            None, ["zone-yokohama"]),
+    (11, "桜木町",          "さくらぎちょう",       "Sakuragichō",      "사쿠라기초",            "樱木町",          None, ["zone-yokohama"]),
+    (12, "横浜",            "よこはま",             "Yokohama",         "요코하마",              "横滨",            "YHM", ["zone-yokohama"]),
+    (13, "東神奈川",        "ひがしかながわ",       "Higashi-Kanagawa", "히가시카나가와",        "东神奈川",        None, ["zone-yokohama"]),
     (14, "新子安",          "しんこやす",           "Shin-Koyasu",      "신코야스",              "新子安",          None, ["zone-yokohama"]),
-    (15, "鶴見",            "つるみ",               "Tsurumi",          "쓰루미",                "鶴見",            None, ["zone-yokohama"]),
+    (15, "鶴見",            "つるみ",               "Tsurumi",          "츠루미",                "鹤见",            None, ["zone-yokohama"]),
     (16, "川崎",            "かわさき",             "Kawasaki",         "가와사키",              "川崎",            "KWS", ["zone-yokohama"]),
     (17, "蒲田",            "かまた",               "Kamata",           "가마타",                "蒲田",            None, ["zone-tokyo23ku"]),
     (18, "大森",            "おおもり",             "Ōmori",            "오모리",                "大森",            None, ["zone-tokyo23ku"]),
@@ -188,9 +188,9 @@ JK_ONLY_STATIONS = [
     # (JK20 - JK34 are Yamanote Line section stations: Shinagawa to Tabata)
 
     # ── Northern section: Kami-Nakazato → Omiya (JK35 - JK47) ──────────────────
-    (35, "上中里",          "かみなかざと",         "Kami-Nakazato",    "가미나카자토",          "上中里",          None, ["zone-tokyo23ku"]),
+    (35, "上中里",          "かみなかざと",         "Kami-Nakazato",    "가미 나카자토",         "上中里",          None, ["zone-tokyo23ku"]),
     (36, "王子",            "おうじ",               "Ōji",              "오지",                  "王子",            None, ["zone-tokyo23ku"]),
-    (37, "東十条",          "ひがしじゅうじょう",   "Higashi-Jūjō",     "히가시주조",            "東十条",          None, ["zone-tokyo23ku"]),
+    (37, "東十条",          "ひがしじゅうじょう",   "Higashi-Jūjō",     "히가시주조",            "东十条",          None, ["zone-tokyo23ku"]),
     (38, "赤羽",            "あかばね",             "Akabane",          "아카바네",              "赤羽",            "ABN", ["zone-tokyo23ku"]),
     (39, "川口",            "かわぐち",             "Kawaguchi",        "가와구치",              "川口",            None, []),
     (40, "西川口",          "にしかわぐち",         "Nishi-Kawaguchi",  "니시카와구치",          "西川口",          None, []),
@@ -199,8 +199,8 @@ JK_ONLY_STATIONS = [
     (43, "浦和",            "うらわ",               "Urawa",            "우라와",                "浦和",            "URW", []),
     (44, "北浦和",          "きたうらわ",           "Kita-Urawa",       "기타우라와",            "北浦和",          None, []),
     (45, "与野",            "よの",                 "Yono",             "요노",                  "与野",            None, []),
-    (46, "さいたま新都心",  "さいたましんとしん",   "Saitama-Shintoshin", "사이타마신토신",      "さいたま新都心",  None, []),
-    (47, "大宮",            "おおみや",             "Ōmiya",            "오미야",                "大宮",            "OMY", []),
+    (46, "さいたま新都心",  "さいたましんとしん",   "Saitama-Shintoshin", "사이타마 신토신",     "埼玉新都心",      None, []),
+    (47, "大宮",            "おおみや",             "Ōmiya",            "오미야",                "大宫",            "OMY", []),
 ]
 
 
@@ -224,17 +224,17 @@ JS_STATIONS = [
     # js_num, name, furigana, en, ko, zh, tlc, zones, reuse_id
     ( 6, "逗子",       "ずし",           "Zushi",         "즈시",      "逗子",     None,  [],                          None),
     ( 7, "鎌倉",       "かまくら",       "Kamakura",      "가마쿠라",  "镰仓",     None,  [],                          None),
-    ( 8, "北鎌倉",     "きたかまくら",   "Kita-Kamakura", "기타가마쿠라","北鎌倉", None,  [],                          None),
+    ( 8, "北鎌倉",     "きたかまくら",   "Kita-Kamakura", "기타 카마쿠라","北镰仓", None,  [],                          None),
     ( 9, "大船",       "おおふな",       "Ōfuna",         "오후나",    "大船",     "OFN", [],                          "station-jk01"),
-    (10, "戸塚",       "とつか",         "Totsuka",       "도쓰카",    "户冢",     "TTK", ["zone-yokohama"],           None),
-    (11, "東戸塚",     "ひがしとつか",   "Higashi-Totsuka","히가시도쓰카","東户冢", None,  ["zone-yokohama"],           None),
+    (10, "戸塚",       "とつか",         "Totsuka",       "도츠카",    "户冢",     "TTK", ["zone-yokohama"],           None),
+    (11, "東戸塚",     "ひがしとつか",   "Higashi-Totsuka","히가시 토츠카","东户冢", None,  ["zone-yokohama"],           None),
     (12, "保土ヶ谷",   "ほどがや",       "Hodogaya",      "호도가야",  "保土谷",   None,  ["zone-yokohama"],           None),
-    (13, "横浜",       "よこはま",       "Yokohama",      "요코하마",  "横浜",     "YHM", ["zone-yokohama"],           "station-jk12"),
+    (13, "横浜",       "よこはま",       "Yokohama",      "요코하마",  "横滨",     "YHM", ["zone-yokohama"],           "station-jk12"),
     (14, "新川崎",     "しんかわさき",   "Shin-Kawasaki", "신카와사키","新川崎",   None,  [],                          None),
-    (15, "武蔵小杉",   "むさしこすぎ",   "Musashi-Kosugi","무사시코스기","武蔵小杉","MKG", [],                         None),
-    (16, "西大井",     "にしおおい",     "Nishi-Ōi",      "니시오이",  "西大井",   None,  ["zone-tokyo23ku"],          None),
-    (17, "大崎",       "おおさき",       "Osaki",         "오사키",    "大崎",     "OSK", ["zone-yamanote", "zone-tokyo23ku"], "station-jy24"),
-    (18, "恵比寿",     "えびす",         "Ebisu",         "에비스",    "恵比寿",   "EBS", ["zone-yamanote", "zone-tokyo23ku"], "station-jy21"),
+    (15, "武蔵小杉",   "むさしこすぎ",   "Musashi-Kosugi","무사시 코스기","武藏小杉","MKG", [],                         None),
+    (16, "西大井",     "にしおおい",     "Nishi-Ōi",      "니시 오이",  "西大井",   None,  ["zone-tokyo23ku"],          None),
+    (17, "大崎",       "おおさき",       "Ōsaki",         "오사키",    "大崎",     "OSK", ["zone-yamanote", "zone-tokyo23ku"], "station-jy24"),
+    (18, "恵比寿",     "えびす",         "Ebisu",         "에비스",    "惠比寿",   "EBS", ["zone-yamanote", "zone-tokyo23ku"], "station-jy21"),
     (19, "渋谷",       "しぶや",         "Shibuya",       "시부야",    "涩谷",     "SBY", ["zone-yamanote", "zone-tokyo23ku"], "station-jy20"),
     (20, "新宿",       "しんじゅく",     "Shinjuku",      "신주쿠",    "新宿",     "SJK", ["zone-yamanote", "zone-tokyo23ku"], "station-jy17"),
     (21, "池袋",       "いけぶくろ",     "Ikebukuro",     "이케부쿠로","池袋",     "IKB", ["zone-yamanote", "zone-tokyo23ku"], "station-jy13"),
@@ -274,29 +274,29 @@ JS_SERVICE_STOPS = {
 # (m_num, primary_name, furigana, english)
 MARUNOUCHI_STATIONS = [
     ( 1, "荻窪",        "おぎくぼ",        "Ogikubo"),
-    ( 2, "南阿佐ヶ谷",  "みなみあさがや",  "Minami-Asagaya"),
-    ( 3, "新高円寺",    "しんこうえんじ",  "Shin-Koenji"),
-    ( 4, "東高円寺",    "ひがしこうえんじ","Higashi-Koenji"),
-    ( 5, "新中野",      "しんなかの",      "Shin-Nakano"),
-    ( 6, "中野坂上",    "なかのさかうえ",  "Nakano-Sakaue"),
-    ( 7, "西新宿",      "にししんじゅく",  "Nishi-Shinjuku"),
+    ( 2, "南阿佐ヶ谷",  "みなみあさがや",  "Minami-asagaya"),
+    ( 3, "新高円寺",    "しんこうえんじ",  "Shin-koenji"),
+    ( 4, "東高円寺",    "ひがしこうえんじ","Higashi-koenji"),
+    ( 5, "新中野",      "しんなかの",      "Shin-nakano"),
+    ( 6, "中野坂上",    "なかのさかうえ",  "Nakano-sakaue"),
+    ( 7, "西新宿",      "にししんじゅく",  "Nishi-shinjuku"),
     ( 8, "新宿",        "しんじゅく",      "Shinjuku"),
-    ( 9, "新宿三丁目",  "しんじゅくさんちょうめ", "Shinjuku-Sanchome"),
-    (10, "新宿御苑前",  "しんじゅくぎょえんまえ", "Shinjukugyoen-mae"),
-    (11, "四谷三丁目",  "よつやさんちょうめ",     "Yotsuya-Sanchome"),
+    ( 9, "新宿三丁目",  "しんじゅくさんちょうめ", "Shinjuku-sanchome"),
+    (10, "新宿御苑前",  "しんじゅくぎょえんまえ", "Shinjuku-gyoemmae"),
+    (11, "四谷三丁目",  "よつやさんちょうめ",     "Yotsuya-sanchome"),
     (12, "四ツ谷",      "よつや",          "Yotsuya"),
-    (13, "赤坂見附",    "あかさかみつけ",  "Akasaka-Mitsuke"),
-    (14, "国会議事堂前","こっかいぎじどうまえ",   "Kokkai-Gijidomae"),
+    (13, "赤坂見附",    "あかさかみつけ",  "Akasaka-mitsuke"),
+    (14, "国会議事堂前","こっかいぎじどうまえ",   "Kokkai-gijidomae"),
     (15, "霞ヶ関",      "かすみがせき",    "Kasumigaseki"),
     (16, "銀座",        "ぎんざ",          "Ginza"),
     (17, "東京",        "とうきょう",      "Tokyo"),
     (18, "大手町",      "おおてまち",      "Otemachi"),
     (19, "淡路町",      "あわじちょう",    "Awajicho"),
     (20, "御茶ノ水",    "おちゃのみず",    "Ochanomizu"),
-    (21, "本郷三丁目",  "ほんごうさんちょうめ",   "Hongo-Sanchome"),
+    (21, "本郷三丁目",  "ほんごうさんちょうめ",   "Hongo-sanchome"),
     (22, "後楽園",      "こうらくえん",    "Korakuen"),
     (23, "茗荷谷",      "みょうがだに",    "Myogadani"),
-    (24, "新大塚",      "しんおおつか",    "Shin-Otsuka"),
+    (24, "新大塚",      "しんおおつか",    "Shin-otsuka"),
     (25, "池袋",        "いけぶくろ",      "Ikebukuro"),
 ]
 
@@ -305,9 +305,9 @@ MARUNOUCHI_STATIONS = [
 # Mb03–Mb05 are unique to the branch.
 # (mb_num, primary_name, furigana, english, reuse_station_id_or_None)
 MARUNOUCHI_BRANCH_STATIONS = [
-    (None, "中野坂上",      "なかのさかうえ",   "Nakano-Sakaue",   "station-m06"),  # shared M06
-    (  5,  "中野新橋",      "なかのしんばし",   "Nakano-Shimbashi",  None),
-    (  4,  "中野富士見町",  "なかのふじみちょう","Nakano-Fujimicho", None),
+    (None, "中野坂上",      "なかのさかうえ",   "Nakano-sakaue",   "station-m06"),  # shared M06
+    (  5,  "中野新橋",      "なかのしんばし",   "Nakano-shimbashi",  None),
+    (  4,  "中野富士見町",  "なかのふじみちょう","Nakano-fujimicho", None),
     (  3,  "方南町",        "ほうなんちょう",   "Honancho",          None),
 ]
 
@@ -325,7 +325,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.5.0')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.5.2')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -630,7 +630,7 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.5.1")
+    print(f"  - version: 0.5.2")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
     print(f"  - 2 companies (JR東日本 jreast, 東京メトロ tokyometro)")
     print(f"  - 6 lines:")

@@ -7,6 +7,7 @@ import migrateV021toV030 from "./migrations/v0.2.1_to_v0.3.0";
 import migrateV030toV040 from "./migrations/v0.3.0_to_v0.4.0";
 import migrateV040toV050 from "./migrations/v0.4.0_to_v0.5.0";
 import migrateV050toV051 from "./migrations/v0.5.0_to_v0.5.1";
+import migrateV051toV052 from "./migrations/v0.5.1_to_v0.5.2";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -115,6 +116,7 @@ function migrateDatabase(database: Database): void {
     migrateV030toV040,
     migrateV040toV050,
     migrateV050toV051,
+    migrateV051toV052,
   ];
 
   for (const migrate of migrations) {
