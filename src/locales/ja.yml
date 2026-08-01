@@ -23,6 +23,10 @@ header:
       mastodon: Mastodon
       reddit: Reddit
       line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
       copy: URLをコピー
     copy: URLをクリップボードにコピーしました！
     share-message: 「{name}」で駅名標をサクッと作ろう！

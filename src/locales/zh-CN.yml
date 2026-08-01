@@ -21,6 +21,10 @@ header:
       mastodon: Mastodon
       reddit: Reddit
       line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
       copy: 复制网址
     copy: 已将 URL 复制到剪贴板。
     share-message: 使用 {name} 生成精美的铁路标志！

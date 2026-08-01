@@ -13,9 +13,11 @@ import { IconTrain } from "@tabler/icons-react";
 import { BR, CN, CZ, DE, ES, GB, HK, IN, JP, MY, PL, PT, RO, RU, TW } from "country-flag-icons/react/3x2";
 import { createElement, type ReactElement, useEffect, useState } from "react";
 import { BsTwitter, BsCopy } from "react-icons/bs";
+import { FaFacebook, FaTelegramPlane, FaVk, FaWhatsapp } from "react-icons/fa";
 import { SiMisskey, SiMastodon, SiLine, SiX, SiReddit } from "react-icons/si";
 import { useTranslations } from "@/i18n/useTranslation";
 import { APP_VERSION } from "@/config";
+import { getShareServices, type ShareService } from "@/config/shareServices";
 import { SUPPORTED_LOCALES } from "@/i18n/locales";
 
 const FLAG_COMPONENTS = { BR, CN, CZ, DE, ES, GB, HK, IN, JP, MY, PL, PT, RO, RU, TW };
@@ -32,63 +34,80 @@ const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
   const [url, setUrl] = useState("https://example.com");
   useEffect(() => {
     setUrl(document.URL);
-  });
+  }, []);
 
   const shareText = t("header.tooltip.share-message", {
     name: t("header.title"),
   });
   const encodedShareText = encodeURIComponent(shareText);
+  const encodedUrl = encodeURIComponent(url);
+  const encodedMessage = encodeURIComponent(`${shareText}\n${url}`);
 
   type ShareOption = {
     name: string;
     link: string | (() => void);
     icon: ReactElement;
-    id: number;
   };
-  const shareOptions: ShareOption[] = [
-    {
+
+  const shareOptions: Record<ShareService, ShareOption> = {
+    copy: {
       name: t("header.tooltip.share-options.copy"),
       link: () => navigator.clipboard.writeText(`${shareText}\n${url}`),
       icon: <BsCopy />,
-      id: 201,
     },
-    {
+    twitter: {
       name: t("header.tooltip.share-options.twitter"),
-      link: `https://x.com/share?text=${encodedShareText}&url=${url}`,
+      link: `https://x.com/share?text=${encodedShareText}&url=${encodedUrl}`,
       icon: <BsTwitter />,
-      id: 1,
     },
-    {
+    x: {
       name: t("header.tooltip.share-options.x"),
-      link: `https://x.com/share?text=${encodedShareText}&url=${url}`,
+      link: `https://x.com/share?text=${encodedShareText}&url=${encodedUrl}`,
       icon: <SiX />,
-      id: 2,
     },
-    {
+    reddit: {
       name: t("header.tooltip.share-options.reddit"),
-      link: `https://www.reddit.com/submit?text=${encodedShareText}&url=${url}`,
+      link: `https://www.reddit.com/submit?title=${encodedShareText}&url=${encodedUrl}`,
       icon: <SiReddit />,
-      id: 12,
     },
-    {
+    misskey: {
       name: t("header.tooltip.share-options.misskey"),
-      link: `https://misskey-hub.net/share/?text=${encodedShareText}&url=${url}&visibility=public&localOnly=0`,
+      link: `https://misskey-hub.net/share/?text=${encodedShareText}&url=${encodedUrl}&visibility=public&localOnly=0`,
       icon: <SiMisskey />,
-      id: 21,
     },
-    {
+    mastodon: {
       name: t("header.tooltip.share-options.mastodon"),
-      link: `https://donshare.net/share.html?text=${encodedShareText}&url=${url}`,
+      link: `https://donshare.net/share.html?text=${encodedShareText}&url=${encodedUrl}`,
       icon: <SiMastodon />,
-      id: 22,
     },
-    {
+    line: {
       name: t("header.tooltip.share-options.line"),
-      link: `https://social-plugins.line.me/lineit/share?text=${encodedShareText}&url=${url}`,
+      link: `https://social-plugins.line.me/lineit/share?text=${encodedShareText}&url=${encodedUrl}`,
       icon: <SiLine />,
-      id: 101,
     },
-  ];
+    facebook: {
+      name: t("header.tooltip.share-options.facebook"),
+      link: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      icon: <FaFacebook />,
+    },
+    whatsapp: {
+      name: t("header.tooltip.share-options.whatsapp"),
+      link: `https://api.whatsapp.com/send?text=${encodedMessage}`,
+      icon: <FaWhatsapp />,
+    },
+    telegram: {
+      name: t("header.tooltip.share-options.telegram"),
+      link: `https://t.me/share/url?url=${encodedUrl}&text=${encodedShareText}`,
+      icon: <FaTelegramPlane />,
+    },
+    vk: {
+      name: t("header.tooltip.share-options.vk"),
+      link: `https://vk.com/share.php?url=${encodedUrl}&title=${encodedShareText}`,
+      icon: <FaVk />,
+    },
+  };
+
+  const visibleShareServices = getShareServices(locale);
 
   const [isCopyMessageOpen, setIsCopyMessageOpen] = useState(false);
 
@@ -230,22 +249,25 @@ const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
                 </Menu.Target>
               </Tooltip>
               <Menu.Dropdown>
-                {shareOptions.map((e) => (
-                  <Menu.Item
-                    key={e.id}
-                    leftSection={e.icon}
-                    onClick={() => {
-                      if (typeof e.link === "string") {
-                        window.open(e.link, "_blank");
-                      } else {
-                        setIsCopyMessageOpen(true);
-                        e.link();
-                      }
-                    }}
-                  >
-                    {e.name}
-                  </Menu.Item>
-                ))}
+                {visibleShareServices.map((service) => {
+                  const option = shareOptions[service];
+                  return (
+                    <Menu.Item
+                      key={service}
+                      leftSection={option.icon}
+                      onClick={() => {
+                        if (typeof option.link === "string") {
+                          window.open(option.link, "_blank", "noopener,noreferrer");
+                        } else {
+                          setIsCopyMessageOpen(true);
+                          option.link();
+                        }
+                      }}
+                    >
+                      {option.name}
+                    </Menu.Item>
+                  );
+                })}
               </Menu.Dropdown>
             </Menu>
           </Box>

@@ -21,6 +21,10 @@ header:
       mastodon: Mastodon
       reddit: Reddit
       line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
       copy: Копировать URL
     copy: Скопирован URL в буфер обмена.
     share-message: Используйте {name} для создания великолепных железнодорожных знаков!

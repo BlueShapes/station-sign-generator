@@ -21,6 +21,10 @@ header:
       mastodon: Mastodon
       reddit: Reddit
       line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
       copy: Salin URL
     copy: URL disalin ke papan keratan anda.
     share-message: Gunakan {name} untuk menjana papan tanda kereta api yang hebat!

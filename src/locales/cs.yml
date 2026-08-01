@@ -21,6 +21,10 @@ header:
       mastodon: Mastodon
       reddit: Reddit
       line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
       copy: Kopírovat URL
     copy: Adresa URL byla zkopírována do vaší schránky.
     share-message: Použijte {name} ke generování skvělých železničních značek!

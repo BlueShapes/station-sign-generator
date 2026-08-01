@@ -23,6 +23,10 @@ header:
       mastodon: Mastodon
       reddit: Reddit
       line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
       copy: Copy URL
     copy: Copied URL to your clipboard.
     share-message: Use {name} to generate great railway signs!

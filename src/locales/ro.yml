@@ -21,6 +21,10 @@ header:
       mastodon: Mastodon
       reddit: Reddit
       line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
       copy: Copiați adresa URL
     copy: Adresa URL a fost copiată în clipboard.
     share-message: Utilizați {name} pentru a genera indicatoare feroviare grozave!

@@ -21,6 +21,10 @@ header:
       mastodon: Mastodon
       reddit: Reddit
       line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
       copy: Copiar URL
     copy: URL copiado para sua área de transferência.
     share-message: Use {name} para gerar ótimos sinais ferroviários!
