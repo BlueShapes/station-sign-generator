@@ -5,6 +5,7 @@ interface Alternate {
 }
 
 interface Props {
+  siteName: string;
   title: string;
   description: string;
   locale: string;
@@ -13,7 +14,22 @@ interface Props {
   alternates: Alternate[];
 }
 
-const { title, description, locale, ogImageUrl, canonical, alternates } = Astro.props;
+const { siteName, title, description, locale, ogImageUrl, canonical, alternates } = Astro.props;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "@id": `${canonical}#web-application`,
+  name: siteName,
+  description,
+  url: canonical,
+  applicationCategory: "DesignApplication",
+  operatingSystem: "Any",
+  inLanguage: locale,
+  isAccessibleForFree: true,
+};
+
+const structuredDataJson = JSON.stringify(structuredData).replace(/</g, "\\u003c");
 ---
 <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -32,7 +48,8 @@ const { title, description, locale, ogImageUrl, canonical, alternates } = Astro.
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content={title} />
 <meta property="og:locale" content={locale} />
-<meta property="og:site_name" content={title} />
+<meta property="og:site_name" content={siteName} />
 {alternates.map(({ lang, href }) => (
   <link rel="alternate" hreflang={lang} href={href} />
 ))}
+<script type="application/ld+json" is:inline set:html={structuredDataJson} />

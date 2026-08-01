@@ -13,6 +13,9 @@ const messages = allMessages[lang];
 
 const siteOrigin =
   import.meta.env.SITE ?? "https://stationsigngen.aosankaku.net";
+const siteName =
+  (messages as Record<string, string>)?.["$site-name"] ??
+  "駅名標ジェネレーター";
 const title =
   (messages as Record<string, Record<string, string>>)?.meta?.title ??
   "駅名標ジェネレーター";
@@ -34,6 +37,7 @@ const alternates = [
 <BaseLayout title={title} description={description} locale={lang}>
   <Fragment slot="head">
     <HeadSeo
+      siteName={siteName}
       title={title}
       description={description}
       locale={lang}

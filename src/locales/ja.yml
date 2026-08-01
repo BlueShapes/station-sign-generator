@@ -1,16 +1,17 @@
 $site-name: "駅名標ジェネレーター"
-$site-description: "さぁ、あたらしい駅名標をあなたの手で。"
 $og-image-path: "/ogp.png"
 
 meta:
-  title: 駅名標ジェネレーター 青三角版 JR東日本・西日本風
-  description: お好きなスタイル・駅名からできた駅名標の画像を、Webでサクッと生成できます。今後どんどん他の種類の駅名標の作成にも対応予定です。
+  title: 駅名標・路線図ジェネレーター 青三角版 JR東日本・西日本風
+  description: JR東日本、JR西日本、東京メトロ・都営地下鉄風の駅名標を、Webでサクッと画像生成できます。オリジナル路線・路線図の作成にも対応しています。
+  og-image-alt: 駅名標のサンプル画像（JR東日本風）
   pwa: 
     name: 駅名標ジェネレーター 青三角版
     short-name: 駅名標
 
 header:
-  title: 駅名標ジェネレーター 青三角版
+  title: 駅名標ジェネレーター
+  edition: 青三角版
   tooltip:
     lang: 言語を変更
     share: このツールを共有
