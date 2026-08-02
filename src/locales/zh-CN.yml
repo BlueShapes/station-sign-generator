@@ -1,14 +1,14 @@
-$site-name: 站名牌生成器
+$site-name: 站名牌及线路图生成器
 $og-image-path: /ogp.png
 meta:
   title: 站名牌及线路图生成器｜蓝三角版（JR东日本／西日本风格）
   description: 在浏览器中快速生成 JR 东日本、JR 西日本、东京地铁及都营地铁风格的站名牌图片，也可创建原创线路和线路图。
   og-image-alt: JR 东日本风格的站名牌示例图片
   pwa:
-    name: 车站标志生成器蓝色三角版
-    short-name: 车站标志
+    name: 站名牌及线路图生成器－蓝三角版
+    short-name: 站名牌及线路图
 header:
-  title: 站名牌生成器
+  title: 站名牌及线路图生成器
   edition: 蓝三角版
   tooltip:
     lang: 切换语言
@@ -27,7 +27,7 @@ header:
       vk: VK
       copy: 复制网址
     copy: 已将 URL 复制到剪贴板。
-    share-message: 使用 {name} 生成精美的铁路标志！
+    share-message: 使用 {name} 快速制作站名牌和线路图！
 input:
   save: 另存为图像
   image-size: 图像尺寸

@@ -1,14 +1,14 @@
-$site-name: Generátor znamení stanice
+$site-name: Generátor staničních cedulí a map linek
 $og-image-path: /ogp.png
 meta:
   title: Generátor železničních značek | Blue Triangle Edition (JR East/West style)
   description: Bezplatný a užitečný nástroj pro generování názvů železničních stanic.
   og-image-alt: Ukázkový obrázek stanice (ve stylu JR East)
   pwa:
-    name: Generátor znamení stanice Blue Triangle Edition
-    short-name: Znamení stanice
+    name: Generátor staničních cedulí a map linek – Edice Modrý trojúhelník
+    short-name: Cedule a mapy
 header:
-  title: Generátor znamení stanice
+  title: Generátor staničních cedulí a map linek
   edition: Edice Blue Triangle
   tooltip:
     lang: Změnit národní prostředí
@@ -27,7 +27,7 @@ header:
       vk: VK
       copy: Kopírovat URL
     copy: Adresa URL byla zkopírována do vaší schránky.
-    share-message: Použijte {name} ke generování skvělých železničních značek!
+    share-message: Vytvářejte staniční cedule a mapy linek pomocí {name}!
 input:
   save: Uložit jako obrázek
   image-size: Velikost obrázku

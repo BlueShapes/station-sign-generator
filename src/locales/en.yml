@@ -1,4 +1,4 @@
-$site-name: "Station Sign Generator"
+$site-name: "Station Sign & Line Map Generator"
 $og-image-path: "/ogp.png"
 
 meta:
@@ -6,11 +6,11 @@ meta:
   description: A free and useful tool for generating railway station name signs.
   og-image-alt: Sample station sign image (JR East style)
   pwa: 
-    name: Station Sign Generator Blue Triangle Edition
-    short-name: Station Sign
+    name: Station Sign & Line Map Generator – Blue Triangle Edition
+    short-name: Sign & Line Map
 
 header:
-  title: Station Sign Generator
+  title: Station Sign & Line Map Generator
   edition: Blue Triangle Edition
   tooltip:
     lang: Change Locale
@@ -29,7 +29,7 @@ header:
       vk: VK
       copy: Copy URL
     copy: Copied URL to your clipboard.
-    share-message: Use {name} to generate great railway signs!
+    share-message: Create station signs and line maps with {name}!
 
 input:
   save: Save as Image

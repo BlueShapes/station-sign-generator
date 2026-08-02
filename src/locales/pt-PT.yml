@@ -1,14 +1,14 @@
-$site-name: Gerador de sinais de estação
+$site-name: Gerador de placas de estação e mapas de linhas
 $og-image-path: /ogp.png
 meta:
   title: Gerador de sinais ferroviários | Edição Blue Triangle (estilo JR Leste/Oeste)
   description: Uma ferramenta gratuita e útil para gerar placas com nomes de estações ferroviárias.
   og-image-alt: Exemplo de imagem de sinal de estação (estilo JR East)
   pwa:
-    name: Gerador de sinais de estação Edição Triângulo Azul
-    short-name: Sinal de estação
+    name: Gerador de placas de estação e mapas de linhas – Edição Triângulo Azul
+    short-name: Placas e mapas
 header:
-  title: Gerador de sinais de estação
+  title: Gerador de placas de estação e mapas de linhas
   edition: Edição Triângulo Azul
   tooltip:
     lang: Alterar localidade
@@ -27,7 +27,7 @@ header:
       vk: VK
       copy: Copiar URL
     copy: URL copiado para sua área de transferência.
-    share-message: Use {name} para gerar ótimos sinais ferroviários!
+    share-message: Crie placas de estação e mapas de linhas com o {name}!
 input:
   save: Guardar como imagem
   image-size: Tamanho da imagem

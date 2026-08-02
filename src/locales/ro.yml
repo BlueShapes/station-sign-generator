@@ -1,14 +1,14 @@
-$site-name: Generator de semne de stație
+$site-name: Generator de indicatoare de stație și hărți de linii
 $og-image-path: /ogp.png
 meta:
   title: Generator de semne feroviare | Ediția triunghi albastru (stil JR Est/Vest)
   description: Un instrument gratuit și util pentru generarea indicatoarelor cu numele gării.
   og-image-alt: Exemplu de imagine indicatoare a stației (stil JR East)
   pwa:
-    name: Generator de semne de stație Ediția triunghi albastru
-    short-name: Semnul stației
+    name: Generator de indicatoare de stație și hărți de linii – Ediția Triunghi Albastru
+    short-name: Indicatoare și hărți
 header:
-  title: Generator de semne de stație
+  title: Generator de indicatoare de stație și hărți de linii
   edition: Ediția Triunghi Albastru
   tooltip:
     lang: Schimbați localitatea
@@ -27,7 +27,7 @@ header:
       vk: VK
       copy: Copiați adresa URL
     copy: Adresa URL a fost copiată în clipboard.
-    share-message: Utilizați {name} pentru a genera indicatoare feroviare grozave!
+    share-message: Creați indicatoare de stație și hărți de linii cu {name}!
 input:
   save: Salvați ca imagine
   image-size: Dimensiunea imaginii

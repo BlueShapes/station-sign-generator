@@ -40,6 +40,7 @@ import type {
 import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
+import { sanitizeDirectInputData } from "@/lib/textInputSafety";
 
 const DEBOUNCE_MS = 400;
 
@@ -66,7 +67,7 @@ const DirectInput = memo(function DirectInput({
     fields.right[f] !== "hidden";
 
   const [formData, setFormData] =
-    useState<DirectInputStationProps>(initialData);
+    useState<DirectInputStationProps>(() => sanitizeDirectInputData(initialData));
   const [resetModalOpen, setResetModalOpen] = useState(false);
 
   // Debounce propagation to parent
@@ -81,11 +82,12 @@ const DirectInput = memo(function DirectInput({
   }, [formData]);
 
   const updateField = (name: string, value: unknown) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        typeof value === "string" ? (value as string).slice(0, 120) : value,
-    }));
+    setFormData((prev) =>
+      sanitizeDirectInputData({
+        ...prev,
+        [name]: value,
+      }),
+    );
   };
 
   const updateDirection = (newDirection: string) => {

@@ -34,6 +34,10 @@ import { DEFAULT_DATA } from "@/db/seed";
 import { waitForCanvasFonts } from "@/lib/fonts";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
+import {
+  DIRECT_INPUT_JSON_MAX_LENGTH,
+  sanitizeDirectInputData,
+} from "@/lib/textInputSafety";
 
 import JrEastSign, {
   height as JrEastSignHeight,
@@ -81,6 +85,9 @@ const SIGN_STYLES: Record<
 };
 
 function validateDirectInputData(text: string): DirectInputStationProps {
+  if (text.length > DIRECT_INPUT_JSON_MAX_LENGTH) {
+    throw new Error("JSON data is too large");
+  }
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -102,7 +109,7 @@ function validateDirectInputData(text: string): DirectInputStationProps {
   if (typeof d.baseColor !== "string")
     throw new Error("missing field: baseColor");
   if (typeof d.ratio !== "number") throw new Error("missing field: ratio");
-  return parsed as DirectInputStationProps;
+  return sanitizeDirectInputData(parsed as DirectInputStationProps);
 }
 
 export default function SimpleInputTab() {

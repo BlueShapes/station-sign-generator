@@ -1,4 +1,4 @@
-$site-name: Bahnhofsschild-Generator
+$site-name: Generator für Bahnhofsschilder und Linienpläne
 $og-image-path: "/ogp.png"
 
 meta:
@@ -6,11 +6,11 @@ meta:
   description: Erstelle Bahnhofsschilder im Stil von JR East, JR West, Tokyo Metro und Toei Subway sowie eigene Linienpläne direkt im Browser.
   og-image-alt: Beispiel eines Bahnhofsschilds im Stil von JR East
   pwa:
-    name: Bahnhofsschild-Generator – Blaue-Dreieck-Ausgabe
-    short-name: Bahnhofsschild
+    name: Generator für Bahnhofsschilder und Linienpläne – Blaue-Dreieck-Ausgabe
+    short-name: Schilder & Pläne
 
 header:
-  title: Bahnhofsschild-Generator
+  title: Generator für Bahnhofsschilder und Linienpläne
   edition: Blaue-Dreieck-Ausgabe
   tooltip:
     lang: Sprache ändern
@@ -29,7 +29,7 @@ header:
       vk: VK
       copy: URL kopieren
     copy: URL wurde in die Zwischenablage kopiert.
-    share-message: Erstelle mit {name} tolle Bahnhofsschilder!
+    share-message: Erstelle mit {name} Bahnhofsschilder und Linienpläne!
 
 input:
   save: Als Bild speichern

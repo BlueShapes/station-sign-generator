@@ -1,4 +1,4 @@
-$site-name: "駅名標ジェネレーター"
+$site-name: "駅名標・路線図ジェネレーター"
 $og-image-path: "/ogp.png"
 
 meta:
@@ -6,11 +6,11 @@ meta:
   description: JR東日本、JR西日本、東京メトロ・都営地下鉄風の駅名標を、Webでサクッと画像生成できます。オリジナル路線・路線図の作成にも対応しています。
   og-image-alt: 駅名標のサンプル画像（JR東日本風）
   pwa: 
-    name: 駅名標ジェネレーター 青三角版
-    short-name: 駅名標
+    name: 駅名標・路線図 ジェネレーター 青三角版
+    short-name: 駅名標・路線図
 
 header:
-  title: 駅名標ジェネレーター
+  title: 駅名標・路線図 ジェネレーター
   edition: 青三角版
   tooltip:
     lang: 言語を変更
@@ -29,7 +29,7 @@ header:
       vk: VK
       copy: URLをコピー
     copy: URLをクリップボードにコピーしました！
-    share-message: 「{name}」で駅名標をサクッと作ろう！
+    share-message: 「{name}」で駅名標・路線図をサクッと作ろう！
 
 input:
   save: 画像として保存

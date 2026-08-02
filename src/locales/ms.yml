@@ -1,14 +1,14 @@
-$site-name: Penjana Tanda Stesen
+$site-name: Penjana Papan Tanda Stesen dan Peta Laluan
 $og-image-path: /ogp.png
 meta:
   title: Penjana Tanda Kereta Api | Edisi Segi Tiga Biru (gaya JR Timur/Barat)
   description: Alat percuma dan berguna untuk menjana tanda nama stesen kereta api.
   og-image-alt: Contoh imej papan tanda stesen (gaya JR East)
   pwa:
-    name: Penjana Tanda Stesen Edisi Segitiga Biru
-    short-name: Tanda Stesen
+    name: Penjana Papan Tanda Stesen dan Peta Laluan – Edisi Segi Tiga Biru
+    short-name: Tanda & Peta Laluan
 header:
-  title: Penjana Tanda Stesen
+  title: Penjana Papan Tanda Stesen dan Peta Laluan
   edition: Edisi Segi Tiga Biru
   tooltip:
     lang: Tukar Tempat
@@ -27,7 +27,7 @@ header:
       vk: VK
       copy: Salin URL
     copy: URL disalin ke papan keratan anda.
-    share-message: Gunakan {name} untuk menjana papan tanda kereta api yang hebat!
+    share-message: Cipta papan tanda stesen dan peta laluan dengan {name}!
 input:
   save: Simpan sebagai Imej
   image-size: Saiz Imej
