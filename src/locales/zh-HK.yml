@@ -1,14 +1,14 @@
-$site-name: 站名牌生成器
+$site-name: 站名牌及路綫圖生成器
 $og-image-path: /ogp.png
 meta:
   title: 站名牌及路綫圖生成器｜藍三角版（JR東日本／西日本風格）
   description: 在瀏覽器快速製作 JR 東日本、JR 西日本、東京地下鐵及都營地下鐵風格的站名牌圖片，亦可建立自訂路綫和路綫圖。
   og-image-alt: JR 東日本風格的站名牌範例圖片
   pwa:
-    name: 車站標誌生成器藍三角版
-    short-name: 車站標誌
+    name: 站名牌及路綫圖生成器－藍三角版
+    short-name: 站名牌及路綫圖
 header:
-  title: 站名牌生成器
+  title: 站名牌及路綫圖生成器
   edition: 藍三角版
   tooltip:
     lang: 切換語言
@@ -27,7 +27,7 @@ header:
       vk: VK
       copy: 複製網址
     copy: 已將 URL 複製到剪貼簿。
-    share-message: 使用 {name} 產生精美的鐵路標誌！
+    share-message: 使用 {name} 快速製作站名牌及路綫圖！
 input:
   save: 儲存為圖片
   image-size: 影像尺寸

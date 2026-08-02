@@ -1,14 +1,14 @@
-$site-name: Generador de señales de estación
+$site-name: Generador de carteles de estación y mapas de líneas
 $og-image-path: /ogp.png
 meta:
   title: Generador de señales ferroviarias | Edición Blue Triangle (estilo JR Este/Oeste)
   description: Una herramienta gratuita y útil para generar carteles con nombres de estaciones de tren.
   og-image-alt: Imagen de letrero de estación de muestra (estilo JR East)
   pwa:
-    name: Generador de señales de estación Edición Triángulo Azul
-    short-name: Señal de estación
+    name: Generador de carteles de estación y mapas de líneas – Edición Triángulo Azul
+    short-name: Carteles y mapas
 header:
-  title: Generador de señales de estación
+  title: Generador de carteles de estación y mapas de líneas
   edition: Edición Triángulo Azul
   tooltip:
     lang: Cambiar configuración regional
@@ -27,7 +27,7 @@ header:
       vk: VK
       copy: Copiar URL
     copy: Copia la URL en tu portapapeles.
-    share-message: ¡Utilice {name} para generar excelentes señales ferroviarias!
+    share-message: ¡Crea carteles de estación y mapas de líneas con {name}!
 input:
   save: Guardar como imagen
   image-size: Tamaño de imagen

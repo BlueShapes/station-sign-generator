@@ -1,14 +1,14 @@
-$site-name: Generator znaków stacji
+$site-name: Generator tablic stacyjnych i map linii
 $og-image-path: /ogp.png
 meta:
   title: Generator znaków kolejowych | Edycja Niebieskiego Trójkąta (styl JR Wschód/Zachód)
   description: Darmowe i przydatne narzędzie do generowania tabliczek z nazwami stacji kolejowych.
   og-image-alt: Przykładowy obraz znaku stacji (styl JR East)
   pwa:
-    name: Generator znaków stacji, edycja z niebieskim trójkątem
-    short-name: Znak stacji
+    name: Generator tablic stacyjnych i map linii – edycja Niebieski Trójkąt
+    short-name: Tablice i mapy
 header:
-  title: Generator znaków stacji
+  title: Generator tablic stacyjnych i map linii
   edition: Edycja Niebieskiego Trójkąta
   tooltip:
     lang: Zmień ustawienia regionalne
@@ -27,7 +27,7 @@ header:
       vk: VK
       copy: Skopiuj adres URL
     copy: Skopiowany adres URL do schowka.
-    share-message: Użyj {name}, aby wygenerować świetne znaki kolejowe!
+    share-message: Twórz tablice stacyjne i mapy linii za pomocą {name}!
 input:
   save: Zapisz jako obraz
   image-size: Rozmiar obrazu
