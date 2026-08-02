@@ -205,6 +205,7 @@ const JrWestSignLarge = forwardRef<Konva.Stage, StationProps>(
         {canvasImage && (
           <CanvasImage
             src={canvasImage}
+            draggable={false}
             style={{ width: "100%" }}
             onContextMenu={(e) => e.preventDefault()}
           />

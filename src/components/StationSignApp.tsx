@@ -11,6 +11,7 @@ import {
   Text,
   Tabs,
   Box,
+  TextInput,
 } from "@mantine/core";
 import {
   IconKeyboard,
@@ -29,8 +30,18 @@ import EditRoutesTab from "@/components/tabs/EditRoutesTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
 import { getLocaleFromPathname, getLocalePath } from "@/i18n/locales";
 import { syncDocumentMetadata } from "@/i18n/syncDocumentMetadata";
+import {
+  installTextInputSafety,
+  TEXT_INPUT_MAX_LENGTH,
+} from "@/lib/textInputSafety";
 
-const theme = createTheme({});
+const theme = createTheme({
+  components: {
+    TextInput: TextInput.extend({
+      defaultProps: { maxLength: TEXT_INPUT_MAX_LENGTH },
+    }),
+  },
+});
 const colorSchemeManager = localStorageColorSchemeManager({
   key: "ssg-color-scheme",
 });
@@ -122,6 +133,8 @@ export default function StationSignApp({
   allMessages,
 }: StationSignAppProps) {
   const [currentLocale, setCurrentLocale] = useState(locale);
+
+  useEffect(() => installTextInputSafety(), []);
 
   const handleSwitchLocale = (newLocale: string) => {
     setCurrentLocale(newLocale);

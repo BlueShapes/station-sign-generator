@@ -1,6 +1,10 @@
 import { useState, useCallback } from 'react';
 import type DirectInputStationProps from '@/components/signs/DirectInputStationProps';
 import { DEFAULT_DATA } from '@/db/seed';
+import {
+  DIRECT_INPUT_JSON_MAX_LENGTH,
+  sanitizeDirectInputData,
+} from '@/lib/textInputSafety';
 
 const SESSION_KEY = 'sign-config-v1';
 
@@ -19,9 +23,15 @@ function loadFromSession(): { data: DirectInputStationProps; wasCorrupted: boole
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return { data: DEFAULT_DATA, wasCorrupted: false };
+    if (raw.length > DIRECT_INPUT_JSON_MAX_LENGTH) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return { data: DEFAULT_DATA, wasCorrupted: true };
+    }
     const parsed = JSON.parse(raw) as unknown;
     if (isValidData(parsed)) {
-      return { data: parsed, wasCorrupted: false };
+      const sanitized = sanitizeDirectInputData(parsed);
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(sanitized));
+      return { data: sanitized, wasCorrupted: false };
     }
     // Parsed successfully but failed validation — clear corrupted data
     sessionStorage.removeItem(SESSION_KEY);
@@ -61,8 +71,9 @@ export function useDatabase(): UseDatabaseResult {
   const [currentData, setCurrentData] = useState<DirectInputStationProps>(data);
 
   const update = useCallback((newData: DirectInputStationProps) => {
-    setCurrentData(newData);
-    saveToSession(newData);
+    const sanitized = sanitizeDirectInputData(newData);
+    setCurrentData(sanitized);
+    saveToSession(sanitized);
   }, []);
 
   const reset = useCallback(() => {
