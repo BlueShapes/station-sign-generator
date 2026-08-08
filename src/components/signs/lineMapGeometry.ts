@@ -35,3 +35,89 @@ export function getTrackEdgeRadius(
 ): number {
   return Math.max(markerRadius, normalizeTrackWidth(trackWidth) / 2);
 }
+
+export interface LinearStationLayout {
+  /** Station centers measured from the start of the content band. */
+  positions: number[];
+  /** Full content-band extent, including half of the endpoint expansions. */
+  extent: number;
+}
+
+export interface ConnectedMarkerLayout {
+  /** Nominal top/left positions for each marker. */
+  positions: number[];
+  /** Nominal extent from the first marker origin to the last marker end. */
+  extent: number;
+}
+
+/**
+ * Place marker shapes so their stroked outer edges touch but never overlap.
+ * Each visualOutset is the amount a centered stroke extends beyond its nominal
+ * marker bounds on the connection axis.
+ */
+export function layoutConnectedMarkers(
+  markerExtents: number[],
+  visualOutsets: number[],
+): ConnectedMarkerLayout {
+  if (markerExtents.length === 0) return { positions: [], extent: 0 };
+
+  const extents = markerExtents.map((extent) => Math.max(0, extent));
+  const outsets = markerExtents.map((_, index) =>
+    Math.max(0, visualOutsets[index] ?? 0),
+  );
+  const positions = [0];
+  for (let index = 1; index < extents.length; index += 1) {
+    positions.push(
+      positions[index - 1] +
+        extents[index - 1] +
+        outsets[index - 1] +
+        outsets[index],
+    );
+  }
+
+  return {
+    positions,
+    extent: positions[positions.length - 1] + extents[extents.length - 1],
+  };
+}
+
+export function getConnectedMarkerExtraExtent(markerExtents: number[]): number {
+  if (markerExtents.length < 2) return 0;
+  const validExtents = markerExtents.map((extent) =>
+    Number.isFinite(extent) ? Math.max(0, extent) : 0,
+  );
+  return Math.max(
+    0,
+    validExtents.reduce((sum, extent) => sum + extent, 0) -
+      Math.max(...validExtents),
+  );
+}
+
+/**
+ * Expand adjacent station gaps around oversized markers while keeping each
+ * marker centered in the space assigned to it.
+ */
+export function layoutExpandedLinearStations(
+  stationSpacing: number,
+  markerExtraExtents: number[],
+): LinearStationLayout {
+  if (markerExtraExtents.length === 0) return { positions: [], extent: 0 };
+
+  const extras = markerExtraExtents.map((extent) =>
+    Number.isFinite(extent) ? Math.max(0, extent) : 0,
+  );
+  const positions = [extras[0] / 2];
+  for (let index = 1; index < extras.length; index += 1) {
+    positions.push(
+      positions[index - 1] +
+        stationSpacing +
+        extras[index - 1] / 2 +
+        extras[index] / 2,
+    );
+  }
+
+  return {
+    positions,
+    extent: positions[positions.length - 1] + extras[extras.length - 1] / 2,
+  };
+}

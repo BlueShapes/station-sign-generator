@@ -283,6 +283,49 @@ export function getThroughRouteSegmentStationIds(
   throw new Error("Invalid through route: invalid-direction");
 }
 
+export interface ThroughRoutePath {
+  stationIds: string[];
+  /** Line ID for each gap between adjacent station IDs. */
+  edgeLineIds: string[];
+  lineIds: string[];
+}
+
+/** Resolve all segments of a named through route into one branch-free path. */
+export function getThroughRoutePath(
+  db: Database,
+  throughRouteId: string,
+): ThroughRoutePath {
+  const stationIds: string[] = [];
+  const edgeLineIds: string[] = [];
+  const lineIds: string[] = [];
+
+  for (const segment of getThroughRouteSegments(db, throughRouteId)) {
+    const segmentStationIds = getThroughRouteSegmentStationIds(db, segment);
+    const previousStationId = stationIds[stationIds.length - 1];
+    if (
+      previousStationId !== undefined &&
+      previousStationId !== segmentStationIds[0]
+    ) {
+      throw new Error("Invalid through route: disconnected");
+    }
+
+    if (!lineIds.includes(segment.line_id)) lineIds.push(segment.line_id);
+    stationIds.push(
+      ...(stationIds.length === 0
+        ? segmentStationIds
+        : segmentStationIds.slice(1)),
+    );
+    edgeLineIds.push(
+      ...Array.from(
+        { length: Math.max(0, segmentStationIds.length - 1) },
+        () => segment.line_id,
+      ),
+    );
+  }
+
+  return { stationIds, edgeLineIds, lineIds };
+}
+
 export function validateThroughRouteSegments(
   db: Database,
   segments: ThroughRouteSegment[],

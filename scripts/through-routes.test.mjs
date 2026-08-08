@@ -8,6 +8,7 @@ import migrateV054toV060 from "../src/db/migrations/v0.5.4_to_v0.6.0.ts";
 import {
   getAllThroughRoutes,
   getRelativeLineDirectionAtStation,
+  getThroughRoutePath,
   getThroughRouteSegmentStationIds,
   getThroughRouteSegments,
   replaceThroughRouteSegments,
@@ -193,6 +194,17 @@ describe("through route repository", () => {
 
     expect(getAllThroughRoutes(db)).toEqual([route]);
     expect(getThroughRouteSegments(db, route.id)).toEqual([forward, reverse]);
+  });
+
+  test("resolves a branch-free render path with one line per station gap", () => {
+    upsertThroughRoute(db, route);
+    replaceThroughRouteSegments(db, route.id, [forward, reverse]);
+
+    expect(getThroughRoutePath(db, route.id)).toEqual({
+      stationIds: ["a", "shared", "b"],
+      edgeLineIds: ["line-a", "line-b"],
+      lineIds: ["line-a", "line-b"],
+    });
   });
 
   test("orients adjacent lines using their through-route segment directions", () => {

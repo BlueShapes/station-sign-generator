@@ -26,6 +26,9 @@ import {
   MIN_TRACK_WIDTH,
   getServiceTrackGap,
   getServiceTrackWidth,
+  getConnectedMarkerExtraExtent,
+  layoutConnectedMarkers,
+  layoutExpandedLinearStations,
   normalizeTrackWidth,
 } from "../src/components/signs/lineMapGeometry";
 
@@ -54,6 +57,28 @@ describe("transit line layout", () => {
     expect(MAX_TRACK_WIDTH / 2).toBeGreaterThan(10 + 1.5);
     expect(getServiceTrackWidth(MAX_TRACK_WIDTH)).toBe(20);
     expect(getServiceTrackGap(MAX_TRACK_WIDTH)).toBeGreaterThan(20);
+  });
+
+  test("expands only the gaps beside an oversized connected marker", () => {
+    expect(getConnectedMarkerExtraExtent([])).toBe(0);
+    expect(getConnectedMarkerExtraExtent([23])).toBe(0);
+    expect(getConnectedMarkerExtraExtent([23, 23])).toBe(23);
+    expect(layoutExpandedLinearStations(75, [0, 0, 0])).toEqual({
+      positions: [0, 75, 150],
+      extent: 150,
+    });
+    expect(layoutExpandedLinearStations(75, [0, 23, 0])).toEqual({
+      positions: [0, 86.5, 173],
+      extent: 173,
+    });
+  });
+
+  test("joins stroked markers without overlapping their outer edges", () => {
+    const layout = layoutConnectedMarkers([23, 23], [1, 1.5]);
+    expect(layout).toEqual({ positions: [0, 25.5], extent: 48.5 });
+    const firstOuterEdge = layout.positions[0] + 23 + 1;
+    const secondOuterEdge = layout.positions[1] - 1.5;
+    expect(firstOuterEdge).toBe(secondOuterEdge);
   });
 
   test("uses company-specific badge shapes with a safe fallback", () => {

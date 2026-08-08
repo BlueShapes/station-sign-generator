@@ -58,6 +58,7 @@ import {
 import { getAllLines } from "@/db/repositories/lines";
 import { getAllCompanies } from "@/db/repositories/companies";
 import {
+  getAllStations,
   getStationsByLine,
   getStationLines,
   getResolvedStationNumber,
@@ -67,8 +68,12 @@ import {
   getServicesByLine,
   getServiceStopsByLine,
 } from "@/db/repositories/services";
-import { getRelativeLineDirectionAtStation } from "@/db/repositories/through-routes";
-import type { Line, Station, Service } from "@/db/types";
+import {
+  getAllThroughRoutes,
+  getRelativeLineDirectionAtStation,
+  getThroughRoutePath,
+} from "@/db/repositories/through-routes";
+import type { Line, Station, Service, ThroughRoute } from "@/db/types";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import type {
   AdjacentStationProps,
@@ -99,7 +104,11 @@ import LineMapRenderer, {
   JP_FONT,
   detectCircularOverlaps,
   getMapCanvasDimensions,
+  getStationNumberGroupExtraExtent,
   type StationNumberMode,
+  type StationNumberGroupMap,
+  type StationNumberInfo,
+  type StationNumberMap,
   type StationNameField,
   type ServiceInfo,
   type ServiceStopMap,
@@ -179,6 +188,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [lines, setLines] = useState<Line[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const [throughRoutes, setThroughRoutes] = useState<ThroughRoute[]>([]);
+  const [selectedThroughRouteId, setSelectedThroughRouteId] = useState<
+    string | null
+  >(null);
 
   // ── Sign mode state ──────────────────────────────────────────────────────
   const [selectedStationId, setSelectedStationId] = useState<string | null>(
@@ -221,17 +234,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapSaveSize, setMapSaveSize] = useState(LineMapScale);
   const [mapStationNumberMode, setMapStationNumberMode] =
     useState<StationNumberMode>("none");
-  const [mapStationNumbers, setMapStationNumbers] = useState<
-    Record<
-      string,
-      {
-        prefix: string;
-        value: string;
-        threeLetterCode?: string | null;
-        color?: string;
-      }
-    >
-  >({});
+  const [mapStationNumbers, setMapStationNumbers] =
+    useState<StationNumberMap>({});
+  const [mapStationNumberGroups, setMapStationNumberGroups] =
+    useState<StationNumberGroupMap>({});
   const [mapNameStyle, setMapNameStyle] = useState<
     "normal" | "above" | "below"
   >("normal");
@@ -261,6 +267,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   useEffect(() => {
     if (!db) return;
     setLines(getAllLines(db));
+    setThroughRoutes(getAllThroughRoutes(db));
   }, [db]);
 
   // Load stations when line changes
@@ -275,8 +282,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     const stns = getStationsByLine(db, selectedLineId);
     setStations(stns);
     setSelectedStationId(null);
-    setMapStartId(stns[0]?.id ?? null);
-    setMapEndId(stns[stns.length - 1]?.id ?? null);
     setMapTransitFilter([]);
   }, [db, selectedLineId]);
 
@@ -584,57 +589,179 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setSaveSize(baseScale);
   }, [ratio, signStyle]);
 
+  const selectedThroughRoute =
+    throughRoutes.find((route) => route.id === selectedThroughRouteId) ?? null;
+
+  const throughRoutePath = useMemo(() => {
+    if (!db || !selectedThroughRouteId) {
+      return {
+        stations: [] as Station[],
+        edgeLineIds: [] as string[],
+        lineIds: [] as string[],
+      };
+    }
+
+    const stationById = new Map(
+      getAllStations(db).map((station) => [station.id, station]),
+    );
+    const { stationIds, edgeLineIds, lineIds } = getThroughRoutePath(
+      db,
+      selectedThroughRouteId,
+    );
+
+    return {
+      stations: stationIds
+        .map((stationId) => stationById.get(stationId))
+        .filter((station): station is Station => !!station),
+      edgeLineIds,
+      lineIds,
+    };
+  }, [db, selectedThroughRouteId]);
+
+  const mapSourceStations = selectedThroughRouteId
+    ? throughRoutePath.stations
+    : stations;
+  const mapSourceEdgeLineIds = useMemo(
+    () =>
+      selectedThroughRouteId
+        ? throughRoutePath.edgeLineIds
+        : Array.from(
+            { length: Math.max(0, stations.length - 1) },
+            () => selectedLineId ?? "",
+          ),
+    [selectedThroughRouteId, throughRoutePath.edgeLineIds, stations, selectedLineId],
+  );
+  const mapRouteLineIds = useMemo(
+    () =>
+      selectedThroughRouteId
+        ? throughRoutePath.lineIds
+        : selectedLineId
+          ? [selectedLineId]
+          : [],
+    [selectedThroughRouteId, throughRoutePath.lineIds, selectedLineId],
+  );
+
+  useEffect(() => {
+    setMapStartId(mapSourceStations[0]?.id ?? null);
+    setMapEndId(mapSourceStations[mapSourceStations.length - 1]?.id ?? null);
+    setMapTransitFilter([]);
+  }, [selectedLineId, selectedThroughRouteId, mapSourceStations]);
+
   // Compute transit lines for all stations when in line map mode
   useEffect(() => {
-    if (!db || !selectedLineId || stations.length === 0) {
+    if (!db || mapRouteLineIds.length === 0 || mapSourceStations.length === 0) {
       setMapTransits({});
       return;
     }
     const result: Record<string, Line[]> = {};
-    for (const station of stations) {
+    const routeLineIdSet = new Set(mapRouteLineIds);
+    for (const station of mapSourceStations) {
       const slRecords = getStationLines(db, station.id);
       const otherLines = lines.filter(
         (l) =>
-          l.id !== selectedLineId &&
+          !routeLineIdSet.has(l.id) &&
           slRecords.some((sl) => sl.line_id === l.id),
       );
       if (otherLines.length > 0) result[station.id] = otherLines;
     }
     setMapTransits(result);
-  }, [db, selectedLineId, stations, lines]);
+  }, [db, mapRouteLineIds, mapSourceStations, lines]);
 
   // ── Derived: stations in selected map range (respects direction) ─────────
-  const { mapStations, mapHasMoreBefore, mapHasMoreAfter } = useMemo(() => {
-    if (stations.length === 0)
+  const {
+    mapStations,
+    mapEdgeLineIds,
+    mapHasMoreBefore,
+    mapHasMoreAfter,
+  } = useMemo(() => {
+    if (mapSourceStations.length === 0)
       return {
         mapStations: [],
+        mapEdgeLineIds: [] as string[],
         mapHasMoreBefore: false,
         mapHasMoreAfter: false,
       };
     const startIdx = mapStartId
-      ? stations.findIndex((s) => s.id === mapStartId)
+      ? mapSourceStations.findIndex((s) => s.id === mapStartId)
       : 0;
     const endIdx = mapEndId
-      ? stations.findIndex((s) => s.id === mapEndId)
-      : stations.length - 1;
+      ? mapSourceStations.findIndex((s) => s.id === mapEndId)
+      : mapSourceStations.length - 1;
     const si = startIdx === -1 ? 0 : startIdx;
-    const ei = endIdx === -1 ? stations.length - 1 : endIdx;
+    const ei = endIdx === -1 ? mapSourceStations.length - 1 : endIdx;
     const reversed = si > ei;
     const sliced = reversed
-      ? stations.slice(ei, si + 1).reverse()
-      : stations.slice(si, ei + 1);
+      ? mapSourceStations.slice(ei, si + 1).reverse()
+      : mapSourceStations.slice(si, ei + 1);
+    const slicedEdgeLineIds = reversed
+      ? mapSourceEdgeLineIds.slice(ei, si).reverse()
+      : mapSourceEdgeLineIds.slice(si, ei);
     // "More before/after" tracks whether the route continues beyond each
     // displayed end in the direction of travel.
-    const hasMoreBefore = reversed ? si < stations.length - 1 : si > 0;
-    const hasMoreAfter = reversed ? ei > 0 : ei < stations.length - 1;
+    const hasMoreBefore = reversed
+      ? si < mapSourceStations.length - 1
+      : si > 0;
+    const hasMoreAfter = reversed
+      ? ei > 0
+      : ei < mapSourceStations.length - 1;
     return {
       mapStations: sliced,
+      mapEdgeLineIds: slicedEdgeLineIds,
       mapHasMoreBefore: hasMoreBefore,
       mapHasMoreAfter: hasMoreAfter,
     };
-  }, [stations, mapStartId, mapEndId]);
+  }, [mapSourceStations, mapSourceEdgeLineIds, mapStartId, mapEndId]);
 
-  const selectedLine = lines.find((l) => l.id === selectedLineId) ?? null;
+  const selectedBaseLine = lines.find((l) => l.id === selectedLineId) ?? null;
+  const firstThroughLine = selectedThroughRouteId
+    ? lines.find((line) => line.id === throughRoutePath.lineIds[0]) ?? null
+    : null;
+  const selectedLine: Line | null = selectedThroughRoute
+    ? {
+        ...(firstThroughLine ?? {
+          id: selectedThroughRoute.id,
+          company_id: null,
+          secondary_name: null,
+          tertiary_name: null,
+          quaternary_name: null,
+          line_color: "#333333",
+          prefix: "",
+          priority: null,
+          is_loop: 0,
+          parent_line_id: null,
+        }),
+        id: selectedThroughRoute.id,
+        name: selectedThroughRoute.name,
+        prefix: "",
+        is_loop: 0,
+        parent_line_id: null,
+      }
+    : selectedBaseLine;
+  const mapRouteSelectValue = selectedThroughRouteId
+    ? `through:${selectedThroughRouteId}`
+    : selectedLineId
+      ? `line:${selectedLineId}`
+      : null;
+  const mapRouteSelectData = [
+    {
+      group: t("route.line.title"),
+      items: lines.map((routeLine) => ({
+        value: `line:${routeLine.id}`,
+        label: `[${routeLine.prefix}] ${routeLine.name}`,
+      })),
+    },
+    ...(throughRoutes.length > 0
+      ? [
+          {
+            group: t("route.through-route.title"),
+            items: throughRoutes.map((route) => ({
+              value: `through:${route.id}`,
+              label: route.name,
+            })),
+          },
+        ]
+      : []),
+  ];
   const isLoopLine = selectedLine?.is_loop === 1;
   // When the user opts into linear rendering for a loop line, treat it as non-loop.
   const effectiveIsLoop = isLoopLine && !mapForceLinear;
@@ -665,6 +792,43 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ]),
     );
   }, [lines, routeCompanies]);
+
+  const lineById = useMemo(
+    () => new Map(lines.map((routeLine) => [routeLine.id, routeLine])),
+    [lines],
+  );
+  const mapTrackColors = useMemo(
+    () =>
+      mapEdgeLineIds.map(
+        (lineId) =>
+          lineById.get(lineId)?.line_color ??
+          selectedLine?.line_color ??
+          "#333333",
+      ),
+    [mapEdgeLineIds, lineById, selectedLine],
+  );
+  const mapStationLineIds = useMemo(
+    () =>
+      mapStations.map((_, index) => {
+        if (mapEdgeLineIds.length === 0) return mapRouteLineIds[0] ?? "";
+        return (
+          mapEdgeLineIds[Math.min(index, mapEdgeLineIds.length - 1)] ?? ""
+        );
+      }),
+    [mapStations, mapEdgeLineIds, mapRouteLineIds],
+  );
+  const mapStationColors = useMemo(
+    () =>
+      Object.fromEntries(
+        mapStations.map((station, index) => [
+          station.id,
+          lineById.get(mapStationLineIds[index] ?? "")?.line_color ??
+            selectedLine?.line_color ??
+            "#333333",
+        ]),
+      ),
+    [mapStations, mapStationLineIds, lineById, selectedLine],
+  );
 
   // Derive ServiceInfo list (1+ services) for renderer
   const mapServiceInfos = useMemo((): ServiceInfo[] => {
@@ -700,45 +864,110 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
   // Build label map: stationId -> "[JY01] 東京" format for dropdowns
   const stationLabelMap = useMemo(() => {
-    if (!db || !selectedLineId || stations.length === 0)
+    if (!db || mapSourceStations.length === 0)
       return {} as Record<string, string>;
     const result: Record<string, string> = {};
-    for (const s of stations) {
-      const num = getResolvedStationNumber(db, s.id, selectedLineId);
+    for (const [index, s] of mapSourceStations.entries()) {
+      const edgeIndex = Math.min(index, mapSourceEdgeLineIds.length - 1);
+      const lineId =
+        mapSourceEdgeLineIds[edgeIndex] ?? mapRouteLineIds[0] ?? selectedLineId;
+      const num = lineId ? getResolvedStationNumber(db, s.id, lineId) : null;
       const badge = num?.prefix ? `[${num.prefix}${num.value}] ` : "";
       result[s.id] = `${badge}${s.primary_name}`;
     }
     return result;
-  }, [db, selectedLineId, stations]);
+  }, [
+    db,
+    mapSourceStations,
+    mapSourceEdgeLineIds,
+    mapRouteLineIds,
+    selectedLineId,
+  ]);
 
   // Load station numbers for map range
   useEffect(() => {
-    if (!db || !selectedLineId || mapStations.length === 0) {
+    if (!db || mapStations.length === 0) {
       setMapStationNumbers({});
+      setMapStationNumberGroups({});
       return;
     }
-    const result: Record<
-      string,
-      {
-        prefix: string;
-        value: string;
-        threeLetterCode?: string | null;
-        color?: string;
+    const result: StationNumberMap = {};
+    const groups: StationNumberGroupMap = {};
+    const toStationNumberInfo = (
+      lineId: string,
+      station: Station,
+    ): StationNumberInfo | null => {
+      const number = getResolvedStationNumber(db, station.id, lineId);
+      if (!number) return null;
+      return {
+        prefix: number.prefix,
+        value: number.value,
+        threeLetterCode: station.three_letter_code,
+        color: number.line_color,
+        style: mapLineIndicatorStyles[lineId] ?? "jreast",
+      };
+    };
+
+    for (const [index, station] of mapStations.entries()) {
+      const lineId = mapStationLineIds[index];
+      if (!lineId) continue;
+      const displayNumber = toStationNumberInfo(lineId, station);
+      if (displayNumber) result[station.id] = displayNumber;
+
+      const incomingLineId = mapEdgeLineIds[index - 1];
+      const outgoingLineId = mapEdgeLineIds[index];
+      if (
+        !selectedThroughRouteId ||
+        !incomingLineId ||
+        !outgoingLineId ||
+        incomingLineId === outgoingLineId
+      ) {
+        continue;
       }
-    > = {};
-    for (const station of mapStations) {
-      const num = getResolvedStationNumber(db, station.id, selectedLineId);
-      if (num) {
-        result[station.id] = {
-          prefix: num.prefix,
-          value: num.value,
+      const incomingResolved = getResolvedStationNumber(
+        db,
+        station.id,
+        incomingLineId,
+      );
+      const outgoingResolved = getResolvedStationNumber(
+        db,
+        station.id,
+        outgoingLineId,
+      );
+      if (
+        !incomingResolved ||
+        !outgoingResolved ||
+        incomingResolved.id === outgoingResolved.id
+      ) {
+        continue;
+      }
+      groups[station.id] = [
+        {
+          prefix: incomingResolved.prefix,
+          value: incomingResolved.value,
           threeLetterCode: station.three_letter_code,
-          color: num.line_color,
-        };
-      }
+          color: incomingResolved.line_color,
+          style: mapLineIndicatorStyles[incomingLineId] ?? "jreast",
+        },
+        {
+          prefix: outgoingResolved.prefix,
+          value: outgoingResolved.value,
+          threeLetterCode: station.three_letter_code,
+          color: outgoingResolved.line_color,
+          style: mapLineIndicatorStyles[outgoingLineId] ?? "jreast",
+        },
+      ];
     }
     setMapStationNumbers(result);
-  }, [db, selectedLineId, mapStations]);
+    setMapStationNumberGroups(groups);
+  }, [
+    db,
+    mapStations,
+    mapStationLineIds,
+    mapEdgeLineIds,
+    selectedThroughRouteId,
+    mapLineIndicatorStyles,
+  ]);
 
   // All unique transit lines that appear in the current map range
   const allTransitLines = useMemo(() => {
@@ -787,6 +1016,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ),
     [mapTransits, mapTransitFilter],
   );
+  const mapStationNumberExtraExtent =
+    mapStationNumberMode === "dot"
+      ? getStationNumberGroupExtraExtent(
+          mapStationNumberGroups,
+          mapOrientation,
+          1,
+        )
+      : 0;
 
   // Save size options for line map (multiples of native canvas resolution)
   const mapSaveSizeList = useMemo(() => {
@@ -802,6 +1039,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapForceLinear ? true : mapHasMoreAfter && mapShowFadeAfter,
       mapShowTransitNames,
       mapTrackWidth,
+      mapStationNumberExtraExtent,
     );
     return [1, 2, 3, 4].map((mult) => ({
       label: `${w * mult} × ${h * mult} (${["SS", "M", "L", "XL"][mult - 1]})`,
@@ -822,6 +1060,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapShowFadeAfter,
     mapShowTransitNames,
     mapTrackWidth,
+    mapStationNumberExtraExtent,
   ]);
 
   // Overlap warnings for circular maps
@@ -1012,7 +1251,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 <Select
                   label={t("route.line.title")}
                   value={selectedLineId}
-                  onChange={setSelectedLineId}
+                  onChange={(value) => {
+                    setSelectedLineId(value);
+                    if (value) setSelectedThroughRouteId(null);
+                  }}
                   data={lines.map((l) => ({
                     value: l.id,
                     label: `[${l.prefix}] ${l.name}`,
@@ -1267,15 +1509,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           <>
             {/* ── Route ── */}
             <Grid gutter="md">
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                 <Select
                   label={t("route.line.title")}
-                  value={selectedLineId}
-                  onChange={setSelectedLineId}
-                  data={lines.map((l) => ({
-                    value: l.id,
-                    label: `[${l.prefix}] ${l.name}`,
-                  }))}
+                  value={mapRouteSelectValue}
+                  onChange={(value) => {
+                    if (value?.startsWith("line:")) {
+                      setSelectedLineId(value.slice("line:".length));
+                      setSelectedThroughRouteId(null);
+                    } else if (value?.startsWith("through:")) {
+                      setSelectedThroughRouteId(value.slice("through:".length));
+                      setSelectedLineId(null);
+                    } else {
+                      setSelectedLineId(null);
+                      setSelectedThroughRouteId(null);
+                    }
+                  }}
+                  data={mapRouteSelectData}
                   placeholder={t("route.line.select")}
                   clearable
                 />
@@ -1285,16 +1535,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   label={t("route.linemap.range-start")}
                   value={mapStartId}
                   onChange={setMapStartId}
-                  data={stations.map((s) => ({
+                  data={mapSourceStations.map((s) => ({
                     value: s.id,
                     label: stationLabelMap[s.id] ?? s.primary_name,
                   }))}
                   placeholder={
-                    selectedLineId
+                    selectedLine
                       ? t("route.station.select")
                       : t("route.station.empty")
                   }
-                  disabled={!selectedLineId}
+                  disabled={!selectedLine}
                 />
               </Grid.Col>
               <Grid.Col
@@ -1304,7 +1554,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 <Button
                   variant="default"
                   fullWidth
-                  disabled={!selectedLineId}
+                  disabled={!selectedLine}
                   onClick={() => {
                     const tmp = mapStartId;
                     setMapStartId(mapEndId);
@@ -1320,16 +1570,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   label={t("route.linemap.range-end")}
                   value={mapEndId}
                   onChange={setMapEndId}
-                  data={stations.map((s) => ({
+                  data={mapSourceStations.map((s) => ({
                     value: s.id,
                     label: stationLabelMap[s.id] ?? s.primary_name,
                   }))}
                   placeholder={
-                    selectedLineId
+                    selectedLine
                       ? t("route.station.select")
                       : t("route.station.empty")
                   }
-                  disabled={!selectedLineId}
+                  disabled={!selectedLine}
                 />
               </Grid.Col>
             </Grid>
@@ -1797,6 +2047,13 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     circularFontSize={mapFontSize}
                     stationNumberMode={mapStationNumberMode}
                     stationNumbers={mapStationNumbers}
+                    stationNumberGroups={mapStationNumberGroups}
+                    trackColors={
+                      selectedThroughRouteId ? mapTrackColors : undefined
+                    }
+                    stationColors={
+                      selectedThroughRouteId ? mapStationColors : undefined
+                    }
                     stationSpacing={mapStationSpacing}
                     trackWidth={mapTrackWidth}
                     primaryLangField={mapPrimaryLang}

@@ -76,3 +76,114 @@ test("aligns reversed adjacent lines in route input", async ({ page }) => {
     page.getByRole("option", { name: "荻窪（中央・総武線各駅停車）" }),
   ).toBeVisible();
 });
+
+test("selects and draws a through route with each section color", async ({
+  page,
+}) => {
+  await page.goto("/en/");
+  await page.waitForSelector('[role="tab"]', { timeout: 30000 });
+  await page.waitForTimeout(3000);
+  await loadSampleDatabase(page);
+
+  await page.getByRole("tab", { name: "From Route" }).click();
+  await page.getByText("Line Map (Single/Through)", { exact: true }).click();
+  await page.getByRole("textbox", { name: "Lines", exact: true }).click();
+  await expect(page.getByText("Through Routes", { exact: true })).toBeVisible();
+  await page
+    .getByRole("option", {
+      name: "三鷹 → 東葉勝田台（東西線直通）",
+      exact: true,
+    })
+    .click();
+
+  await expect(page.getByRole("textbox", { name: "From" })).toHaveValue(
+    /三鷹/,
+  );
+  await expect(page.getByRole("textbox", { name: "To" })).toHaveValue(
+    /東葉勝田台/,
+  );
+
+  const canvas = page.locator(".map-preview canvas").first();
+  await expect(canvas).toBeVisible();
+  const [firstSectionColor, lastSectionColor] = await canvas.evaluate(
+    (element) => {
+      const routeCanvas = element as HTMLCanvasElement;
+      const context = routeCanvas.getContext("2d", { willReadFrequently: true });
+      if (!context) throw new Error("Canvas context is unavailable");
+      const sample = (x: number) =>
+        Array.from(context.getImageData(x, 210, 1, 1).data.slice(0, 3));
+      return [sample(175), sample(routeCanvas.width - 175)];
+    },
+  );
+
+  expect(firstSectionColor).toEqual([255, 212, 0]);
+  expect(lastSectionColor).toEqual([120, 233, 0]);
+
+  const canvasSize = () =>
+    page
+      .locator(".map-preview canvas")
+      .first()
+      .evaluate((element) => ({
+        width: (element as HTMLCanvasElement).width,
+        height: (element as HTMLCanvasElement).height,
+      }));
+  const baseHorizontalSize = await canvasSize();
+
+  await page
+    .getByRole("radio", { name: "Badge", exact: true })
+    .evaluate((element) => (element as HTMLInputElement).click());
+  await expect
+    .poll(async () => (await canvasSize()).width)
+    .toBe(baseHorizontalSize.width);
+  const connectedBadgeColors = await page
+    .locator(".map-preview canvas")
+    .first()
+    .evaluate((element) => {
+      const routeCanvas = element as HTMLCanvasElement;
+      const context = routeCanvas.getContext("2d", { willReadFrequently: true });
+      if (!context) throw new Error("Canvas context is unavailable");
+      const pixels = context.getImageData(930, 110, 140, 90).data;
+      const hasColor = (target: [number, number, number]) => {
+        for (let index = 0; index < pixels.length; index += 4) {
+          if (
+            Math.abs(pixels[index] - target[0]) <= 2 &&
+            Math.abs(pixels[index + 1] - target[1]) <= 2 &&
+            Math.abs(pixels[index + 2] - target[2]) <= 2
+          ) {
+            return true;
+          }
+        }
+        return false;
+      };
+      return {
+        hasChuoSobu: hasColor([255, 212, 0]),
+        hasTozai: hasColor([0, 167, 219]),
+      };
+    });
+  expect(connectedBadgeColors).toEqual({
+    hasChuoSobu: true,
+    hasTozai: true,
+  });
+
+  await page
+    .getByRole("radio", { name: "Replace Dot", exact: true })
+    .evaluate((element) => (element as HTMLInputElement).click());
+  await expect
+    .poll(async () => (await canvasSize()).width)
+    .toBeGreaterThan(baseHorizontalSize.width);
+
+  await page
+    .getByRole("radio", { name: "Vertical", exact: true })
+    .evaluate((element) => (element as HTMLInputElement).click());
+  await expect
+    .poll(async () => (await canvasSize()).height)
+    .toBeGreaterThan(baseHorizontalSize.height);
+  const expandedVerticalHeight = (await canvasSize()).height;
+
+  await page
+    .getByRole("radio", { name: "Badge", exact: true })
+    .evaluate((element) => (element as HTMLInputElement).click());
+  await expect
+    .poll(async () => (await canvasSize()).height)
+    .toBeLessThan(expandedVerticalHeight);
+});
