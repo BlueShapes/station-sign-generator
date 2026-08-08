@@ -428,6 +428,65 @@ TOYO_RAPID_STATIONS = [
 ]
 
 
+# (key, display_name, color, stop_numbers, special_stop_numbers)
+# "special" represents a conditional stop, such as the three stations where
+# Chuo Line rapid trains stop only on weekdays.
+CHUO_RAPID_SERVICES = [
+    ("kaisoku", "快速", "#f15a22", frozenset(range(1, 25)), frozenset({7, 8, 10})),
+    (
+        "tsukin-kaisoku",
+        "通勤快速",
+        "#8e44ad",
+        frozenset({1, 2, 3, 4, 5, 6, 9, 11, 12, 16, 19, 20, 21, 22, 23, 24}),
+        frozenset(),
+    ),
+    (
+        "chuo-tokkai",
+        "中央特快",
+        "#0067c0",
+        frozenset({1, 2, 3, 4, 5, 6, 12, 16, 19, 20, 21, 22, 23, 24}),
+        frozenset(),
+    ),
+    (
+        "tsukin-tokkai",
+        "通勤特別快速",
+        "#c0392b",
+        frozenset({1, 2, 3, 4, 5, 16, 19, 20, 21, 22, 23, 24}),
+        frozenset(),
+    ),
+]
+
+TOZAI_SERVICES = [
+    ("kakueki", "各駅停車", "#00a7db", frozenset(range(1, 24)), frozenset()),
+    (
+        "kaisoku",
+        "快速",
+        "#e60012",
+        frozenset({*range(1, 15), 18, 23}),
+        frozenset(),
+    ),
+    (
+        "tsukin-kaisoku",
+        "通勤快速",
+        "#009944",
+        frozenset({*range(1, 19), 23}),
+        frozenset(),
+    ),
+]
+
+TOYO_RAPID_SERVICES = [
+    ("kakueki", "各駅停車", "#e95513", frozenset(range(1, 10)), frozenset()),
+    ("kaisoku", "快速", "#e60012", frozenset(range(1, 10)), frozenset()),
+    (
+        "tsukin-kaisoku",
+        "通勤快速",
+        "#009944",
+        frozenset(range(1, 10)),
+        frozenset(),
+    ),
+]
+
+
 def insert_numbered_line_stations(cursor, line_id, id_prefix, stations):
     """Insert a route while reusing any station records already in the sample."""
     for number, station_id, primary_name, furigana, english in stations:
@@ -445,6 +504,28 @@ def insert_numbered_line_stations(cursor, line_id, id_prefix, stations):
         )
 
 
+def insert_line_services(cursor, line_id, id_prefix, stations, services):
+    """Insert service types and their stopping patterns for a numbered line."""
+    station_ids = {number: station_id for number, station_id, *_ in stations}
+    for sort_order, (key, name, color, stop_numbers, special_numbers) in enumerate(services):
+        service_id = f"svc-{id_prefix}-{key}"
+        cursor.execute(
+            "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+            (service_id, line_id, name, color, sort_order),
+        )
+        for number in sorted(stop_numbers):
+            status = "special" if number in special_numbers else "stop"
+            cursor.execute(
+                "INSERT INTO station_service_stops VALUES (?, ?, ?, ?)",
+                (
+                    f"sss-{id_prefix}-{key}-{number:02d}",
+                    station_ids[number],
+                    service_id,
+                    status,
+                ),
+            )
+
+
 def main():
     script_dir = os.path.dirname(__file__)
     out_path = os.path.normpath(os.path.join(script_dir, "..", ".claude", "output", "sample-yamanote-keihintouhoku-negishi.sqlite"))
@@ -458,7 +539,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.5.3')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.5.4')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -756,6 +837,7 @@ def main():
         (jc_line_id, company_id, "中央線快速", "#f15a22", "JC", 5, 0),
     )
     insert_numbered_line_stations(c, jc_line_id, "jc", CHUO_RAPID_STATIONS)
+    insert_line_services(c, jc_line_id, "jc", CHUO_RAPID_STATIONS, CHUO_RAPID_SERVICES)
 
     # ── Chuo-Sobu Line (Local) ────────────────────────────────────────────────
     jb_line_id = "line-chuo-sobu-local"
@@ -772,6 +854,7 @@ def main():
         (t_line_id, company_metro_id, "東西線", "#00a7db", "T", 3, 0),
     )
     insert_numbered_line_stations(c, t_line_id, "t", TOZAI_STATIONS)
+    insert_line_services(c, t_line_id, "t", TOZAI_STATIONS, TOZAI_SERVICES)
 
     # ── Toyo Rapid Line ───────────────────────────────────────────────────────
     company_toyo_id = "company-toyo-rapid"
@@ -785,6 +868,7 @@ def main():
         (tr_line_id, company_toyo_id, "東葉高速線", "#e95513", "TR", 1, 0),
     )
     insert_numbered_line_stations(c, tr_line_id, "tr", TOYO_RAPID_STATIONS)
+    insert_line_services(c, tr_line_id, "tr", TOYO_RAPID_STATIONS, TOYO_RAPID_SERVICES)
 
     conn.commit()
     conn.close()
@@ -800,7 +884,7 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.5.3")
+    print(f"  - version: 0.5.4")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
     print(f"  - 3 companies (JR東日本, 東京メトロ, 東葉高速鉄道)")
     print(f"  - 10 lines:")
@@ -810,10 +894,10 @@ def main():
     print(f"      湘南新宿ライン  (JS, #c61c1b,  is_loop=0): {len(JS_STATIONS)} stations ({js_new} new + {js_reuse} reused); 4 services")
     print(f"      丸ノ内線        (M,  #dd3839,  is_loop=0): {len(MARUNOUCHI_STATIONS)} stations; 1 service")
     print(f"      丸ノ内線（方南町支線）(Mb, #dd3839, is_loop=0): {len(MARUNOUCHI_BRANCH_STATIONS)} stations (1 shared + {mb_new} new); 1 service")
-    print(f"      中央線快速      (JC, #f15a22,  is_loop=0): {len(CHUO_RAPID_STATIONS)} stations")
+    print(f"      中央線快速      (JC, #f15a22,  is_loop=0): {len(CHUO_RAPID_STATIONS)} stations; 4 services")
     print(f"      中央・総武線各駅停車 (JB, #ffd400, is_loop=0): {len(CHUO_SOBU_LOCAL_STATIONS)} stations")
-    print(f"      東西線          (T,  #00a7db,  is_loop=0): {len(TOZAI_STATIONS)} stations")
-    print(f"      東葉高速線      (TR, #e95513,  is_loop=0): {len(TOYO_RAPID_STATIONS)} stations")
+    print(f"      東西線          (T,  #00a7db,  is_loop=0): {len(TOZAI_STATIONS)} stations; 3 services")
+    print(f"      東葉高速線      (TR, #e95513,  is_loop=0): {len(TOYO_RAPID_STATIONS)} stations; 3 services")
 
 
 if __name__ == "__main__":

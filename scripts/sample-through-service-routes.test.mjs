@@ -53,6 +53,47 @@ function numberedLinesForStation(stationId) {
   }
 }
 
+function servicesForLine(lineId) {
+  const statement = db.prepare(
+    `SELECT id, name, color, sort_order
+     FROM services
+     WHERE line_id = ?
+     ORDER BY sort_order`,
+  );
+  try {
+    statement.bind([lineId]);
+    const services = [];
+    while (statement.step()) services.push(statement.getAsObject());
+    return services;
+  } finally {
+    statement.free();
+  }
+}
+
+function stopsForService(serviceId) {
+  const statement = db.prepare(
+    `SELECT CAST(sn.value AS INTEGER) AS number, sss.status
+     FROM station_service_stops sss
+     JOIN services svc ON svc.id = sss.service_id
+     JOIN station_numbers sn
+       ON sn.station_id = sss.station_id AND sn.line_id = svc.line_id
+     WHERE sss.service_id = ?
+     ORDER BY CAST(sn.value AS INTEGER)`,
+  );
+  try {
+    statement.bind([serviceId]);
+    const stops = [];
+    while (statement.step()) stops.push(statement.getAsObject());
+    return stops;
+  } finally {
+    statement.free();
+  }
+}
+
+function stopNumbers(serviceId) {
+  return stopsForService(serviceId).map(({ number }) => number);
+}
+
 describe("through-service sample routes", () => {
   test("contains the four requested complete lines", () => {
     expect(route("line-chuo-rapid")).toMatchObject({
@@ -104,4 +145,60 @@ describe("through-service sample routes", () => {
       { prefix: "TR", value: "01" },
     ]);
   });
+
+  test("contains the Chuo Line rapid service patterns", () => {
+    expect(servicesForLine("line-chuo-rapid").map(({ id, name }) => ({ id, name }))).toEqual([
+      { id: "svc-jc-kaisoku", name: "快速" },
+      { id: "svc-jc-tsukin-kaisoku", name: "通勤快速" },
+      { id: "svc-jc-chuo-tokkai", name: "中央特快" },
+      { id: "svc-jc-tsukin-tokkai", name: "通勤特別快速" },
+    ]);
+
+    expect(stopNumbers("svc-jc-tsukin-kaisoku")).toEqual([
+      1, 2, 3, 4, 5, 6, 9, 11, 12, 16, 19, 20, 21, 22, 23, 24,
+    ]);
+    expect(stopNumbers("svc-jc-chuo-tokkai")).toEqual([
+      1, 2, 3, 4, 5, 6, 12, 16, 19, 20, 21, 22, 23, 24,
+    ]);
+    expect(stopNumbers("svc-jc-tsukin-tokkai")).toEqual([
+      1, 2, 3, 4, 5, 16, 19, 20, 21, 22, 23, 24,
+    ]);
+    expect(
+      stopsForService("svc-jc-kaisoku")
+        .filter(({ status }) => status === "special")
+        .map(({ number }) => number),
+    ).toEqual([7, 8, 10]);
+  });
+
+  test("contains the Tokyo Metro Tozai Line service patterns", () => {
+    expect(servicesForLine("line-tozai").map(({ id, name }) => ({ id, name }))).toEqual([
+      { id: "svc-t-kakueki", name: "各駅停車" },
+      { id: "svc-t-kaisoku", name: "快速" },
+      { id: "svc-t-tsukin-kaisoku", name: "通勤快速" },
+    ]);
+    expect(stopNumbers("svc-t-kakueki")).toEqual(Array.from({ length: 23 }, (_, i) => i + 1));
+    expect(stopNumbers("svc-t-kaisoku")).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 18, 23,
+    ]);
+    expect(stopNumbers("svc-t-tsukin-kaisoku")).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 23,
+    ]);
+  });
+
+  test("contains all-stations service patterns for the Toyo Rapid Line", () => {
+    const services = servicesForLine("line-toyo-rapid");
+    expect(services.map(({ id, name }) => ({ id, name }))).toEqual([
+      { id: "svc-tr-kakueki", name: "各駅停車" },
+      { id: "svc-tr-kaisoku", name: "快速" },
+      { id: "svc-tr-tsukin-kaisoku", name: "通勤快速" },
+    ]);
+    for (const { id } of services) {
+      expect(stopNumbers(id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    }
+  });
+
+  test("keeps Chuo-Sobu Line local without separate service types", () => {
+    expect(servicesForLine("line-chuo-sobu-local")).toEqual([]);
+  });
+
 });
