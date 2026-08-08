@@ -265,7 +265,8 @@ route:
     center-colors: 中央四角の色
   mode:
     sign: 駅名標
-    linemap: 路線図
+    linemap: 路線図（単線・直通）
+    multiline-linemap: 路線図（複線）
   linemap:
     orientation: 向き
     horizontal: 横
@@ -273,6 +274,7 @@ route:
     range-start: 始発駅
     range-end: 終着駅
     transit-filter: 乗換路線を表示
+    transit-show-names: 乗換先の路線名を表示
     font-size: 駅名フォントサイズ
     overlap-warning-title: 駅名の重なりを検出
     overlap-warning: 一部の駅名が重なっています。フォントサイズを小さくしてみてください。
@@ -285,6 +287,7 @@ route:
     name-style-above: 上（縦書き）
     name-style-below: 下（縦書き）
     station-spacing: 駅間隔
+    line-width: 路線の太さ
     primary-lang: 主表示
     secondary-lang: 副表示
     show-secondary-lang: 表示

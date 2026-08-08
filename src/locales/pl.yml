@@ -257,7 +257,8 @@ route:
     center-colors: Kolory kwadratu centralnego
   mode:
     sign: Znak stacji
-    linemap: Mapa linii
+    linemap: Mapa linii (pojedyncza/bezpośrednia)
+    multiline-linemap: Mapa linii (wiele linii)
   linemap:
     orientation: Orientacja
     horizontal: Poziomy
@@ -265,6 +266,7 @@ route:
     range-start: Od
     range-end: Do
     transit-filter: Pokaż linie tranzytowe
+    transit-show-names: Pokaż nazwy linii przesiadkowych
     font-size: Rozmiar czcionki nazwy stacji
     overlap-warning-title: Wykryto nakładanie się etykiet
     overlap-warning: Niektóre nazwy stacji pokrywają się. Spróbuj zmniejszyć rozmiar czcionki.
@@ -277,6 +279,7 @@ route:
     name-style-above: Powyżej
     name-style-below: Poniżej
     station-spacing: Rozstaw stacji
+    line-width: Grubość linii
     primary-lang: Język podstawowy
     secondary-lang: Język dodatkowy
     show-secondary-lang: Pokaż

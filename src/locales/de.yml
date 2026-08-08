@@ -265,7 +265,8 @@ route:
     center-colors: Farben der mittleren Quadrate
   mode:
     sign: Bahnhofsschild
-    linemap: Linienplan
+    linemap: Linienplan (Einzellinie/Durchbindung)
+    multiline-linemap: Linienplan (mehrere Linien)
   linemap:
     orientation: Ausrichtung
     horizontal: Horizontal
@@ -273,6 +274,7 @@ route:
     range-start: Von
     range-end: Bis
     transit-filter: Umsteigelinien anzeigen
+    transit-show-names: Namen der Umsteigelinien anzeigen
     font-size: Schriftgröße des Stationsnamens
     overlap-warning-title: Überlappende Beschriftungen erkannt
     overlap-warning: Einige Stationsnamen überlappen sich. Verkleinere die Schrift.
@@ -285,6 +287,7 @@ route:
     name-style-above: Oben
     name-style-below: Unten
     station-spacing: Stationsabstand
+    line-width: Linienstärke
     primary-lang: Primärsprache
     secondary-lang: Sekundärsprache
     show-secondary-lang: Anzeigen

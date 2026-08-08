@@ -257,7 +257,8 @@ route:
     center-colors: 中心方形顏色
   mode:
     sign: 車站標誌
-    linemap: 線路圖
+    linemap: 路線圖（單線／直通）
+    multiline-linemap: 路線圖（複線）
   linemap:
     orientation: 方向
     horizontal: 水平
@@ -265,6 +266,7 @@ route:
     range-start: 來自
     range-end: 至
     transit-filter: 顯示公車線路
+    transit-show-names: 顯示轉乘路線名稱
     font-size: 站名字體型大小
     overlap-warning-title: 偵測到標籤重疊
     overlap-warning: 有些站名重疊。嘗試減小字體大小。
@@ -277,6 +279,7 @@ route:
     name-style-above: 以上
     name-style-below: 下面
     station-spacing: 站間距
+    line-width: 路線粗細
     primary-lang: 主要語言
     secondary-lang: 第二語言
     show-secondary-lang: 顯示

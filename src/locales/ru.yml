@@ -257,7 +257,8 @@ route:
     center-colors: Цвета центральной площади
   mode:
     sign: Знак станции
-    linemap: Линейная карта
+    linemap: Схема линии (одна/сквозная)
+    multiline-linemap: Схема линий (несколько)
   linemap:
     orientation: Ориентация
     horizontal: Горизонтальный
@@ -265,6 +266,7 @@ route:
     range-start: От
     range-end: Чтобы
     transit-filter: Показать транзитные линии
+    transit-show-names: Показывать названия линий пересадки
     font-size: Название станции Размер шрифта
     overlap-warning-title: Обнаружено перекрытие этикеток
     overlap-warning: Названия некоторых станций совпадают. Попробуйте уменьшить размер шрифта.
@@ -277,6 +279,7 @@ route:
     name-style-above: Выше
     name-style-below: Ниже
     station-spacing: Расстояние между станциями
+    line-width: Толщина линии
     primary-lang: Основной язык
     secondary-lang: Второй язык
     show-secondary-lang: Показать

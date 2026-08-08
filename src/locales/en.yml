@@ -265,7 +265,8 @@ route:
     center-colors: Center Square Colors
   mode:
     sign: Station Sign
-    linemap: Line Map
+    linemap: Line Map (Single/Through)
+    multiline-linemap: Line Map (Multiple Lines)
   linemap:
     orientation: Orientation
     horizontal: Horizontal
@@ -273,6 +274,7 @@ route:
     range-start: From
     range-end: To
     transit-filter: Show Transit Lines
+    transit-show-names: Show transfer line names
     font-size: Station Name Font Size
     overlap-warning-title: Label Overlap Detected
     overlap-warning: Some station names overlap. Try reducing the font size.
@@ -285,6 +287,7 @@ route:
     name-style-above: Above
     name-style-below: Below
     station-spacing: Station Spacing
+    line-width: Line Thickness
     primary-lang: Primary Language
     secondary-lang: Secondary Language
     show-secondary-lang: Show

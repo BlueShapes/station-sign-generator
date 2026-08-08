@@ -257,7 +257,8 @@ route:
     center-colors: केंद्र चौकोर रंग
   mode:
     sign: स्टेशन चिन्ह
-    linemap: रेखा मानचित्र
+    linemap: लाइन मानचित्र (एकल/सीधी)
+    multiline-linemap: लाइन मानचित्र (एकाधिक लाइनें)
   linemap:
     orientation: अभिमुखीकरण
     horizontal: क्षैतिज
@@ -265,6 +266,7 @@ route:
     range-start: से
     range-end: को
     transit-filter: पारगमन रेखाएँ दिखाएँ
+    transit-show-names: इंटरचेंज लाइन के नाम दिखाएँ
     font-size: स्टेशन का नाम फ़ॉन्ट आकार
     overlap-warning-title: लेबल ओवरलैप का पता चला
     overlap-warning: कुछ स्टेशनों के नाम ओवरलैप होते हैं। फ़ॉन्ट का आकार कम करने का प्रयास करें.
@@ -277,6 +279,7 @@ route:
     name-style-above: ऊपर
     name-style-below: नीचे
     station-spacing: स्टेशन रिक्ति
+    line-width: लाइन की मोटाई
     primary-lang: प्राथमिक भाषा
     secondary-lang: द्वितीयक भाषा
     show-secondary-lang: दिखाओ

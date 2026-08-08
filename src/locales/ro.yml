@@ -257,7 +257,8 @@ route:
     center-colors: Culori Piața Centrală
   mode:
     sign: Semnul stației
-    linemap: Harta liniilor
+    linemap: Harta liniilor (o linie/direct)
+    multiline-linemap: Harta liniilor (linii multiple)
   linemap:
     orientation: Orientare
     horizontal: Orizontală
@@ -265,6 +266,7 @@ route:
     range-start: De la
     range-end: Pentru a
     transit-filter: Afișați liniile de transport public
+    transit-show-names: Afișează numele liniilor de transfer
     font-size: Nume stație Dimensiune font
     overlap-warning-title: S-a detectat suprapunerea etichetelor
     overlap-warning: Unele nume de stații se suprapun. Încercați să reduceți dimensiunea fontului.
@@ -277,6 +279,7 @@ route:
     name-style-above: Mai sus
     name-style-below: Mai jos
     station-spacing: Spațierea stațiilor
+    line-width: Grosimea liniei
     primary-lang: Limba primară
     secondary-lang: Limba secundară
     show-secondary-lang: Arată

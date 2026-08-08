@@ -257,7 +257,8 @@ route:
     center-colors: Warna Segi Empat Tengah
   mode:
     sign: Tanda Stesen
-    linemap: Peta Garisan
+    linemap: Peta Garisan (Tunggal/Terus)
+    multiline-linemap: Peta Garisan (Berbilang)
   linemap:
     orientation: Orientasi
     horizontal: Mendatar
@@ -265,6 +266,7 @@ route:
     range-start: daripada
     range-end: Kepada
     transit-filter: Tunjukkan Laluan Transit
+    transit-show-names: Tunjukkan nama laluan pertukaran
     font-size: Saiz Font Nama Stesen
     overlap-warning-title: Pertindihan Label Dikesan
     overlap-warning: Beberapa nama stesen bertindih. Cuba kecilkan saiz fon.
@@ -277,6 +279,7 @@ route:
     name-style-above: Di atas
     name-style-below: Di bawah
     station-spacing: Jarak Stesen
+    line-width: Ketebalan Laluan
     primary-lang: Bahasa Utama
     secondary-lang: Bahasa Menengah
     show-secondary-lang: Tunjukkan

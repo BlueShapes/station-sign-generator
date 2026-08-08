@@ -97,9 +97,14 @@ import LineMapRenderer, {
   type ServiceInfo,
   type ServiceStopMap,
 } from "@/components/signs/LineMapRenderer";
+import {
+  DEFAULT_TRACK_WIDTH,
+  MAX_TRACK_WIDTH,
+  MIN_TRACK_WIDTH,
+} from "@/components/signs/lineMapGeometry";
 
 type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
-type TabMode = "sign" | "linemap";
+type TabMode = "sign" | "linemap" | "multiline-linemap";
 type MapOrientation = "horizontal" | "vertical";
 type AdjacentSide = "left" | "right";
 
@@ -185,10 +190,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapShowFadeBefore, setMapShowFadeBefore] = useState(true);
   const [mapShowFadeAfter, setMapShowFadeAfter] = useState(true);
   const [mapTransits, setMapTransits] = useState<Record<string, Line[]>>({});
-  /** null = show all transit lines; array = show only these line IDs */
-  const [mapTransitFilter, setMapTransitFilter] = useState<string[] | null>(
-    null,
-  );
+  const [mapTransitFilter, setMapTransitFilter] = useState<string[]>([]);
+  const [mapShowTransitNames, setMapShowTransitNames] = useState(true);
   const [mapFontSize, setMapFontSize] = useState(CIRCULAR_FONT_DEFAULT);
   const [mapSaveSize, setMapSaveSize] = useState(LineMapScale);
   const [mapStationNumberMode, setMapStationNumberMode] =
@@ -208,6 +211,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     "normal" | "above" | "below"
   >("normal");
   const [mapStationSpacing, setMapStationSpacing] = useState(90);
+  const [mapTrackWidth, setMapTrackWidth] = useState(DEFAULT_TRACK_WIDTH);
   const [mapPrimaryLang, setMapPrimaryLang] =
     useState<StationNameField>("primary_name");
   const [mapSecondaryLang, setMapSecondaryLang] =
@@ -248,7 +252,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setSelectedStationId(null);
     setMapStartId(stns[0]?.id ?? null);
     setMapEndId(stns[stns.length - 1]?.id ?? null);
-    setMapTransitFilter(null);
+    setMapTransitFilter([]);
   }, [db, selectedLineId]);
 
   // Load services and service stops when line changes
@@ -614,6 +618,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     return getAllCompanies(db).find((c) => c.id === selectedLine.company_id)
       ?.station_number_style;
   }, [db, selectedLine?.company_id]);
+  const mapLineIndicatorStyles = useMemo(() => {
+    if (!db) return {};
+    const styleByCompanyId = new Map(
+      getAllCompanies(db).map((company) => [
+        company.id,
+        company.station_number_style,
+      ]),
+    );
+    return Object.fromEntries(
+      lines.map((routeLine) => [
+        routeLine.id,
+        routeLine.company_id
+          ? (styleByCompanyId.get(routeLine.company_id) ?? "jreast")
+          : "jreast",
+      ]),
+    );
+  }, [db, lines]);
 
   // Derive ServiceInfo list (1+ services) for renderer
   const mapServiceInfos = useMemo((): ServiceInfo[] => {
@@ -708,22 +729,32 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const mapMaxNameExtent = useMemo(() => {
     if (mapStations.length === 0) return 60;
     const maxCharCount = Math.max(
-      ...mapStations.map((s) => [...(s[mapPrimaryLang] ?? "")].length),
+      ...mapStations.map((station) =>
+        Math.max(
+          [...(station[mapPrimaryLang] ?? "")].length,
+          mapShowSecondaryLang
+            ? [...(station[mapSecondaryLang] ?? "")].length
+            : 0,
+        ),
+      ),
     );
     return maxCharCount > 0 ? maxCharCount * (JP_FONT + 1) - 1 : 60;
-  }, [mapStations, mapPrimaryLang]);
+  }, [
+    mapStations,
+    mapPrimaryLang,
+    mapSecondaryLang,
+    mapShowSecondaryLang,
+  ]);
 
   // Apply transit filter before passing to renderer
   const filteredMapTransits = useMemo<Record<string, Line[]>>(
     () =>
-      mapTransitFilter === null
-        ? mapTransits
-        : Object.fromEntries(
-            Object.entries(mapTransits).map(([stationId, tlines]) => [
-              stationId,
-              tlines.filter((tl) => mapTransitFilter.includes(tl.id)),
-            ]),
-          ),
+      Object.fromEntries(
+        Object.entries(mapTransits).map(([stationId, tlines]) => [
+          stationId,
+          tlines.filter((tl) => mapTransitFilter.includes(tl.id)),
+        ]),
+      ),
     [mapTransits, mapTransitFilter],
   );
 
@@ -739,6 +770,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapStationSpacing,
       mapForceLinear ? true : mapHasMoreBefore && mapShowFadeBefore,
       mapForceLinear ? true : mapHasMoreAfter && mapShowFadeAfter,
+      mapShowTransitNames,
+      mapTrackWidth,
     );
     return [1, 2, 3, 4].map((mult) => ({
       label: `${w * mult} × ${h * mult} (${["SS", "M", "L", "XL"][mult - 1]})`,
@@ -757,6 +790,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapShowFadeBefore,
     mapHasMoreAfter,
     mapShowFadeAfter,
+    mapShowTransitNames,
+    mapTrackWidth,
   ]);
 
   // Overlap warnings for circular maps
@@ -771,6 +806,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapPrimaryLang,
       mapSecondaryLang,
       mapShowSecondaryLang,
+      mapShowTransitNames,
+      mapTrackWidth,
     );
   }, [
     effectiveIsLoop,
@@ -782,6 +819,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapPrimaryLang,
     mapSecondaryLang,
     mapShowSecondaryLang,
+    mapShowTransitNames,
+    mapTrackWidth,
   ]);
 
   const handleSaveSign = async () => {
@@ -864,6 +903,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   <Group gap={6}>
                     <IconMap size={16} />
                     {t("route.mode.linemap")}
+                  </Group>
+                ),
+              },
+              {
+                value: "multiline-linemap",
+                label: (
+                  <Group gap={6}>
+                    <IconMap size={16} />
+                    {t("route.mode.multiline-linemap")}
                   </Group>
                 ),
               },
@@ -1469,6 +1517,35 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Box>
                     </Grid.Col>
                   )}
+                  <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                    <Text size="sm" fw={500} mb={8}>
+                      {t("route.linemap.line-width")}
+                    </Text>
+                    <Box
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <IconRuler size={20} style={{ flexShrink: 0 }} />
+                      <Slider
+                        value={mapTrackWidth}
+                        label={(value) => `${value}`}
+                        labelAlwaysOn
+                        step={1}
+                        min={MIN_TRACK_WIDTH}
+                        max={MAX_TRACK_WIDTH}
+                        style={{ width: "100%" }}
+                        onChange={setMapTrackWidth}
+                        marks={[
+                          { value: DEFAULT_TRACK_WIDTH, label: "6" },
+                          { value: 18, label: "18" },
+                          { value: MAX_TRACK_WIDTH, label: "30" },
+                        ]}
+                      />
+                    </Box>
+                  </Grid.Col>
                 </Grid>
               </>
             )}
@@ -1592,18 +1669,22 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     <Grid.Col span={{ base: 12, md: 6 }}>
                       <MultiSelect
                         label={t("route.linemap.transit-filter")}
-                        value={
-                          mapTransitFilter ?? allTransitLines.map((l) => l.id)
-                        }
-                        onChange={(v) =>
-                          setMapTransitFilter(
-                            v.length === allTransitLines.length ? null : v,
-                          )
-                        }
+                        value={mapTransitFilter}
+                        onChange={setMapTransitFilter}
                         data={allTransitLines.map((l) => ({
                           value: l.id,
-                          label: `[${l.prefix}] ${l.name}`,
+                          label: l.prefix ? `[${l.prefix}] ${l.name}` : l.name,
                         }))}
+                      />
+                      <Switch
+                        mt="xs"
+                        label={t("route.linemap.transit-show-names")}
+                        checked={mapShowTransitNames}
+                        onChange={(event) =>
+                          setMapShowTransitNames(event.currentTarget.checked)
+                        }
+                        disabled={mapTransitFilter.length === 0}
+                        size="xs"
                       />
                     </Grid.Col>
                   )}
@@ -1676,6 +1757,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     line={selectedLine}
                     isLoop={effectiveIsLoop}
                     transits={filteredMapTransits}
+                    transitLineStyles={mapLineIndicatorStyles}
+                    showTransitNames={mapShowTransitNames}
                     orientation={mapOrientation}
                     nameStyle={mapNameStyle}
                     verticalNameSide={mapVerticalNameSide}
@@ -1683,6 +1766,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     stationNumberMode={mapStationNumberMode}
                     stationNumbers={mapStationNumbers}
                     stationSpacing={mapStationSpacing}
+                    trackWidth={mapTrackWidth}
                     primaryLangField={mapPrimaryLang}
                     secondaryLangField={mapSecondaryLang}
                     showSecondaryLang={mapShowSecondaryLang}

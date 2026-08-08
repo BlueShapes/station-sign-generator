@@ -257,7 +257,8 @@ route:
     center-colors: Barvy středového čtverce
   mode:
     sign: Znamení stanice
-    linemap: Linková mapa
+    linemap: Linková mapa (jedna linka / přímý spoj)
+    multiline-linemap: Linková mapa (více linek)
   linemap:
     orientation: Orientace
     horizontal: Horizontální
@@ -265,6 +266,7 @@ route:
     range-start: Od
     range-end: Komu
     transit-filter: Zobrazit linky veřejné dopravy
+    transit-show-names: Zobrazit názvy přestupních linek
     font-size: Název stanice Velikost písma
     overlap-warning-title: Bylo zjištěno překrývání štítků
     overlap-warning: Některé názvy stanic se překrývají. Zkuste zmenšit velikost písma.
@@ -277,6 +279,7 @@ route:
     name-style-above: Nahoře
     name-style-below: Níže
     station-spacing: Rozteč stanic
+    line-width: Tloušťka linky
     primary-lang: Primární jazyk
     secondary-lang: Sekundární jazyk
     show-secondary-lang: Zobrazit

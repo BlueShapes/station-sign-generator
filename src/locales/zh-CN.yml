@@ -257,7 +257,8 @@ route:
     center-colors: 中心正方形颜色
   mode:
     sign: 车站标志
-    linemap: 线路图
+    linemap: 线路图（单线/直通）
+    multiline-linemap: 线路图（多线）
   linemap:
     orientation: 方向
     horizontal: 卧式
@@ -265,6 +266,7 @@ route:
     range-start: 来自
     range-end: 至
     transit-filter: 显示公交线路
+    transit-show-names: 显示换乘线路名称
     font-size: 站名字体大小
     overlap-warning-title: 检测到标签重叠
     overlap-warning: 有些站名重叠。尝试减小字体大小。
@@ -277,6 +279,7 @@ route:
     name-style-above: 以上
     name-style-below: 下面
     station-spacing: 站间距
+    line-width: 线路粗细
     primary-lang: 主要语言
     secondary-lang: 第二语言
     show-secondary-lang: 显示
