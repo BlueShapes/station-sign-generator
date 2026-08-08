@@ -5,6 +5,13 @@ export const MAX_TRACK_WIDTH = 30;
 const DEFAULT_SERVICE_TRACK_WIDTH = 4;
 const DEFAULT_SERVICE_TRACK_GAP = 16;
 
+export function ceilCanvasDimensions(
+  width: number,
+  height: number,
+): { w: number; h: number } {
+  return { w: Math.ceil(width), h: Math.ceil(height) };
+}
+
 export function normalizeTrackWidth(width?: number): number {
   const value = Number.isFinite(width) ? width! : DEFAULT_TRACK_WIDTH;
   return Math.min(MAX_TRACK_WIDTH, Math.max(MIN_TRACK_WIDTH, value));

@@ -27,6 +27,7 @@ import {
 } from "@/components/signs/transitLineLayout";
 import { getLineIndicatorVisualStyle } from "@/components/signs/lineIndicatorStyle";
 import {
+  ceilCanvasDimensions,
   DEFAULT_TRACK_WIDTH,
   getServiceTrackGap,
   getServiceTrackWidth,
@@ -286,8 +287,8 @@ export function getMapCanvasDimensions(
       const stationSideExtent = lineEdgeRadius + VN_DOT_GAP + ne + PADDING;
       const transitSideExtent =
         lineEdgeRadius + VN_DOT_GAP + maxTransitExtent + PADDING;
-      return {
-        w: Math.max(
+      return ceilCanvasDimensions(
+        Math.max(
           300,
           PADDING +
             extraL +
@@ -295,16 +296,16 @@ export function getMapCanvasDimensions(
             Math.max(PADDING, maxTransitWidth + 5) +
             extraR,
         ),
-        h: stationSideExtent + transitSideExtent,
-      };
+        stationSideExtent + transitSideExtent,
+      );
     }
-    return {
-      w: Math.max(
+    return ceilCanvasDimensions(
+      Math.max(
         300,
         PADDING + extraL + (n - 1) * hSpacing + PADDING + extraR,
       ),
-      h: H_HEIGHT,
-    };
+      H_HEIGHT,
+    );
   }
   // vertical
   const vFadeLen = Math.round(vSpacing / 3);
@@ -319,8 +320,8 @@ export function getMapCanvasDimensions(
     ),
   );
   const maxNameW = 130;
-  return {
-    w: Math.max(
+  return ceilCanvasDimensions(
+    Math.max(
       200,
       V_TRACK_X +
         getTrackEdgeRadius(XCHG_R, trackWidth) +
@@ -330,8 +331,8 @@ export function getMapCanvasDimensions(
         maxNameW +
         V_RIGHT_MARGIN,
     ),
-    h: Math.max(200, PADDING + extraT + (n - 1) * vSpacing + PADDING + extraB),
-  };
+    Math.max(200, PADDING + extraT + (n - 1) * vSpacing + PADDING + extraB),
+  );
 }
 
 /** Returns primary names of stations whose labels overlap another label. */
@@ -1650,7 +1651,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const topSideExtent =
         nameStyle === "above" ? nameSideExtent : transitSideExtent;
       const bundleCenterY = topSideExtent + bundleHalfH;
-      const vnCanvasH = nameSideExtent + bundleSpan + transitSideExtent;
+      const rawCanvasH = nameSideExtent + bundleSpan + transitSideExtent;
 
       const vnFadeLen = Math.round(hSpacing / 3);
       const vnFadeExtra = vnFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
@@ -1670,12 +1671,16 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       // Effective track start X
       const tL = PADDING + vnExtraL + svcExtraL;
 
-      const vnCanvasW = Math.max(
+      const rawCanvasW = Math.max(
         300,
         tL +
           (n - 1) * hSpacing +
           Math.max(PADDING, maxTransitWidth + 5) +
           vnExtraR,
+      );
+      const { w: vnCanvasW, h: vnCanvasH } = ceilCanvasDimensions(
+        rawCanvasW,
+        rawCanvasH,
       );
       const d = nameStyle === "above" ? -1 : 1;
       const transitD = -d;
@@ -2096,18 +2101,22 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
       const vnTrackY =
         nameStyle === "above" ? stationSideExtent : transitSideExtent;
-      const vnCanvasH = stationSideExtent + transitSideExtent;
+      const rawCanvasH = stationSideExtent + transitSideExtent;
       const vnFadeLen = Math.round(hSpacing / 3);
       const vnFadeExtra = vnFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
       const vnExtraL = hasMoreBefore ? vnFadeExtra : 0;
       const vnExtraR = hasMoreAfter ? vnFadeExtra : 0;
-      const vnCanvasW = Math.max(
+      const rawCanvasW = Math.max(
         300,
         PADDING +
           vnExtraL +
           (n - 1) * hSpacing +
           Math.max(PADDING, maxTransitWidth + 5) +
           vnExtraR,
+      );
+      const { w: vnCanvasW, h: vnCanvasH } = ceilCanvasDimensions(
+        rawCanvasW,
+        rawCanvasH,
       );
       // d: direction away from track (+1 = down for "below", -1 = up for "above")
       const d = nameStyle === "above" ? -1 : 1;
@@ -2561,11 +2570,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const hFadeExtra = hFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
       const hExtraL = hasMoreBefore ? hFadeExtra : 0;
       const hExtraR = hasMoreAfter ? hFadeExtra : 0;
-      const canvasW = Math.max(
+      const rawCanvasW = Math.max(
         300,
         PADDING + hExtraL + (n - 1) * hSpacing + PADDING + hExtraR,
       );
-      const canvasH = H_HEIGHT;
+      const { w: canvasW, h: canvasH } = ceilCanvasDimensions(
+        rawCanvasW,
+        H_HEIGHT,
+      );
 
       return (
         <Stage
@@ -2940,7 +2952,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         ),
       );
       const maxNameW = 130;
-      const canvasW = Math.max(
+      const rawCanvasW = Math.max(
         200,
         V_TRACK_X +
           bundleHalfW +
@@ -2956,14 +2968,18 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
       const vExtraT = hasMoreBefore ? vFadeExtra : 0;
       const vExtraB = hasMoreAfter ? vFadeExtra : 0;
-      const canvasH = Math.max(
+      const rawCanvasH = Math.max(
         200,
         PADDING + vExtraT + (n - 1) * vSpacing + PADDING + vExtraB,
+      );
+      const { w: canvasW, h: canvasH } = ceilCanvasDimensions(
+        rawCanvasW,
+        rawCanvasH,
       );
 
       // Bundle centre X
       const bundleCenterX =
-        verticalNameSide === "left" ? canvasW - V_TRACK_X : V_TRACK_X;
+        verticalNameSide === "left" ? rawCanvasW - V_TRACK_X : V_TRACK_X;
       // Track X for each service
       const trackXs = services.map(
         (_, si) => bundleCenterX + (si - (N - 1) / 2) * serviceTrackGap,
@@ -3311,7 +3327,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       ),
     );
     const maxNameW = 130;
-    const canvasW = Math.max(
+    const rawCanvasW = Math.max(
       200,
       V_TRACK_X +
         lineExchangeEdgeRadius +
@@ -3325,14 +3341,18 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
     const vExtraT = hasMoreBefore ? vFadeExtra : 0;
     const vExtraB = hasMoreAfter ? vFadeExtra : 0;
-    const canvasH = Math.max(
+    const rawCanvasH = Math.max(
       200,
       PADDING + vExtraT + (n - 1) * vSpacing + PADDING + vExtraB,
+    );
+    const { w: canvasW, h: canvasH } = ceilCanvasDimensions(
+      rawCanvasW,
+      rawCanvasH,
     );
 
     // Track x position depends on name side
     const trackX =
-      verticalNameSide === "left" ? canvasW - V_TRACK_X : V_TRACK_X;
+      verticalNameSide === "left" ? rawCanvasW - V_TRACK_X : V_TRACK_X;
     // Title starts on the same side as the names
     const titleBaseX =
       verticalNameSide === "left"

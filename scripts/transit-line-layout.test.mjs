@@ -20,6 +20,7 @@ import {
   getLineIndicatorVisualStyle,
 } from "../src/components/signs/lineIndicatorStyle";
 import {
+  ceilCanvasDimensions,
   DEFAULT_TRACK_WIDTH,
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
@@ -29,6 +30,13 @@ import {
 } from "../src/components/signs/lineMapGeometry";
 
 describe("transit line layout", () => {
+  test("rounds canvas dimensions up so fractional pixels become padding", () => {
+    expect(ceilCanvasDimensions(1750, 325.64563306743423)).toEqual({
+      w: 1750,
+      h: 326,
+    });
+  });
+
   test("keeps transfer icons visually subordinate to station-number badges", () => {
     expect(TRANSIT_ICON_SIZE).toBe(9);
     expect(TRANSIT_SECONDARY_NAME_FONT).toBeLessThan(5);
