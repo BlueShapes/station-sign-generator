@@ -187,6 +187,27 @@ route:
     all: 所有公司
     delete-confirm: 刪除這一行嗎？
     prefix-preview: 線路指示器徽章預覽
+  through-route:
+    title: 直通路徑
+    add: 新增直通路徑
+    edit: 編輯直通路徑
+    name: 路徑名稱
+    empty: 尚無直通路徑
+    segments: 路線區段
+    segment-number: "區段 {number}"
+    add-segment: 新增路線區段
+    line: 路線
+    entry-station: 入口站
+    exit-station: 出口站
+    direction: 區段方向
+    forward: 順向（依車站順序）
+    reverse: 反向（逆車站順序）
+    delete-confirm: 刪除此直通路徑？
+    error-incomplete: 請為每個區段選擇路線及兩個端點車站。
+    error-empty: 請至少新增一個路線區段。
+    error-station-not-on-line: 所選車站不屬於該路線。
+    error-invalid-direction: 無法依所選方向從入口站抵達出口站。
+    error-disconnected: 相鄰路線區段的轉接站不一致。
   service:
     title: 服務
     local: 本地

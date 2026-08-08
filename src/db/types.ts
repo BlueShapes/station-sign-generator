@@ -74,6 +74,24 @@ export interface StationServiceStop {
   status: ServiceStopStatus;
 }
 
+export interface ThroughRoute {
+  id: string;
+  name: string;
+  sort_order: number;
+}
+
+export type ThroughRouteDirection = "forward" | "reverse";
+
+export interface ThroughRouteSegment {
+  id: string;
+  through_route_id: string;
+  line_id: string;
+  entry_station_id: string;
+  exit_station_id: string;
+  direction: ThroughRouteDirection;
+  sort_order: number;
+}
+
 export interface StationAreaWithZone {
   id: string;
   station_id: string;

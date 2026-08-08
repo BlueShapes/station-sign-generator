@@ -81,5 +81,6 @@ export function upsertLine(db: Database, line: Line): void {
 }
 
 export function deleteLine(db: Database, id: string): void {
+  db.run(`DELETE FROM through_route_segments WHERE line_id = ?`, [id]);
   db.run(`DELETE FROM lines WHERE id = ?`, [id]);
 }

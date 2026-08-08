@@ -91,6 +91,25 @@ CREATE TABLE IF NOT EXISTS station_service_stops (
   service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
   status     TEXT NOT NULL DEFAULT 'stop'
 );
+
+CREATE TABLE IF NOT EXISTS through_routes (
+  id         TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS through_route_segments (
+  id                    TEXT PRIMARY KEY,
+  through_route_id      TEXT NOT NULL REFERENCES through_routes(id) ON DELETE CASCADE,
+  line_id               TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
+  entry_station_id      TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  exit_station_id       TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  direction             TEXT NOT NULL DEFAULT 'forward' CHECK (direction IN ('forward', 'reverse')),
+  sort_order            INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_through_route_segments_route_order
+  ON through_route_segments (through_route_id, sort_order);
 """
 
 # ── Special zones ─────────────────────────────────────────────────────────────
@@ -539,7 +558,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.5.4')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.6.0')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -870,6 +889,33 @@ def main():
     insert_numbered_line_stations(c, tr_line_id, "tr", TOYO_RAPID_STATIONS)
     insert_line_services(c, tr_line_id, "tr", TOYO_RAPID_STATIONS, TOYO_RAPID_SERVICES)
 
+    # ── Direction-aware through routes ────────────────────────────────────────
+    c.execute(
+        "INSERT INTO through_routes VALUES (?, ?, ?)",
+        ("through-mitaka-to-toyo-katsutadai", "三鷹 → 東葉勝田台（東西線直通）", 0),
+    )
+    c.executemany(
+        "INSERT INTO through_route_segments VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+            ("trs-east-01", "through-mitaka-to-toyo-katsutadai", jb_line_id, "station-jc12", "station-jc06", "forward", 0),
+            ("trs-east-02", "through-mitaka-to-toyo-katsutadai", t_line_id, "station-jc06", "station-jb30", "forward", 1),
+            ("trs-east-03", "through-mitaka-to-toyo-katsutadai", tr_line_id, "station-jb30", "station-tr09", "forward", 2),
+        ],
+    )
+
+    c.execute(
+        "INSERT INTO through_routes VALUES (?, ?, ?)",
+        ("through-toyo-katsutadai-to-mitaka", "東葉勝田台 → 三鷹（東西線直通）", 1),
+    )
+    c.executemany(
+        "INSERT INTO through_route_segments VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+            ("trs-west-01", "through-toyo-katsutadai-to-mitaka", tr_line_id, "station-tr09", "station-jb30", "reverse", 0),
+            ("trs-west-02", "through-toyo-katsutadai-to-mitaka", t_line_id, "station-jb30", "station-jc06", "reverse", 1),
+            ("trs-west-03", "through-toyo-katsutadai-to-mitaka", jb_line_id, "station-jc06", "station-jc12", "reverse", 2),
+        ],
+    )
+
     conn.commit()
     conn.close()
 
@@ -884,7 +930,7 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.5.4")
+    print(f"  - version: 0.6.0")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
     print(f"  - 3 companies (JR東日本, 東京メトロ, 東葉高速鉄道)")
     print(f"  - 10 lines:")
@@ -898,6 +944,7 @@ def main():
     print(f"      中央・総武線各駅停車 (JB, #ffd400, is_loop=0): {len(CHUO_SOBU_LOCAL_STATIONS)} stations")
     print(f"      東西線          (T,  #00a7db,  is_loop=0): {len(TOZAI_STATIONS)} stations; 3 services")
     print(f"      東葉高速線      (TR, #e95513,  is_loop=0): {len(TOYO_RAPID_STATIONS)} stations; 3 services")
+    print(f"  - 2 direction-aware through routes (3 line sections each)")
 
 
 if __name__ == "__main__":

@@ -60,6 +60,7 @@ import {
   getServicesByLine,
   getServiceStopsByLine,
 } from "@/db/repositories/services";
+import { getRelativeLineDirectionAtStation } from "@/db/repositories/through-routes";
 import type { Line, Station, Service } from "@/db/types";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import type {
@@ -279,7 +280,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   }, [selectedStationId, selectedLineId]);
 
   const adjacentOptions = useMemo(() => {
-    if (!db || !selectedStationId) {
+    if (!db || !selectedLineId || !selectedStationId) {
       return {
         left: [] as AdjacentCandidate[],
         right: [] as AdjacentCandidate[],
@@ -334,14 +335,42 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         };
       };
 
-      const leftCandidate = buildCandidate(previousStation, "left");
-      const rightCandidate = buildCandidate(nextStation, "right");
-      if (leftCandidate) result.left.push(leftCandidate);
-      if (rightCandidate) result.right.push(rightCandidate);
+      const relativeDirection = getRelativeLineDirectionAtStation(
+        db,
+        selectedLineId,
+        line.id,
+        selectedStationId,
+      );
+      const addCandidate = (station: Station | null, side: AdjacentSide) => {
+        const candidate = buildCandidate(station, side);
+        if (
+          candidate &&
+          !result[side].some(
+            (existing) => existing.optionValue === candidate.optionValue,
+          )
+        ) {
+          result[side].push(candidate);
+        }
+      };
+
+      if (relativeDirection === "reverse") {
+        addCandidate(nextStation, "left");
+        addCandidate(previousStation, "right");
+      } else if (relativeDirection === "forward") {
+        addCandidate(previousStation, "left");
+        addCandidate(nextStation, "right");
+      } else {
+        // A single shared junction does not contain enough information to infer
+        // orientation. Offer both neighbours so the user can choose explicitly.
+        addCandidate(previousStation, "left");
+        addCandidate(nextStation, "left");
+        addCandidate(previousStation, "right");
+        addCandidate(nextStation, "right");
+      }
     }
 
     return result;
-  }, [db, selectedStationId, lines]);
+  }, [db, selectedLineId, selectedStationId, lines]);
 
   useEffect(() => {
     const defaultLeft =

@@ -187,6 +187,27 @@ route:
     all: Všechny společnosti
     delete-confirm: Smazat tento řádek?
     prefix-preview: Náhled odznaku indikátoru čáry
+  through-route:
+    title: Průjezdné trasy
+    add: Přidat průjezdnou trasu
+    edit: Upravit průjezdnou trasu
+    name: Název trasy
+    empty: Zatím nejsou žádné průjezdné trasy
+    segments: Úseky linek
+    segment-number: "Úsek {number}"
+    add-segment: Přidat úsek linky
+    line: Linka
+    entry-station: Vstupní stanice
+    exit-station: Výstupní stanice
+    direction: Směr úseku
+    forward: Vpřed (pořadí stanic)
+    reverse: Obráceně (proti pořadí stanic)
+    delete-confirm: Smazat tuto průjezdnou trasu?
+    error-incomplete: Pro každý úsek vyberte linku a obě koncové stanice.
+    error-empty: Přidejte alespoň jeden úsek linky.
+    error-station-not-on-line: Vybraná stanice nepatří k dané lince.
+    error-invalid-direction: Z výstupní stanice nelze ve zvoleném směru dojet ze vstupní stanice.
+    error-disconnected: Sousední úseky nemají stejnou přestupní stanici.
   service:
     title: Služby
     local: Místní

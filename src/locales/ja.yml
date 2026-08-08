@@ -195,6 +195,27 @@ route:
     all: すべての会社
     delete-confirm: この路線を削除しますか？
     prefix-preview: 路線インジケータバッジのプレビュー
+  through-route:
+    title: 直通経路
+    add: 直通経路を追加
+    edit: 直通経路を編集
+    name: 経路名
+    empty: 直通経路がありません
+    segments: 路線区間
+    segment-number: "区間 {number}"
+    add-segment: 路線区間を追加
+    line: 路線
+    entry-station: 入口駅
+    exit-station: 出口駅
+    direction: 区間の向き
+    forward: 順方向（駅順に進む）
+    reverse: 逆方向（駅順を戻る）
+    delete-confirm: この直通経路を削除しますか？
+    error-incomplete: すべての区間で路線と両端駅を選択してください。
+    error-empty: 路線区間を1件以上追加してください。
+    error-station-not-on-line: 選択した駅が路線に含まれていません。
+    error-invalid-direction: 入口駅から出口駅へ指定した方向では進めません。
+    error-disconnected: 隣り合う路線区間の接続駅が一致していません。
   service:
     title: 種別
     local: 各駅停車

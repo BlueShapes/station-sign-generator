@@ -187,6 +187,27 @@ route:
     all: Toate Companiile
     delete-confirm: Ștergeți această linie?
     prefix-preview: Previzualizarea insignei cu indicator de linie
+  through-route:
+    title: Rute directe
+    add: Adăugați o rută directă
+    edit: Editați ruta directă
+    name: Numele rutei
+    empty: Nu există încă rute directe
+    segments: Segmente de linie
+    segment-number: "Segmentul {number}"
+    add-segment: Adăugați un segment de linie
+    line: Linie
+    entry-station: Stația de intrare
+    exit-station: Stația de ieșire
+    direction: Direcția segmentului
+    forward: Înainte (ordinea stațiilor)
+    reverse: Invers (ordinea opusă)
+    delete-confirm: Ștergeți această rută directă?
+    error-incomplete: Selectați linia și ambele stații terminale pentru fiecare segment.
+    error-empty: Adăugați cel puțin un segment de linie.
+    error-station-not-on-line: O stație selectată nu aparține liniei.
+    error-invalid-direction: Stația de ieșire nu poate fi atinsă din stația de intrare în direcția selectată.
+    error-disconnected: Segmentele adiacente nu au aceeași stație de legătură.
   service:
     title: Servicii
     local: Local

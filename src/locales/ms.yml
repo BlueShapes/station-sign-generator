@@ -187,6 +187,27 @@ route:
     all: Semua Syarikat
     delete-confirm: Padamkan baris ini?
     prefix-preview: Pratonton lencana penunjuk baris
+  through-route:
+    title: Laluan Terus
+    add: Tambah Laluan Terus
+    edit: Edit Laluan Terus
+    name: Nama Laluan
+    empty: Belum ada laluan terus
+    segments: Segmen Laluan
+    segment-number: "Segmen {number}"
+    add-segment: Tambah Segmen Laluan
+    line: Laluan
+    entry-station: Stesen Masuk
+    exit-station: Stesen Keluar
+    direction: Arah Segmen
+    forward: Ke hadapan (susunan stesen)
+    reverse: Terbalik (lawan susunan stesen)
+    delete-confirm: Padam laluan terus ini?
+    error-incomplete: Pilih laluan dan kedua-dua stesen hujung bagi setiap segmen.
+    error-empty: Tambah sekurang-kurangnya satu segmen laluan.
+    error-station-not-on-line: Stesen yang dipilih bukan dalam laluan tersebut.
+    error-invalid-direction: Stesen keluar tidak boleh dicapai dari stesen masuk dalam arah yang dipilih.
+    error-disconnected: Segmen bersebelahan tidak berkongsi stesen sambungan yang sama.
   service:
     title: Perkhidmatan
     local: Tempatan

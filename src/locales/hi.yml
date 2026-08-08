@@ -187,6 +187,27 @@ route:
     all: सभी कंपनियाँ
     delete-confirm: यह पंक्ति हटाएं?
     prefix-preview: लाइन सूचक बैज पूर्वावलोकन
+  through-route:
+    title: सीधी सेवा के मार्ग
+    add: सीधी सेवा मार्ग जोड़ें
+    edit: सीधी सेवा मार्ग संपादित करें
+    name: मार्ग का नाम
+    empty: अभी कोई सीधी सेवा मार्ग नहीं है
+    segments: लाइन खंड
+    segment-number: "खंड {number}"
+    add-segment: लाइन खंड जोड़ें
+    line: लाइन
+    entry-station: प्रवेश स्टेशन
+    exit-station: निकास स्टेशन
+    direction: खंड की दिशा
+    forward: सीधी दिशा (स्टेशन क्रम)
+    reverse: उलटी दिशा (स्टेशन क्रम के विपरीत)
+    delete-confirm: इस सीधी सेवा मार्ग को हटाएँ?
+    error-incomplete: हर खंड के लिए लाइन और दोनों अंतिम स्टेशन चुनें।
+    error-empty: कम से कम एक लाइन खंड जोड़ें।
+    error-station-not-on-line: चुना गया स्टेशन संबंधित लाइन पर नहीं है।
+    error-invalid-direction: चुनी गई दिशा में प्रवेश स्टेशन से निकास स्टेशन तक नहीं पहुँचा जा सकता।
+    error-disconnected: पास-पास के लाइन खंड एक ही जोड़ स्टेशन पर नहीं मिलते।
   service:
     title: सेवाएँ
     local: स्थानीय

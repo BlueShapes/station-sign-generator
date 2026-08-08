@@ -187,6 +187,27 @@ route:
     all: Wszystkie firmy
     delete-confirm: Usunąć tę linię?
     prefix-preview: Podgląd plakietki wskaźnika linii
+  through-route:
+    title: Trasy bezpośrednie
+    add: Dodaj trasę bezpośrednią
+    edit: Edytuj trasę bezpośrednią
+    name: Nazwa trasy
+    empty: Brak tras bezpośrednich
+    segments: Odcinki linii
+    segment-number: "Odcinek {number}"
+    add-segment: Dodaj odcinek linii
+    line: Linia
+    entry-station: Stacja wjazdowa
+    exit-station: Stacja wyjazdowa
+    direction: Kierunek odcinka
+    forward: Do przodu (kolejność stacji)
+    reverse: Odwrotnie (przeciwnie do kolejności stacji)
+    delete-confirm: Usunąć tę trasę bezpośrednią?
+    error-incomplete: Wybierz linię i obie stacje końcowe każdego odcinka.
+    error-empty: Dodaj co najmniej jeden odcinek linii.
+    error-station-not-on-line: Wybrana stacja nie należy do tej linii.
+    error-invalid-direction: Nie można dotrzeć do stacji wyjazdowej ze stacji wjazdowej w wybranym kierunku.
+    error-disconnected: Sąsiednie odcinki nie mają wspólnej stacji połączenia.
   service:
     title: Usługi
     local: Lokalny

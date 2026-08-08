@@ -187,6 +187,27 @@ route:
     all: Todas las empresas
     delete-confirm: ¿Eliminar esta línea?
     prefix-preview: Vista previa de la insignia del indicador de línea
+  through-route:
+    title: Rutas directas
+    add: Añadir ruta directa
+    edit: Editar ruta directa
+    name: Nombre de la ruta
+    empty: Aún no hay rutas directas
+    segments: Tramos de línea
+    segment-number: "Tramo {number}"
+    add-segment: Añadir tramo de línea
+    line: Línea
+    entry-station: Estación de entrada
+    exit-station: Estación de salida
+    direction: Dirección del tramo
+    forward: Normal (orden de estaciones)
+    reverse: Inversa (orden opuesto)
+    delete-confirm: ¿Eliminar esta ruta directa?
+    error-incomplete: Seleccione una línea y ambas estaciones terminales para cada tramo.
+    error-empty: Añada al menos un tramo de línea.
+    error-station-not-on-line: Una estación seleccionada no pertenece a su línea.
+    error-invalid-direction: No se puede llegar a la estación de salida desde la entrada en la dirección seleccionada.
+    error-disconnected: Los tramos contiguos no comparten la misma estación de enlace.
   service:
     title: Servicios
     local: locales

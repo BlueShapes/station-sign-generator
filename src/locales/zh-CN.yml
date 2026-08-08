@@ -187,6 +187,27 @@ route:
     all: 所有公司
     delete-confirm: 删除这一行吗？
     prefix-preview: 线路指示器徽章预览
+  through-route:
+    title: 直通路径
+    add: 添加直通路径
+    edit: 编辑直通路径
+    name: 路径名称
+    empty: 暂无直通路径
+    segments: 线路区间
+    segment-number: "区间 {number}"
+    add-segment: 添加线路区间
+    line: 线路
+    entry-station: 入口站
+    exit-station: 出口站
+    direction: 区间方向
+    forward: 正向（按车站顺序）
+    reverse: 反向（逆车站顺序）
+    delete-confirm: 删除此直通路径？
+    error-incomplete: 请为每个区间选择线路和两个端点站。
+    error-empty: 请至少添加一个线路区间。
+    error-station-not-on-line: 所选车站不属于对应线路。
+    error-invalid-direction: 无法按所选方向从入口站到达出口站。
+    error-disconnected: 相邻线路区间的连接站不一致。
   service:
     title: 服务
     local: 本地

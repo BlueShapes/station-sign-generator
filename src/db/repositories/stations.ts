@@ -110,6 +110,12 @@ export function deleteStationFromLine(
   stationId: string,
   lineId: string,
 ): void {
+  db.run(
+    `DELETE FROM through_route_segments
+     WHERE line_id = ?
+       AND (entry_station_id = ? OR exit_station_id = ?)`,
+    [lineId, stationId, stationId],
+  );
   db.run(`DELETE FROM station_lines WHERE station_id = ? AND line_id = ?`, [
     stationId,
     lineId,

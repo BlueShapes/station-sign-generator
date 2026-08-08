@@ -8,6 +8,7 @@ import migrateV030toV040 from "./migrations/v0.3.0_to_v0.4.0";
 import migrateV040toV050 from "./migrations/v0.4.0_to_v0.5.0";
 import migrateV050toV051 from "./migrations/v0.5.0_to_v0.5.1";
 import migrateV051toV052 from "./migrations/v0.5.1_to_v0.5.2";
+import migrateV054toV060 from "./migrations/v0.5.4_to_v0.6.0";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -98,6 +99,25 @@ CREATE TABLE IF NOT EXISTS station_service_stops (
   service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
   status     TEXT NOT NULL DEFAULT 'stop'
 );
+
+CREATE TABLE IF NOT EXISTS through_routes (
+  id         TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS through_route_segments (
+  id                    TEXT PRIMARY KEY,
+  through_route_id      TEXT NOT NULL REFERENCES through_routes(id) ON DELETE CASCADE,
+  line_id               TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
+  entry_station_id      TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  exit_station_id       TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  direction             TEXT NOT NULL DEFAULT 'forward' CHECK (direction IN ('forward', 'reverse')),
+  sort_order            INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_through_route_segments_route_order
+  ON through_route_segments (through_route_id, sort_order);
 `;
 
 let SQL: SqlJsStatic | null = null;
@@ -117,6 +137,7 @@ function migrateDatabase(database: Database): void {
     migrateV040toV050,
     migrateV050toV051,
     migrateV051toV052,
+    migrateV054toV060,
   ];
 
   for (const migrate of migrations) {
@@ -184,6 +205,16 @@ const REQUIRED_SCHEMA: Record<string, string[]> = {
   station_areas: ["id", "station_id", "zone_id", "sort_order"],
   services: ["id", "line_id", "name", "color", "sort_order"],
   station_service_stops: ["id", "station_id", "service_id", "status"],
+  through_routes: ["id", "name", "sort_order"],
+  through_route_segments: [
+    "id",
+    "through_route_id",
+    "line_id",
+    "entry_station_id",
+    "exit_station_id",
+    "direction",
+    "sort_order",
+  ],
 };
 
 export type ValidationResult =
@@ -278,6 +309,8 @@ const MERGE_TABLES = [
   "station_areas",
   "services",
   "station_service_stops",
+  "through_routes",
+  "through_route_segments",
 ] as const;
 
 /**

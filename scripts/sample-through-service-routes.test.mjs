@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import initSqlJs from "sql.js";
+import { getRelativeLineDirectionAtStation } from "../src/db/repositories/through-routes.ts";
 
 const wasmPath = fileURLToPath(
   new URL("../node_modules/sql.js/dist/sql-wasm.wasm", import.meta.url),
@@ -92,6 +93,25 @@ function stopsForService(serviceId) {
 
 function stopNumbers(serviceId) {
   return stopsForService(serviceId).map(({ number }) => number);
+}
+
+function throughRouteSegments(routeId) {
+  const statement = db.prepare(
+    `SELECT tr.name, trs.line_id, trs.entry_station_id,
+            trs.exit_station_id, trs.direction, trs.sort_order
+     FROM through_routes tr
+     JOIN through_route_segments trs ON trs.through_route_id = tr.id
+     WHERE tr.id = ?
+     ORDER BY trs.sort_order`,
+  );
+  try {
+    statement.bind([routeId]);
+    const segments = [];
+    while (statement.step()) segments.push(statement.getAsObject());
+    return segments;
+  } finally {
+    statement.free();
+  }
 }
 
 describe("through-service sample routes", () => {
@@ -201,4 +221,68 @@ describe("through-service sample routes", () => {
     expect(servicesForLine("line-chuo-sobu-local")).toEqual([]);
   });
 
+  test("stores both directions of the Tozai through route as oriented sections", () => {
+    expect(throughRouteSegments("through-mitaka-to-toyo-katsutadai")).toEqual([
+      {
+        name: "三鷹 → 東葉勝田台（東西線直通）",
+        line_id: "line-chuo-sobu-local",
+        entry_station_id: "station-jc12",
+        exit_station_id: "station-jc06",
+        direction: "forward",
+        sort_order: 0,
+      },
+      {
+        name: "三鷹 → 東葉勝田台（東西線直通）",
+        line_id: "line-tozai",
+        entry_station_id: "station-jc06",
+        exit_station_id: "station-jb30",
+        direction: "forward",
+        sort_order: 1,
+      },
+      {
+        name: "三鷹 → 東葉勝田台（東西線直通）",
+        line_id: "line-toyo-rapid",
+        entry_station_id: "station-jb30",
+        exit_station_id: "station-tr09",
+        direction: "forward",
+        sort_order: 2,
+      },
+    ]);
+    expect(
+      throughRouteSegments("through-toyo-katsutadai-to-mitaka").map(
+        ({ line_id, direction }) => ({ line_id, direction }),
+      ),
+    ).toEqual([
+      { line_id: "line-toyo-rapid", direction: "reverse" },
+      { line_id: "line-tozai", direction: "reverse" },
+      { line_id: "line-chuo-sobu-local", direction: "reverse" },
+    ]);
+  });
+
+  test("aligns adjacent lines for route-input station signs", () => {
+    expect(
+      getRelativeLineDirectionAtStation(
+        db,
+        "line-chuo-rapid",
+        "line-chuo-sobu-local",
+        "station-jc08",
+      ),
+    ).toBe("reverse");
+    expect(
+      getRelativeLineDirectionAtStation(
+        db,
+        "line-chuo-sobu-local",
+        "line-tozai",
+        "station-jc06",
+      ),
+    ).toBe("forward");
+    expect(
+      getRelativeLineDirectionAtStation(
+        db,
+        "line-tozai",
+        "line-toyo-rapid",
+        "station-jb30",
+      ),
+    ).toBe("forward");
+  });
 });

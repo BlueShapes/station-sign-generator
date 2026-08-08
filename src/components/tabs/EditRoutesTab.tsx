@@ -52,6 +52,15 @@ import {
 } from "@/db/repositories/companies";
 import { getAllLines, upsertLine, deleteLine } from "@/db/repositories/lines";
 import {
+  deleteThroughRoute,
+  getAllThroughRoutes,
+  getThroughRouteSegments,
+  replaceThroughRouteSegments,
+  upsertThroughRoute,
+  validateThroughRouteSegments,
+  type ThroughRouteValidationError,
+} from "@/db/repositories/through-routes";
+import {
   getServicesByLine,
   upsertService,
   deleteService,
@@ -85,6 +94,9 @@ import type {
   SpecialZone,
   Service,
   ServiceStopStatus,
+  ThroughRoute,
+  ThroughRouteDirection,
+  ThroughRouteSegment,
 } from "@/db/types";
 
 const TOKYO_METRO_COLOR = "#00a3d9";
@@ -785,6 +797,326 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
   );
 }
 
+// ── Through Route Form Modal ─────────────────────────────────────────────────
+
+type DraftThroughRouteSegment = {
+  id: string;
+  lineId: string;
+  entryStationId: string;
+  exitStationId: string;
+  direction: ThroughRouteDirection;
+};
+
+interface ThroughRouteFormProps {
+  db: Database;
+  route?: ThroughRoute;
+  nextSortOrder: number;
+  onSave: () => void;
+  onClose: () => void;
+}
+
+function ThroughRouteForm({
+  db,
+  route,
+  nextSortOrder,
+  onSave,
+  onClose,
+}: ThroughRouteFormProps) {
+  const t = useTranslations();
+  const lines = getAllLines(db);
+  const [name, setName] = useState(route?.name ?? "");
+  const [segments, setSegments] = useState<DraftThroughRouteSegment[]>(() => {
+    const existing = route ? getThroughRouteSegments(db, route.id) : [];
+    if (existing.length > 0) {
+      return existing.map((segment) => ({
+        id: segment.id,
+        lineId: segment.line_id,
+        entryStationId: segment.entry_station_id,
+        exitStationId: segment.exit_station_id,
+        direction: segment.direction,
+      }));
+    }
+    return [
+      {
+        id: uuidv7(),
+        lineId: "",
+        entryStationId: "",
+        exitStationId: "",
+        direction: "forward",
+      },
+    ];
+  });
+
+  const routeId = route?.id ?? "draft-through-route";
+  const complete = segments.every(
+    (segment) =>
+      segment.lineId &&
+      segment.entryStationId &&
+      segment.exitStationId,
+  );
+  const persistedSegments: ThroughRouteSegment[] = segments.map(
+    (segment, index) => ({
+      id: segment.id,
+      through_route_id: routeId,
+      line_id: segment.lineId,
+      entry_station_id: segment.entryStationId,
+      exit_station_id: segment.exitStationId,
+      direction: segment.direction,
+      sort_order: index,
+    }),
+  );
+  const validationError: ThroughRouteValidationError | "incomplete" | null =
+    complete
+      ? validateThroughRouteSegments(db, persistedSegments)
+      : "incomplete";
+
+  const updateSegment = (
+    index: number,
+    update: Partial<DraftThroughRouteSegment>,
+  ) => {
+    setSegments((current) =>
+      current.map((segment, currentIndex) =>
+        currentIndex === index ? { ...segment, ...update } : segment,
+      ),
+    );
+  };
+
+  const setSegmentLine = (index: number, lineId: string | null) => {
+    const lineStations = lineId ? getStationsByLine(db, lineId) : [];
+    updateSegment(index, {
+      lineId: lineId ?? "",
+      entryStationId: lineStations[0]?.id ?? "",
+      exitStationId: lineStations.at(-1)?.id ?? "",
+      direction: "forward",
+    });
+  };
+
+  const setSegmentDirection = (
+    index: number,
+    direction: ThroughRouteDirection,
+  ) => {
+    const segment = segments[index];
+    if (!segment) return;
+    const line = lines.find((candidate) => candidate.id === segment.lineId);
+    const shouldSwapEndpoints =
+      line?.is_loop !== 1 && segment.direction !== direction;
+    updateSegment(index, {
+      direction,
+      entryStationId: shouldSwapEndpoints
+        ? segment.exitStationId
+        : segment.entryStationId,
+      exitStationId: shouldSwapEndpoints
+        ? segment.entryStationId
+        : segment.exitStationId,
+    });
+  };
+
+  const moveSegment = (index: number, offset: -1 | 1) => {
+    const target = index + offset;
+    if (target < 0 || target >= segments.length) return;
+    setSegments((current) => {
+      const updated = [...current];
+      [updated[index], updated[target]] = [updated[target]!, updated[index]!];
+      return updated;
+    });
+  };
+
+  const handleSave = () => {
+    if (!name.trim() || validationError) return;
+    const id = route?.id ?? uuidv7();
+    const finalSegments = persistedSegments.map((segment) => ({
+      ...segment,
+      through_route_id: id,
+    }));
+    upsertThroughRoute(db, {
+      id,
+      name: name.trim(),
+      sort_order: route?.sort_order ?? nextSortOrder,
+    });
+    replaceThroughRouteSegments(db, id, finalSegments);
+    onSave();
+    onClose();
+  };
+
+  return (
+    <Stack gap="md">
+      <TextInput
+        label={t("route.through-route.name")}
+        value={name}
+        onChange={(event) => setName(event.currentTarget.value)}
+        required
+      />
+
+      <Stack gap="sm">
+        {segments.map((segment, index) => {
+          const lineStations = segment.lineId
+            ? getStationsByLine(db, segment.lineId)
+            : [];
+          const stationOptions = lineStations.map((station) => ({
+            value: station.id,
+            label: station.primary_name,
+          }));
+          const entryName = lineStations.find(
+            (station) => station.id === segment.entryStationId,
+          )?.primary_name;
+          const exitName = lineStations.find(
+            (station) => station.id === segment.exitStationId,
+          )?.primary_name;
+
+          return (
+            <Box
+              key={segment.id}
+              p="sm"
+              style={{
+                border: "1px solid var(--mantine-color-default-border)",
+                borderRadius: "var(--mantine-radius-sm)",
+              }}
+            >
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" fw={600}>
+                  {t("route.through-route.segment-number", {
+                    number: String(index + 1),
+                  })}
+                </Text>
+                <Group gap={4}>
+                  <ActionIcon
+                    variant="subtle"
+                    disabled={index === 0}
+                    onClick={() => moveSegment(index, -1)}
+                  >
+                    <IconArrowUp size={16} />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="subtle"
+                    disabled={index === segments.length - 1}
+                    onClick={() => moveSegment(index, 1)}
+                  >
+                    <IconArrowDown size={16} />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    disabled={segments.length === 1}
+                    onClick={() =>
+                      setSegments((current) =>
+                        current.filter((_, currentIndex) => currentIndex !== index),
+                      )
+                    }
+                  >
+                    <IconTrash size={16} />
+                  </ActionIcon>
+                </Group>
+              </Group>
+
+              <Stack gap="xs">
+                <Select
+                  label={t("route.through-route.line")}
+                  value={segment.lineId || null}
+                  onChange={(value) => setSegmentLine(index, value)}
+                  data={lines.map((line) => ({
+                    value: line.id,
+                    label: `[${line.prefix}] ${line.name}`,
+                  }))}
+                  searchable
+                  required
+                />
+                <Group grow align="start">
+                  <Select
+                    label={t("route.through-route.entry-station")}
+                    value={segment.entryStationId || null}
+                    onChange={(value) =>
+                      updateSegment(index, {
+                        entryStationId: value ?? "",
+                      })
+                    }
+                    data={stationOptions}
+                    searchable
+                    disabled={!segment.lineId}
+                    required
+                  />
+                  <Select
+                    label={t("route.through-route.exit-station")}
+                    value={segment.exitStationId || null}
+                    onChange={(value) =>
+                      updateSegment(index, {
+                        exitStationId: value ?? "",
+                      })
+                    }
+                    data={stationOptions}
+                    searchable
+                    disabled={!segment.lineId}
+                    required
+                  />
+                </Group>
+                <Select
+                  label={t("route.through-route.direction")}
+                  value={segment.direction}
+                  onChange={(value) =>
+                    value &&
+                    setSegmentDirection(index, value as ThroughRouteDirection)
+                  }
+                  data={[
+                    {
+                      value: "forward",
+                      label: t("route.through-route.forward"),
+                    },
+                    {
+                      value: "reverse",
+                      label: t("route.through-route.reverse"),
+                    },
+                  ]}
+                />
+                {entryName && exitName && (
+                  <Text size="xs" c="dimmed">
+                    {entryName} → {exitName}
+                  </Text>
+                )}
+              </Stack>
+            </Box>
+          );
+        })}
+      </Stack>
+
+      <Button
+        variant="outline"
+        leftSection={<IconPlus size={16} />}
+        onClick={() =>
+          setSegments((current) => [
+            ...current,
+            {
+              id: uuidv7(),
+              lineId: "",
+              entryStationId: "",
+              exitStationId: "",
+              direction: "forward",
+            },
+          ])
+        }
+      >
+        {t("route.through-route.add-segment")}
+      </Button>
+
+      {validationError && (
+        <Alert icon={<IconAlertCircle size={16} />} color="red">
+          {t(`route.through-route.error-${validationError}`)}
+        </Alert>
+      )}
+
+      <Group justify="flex-end" mt="md">
+        <Button variant="default" onClick={onClose}>
+          {t("common.close")}
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={!name.trim() || validationError !== null}
+        >
+          {t("common.save")}
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
+
 // ── Station Form Modal ────────────────────────────────────────────────────────
 
 interface StationFormProps {
@@ -1367,6 +1699,15 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     null,
   );
 
+  // Through route state
+  const [
+    throughRouteModalOpened,
+    { open: openThroughRouteModal, close: closeThroughRouteModal },
+  ] = useDisclosure(false);
+  const [editingThroughRoute, setEditingThroughRoute] = useState<
+    ThroughRoute | undefined
+  >(undefined);
+
   // Station state
   const [
     stationModalOpened,
@@ -1416,6 +1757,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const specialZones = getAllSpecialZones(db);
   const companies = getAllCompanies(db);
   const allLines = getAllLines(db);
+  const throughRoutes = getAllThroughRoutes(db);
   const filteredLines = lineCompanyFilter
     ? allLines.filter((l) => l.company_id === lineCompanyFilter)
     : allLines;
@@ -1450,6 +1792,13 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const handleDeleteLine = (id: string) => {
     openConfirmModal(t("route.line.delete-confirm"), () => {
       deleteLine(db, id);
+      refresh();
+    });
+  };
+
+  const handleDeleteThroughRoute = (id: string) => {
+    openConfirmModal(t("route.through-route.delete-confirm"), () => {
+      deleteThroughRoute(db, id);
       refresh();
     });
   };
@@ -1855,6 +2204,111 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                               variant="subtle"
                               color="red"
                               onClick={() => handleDeleteLine(line.id)}
+                            >
+                              <IconTrash size={16} />
+                            </ActionIcon>
+                          </Group>
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  })}
+                </Table.Tbody>
+              </Table>
+            </ScrollArea>
+          )}
+        </Box>
+
+        <Divider />
+
+        {/* ── Through Routes section ── */}
+        <Box>
+          <Group justify="space-between" mb="md">
+            <Title order={3}>{t("route.through-route.title")}</Title>
+            <Button
+              size="sm"
+              leftSection={<IconPlus size={16} />}
+              disabled={allLines.length === 0}
+              onClick={() => {
+                setEditingThroughRoute(undefined);
+                openThroughRouteModal();
+              }}
+            >
+              {t("route.through-route.add")}
+            </Button>
+          </Group>
+
+          {throughRoutes.length === 0 ? (
+            <Text c="dimmed" size="sm">
+              {t("route.through-route.empty")}
+            </Text>
+          ) : (
+            <ScrollArea>
+              <Table
+                withTableBorder
+                withColumnBorders
+                style={{ minWidth: 620 }}
+              >
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("route.through-route.name")}</Table.Th>
+                    <Table.Th>{t("route.through-route.segments")}</Table.Th>
+                    <Table.Th style={{ width: 100 }}></Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {throughRoutes.map((route) => {
+                    const routeSegments = getThroughRouteSegments(db, route.id);
+                    return (
+                      <Table.Tr key={route.id}>
+                        <Table.Td>{route.name}</Table.Td>
+                        <Table.Td>
+                          <Group gap="xs" wrap="wrap">
+                            {routeSegments.map((segment) => {
+                              const line = allLines.find(
+                                (candidate) => candidate.id === segment.line_id,
+                              );
+                              const lineStations = getStationsByLine(
+                                db,
+                                segment.line_id,
+                              );
+                              const start = lineStations.find(
+                                (station) =>
+                                  station.id === segment.entry_station_id,
+                              );
+                              const end = lineStations.find(
+                                (station) =>
+                                  station.id === segment.exit_station_id,
+                              );
+                              return (
+                                <Badge
+                                  key={segment.id}
+                                  variant="light"
+                                  color="gray"
+                                  tt="none"
+                                >
+                                  {line?.name ?? "—"}: {start?.primary_name ?? "—"}
+                                  {" → "}
+                                  {end?.primary_name ?? "—"}
+                                </Badge>
+                              );
+                            })}
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap="xs">
+                            <ActionIcon
+                              variant="subtle"
+                              onClick={() => {
+                                setEditingThroughRoute(route);
+                                openThroughRouteModal();
+                              }}
+                            >
+                              <IconEdit size={16} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() => handleDeleteThroughRoute(route.id)}
                             >
                               <IconTrash size={16} />
                             </ActionIcon>
@@ -2350,6 +2804,27 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
           companies={companies}
           onSave={refresh}
           onClose={closeLineModal}
+        />
+      </Modal>
+
+      <Modal
+        opened={throughRouteModalOpened}
+        onClose={closeThroughRouteModal}
+        title={
+          editingThroughRoute
+            ? t("route.through-route.edit")
+            : t("route.through-route.add")
+        }
+        centered
+        size="xl"
+        scrollAreaComponent={ScrollArea.Autosize}
+      >
+        <ThroughRouteForm
+          db={db}
+          route={editingThroughRoute}
+          nextSortOrder={throughRoutes.length}
+          onSave={refresh}
+          onClose={closeThroughRouteModal}
         />
       </Modal>
 

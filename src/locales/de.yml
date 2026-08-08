@@ -195,6 +195,27 @@ route:
     all: Alle Unternehmen
     delete-confirm: Diese Linie löschen?
     prefix-preview: Vorschau der Linienplakette
+  through-route:
+    title: Durchgehende Routen
+    add: Durchgehende Route hinzufügen
+    edit: Durchgehende Route bearbeiten
+    name: Routenname
+    empty: Noch keine durchgehenden Routen
+    segments: Linienabschnitte
+    segment-number: "Abschnitt {number}"
+    add-segment: Linienabschnitt hinzufügen
+    line: Linie
+    entry-station: Einfahrtsbahnhof
+    exit-station: Ausfahrtsbahnhof
+    direction: Abschnittsrichtung
+    forward: Vorwärts (Bahnhofsreihenfolge)
+    reverse: Rückwärts (entgegen der Bahnhofsreihenfolge)
+    delete-confirm: Diese durchgehende Route löschen?
+    error-incomplete: Wählen Sie für jeden Abschnitt eine Linie und beide Endbahnhöfe aus.
+    error-empty: Fügen Sie mindestens einen Linienabschnitt hinzu.
+    error-station-not-on-line: Ein ausgewählter Bahnhof gehört nicht zur Linie.
+    error-invalid-direction: Der Ausfahrtsbahnhof ist vom Einfahrtsbahnhof in der gewählten Richtung nicht erreichbar.
+    error-disconnected: Benachbarte Linienabschnitte haben keinen gemeinsamen Anschlussbahnhof.
   service:
     title: Zugarten
     local: Nahverkehr

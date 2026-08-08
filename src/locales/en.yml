@@ -195,6 +195,27 @@ route:
     all: All Companies
     delete-confirm: Delete this line?
     prefix-preview: Line indicator badge preview
+  through-route:
+    title: Through Routes
+    add: Add Through Route
+    edit: Edit Through Route
+    name: Route Name
+    empty: No through routes yet
+    segments: Line Sections
+    segment-number: "Section {number}"
+    add-segment: Add Line Section
+    line: Line
+    entry-station: Entry Station
+    exit-station: Exit Station
+    direction: Section Direction
+    forward: Forward (station order)
+    reverse: Reverse (opposite station order)
+    delete-confirm: Delete this through route?
+    error-incomplete: Select a line and both endpoint stations for every section.
+    error-empty: Add at least one line section.
+    error-station-not-on-line: A selected station does not belong to its line.
+    error-invalid-direction: The exit station is not reachable from the entry station in the selected direction.
+    error-disconnected: Adjacent line sections do not share the same connection station.
   service:
     title: Services
     local: Local

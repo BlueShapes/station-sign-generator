@@ -187,6 +187,27 @@ route:
     all: Todas as empresas
     delete-confirm: Excluir esta linha?
     prefix-preview: Visualização do selo do indicador de linha
+  through-route:
+    title: Rotas diretas
+    add: Adicionar rota direta
+    edit: Editar rota direta
+    name: Nome da rota
+    empty: Ainda não há rotas diretas
+    segments: Trechos de linha
+    segment-number: "Trecho {number}"
+    add-segment: Adicionar trecho de linha
+    line: Linha
+    entry-station: Estação de entrada
+    exit-station: Estação de saída
+    direction: Direção do trecho
+    forward: Direta (ordem das estações)
+    reverse: Inversa (ordem oposta)
+    delete-confirm: Excluir esta rota direta?
+    error-incomplete: Selecione uma linha e as duas estações de ponta de cada trecho.
+    error-empty: Adicione pelo menos um trecho de linha.
+    error-station-not-on-line: Uma estação selecionada não pertence à linha.
+    error-invalid-direction: Não é possível chegar à estação de saída a partir da entrada na direção selecionada.
+    error-disconnected: Trechos adjacentes não compartilham a mesma estação de conexão.
   service:
     title: Serviços
     local: locais
