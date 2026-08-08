@@ -187,6 +187,7 @@ route:
     all: Semua Syarikat
     delete-confirm: Padamkan baris ini?
     prefix-preview: Pratonton lencana penunjuk baris
+    station-number-preview: Pratonton nombor stesen (01)
   through-route:
     title: Laluan Terus
     add: Tambah Laluan Terus
@@ -267,6 +268,7 @@ route:
     range-end: Kepada
     transit-filter: Tunjukkan Laluan Transit
     transit-show-names: Tunjukkan nama laluan pertukaran
+    download-text-warning: Simpan (bahasa kedua mungkin tidak dapat dibaca)
     font-size: Saiz Font Nama Stesen
     overlap-warning-title: Pertindihan Label Dikesan
     overlap-warning: Beberapa nama stesen bertindih. Cuba kecilkan saiz fon.

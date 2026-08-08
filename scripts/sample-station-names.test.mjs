@@ -33,7 +33,7 @@ describe("sample station names", () => {
     const result = db.exec(
       "SELECT value FROM db_metadata WHERE key = 'version'",
     );
-    expect(result[0]?.values[0]?.[0]).toBe("0.6.0");
+    expect(result[0]?.values[0]?.[0]).toBe("0.7.0");
   });
 
   test("uses the verified JR East multilingual spellings", () => {

@@ -3,12 +3,19 @@ export interface Company {
   name: string;
   company_color: string;
   station_number_style: string;
+  primary_language: string;
+  secondary_language: string;
+  tertiary_language: string;
+  quaternary_language: string;
 }
 
 export interface Line {
   id: string;
   company_id: string | null;
   name: string;
+  secondary_name: string | null;
+  tertiary_name: string | null;
+  quaternary_name: string | null;
   line_color: string;
   prefix: string;
   priority: number | null;

@@ -3,7 +3,11 @@ import type { Company } from "@/db/types";
 
 export function getAllCompanies(db: Database): Company[] {
   const stmt = db.prepare(
-    `SELECT id, name, company_color, station_number_style FROM companies ORDER BY name`,
+    `SELECT id, name, company_color, station_number_style,
+            primary_language, secondary_language, tertiary_language,
+            quaternary_language
+       FROM companies
+      ORDER BY name`,
   );
   const results: Company[] = [];
   while (stmt.step()) {
@@ -12,12 +16,20 @@ export function getAllCompanies(db: Database): Company[] {
       name: string;
       company_color: string;
       station_number_style: string;
+      primary_language: string;
+      secondary_language: string;
+      tertiary_language: string;
+      quaternary_language: string;
     };
     results.push({
       id: row.id,
       name: row.name,
       company_color: row.company_color,
       station_number_style: row.station_number_style,
+      primary_language: row.primary_language,
+      secondary_language: row.secondary_language,
+      tertiary_language: row.tertiary_language,
+      quaternary_language: row.quaternary_language,
     });
   }
   stmt.free();
@@ -26,8 +38,20 @@ export function getAllCompanies(db: Database): Company[] {
 
 export function upsertCompany(db: Database, company: Company): void {
   db.run(
-    `INSERT OR REPLACE INTO companies (id, name, company_color, station_number_style) VALUES (?, ?, ?, ?)`,
-    [company.id, company.name, company.company_color, company.station_number_style],
+    `INSERT OR REPLACE INTO companies
+      (id, name, company_color, station_number_style, primary_language,
+       secondary_language, tertiary_language, quaternary_language)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      company.id,
+      company.name,
+      company.company_color,
+      company.station_number_style,
+      company.primary_language,
+      company.secondary_language,
+      company.tertiary_language,
+      company.quaternary_language,
+    ],
   );
 }
 

@@ -6,8 +6,12 @@ import {
   TRANSIT_GROUP_GAP,
   TRANSIT_ICON_SIZE,
   TRANSIT_ITEM_GAP,
+  TRANSIT_SECONDARY_NAME_FONT,
+  isTransitSecondaryNameExportTooSmall,
   layoutDiagonalTransitLines,
+  layoutHorizontalStationDetails,
   layoutHorizontalTransitLines,
+  layoutVerticalStationDetails,
   oppositeVerticalDirection,
   shouldRotateVerticalGlyph,
 } from "../src/components/signs/transitLineLayout";
@@ -27,6 +31,12 @@ import {
 describe("transit line layout", () => {
   test("keeps transfer icons visually subordinate to station-number badges", () => {
     expect(TRANSIT_ICON_SIZE).toBe(9);
+    expect(TRANSIT_SECONDARY_NAME_FONT).toBeLessThan(5);
+  });
+
+  test("warns when the exported secondary transfer name would be unreadable", () => {
+    expect(isTransitSecondaryNameExportTooSmall(2)).toBe(true);
+    expect(isTransitSecondaryNameExportTooSmall(4)).toBe(false);
   });
 
   test("supports a route band wide enough to contain exchange markers", () => {
@@ -75,6 +85,68 @@ describe("transit line layout", () => {
     );
   });
 
+  test("places horizontal transfer lines outside the station-name block", () => {
+    const above = layoutHorizontalStationDetails(
+      "above",
+      100,
+      8,
+      9,
+      6,
+      20,
+    );
+    const below = layoutHorizontalStationDetails(
+      "below",
+      100,
+      6,
+      9,
+      6,
+      20,
+    );
+
+    expect(above).toEqual({
+      primaryNameY: 75,
+      secondaryNameY: 86,
+      transitY: 51,
+    });
+    expect(above.transitY + 20).toBeLessThan(above.primaryNameY);
+    expect(below).toEqual({
+      primaryNameY: 114,
+      secondaryNameY: 106,
+      transitY: 127,
+    });
+    expect(below.transitY).toBeGreaterThan(below.primaryNameY + 9);
+  });
+
+  test("places vertical transfer lines outside the station-name block", () => {
+    const right = layoutVerticalStationDetails(
+      "right",
+      60,
+      20,
+      50,
+      true,
+    );
+    const left = layoutVerticalStationDetails("left", 140, 20, 50, true);
+
+    expect(right).toEqual({
+      badgeX: 60,
+      nameX: 84,
+      transitAnchorX: 140,
+    });
+    expect(left).toEqual({
+      badgeX: 120,
+      nameX: 66,
+      transitAnchorX: 60,
+    });
+    expect(right.transitAnchorX).toBeGreaterThan(right.nameX);
+    expect(left.transitAnchorX).toBeLessThan(left.nameX);
+
+    const source = readFileSync(
+      "src/components/signs/LineMapRenderer.tsx",
+      "utf8",
+    );
+    expect(source.match(/layoutVerticalStationDetails\(/g)?.length).toBe(3);
+  });
+
   test("stacks vertical-writing transfers on one station axis", () => {
     const above = layoutDiagonalTransitLines([10, 20, 30, 40], "above");
     const below = layoutDiagonalTransitLines([10, 20, 30, 40], "below");
@@ -114,6 +186,12 @@ describe("transit line layout", () => {
       "const [mapTransitFilter, setMapTransitFilter] = useState<string[]>([]);",
     );
     expect(source).toContain("setMapTransitFilter([]);");
+    expect(source).toContain(
+      "const [mapShowTransitNames, setMapShowTransitNames] = useState(true);",
+    );
+    expect(source).toContain(
+      "const [mapStationSpacing, setMapStationSpacing] = useState(75);",
+    );
   });
 
   test("defines the transfer-name and line-width options in every locale", () => {
@@ -157,6 +235,27 @@ describe("transit line layout", () => {
     expect(source).toContain("<DiagonalTransitLines");
     expect(source).toContain("? -TRANSIT_DIAGONAL_ANGLE");
     expect(source).toContain(": TRANSIT_DIAGONAL_ANGLE");
+    expect(source).toContain("line.secondary_name?.trim()");
+    expect(source).toContain("y={itemY + TRANSIT_ICON_SIZE}");
+  });
+
+  test("shows a localized warning on low-resolution map downloads", () => {
+    const source = readFileSync(
+      "src/components/tabs/RouteInputTab.tsx",
+      "utf8",
+    );
+
+    expect(source).toContain("mapDownloadTextTooSmall");
+    expect(source).toContain("mapDownloadWarningText");
+    expect(source).toContain("disabled={!mapDownloadWarningText}");
+    expect(source).toContain("fullWidth");
+    expect(source).toContain('{t("input.save")}');
+    for (const locale of SUPPORTED_LOCALE_CODES) {
+      const messages = parse(
+        readFileSync(`src/locales/${locale}.yml`, "utf8"),
+      );
+      expect(messages.route?.linemap?.["download-text-warning"]).toBeTruthy();
+    }
   });
 
   test("centers vertical transfer icons on the station axis", () => {

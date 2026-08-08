@@ -195,6 +195,7 @@ route:
     all: Alle Unternehmen
     delete-confirm: Diese Linie löschen?
     prefix-preview: Vorschau der Linienplakette
+    station-number-preview: Vorschau der Stationsnummer (01)
   through-route:
     title: Durchgehende Routen
     add: Durchgehende Route hinzufügen
@@ -275,6 +276,7 @@ route:
     range-end: Bis
     transit-filter: Umsteigelinien anzeigen
     transit-show-names: Namen der Umsteigelinien anzeigen
+    download-text-warning: Speichern (zweite Sprache evtl. unleserlich)
     font-size: Schriftgröße des Stationsnamens
     overlap-warning-title: Überlappende Beschriftungen erkannt
     overlap-warning: Einige Stationsnamen überlappen sich. Verkleinere die Schrift.

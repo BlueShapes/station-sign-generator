@@ -40,6 +40,12 @@ import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
 import { waitForCanvasFonts } from "@/lib/fonts";
 import {
+  DEFAULT_COMPANY_LANGUAGES,
+  getCompanyLanguages,
+  getRailwayLanguageLabel,
+  getRailwayLanguageOptions,
+} from "@/lib/railwayLanguages";
+import {
   downloadDatabase,
   overwriteDatabaseInPlace,
   mergeDatabase,
@@ -100,6 +106,24 @@ import type {
 } from "@/db/types";
 
 const TOKYO_METRO_COLOR = "#00a3d9";
+const LINE_FORM_STATION_NUMBER_PREVIEW = "01";
+
+const LANGUAGE_SLOT_LABEL_KEYS = [
+  "route.linemap.lang-1st",
+  "route.linemap.lang-2nd",
+  "route.linemap.lang-3rd",
+  "route.linemap.lang-4th",
+] as const;
+
+function getLanguageFieldLabels(
+  company: Company | null | undefined,
+  t: ReturnType<typeof useTranslations>,
+): string[] {
+  return getCompanyLanguages(company).map(
+    (language, index) =>
+      `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
+  );
+}
 
 function buildStationNumberSourceOptions(
   currentLine: Line | undefined,
@@ -504,6 +528,9 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
   const [stationNumberStyle, setStationNumberStyle] = useState(
     company?.station_number_style ?? "jreast",
   );
+  const [languages, setLanguages] = useState<string[]>(() =>
+    company ? getCompanyLanguages(company) : [...DEFAULT_COMPANY_LANGUAGES],
+  );
 
   useEffect(() => {
     if (company || colorDirty) return;
@@ -517,6 +544,10 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
       name: name.trim(),
       company_color: color,
       station_number_style: stationNumberStyle,
+      primary_language: languages[0],
+      secondary_language: languages[1],
+      tertiary_language: languages[2],
+      quaternary_language: languages[3],
     });
     onSave();
     onClose();
@@ -530,6 +561,24 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
         onChange={(e) => setName(e.target.value)}
         required
       />
+      {languages.map((language, index) => (
+        <Select
+          key={LANGUAGE_SLOT_LABEL_KEYS[index]}
+          label={`${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`}
+          value={language}
+          onChange={(value) => {
+            if (!value) return;
+            setLanguages((current) =>
+              current.map((item, itemIndex) =>
+                itemIndex === index ? value : item,
+              ),
+            );
+          }}
+          data={getRailwayLanguageOptions(language)}
+          searchable
+          allowDeselect={false}
+        />
+      ))}
       <ColorInput
         label={t("route.company.color")}
         value={color}
@@ -594,6 +643,15 @@ interface LineFormProps {
 function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
   const t = useTranslations();
   const [name, setName] = useState(line?.name ?? "");
+  const [secondaryName, setSecondaryName] = useState(
+    line?.secondary_name ?? "",
+  );
+  const [tertiaryName, setTertiaryName] = useState(
+    line?.tertiary_name ?? "",
+  );
+  const [quaternaryName, setQuaternaryName] = useState(
+    line?.quaternary_name ?? "",
+  );
   const [prefix, setPrefix] = useState(line?.prefix ?? "");
   const [color, setColor] = useState(line?.line_color ?? "#8cc800");
   const [companyId, setCompanyId] = useState<string | null>(
@@ -603,6 +661,10 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
     line?.priority ?? "",
   );
   const [isLoop, setIsLoop] = useState((line?.is_loop ?? 0) === 1);
+  const selectedCompany = companies.find((company) => company.id === companyId);
+  const stationNumberStyle =
+    selectedCompany?.station_number_style ?? "jreast";
+  const languageFieldLabels = getLanguageFieldLabels(selectedCompany, t);
 
   const [draftServices, setDraftServices] = useState<
     { id: string | null; name: string; color: string }[]
@@ -639,6 +701,9 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
     upsertLine(db, {
       id: lineId,
       name: name.trim(),
+      secondary_name: secondaryName.trim() || null,
+      tertiary_name: tertiaryName.trim() || null,
+      quaternary_name: quaternaryName.trim() || null,
       prefix: prefix.trim(),
       line_color: color,
       company_id: companyId,
@@ -677,11 +742,34 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
 
   return (
     <Stack gap="md">
+      <Select
+        label={t("route.line.company")}
+        value={companyId}
+        onChange={setCompanyId}
+        data={companies.map((c) => ({ value: c.id, label: c.name }))}
+        clearable
+        placeholder="—"
+      />
       <TextInput
-        label={t("route.line.name")}
+        label={languageFieldLabels[0]}
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
+      />
+      <TextInput
+        label={languageFieldLabels[1]}
+        value={secondaryName}
+        onChange={(e) => setSecondaryName(e.target.value)}
+      />
+      <TextInput
+        label={languageFieldLabels[2]}
+        value={tertiaryName}
+        onChange={(e) => setTertiaryName(e.target.value)}
+      />
+      <TextInput
+        label={languageFieldLabels[3]}
+        value={quaternaryName}
+        onChange={(e) => setQuaternaryName(e.target.value)}
       />
       <TextInput
         label={t("route.line.prefix")}
@@ -696,28 +784,30 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
         swatches={["#8cc800", "#ffffff", "#000000", "#ffdd00", "#f97f00"]}
       />
       {prefix.trim() && (
-        <Group align="center" gap="md">
-          <LineIndicatorBadgePreview
-            color={color}
-            prefix={prefix.trim()}
-            style={
-              companies.find((c) => c.id === companyId)?.station_number_style ??
-              ""
-            }
-          />
-          <Text size="xs" c="dimmed">
-            {t("route.line.prefix-preview")}
-          </Text>
+        <Group align="flex-start" gap="xl">
+          <Stack align="center" gap={4}>
+            <LineIndicatorBadgePreview
+              color={color}
+              prefix={prefix.trim()}
+              style={stationNumberStyle}
+            />
+            <Text size="xs" c="dimmed" ta="center">
+              {t("route.line.prefix-preview")}
+            </Text>
+          </Stack>
+          <Stack align="center" gap={4}>
+            <StationNumberBadgePreview
+              color={color}
+              style={stationNumberStyle}
+              prefix={prefix.trim()}
+              value={LINE_FORM_STATION_NUMBER_PREVIEW}
+            />
+            <Text size="xs" c="dimmed" ta="center">
+              {t("route.line.station-number-preview")}
+            </Text>
+          </Stack>
         </Group>
       )}
-      <Select
-        label={t("route.line.company")}
-        value={companyId}
-        onChange={setCompanyId}
-        data={companies.map((c) => ({ value: c.id, label: c.name }))}
-        clearable
-        placeholder="—"
-      />
       <NumberInput
         label={t("route.line.priority")}
         value={priority}
@@ -1141,6 +1231,11 @@ function StationForm({
   const t = useTranslations();
   const allLines = useMemo(() => getAllLines(db), [db]);
   const currentLine = allLines.find((l) => l.id === lineId);
+  const allCompanies = useMemo(() => getAllCompanies(db), [db]);
+  const currentCompany = allCompanies.find(
+    (company) => company.id === currentLine?.company_id,
+  );
+  const languageFieldLabels = getLanguageFieldLabels(currentCompany, t);
   const parentLine = currentLine?.parent_line_id
     ? allLines.find((l) => l.id === currentLine.parent_line_id)
     : undefined;
@@ -1279,7 +1374,7 @@ function StationForm({
   return (
     <Stack gap="md">
       <TextInput
-        label={t("route.station.name")}
+        label={languageFieldLabels[0]}
         value={primaryName}
         onChange={(e) => setPrimaryName(e.target.value)}
         required
@@ -1290,17 +1385,17 @@ function StationForm({
         onChange={(e) => setFurigana(e.target.value)}
       />
       <TextInput
-        label={t("route.station.en")}
+        label={languageFieldLabels[1]}
         value={secondaryName}
         onChange={(e) => setSecondaryName(e.target.value)}
       />
       <TextInput
-        label={t("route.station.ko")}
+        label={languageFieldLabels[2]}
         value={tertiaryName}
         onChange={(e) => setTertiaryName(e.target.value)}
       />
       <TextInput
-        label={t("route.station.zh")}
+        label={languageFieldLabels[3]}
         value={quaternaryName}
         onChange={(e) => setQuaternaryName(e.target.value)}
       />
@@ -1421,6 +1516,11 @@ function LinkExistingStationForm({
   const t = useTranslations();
   const allLines = useMemo(() => getAllLines(db), [db]);
   const currentLine = allLines.find((l) => l.id === lineId);
+  const allCompanies = useMemo(() => getAllCompanies(db), [db]);
+  const currentCompany = allCompanies.find(
+    (company) => company.id === currentLine?.company_id,
+  );
+  const languageFieldLabels = getLanguageFieldLabels(currentCompany, t);
   const parentLine = currentLine?.parent_line_id
     ? allLines.find((l) => l.id === currentLine.parent_line_id)
     : undefined;
@@ -1481,9 +1581,9 @@ function LinkExistingStationForm({
 
   const infoRows: [string, string | null | undefined][] = [
     [t("route.station.furigana"), selectedStation?.primary_name_furigana],
-    [t("route.station.en"), selectedStation?.secondary_name],
-    [t("route.station.ko"), selectedStation?.tertiary_name],
-    [t("route.station.zh"), selectedStation?.quaternary_name],
+    [languageFieldLabels[1], selectedStation?.secondary_name],
+    [languageFieldLabels[2], selectedStation?.tertiary_name],
+    [languageFieldLabels[3], selectedStation?.quaternary_name],
     [t("route.station.note"), selectedStation?.note],
     [t("route.station.trc"), selectedStation?.three_letter_code],
   ];

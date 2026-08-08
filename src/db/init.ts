@@ -9,6 +9,7 @@ import migrateV040toV050 from "./migrations/v0.4.0_to_v0.5.0";
 import migrateV050toV051 from "./migrations/v0.5.0_to_v0.5.1";
 import migrateV051toV052 from "./migrations/v0.5.1_to_v0.5.2";
 import migrateV054toV060 from "./migrations/v0.5.4_to_v0.6.0";
+import migrateV060toV070 from "./migrations/v0.6.0_to_v0.7.0";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -22,18 +23,25 @@ CREATE TABLE IF NOT EXISTS companies (
   id                   TEXT PRIMARY KEY,
   name                 TEXT NOT NULL,
   company_color        TEXT NOT NULL DEFAULT '#3a9200',
-  station_number_style TEXT NOT NULL DEFAULT 'jreast'
+  station_number_style TEXT NOT NULL DEFAULT 'jreast',
+  primary_language     TEXT NOT NULL DEFAULT 'ja',
+  secondary_language   TEXT NOT NULL DEFAULT 'en',
+  tertiary_language    TEXT NOT NULL DEFAULT 'ko',
+  quaternary_language  TEXT NOT NULL DEFAULT 'zh-CN'
 );
 
 CREATE TABLE IF NOT EXISTS lines (
-  id             TEXT PRIMARY KEY,
-  company_id     TEXT REFERENCES companies(id) ON DELETE SET NULL,
-  name           TEXT NOT NULL,
-  line_color     TEXT NOT NULL DEFAULT '#8cc800',
-  prefix         TEXT NOT NULL,
-  priority       INTEGER,
-  is_loop        INTEGER NOT NULL DEFAULT 0,
-  parent_line_id TEXT REFERENCES lines(id) ON DELETE SET NULL
+  id              TEXT PRIMARY KEY,
+  company_id      TEXT REFERENCES companies(id) ON DELETE SET NULL,
+  name            TEXT NOT NULL,
+  secondary_name  TEXT,
+  tertiary_name   TEXT,
+  quaternary_name TEXT,
+  line_color      TEXT NOT NULL DEFAULT '#8cc800',
+  prefix          TEXT NOT NULL,
+  priority        INTEGER,
+  is_loop         INTEGER NOT NULL DEFAULT 0,
+  parent_line_id  TEXT REFERENCES lines(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS stations (
@@ -138,6 +146,7 @@ function migrateDatabase(database: Database): void {
     migrateV050toV051,
     migrateV051toV052,
     migrateV054toV060,
+    migrateV060toV070,
   ];
 
   for (const migrate of migrations) {
@@ -196,8 +205,26 @@ export function persistDatabase(database: Database): void {
 
 // Minimum required columns per table (subset that the app actively reads/writes)
 const REQUIRED_SCHEMA: Record<string, string[]> = {
-  companies: ["id", "name", "company_color", "station_number_style"],
-  lines: ["id", "name", "line_color", "prefix", "parent_line_id"],
+  companies: [
+    "id",
+    "name",
+    "company_color",
+    "station_number_style",
+    "primary_language",
+    "secondary_language",
+    "tertiary_language",
+    "quaternary_language",
+  ],
+  lines: [
+    "id",
+    "name",
+    "secondary_name",
+    "tertiary_name",
+    "quaternary_name",
+    "line_color",
+    "prefix",
+    "parent_line_id",
+  ],
   stations: ["id", "primary_name"],
   station_lines: ["id", "station_id", "line_id", "sort_order"],
   station_numbers: ["id", "station_id", "line_id", "value"],

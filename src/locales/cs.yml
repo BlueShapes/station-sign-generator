@@ -187,6 +187,7 @@ route:
     all: Všechny společnosti
     delete-confirm: Smazat tento řádek?
     prefix-preview: Náhled odznaku indikátoru čáry
+    station-number-preview: Náhled čísla stanice (01)
   through-route:
     title: Průjezdné trasy
     add: Přidat průjezdnou trasu
@@ -267,6 +268,7 @@ route:
     range-end: Komu
     transit-filter: Zobrazit linky veřejné dopravy
     transit-show-names: Zobrazit názvy přestupních linek
+    download-text-warning: Uložit (druhý jazyk může být nečitelný)
     font-size: Název stanice Velikost písma
     overlap-warning-title: Bylo zjištěno překrývání štítků
     overlap-warning: Některé názvy stanic se překrývají. Zkuste zmenšit velikost písma.

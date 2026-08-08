@@ -187,6 +187,7 @@ route:
     all: Wszystkie firmy
     delete-confirm: Usunąć tę linię?
     prefix-preview: Podgląd plakietki wskaźnika linii
+    station-number-preview: Podgląd numeru stacji (01)
   through-route:
     title: Trasy bezpośrednie
     add: Dodaj trasę bezpośrednią
@@ -267,6 +268,7 @@ route:
     range-end: Do
     transit-filter: Pokaż linie tranzytowe
     transit-show-names: Pokaż nazwy linii przesiadkowych
+    download-text-warning: Zapisz (drugi język może być nieczytelny)
     font-size: Rozmiar czcionki nazwy stacji
     overlap-warning-title: Wykryto nakładanie się etykiet
     overlap-warning: Niektóre nazwy stacji pokrywają się. Spróbuj zmniejszyć rozmiar czcionki.

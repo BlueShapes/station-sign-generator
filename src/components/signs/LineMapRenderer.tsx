@@ -16,8 +16,12 @@ import {
   TRANSIT_ICON_SIZE,
   TRANSIT_DIAGONAL_ANGLE,
   TRANSIT_NAME_FONT,
+  TRANSIT_NAME_LINE_GAP,
+  TRANSIT_SECONDARY_NAME_FONT,
   layoutDiagonalTransitLines,
+  layoutHorizontalStationDetails,
   layoutHorizontalTransitLines,
+  layoutVerticalStationDetails,
   oppositeVerticalDirection,
   shouldRotateVerticalGlyph,
 } from "@/components/signs/transitLineLayout";
@@ -104,7 +108,7 @@ export interface LineMapRendererProps {
       color?: string;
     }
   >;
-  /** Override the gap between stations in canvas units (defaults: 90 horizontal, 62 vertical) */
+  /** Override the gap between stations in canvas units (defaults: 75 horizontal, 62 vertical) */
   stationSpacing?: number;
   /** Width of the route line in canvas units. */
   trackWidth?: number;
@@ -384,7 +388,7 @@ const EN_FONT = 6;
 const LINE_TITLE_FONT = 12;
 
 // Horizontal
-const H_SPACING = 90;
+const H_SPACING = 75;
 const H_HEIGHT = 210;
 const H_TRACK_Y = 105;
 
@@ -843,9 +847,16 @@ function getHorizontalTransitLayout(
   side: "left" | "right",
 ) {
   return layoutHorizontalTransitLines(
-    lines.map((line) =>
-      showNames ? measureTextWidth(line.name, TRANSIT_NAME_FONT) : 0,
-    ),
+    lines.map((line) => {
+      if (!showNames) return 0;
+      const secondaryName = line.secondary_name?.trim();
+      return Math.max(
+        measureTextWidth(line.name, TRANSIT_NAME_FONT),
+        secondaryName
+          ? measureTextWidth(secondaryName, TRANSIT_SECONDARY_NAME_FONT)
+          : 0,
+      );
+    }),
     side,
   );
 }
@@ -855,11 +866,27 @@ function getDiagonalTransitLayout(
   showNames: boolean,
   direction: "above" | "below",
 ) {
+  const nameMetrics = lines.map((line) => {
+    if (!showNames) return { width: 0, height: 0 };
+    const secondaryName = line.secondary_name?.trim();
+    return {
+      width: Math.max(
+        measureTextWidth(line.name, TRANSIT_NAME_FONT),
+        secondaryName
+          ? measureTextWidth(secondaryName, TRANSIT_SECONDARY_NAME_FONT)
+          : 0,
+      ),
+      height:
+        TRANSIT_NAME_FONT +
+        (secondaryName
+          ? TRANSIT_NAME_LINE_GAP + TRANSIT_SECONDARY_NAME_FONT
+          : 0),
+    };
+  });
   return layoutDiagonalTransitLines(
-    lines.map((line) =>
-      showNames ? measureTextWidth(line.name, TRANSIT_NAME_FONT) : 0,
-    ),
+    nameMetrics.map(({ width }) => width),
     direction,
+    nameMetrics.map(({ height }) => height),
   );
 }
 
@@ -884,6 +911,13 @@ function HorizontalTransitLines({
     const item = layout.items[index];
     const itemX = x + item.x;
     const itemY = y + item.y;
+    const secondaryName = line.secondary_name?.trim();
+    const textBlockHeight =
+      TRANSIT_NAME_FONT +
+      (secondaryName
+        ? TRANSIT_NAME_LINE_GAP + TRANSIT_SECONDARY_NAME_FONT
+        : 0);
+    const textBlockY = itemY + (TRANSIT_ICON_SIZE - textBlockHeight) / 2;
     return (
       <Fragment key={line.id}>
         <TransitLineIcon
@@ -893,14 +927,28 @@ function HorizontalTransitLines({
           style={lineStyles[line.id]}
         />
         {showNames && (
-          <Text
-            x={itemX + TRANSIT_ICON_SIZE + TRANSIT_ICON_NAME_GAP}
-            y={itemY + (TRANSIT_ICON_SIZE - TRANSIT_NAME_FONT) / 2}
-            text={line.name}
-            fontSize={TRANSIT_NAME_FONT}
-            fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
-            fill="#222"
-          />
+          <Fragment>
+            <Text
+              x={itemX + TRANSIT_ICON_SIZE + TRANSIT_ICON_NAME_GAP}
+              y={textBlockY}
+              text={line.name}
+              fontSize={TRANSIT_NAME_FONT}
+              fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+              fill="#222"
+              wrap="none"
+            />
+            {secondaryName && (
+              <Text
+                x={itemX + TRANSIT_ICON_SIZE + TRANSIT_ICON_NAME_GAP}
+                y={textBlockY + TRANSIT_NAME_FONT + TRANSIT_NAME_LINE_GAP}
+                text={secondaryName}
+                fontSize={TRANSIT_SECONDARY_NAME_FONT}
+                fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+                fill="#666"
+                wrap="none"
+              />
+            )}
+          </Fragment>
         )}
       </Fragment>
     );
@@ -928,6 +976,12 @@ function DiagonalTransitLines({
     const item = layout.items[index];
     const itemX = x + item.x;
     const itemY = y + item.y;
+    const secondaryName = line.secondary_name?.trim();
+    const rotation =
+      direction === "above"
+        ? -TRANSIT_DIAGONAL_ANGLE
+        : TRANSIT_DIAGONAL_ANGLE;
+    const secondaryOffset = TRANSIT_NAME_FONT + TRANSIT_NAME_LINE_GAP;
     return (
       <Fragment key={line.id}>
         <TransitLineIcon
@@ -937,21 +991,32 @@ function DiagonalTransitLines({
           style={lineStyles[line.id]}
         />
         {showNames && (
-          <Text
+          <Group
             x={itemX + TRANSIT_ICON_SIZE + TRANSIT_ICON_NAME_GAP}
-            y={itemY + TRANSIT_ICON_SIZE / 2}
-            offsetY={TRANSIT_NAME_FONT / 2}
-            rotation={
-              direction === "above"
-                ? -TRANSIT_DIAGONAL_ANGLE
-                : TRANSIT_DIAGONAL_ANGLE
-            }
-            text={line.name}
-            fontSize={TRANSIT_NAME_FONT}
-            fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
-            fill="#222"
-            wrap="none"
-          />
+            y={itemY + TRANSIT_ICON_SIZE}
+            rotation={rotation}
+          >
+            <Text
+              x={0}
+              y={0}
+              text={line.name}
+              fontSize={TRANSIT_NAME_FONT}
+              fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+              fill="#222"
+              wrap="none"
+            />
+            {secondaryName && (
+              <Text
+                x={direction === "below" ? secondaryOffset : -secondaryOffset}
+                y={secondaryOffset}
+                text={secondaryName}
+                fontSize={TRANSIT_SECONDARY_NAME_FONT}
+                fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
+                fill="#666"
+                wrap="none"
+              />
+            )}
+          </Group>
         )}
       </Fragment>
     );
@@ -2664,9 +2729,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
               // Calculate label heights
               const jpH = JP_FONT;
-              const enH = secondaryName ? EN_FONT + 2 : 0;
-              const badgeBlockH =
-                stTransits.length > 0 ? transitLayout.height + 4 : 0;
+              const enH = secondaryName ? EN_FONT : 0;
+              const transitH = stTransits.length > 0 ? transitLayout.height : 0;
 
               // Dot replacement: center badge on the dot position
               const snDotDims =
@@ -2689,8 +2753,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 ? snBadgeDims(!!snNum.threeLetterCode)
                 : snBadgeDims(false);
 
-              // For "above" stations: jp name at top, then en name, then transit badges, then gap, then dot
-              // For "below" stations: dot, then gap, then transit badges, then en name, then jp name
+              // The station-name block stays nearest the marker. Transfer lines
+              // are stacked beyond the names, away from the track.
               // In badge mode the SN badge is inserted between the dot and the rest of the labels,
               // centered on the station x.
               let jpNameY: number;
@@ -2705,29 +2769,47 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 if (above) {
                   snBadgeY =
                     H_TRACK_Y - markerEdgeRadius - 8 - snDims.h;
-                  const totalH = jpH + enH + badgeBlockH;
-                  jpNameY = snBadgeY - SN_BADGE_GAP - totalH;
-                  enNameY = jpNameY + jpH + 2;
-                  badgeRowY = enNameY + enH;
+                  const details = layoutHorizontalStationDetails(
+                    "above",
+                    snBadgeY,
+                    SN_BADGE_GAP,
+                    jpH,
+                    enH,
+                    transitH,
+                  );
+                  jpNameY = details.primaryNameY;
+                  enNameY = details.secondaryNameY;
+                  badgeRowY = details.transitY;
                 } else {
                   snBadgeY = H_TRACK_Y + markerEdgeRadius + 8;
-                  badgeRowY = snBadgeY + snDims.h + SN_BADGE_GAP;
-                  enNameY = badgeRowY + badgeBlockH;
-                  jpNameY = enNameY + enH;
+                  const details = layoutHorizontalStationDetails(
+                    "below",
+                    snBadgeY + snDims.h,
+                    SN_BADGE_GAP,
+                    jpH,
+                    enH,
+                    transitH,
+                  );
+                  jpNameY = details.primaryNameY;
+                  enNameY = details.secondaryNameY;
+                  badgeRowY = details.transitY;
                 }
               } else {
                 snBadgeX = 0;
                 snBadgeY = 0;
-                if (above) {
-                  const totalH = jpH + enH + badgeBlockH;
-                  jpNameY = H_TRACK_Y - effectiveDotR - 8 - totalH;
-                  enNameY = jpNameY + jpH + 2;
-                  badgeRowY = enNameY + enH;
-                } else {
-                  badgeRowY = H_TRACK_Y + effectiveDotR + 6;
-                  enNameY = badgeRowY + badgeBlockH;
-                  jpNameY = enNameY + enH;
-                }
+                const details = layoutHorizontalStationDetails(
+                  above ? "above" : "below",
+                  above
+                    ? H_TRACK_Y - effectiveDotR
+                    : H_TRACK_Y + effectiveDotR,
+                  above ? 8 : 6,
+                  jpH,
+                  enH,
+                  transitH,
+                );
+                jpNameY = details.primaryNameY;
+                enNameY = details.secondaryNameY;
+                badgeRowY = details.transitY;
               }
 
               return (
@@ -3099,41 +3181,36 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
               const jpNameY = y - JP_FONT / 2;
               const enNameY = jpNameY + JP_FONT + 1;
+              const primaryName = stationName(station, primaryLangField);
+              const secondaryName =
+                showSecondaryLang && station[secondaryLangField]
+                  ? station[secondaryLangField]!
+                  : null;
+              const nameBlockWidth = Math.max(
+                measureTextWidth(primaryName, JP_FONT),
+                secondaryName ? measureTextWidth(secondaryName, EN_FONT) : 0,
+              );
 
               // Name/badge positions — same as single-service vertical,
               // but using outermost track as the boundary
-              let transitAnchorX: number;
-              let snBadgeX: number;
-              let nameX: number;
-              let nameTextWidth: number | undefined;
-              let nameAlign: "left" | "right";
-
-              if (verticalNameSide === "right") {
-                transitAnchorX = outerTrackX + serviceDotEdgeRadius + 10;
-                const afterTransitsX =
-                  transitAnchorX +
-                  transitLayout.width +
-                  (stTransits.length > 0 ? 6 : 0);
-                snBadgeX = afterTransitsX;
-                const snExtraW = showSnBadge ? snDims.w + SN_BADGE_GAP : 0;
-                nameX = afterTransitsX + snExtraW;
-                nameTextWidth = undefined;
-                nameAlign = "left";
-              } else {
-                const labelsRightEdge =
-                  outerTrackX - serviceDotEdgeRadius - 10;
-                transitAnchorX = labelsRightEdge;
-                const snBadgeSide =
-                  labelsRightEdge -
-                  transitLayout.width -
-                  (stTransits.length > 0 ? 6 : 0);
-                snBadgeX = snBadgeSide - (showSnBadge ? snDims.w : 0);
-                const nameRightEdge =
-                  snBadgeX - (showSnBadge ? SN_BADGE_GAP : 0);
-                nameX = V_RIGHT_MARGIN;
-                nameTextWidth = Math.max(0, nameRightEdge - V_RIGHT_MARGIN);
-                nameAlign = "right";
-              }
+              const innerBoundary =
+                verticalNameSide === "right"
+                  ? outerTrackX + serviceDotEdgeRadius + 10
+                  : outerTrackX - serviceDotEdgeRadius - 10;
+              const detailsLayout = layoutVerticalStationDetails(
+                verticalNameSide,
+                innerBoundary,
+                showSnBadge ? snDims.w : 0,
+                nameBlockWidth,
+                stTransits.length > 0,
+              );
+              const transitAnchorX = detailsLayout.transitAnchorX;
+              const snBadgeX = detailsLayout.badgeX;
+              const nameX = detailsLayout.nameX;
+              const nameTextWidth =
+                verticalNameSide === "left" ? nameBlockWidth : undefined;
+              const nameAlign: "left" | "right" =
+                verticalNameSide === "left" ? "right" : "left";
 
               return (
                 <Group key={station.id} opacity={stopsHere ? 1 : 0.5}>
@@ -3188,25 +3265,27 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   <Text
                     x={nameX}
                     y={jpNameY}
-                    text={stationName(station, primaryLangField)}
+                    text={primaryName}
                     fontSize={JP_FONT}
                     fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                     fill="#222"
                     align={nameAlign}
                     width={nameTextWidth}
+                    wrap="none"
                   />
 
                   {/* Secondary name */}
-                  {showSecondaryLang && station[secondaryLangField] && (
+                  {secondaryName && (
                     <Text
                       x={nameX}
                       y={enNameY}
-                      text={station[secondaryLangField]!}
+                      text={secondaryName}
                       fontSize={EN_FONT}
                       fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                       fill="#666"
                       align={nameAlign}
                       width={nameTextWidth}
+                      wrap="none"
                     />
                   )}
                 </Group>
@@ -3408,44 +3487,47 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
             const jpNameY = y - JP_FONT / 2;
             const enNameY = jpNameY + JP_FONT + 1;
+            const primaryName = stationName(station, primaryLangField);
+            const secondaryName =
+              showSecondaryLang && station[secondaryLangField]
+                ? station[secondaryLangField]!
+                : null;
+            const primaryFontSize = isPassed
+              ? Math.round(JP_FONT * 0.85)
+              : JP_FONT;
+            const secondaryFontSize = isPassed
+              ? Math.round(EN_FONT * 0.85)
+              : EN_FONT;
+            const nameBlockWidth = Math.max(
+              measureTextWidth(primaryName, primaryFontSize),
+              secondaryName
+                ? measureTextWidth(secondaryName, secondaryFontSize)
+                : 0,
+            );
 
             // Dot replacement: center badge on the dot position
             const snDotDims =
               showSnDot && snNum ? snBadgeDims(!!snNum.threeLetterCode) : null;
 
             // ── Layout: name side determines badge/name x positions ──
-            let transitAnchorX: number;
-            let snBadgeX: number;
-            let nameX: number;
-            let nameTextWidth: number | undefined;
-            let nameAlign: "left" | "right";
-
-            if (verticalNameSide === "right") {
-              transitAnchorX =
-                trackX + getTrackEdgeRadius(r, effectiveTrackWidth) + 10;
-              const afterTransitsX =
-                transitAnchorX +
-                transitLayout.width +
-                (stTransits.length > 0 ? 6 : 0);
-              snBadgeX = afterTransitsX;
-              const snExtraW = showSnBadge ? snDims.w + SN_BADGE_GAP : 0;
-              nameX = afterTransitsX + snExtraW;
-              nameTextWidth = undefined;
-              nameAlign = "left";
-            } else {
-              const labelsRightEdge =
-                trackX - getTrackEdgeRadius(r, effectiveTrackWidth) - 10;
-              transitAnchorX = labelsRightEdge;
-              const snBadgeSide =
-                labelsRightEdge -
-                transitLayout.width -
-                (stTransits.length > 0 ? 6 : 0);
-              snBadgeX = snBadgeSide - (showSnBadge ? snDims.w : 0);
-              const nameRightEdge = snBadgeX - (showSnBadge ? SN_BADGE_GAP : 0);
-              nameX = V_RIGHT_MARGIN;
-              nameTextWidth = Math.max(0, nameRightEdge - V_RIGHT_MARGIN);
-              nameAlign = "right";
-            }
+            const innerBoundary =
+              verticalNameSide === "right"
+                ? trackX + getTrackEdgeRadius(r, effectiveTrackWidth) + 10
+                : trackX - getTrackEdgeRadius(r, effectiveTrackWidth) - 10;
+            const detailsLayout = layoutVerticalStationDetails(
+              verticalNameSide,
+              innerBoundary,
+              showSnBadge ? snDims.w : 0,
+              nameBlockWidth,
+              stTransits.length > 0,
+            );
+            let transitAnchorX = detailsLayout.transitAnchorX;
+            const snBadgeX = detailsLayout.badgeX;
+            const nameX = detailsLayout.nameX;
+            const nameTextWidth =
+              verticalNameSide === "left" ? nameBlockWidth : undefined;
+            const nameAlign: "left" | "right" =
+              verticalNameSide === "left" ? "right" : "left";
 
             // Passed dot-replace layout: badge sits between track and name.
             // Right side: badge just right of track, name further right.
@@ -3454,18 +3536,26 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             let effectiveNameX = nameX;
             let effectiveNameTextWidth = nameTextWidth;
             if (isPassed && showSnDot && snDotDims) {
-              if (verticalNameSide === "right") {
-                passedDotX = trackX + r + SN_BADGE_GAP;
-                effectiveNameX = passedDotX + snDotDims.w * 0.85 + SN_BADGE_GAP;
-                effectiveNameTextWidth = undefined;
-              } else {
-                passedDotX = trackX - r - SN_BADGE_GAP - snDotDims.w * 0.85;
-                effectiveNameX = V_RIGHT_MARGIN;
-                effectiveNameTextWidth = Math.max(
-                  0,
-                  passedDotX - SN_BADGE_GAP - V_RIGHT_MARGIN,
-                );
-              }
+              const passedInnerBoundary =
+                verticalNameSide === "right"
+                  ? trackX +
+                    getTrackEdgeRadius(r, effectiveTrackWidth) +
+                    SN_BADGE_GAP
+                  : trackX -
+                    getTrackEdgeRadius(r, effectiveTrackWidth) -
+                    SN_BADGE_GAP;
+              const passedDetailsLayout = layoutVerticalStationDetails(
+                verticalNameSide,
+                passedInnerBoundary,
+                snDotDims.w * 0.85,
+                nameBlockWidth,
+                stTransits.length > 0,
+              );
+              passedDotX = passedDetailsLayout.badgeX;
+              effectiveNameX = passedDetailsLayout.nameX;
+              effectiveNameTextWidth =
+                verticalNameSide === "left" ? nameBlockWidth : undefined;
+              transitAnchorX = passedDetailsLayout.transitAnchorX;
             }
 
             return (
@@ -3543,25 +3633,27 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   <Text
                     x={effectiveNameX}
                     y={jpNameY}
-                    text={stationName(station, primaryLangField)}
-                    fontSize={isPassed ? Math.round(JP_FONT * 0.85) : JP_FONT}
+                    text={primaryName}
+                    fontSize={primaryFontSize}
                     fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                     fill="#222"
                     align={nameAlign}
                     width={effectiveNameTextWidth}
+                    wrap="none"
                   />
 
                   {/* Secondary name */}
-                  {showSecondaryLang && station[secondaryLangField] && (
+                  {secondaryName && (
                     <Text
                       x={effectiveNameX}
                       y={enNameY}
-                      text={station[secondaryLangField]!}
-                      fontSize={isPassed ? Math.round(EN_FONT * 0.85) : EN_FONT}
+                      text={secondaryName}
+                      fontSize={secondaryFontSize}
                       fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                       fill="#666"
                       align={nameAlign}
                       width={effectiveNameTextWidth}
+                      wrap="none"
                     />
                   )}
                 </Group>

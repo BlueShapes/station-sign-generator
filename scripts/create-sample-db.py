@@ -14,13 +14,20 @@ CREATE TABLE IF NOT EXISTS companies (
   id                   TEXT PRIMARY KEY,
   name                 TEXT NOT NULL,
   company_color        TEXT NOT NULL DEFAULT '#3a9200',
-  station_number_style TEXT NOT NULL DEFAULT 'jreast'
+  station_number_style TEXT NOT NULL DEFAULT 'jreast',
+  primary_language     TEXT NOT NULL DEFAULT 'ja',
+  secondary_language   TEXT NOT NULL DEFAULT 'en',
+  tertiary_language    TEXT NOT NULL DEFAULT 'ko',
+  quaternary_language  TEXT NOT NULL DEFAULT 'zh-CN'
 );
 
 CREATE TABLE IF NOT EXISTS lines (
   id             TEXT PRIMARY KEY,
   company_id     TEXT REFERENCES companies(id) ON DELETE SET NULL,
   name           TEXT NOT NULL,
+  secondary_name TEXT,
+  tertiary_name  TEXT,
+  quaternary_name TEXT,
   line_color     TEXT NOT NULL DEFAULT '#8cc800',
   prefix         TEXT NOT NULL,
   priority       INTEGER,
@@ -558,7 +565,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.6.0')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.7.0')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -570,15 +577,17 @@ def main():
     # Company — color matches default #3a9200, station_number_style = jreast
     company_id = "company-jreast"
     c.execute(
-        "INSERT INTO companies VALUES (?, ?, ?, ?)",
-        (company_id, "JR東日本", "#3a9200", "jreast"),
+        "INSERT INTO companies (id, name, company_color, station_number_style, primary_language, secondary_language)"
+        " VALUES (?, ?, ?, ?, ?, ?)",
+        (company_id, "JR東日本", "#3a9200", "jreast", "ja", "en"),
     )
 
     # ── Yamanote Line ─────────────────────────────────────────────────────────
     jy_line_id = "line-yamanote"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (jy_line_id, company_id, "山手線", "#8cc800", "JY", 1, 1),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (jy_line_id, company_id, "山手線", "Yamanote Line", "#8cc800", "JY", 1, 1),
     )
 
     for (num, primary_name, furigana, english, korean, chinese, tlc) in YAMANOTE_STATIONS:
@@ -612,8 +621,9 @@ def main():
     # ── Keihin-Tohoku / Negishi Line ──────────────────────────────────────────
     jk_line_id = "line-keihin-tohoku"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (jk_line_id, company_id, "京浜東北線・根岸線", "#5f9de9", "JK", 2, 0),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (jk_line_id, company_id, "京浜東北線・根岸線", "Keihin-Tōhoku Line / Negishi Line", "#5f9de9", "JK", 2, 0),
     )
 
     # Shared stations: reuse existing station records, add only station_lines + station_numbers
@@ -691,8 +701,9 @@ def main():
     # ── Negishi Line ───────────────────────────────────────────────────────────
     negishi_line_id = "line-negishi"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (negishi_line_id, company_id, "根岸線", "#8bd900", "", 3, 0),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (negishi_line_id, company_id, "根岸線", "Negishi Line", "#8bd900", "", 3, 0),
     )
 
     # Reuse existing station records (station-jk01 … station-jk12); add only station_lines
@@ -706,8 +717,9 @@ def main():
     # ── Shonan-Shinjuku Line ──────────────────────────────────────────────────
     js_line_id = "line-shonan-shinjuku"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (js_line_id, company_id, "湘南新宿ライン", "#c61c1b", "JS", 4, 0),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (js_line_id, company_id, "湘南新宿ライン", "Shōnan-Shinjuku Line", "#c61c1b", "JS", 4, 0),
     )
 
     # JS services
@@ -767,16 +779,17 @@ def main():
     # ── Tokyo Metro (東京メトロ) ───────────────────────────────────────────────
     company_metro_id = "company-tokyometro"
     c.execute(
-        "INSERT INTO companies VALUES (?, ?, ?, ?)",
-        (company_metro_id, "東京メトロ", "#00a3d9", "tokyometro"),
+        "INSERT INTO companies (id, name, company_color, station_number_style, primary_language, secondary_language)"
+        " VALUES (?, ?, ?, ?, ?, ?)",
+        (company_metro_id, "東京メトロ", "#00a3d9", "tokyometro", "ja", "en"),
     )
 
     # ── Marunouchi Line (丸ノ内線) ────────────────────────────────────────────
     m_line_id = "line-marunouchi"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop, parent_line_id)"
-        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (m_line_id, company_metro_id, "丸ノ内線", "#dd3839", "M", 1, 0, None),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop, parent_line_id)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (m_line_id, company_metro_id, "丸ノ内線", "Marunouchi Line", "#dd3839", "M", 1, 0, None),
     )
 
     # 普通 service for Marunouchi main line
@@ -808,9 +821,9 @@ def main():
     # ── Marunouchi Branch Line (丸ノ内線 方南町支線) ──────────────────────────
     mb_line_id = "line-marunouchi-branch"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop, parent_line_id)"
-        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (mb_line_id, company_metro_id, "丸ノ内線（方南町支線）", "#dd3839", "Mb", 2, 0, m_line_id),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop, parent_line_id)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (mb_line_id, company_metro_id, "丸ノ内線（方南町支線）", "Marunouchi Line (Honancho Branch)", "#dd3839", "Mb", 2, 0, m_line_id),
     )
 
     # 普通 service for branch line
@@ -852,8 +865,9 @@ def main():
     # ── Chuo Line (Rapid) ─────────────────────────────────────────────────────
     jc_line_id = "line-chuo-rapid"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (jc_line_id, company_id, "中央線快速", "#f15a22", "JC", 5, 0),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (jc_line_id, company_id, "中央線快速", "Chūō Line (Rapid)", "#f15a22", "JC", 5, 0),
     )
     insert_numbered_line_stations(c, jc_line_id, "jc", CHUO_RAPID_STATIONS)
     insert_line_services(c, jc_line_id, "jc", CHUO_RAPID_STATIONS, CHUO_RAPID_SERVICES)
@@ -861,16 +875,18 @@ def main():
     # ── Chuo-Sobu Line (Local) ────────────────────────────────────────────────
     jb_line_id = "line-chuo-sobu-local"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (jb_line_id, company_id, "中央・総武線各駅停車", "#ffd400", "JB", 6, 0),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (jb_line_id, company_id, "中央・総武線各駅停車", "Chūō-Sōbu Line (Local)", "#ffd400", "JB", 6, 0),
     )
     insert_numbered_line_stations(c, jb_line_id, "jb", CHUO_SOBU_LOCAL_STATIONS)
 
     # ── Tokyo Metro Tozai Line ────────────────────────────────────────────────
     t_line_id = "line-tozai"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (t_line_id, company_metro_id, "東西線", "#00a7db", "T", 3, 0),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (t_line_id, company_metro_id, "東西線", "Tozai Line", "#00a7db", "T", 3, 0),
     )
     insert_numbered_line_stations(c, t_line_id, "t", TOZAI_STATIONS)
     insert_line_services(c, t_line_id, "t", TOZAI_STATIONS, TOZAI_SERVICES)
@@ -878,13 +894,15 @@ def main():
     # ── Toyo Rapid Line ───────────────────────────────────────────────────────
     company_toyo_id = "company-toyo-rapid"
     c.execute(
-        "INSERT INTO companies VALUES (?, ?, ?, ?)",
-        (company_toyo_id, "東葉高速鉄道", "#e95513", "tokyometro"),
+        "INSERT INTO companies (id, name, company_color, station_number_style, primary_language, secondary_language)"
+        " VALUES (?, ?, ?, ?, ?, ?)",
+        (company_toyo_id, "東葉高速鉄道", "#e95513", "tokyometro", "ja", "en"),
     )
     tr_line_id = "line-toyo-rapid"
     c.execute(
-        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (tr_line_id, company_toyo_id, "東葉高速線", "#e95513", "TR", 1, 0),
+        "INSERT INTO lines (id, company_id, name, secondary_name, line_color, prefix, priority, is_loop)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (tr_line_id, company_toyo_id, "東葉高速線", "Toyo Rapid Line", "#78e900", "TR", 1, 0),
     )
     insert_numbered_line_stations(c, tr_line_id, "tr", TOYO_RAPID_STATIONS)
     insert_line_services(c, tr_line_id, "tr", TOYO_RAPID_STATIONS, TOYO_RAPID_SERVICES)
@@ -930,7 +948,7 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.6.0")
+    print(f"  - version: 0.7.0")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
     print(f"  - 3 companies (JR東日本, 東京メトロ, 東葉高速鉄道)")
     print(f"  - 10 lines:")
@@ -943,7 +961,7 @@ def main():
     print(f"      中央線快速      (JC, #f15a22,  is_loop=0): {len(CHUO_RAPID_STATIONS)} stations; 4 services")
     print(f"      中央・総武線各駅停車 (JB, #ffd400, is_loop=0): {len(CHUO_SOBU_LOCAL_STATIONS)} stations")
     print(f"      東西線          (T,  #00a7db,  is_loop=0): {len(TOZAI_STATIONS)} stations; 3 services")
-    print(f"      東葉高速線      (TR, #e95513,  is_loop=0): {len(TOYO_RAPID_STATIONS)} stations; 3 services")
+    print(f"      東葉高速線      (TR, #78e900,  is_loop=0): {len(TOYO_RAPID_STATIONS)} stations; 3 services")
     print(f"  - 2 direction-aware through routes (3 line sections each)")
 
 

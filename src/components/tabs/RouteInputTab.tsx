@@ -1,7 +1,8 @@
 /*
  * JR East sign format — required data from DB:
  * Current station: primary_name, primary_name_furigana, secondary_name,
- *   tertiary_name (Korean), quaternary_name (Chinese), note, three_letter_code,
+ *   tertiary_name, quaternary_name (language order is owned by the company),
+ *   note, three_letter_code,
  *   station_number (value from station_numbers for this line),
  *   station_areas (from station_areas)
  * Adjacent stations (left/right by sort_order ±1 in station_lines):
@@ -30,6 +31,7 @@ import {
   SegmentedControl,
   Slider,
   Switch,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconDownload,
@@ -48,6 +50,10 @@ import {
 import Konva from "konva";
 import { useTranslations } from "@/i18n/useTranslation";
 import { waitForCanvasFonts } from "@/lib/fonts";
+import {
+  getCompanyLanguages,
+  getRailwayLanguageLabel,
+} from "@/lib/railwayLanguages";
 import { getAllLines } from "@/db/repositories/lines";
 import { getAllCompanies } from "@/db/repositories/companies";
 import {
@@ -102,11 +108,28 @@ import {
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
 } from "@/components/signs/lineMapGeometry";
+import {
+  isTransitSecondaryNameExportTooSmall,
+} from "@/components/signs/transitLineLayout";
 
 type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
 type TabMode = "sign" | "linemap" | "multiline-linemap";
 type MapOrientation = "horizontal" | "vertical";
 type AdjacentSide = "left" | "right";
+
+const STATION_NAME_FIELDS: StationNameField[] = [
+  "primary_name",
+  "secondary_name",
+  "tertiary_name",
+  "quaternary_name",
+];
+
+const LANGUAGE_SLOT_LABEL_KEYS = [
+  "route.linemap.lang-1st",
+  "route.linemap.lang-2nd",
+  "route.linemap.lang-3rd",
+  "route.linemap.lang-4th",
+] as const;
 
 type AdjacentCandidate = AdjacentStationProps & {
   optionValue: string;
@@ -210,7 +233,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapNameStyle, setMapNameStyle] = useState<
     "normal" | "above" | "below"
   >("normal");
-  const [mapStationSpacing, setMapStationSpacing] = useState(90);
+  const [mapStationSpacing, setMapStationSpacing] = useState(75);
   const [mapTrackWidth, setMapTrackWidth] = useState(DEFAULT_TRACK_WIDTH);
   const [mapPrimaryLang, setMapPrimaryLang] =
     useState<StationNameField>("primary_name");
@@ -613,15 +636,20 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const isLoopLine = selectedLine?.is_loop === 1;
   // When the user opts into linear rendering for a loop line, treat it as non-loop.
   const effectiveIsLoop = isLoopLine && !mapForceLinear;
-  const mapCompanyStyle = useMemo(() => {
-    if (!db || !selectedLine?.company_id) return undefined;
-    return getAllCompanies(db).find((c) => c.id === selectedLine.company_id)
-      ?.station_number_style;
-  }, [db, selectedLine?.company_id]);
+  const routeCompanies = useMemo(() => (db ? getAllCompanies(db) : []), [db]);
+  const mapCompany = routeCompanies.find(
+    (company) => company.id === selectedLine?.company_id,
+  );
+  const mapCompanyStyle = mapCompany?.station_number_style;
+  const mapLanguageOptions = getCompanyLanguages(mapCompany).map(
+    (language, index) => ({
+      value: STATION_NAME_FIELDS[index],
+      label: `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
+    }),
+  );
   const mapLineIndicatorStyles = useMemo(() => {
-    if (!db) return {};
     const styleByCompanyId = new Map(
-      getAllCompanies(db).map((company) => [
+      routeCompanies.map((company) => [
         company.id,
         company.station_number_style,
       ]),
@@ -634,7 +662,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           : "jreast",
       ]),
     );
-  }, [db, lines]);
+  }, [lines, routeCompanies]);
 
   // Derive ServiceInfo list (1+ services) for renderer
   const mapServiceInfos = useMemo((): ServiceInfo[] => {
@@ -822,6 +850,20 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapShowTransitNames,
     mapTrackWidth,
   ]);
+
+  const hasVisibleTransitSecondaryNames =
+    mapShowTransitNames &&
+    mapDisplayStations.some((station) =>
+      filteredMapTransits[station.id]?.some(
+        (transitLine) => !!transitLine.secondary_name?.trim(),
+      ),
+    );
+  const mapDownloadTextTooSmall =
+    hasVisibleTransitSecondaryNames &&
+    isTransitSecondaryNameExportTooSmall(mapSaveSize);
+  const mapDownloadWarningText = mapDownloadTextTooSmall
+    ? t("route.linemap.download-text-warning")
+    : null;
 
   const handleSaveSign = async () => {
     if (!signData) return;
@@ -1565,24 +1607,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       onChange={(v) =>
                         v && setMapPrimaryLang(v as StationNameField)
                       }
-                      data={[
-                        {
-                          value: "primary_name",
-                          label: t("route.linemap.lang-1st"),
-                        },
-                        {
-                          value: "secondary_name",
-                          label: t("route.linemap.lang-2nd"),
-                        },
-                        {
-                          value: "tertiary_name",
-                          label: t("route.linemap.lang-3rd"),
-                        },
-                        {
-                          value: "quaternary_name",
-                          label: t("route.linemap.lang-4th"),
-                        },
-                      ]}
+                      data={mapLanguageOptions}
                     />
                     {mapStations.length > 0 && (
                       <Text size="xs" c="dimmed" mt={4} truncate>
@@ -1601,24 +1626,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         v && setMapSecondaryLang(v as StationNameField)
                       }
                       disabled={!mapShowSecondaryLang}
-                      data={[
-                        {
-                          value: "primary_name",
-                          label: t("route.linemap.lang-1st"),
-                        },
-                        {
-                          value: "secondary_name",
-                          label: t("route.linemap.lang-2nd"),
-                        },
-                        {
-                          value: "tertiary_name",
-                          label: t("route.linemap.lang-3rd"),
-                        },
-                        {
-                          value: "quaternary_name",
-                          label: t("route.linemap.lang-4th"),
-                        },
-                      ]}
+                      data={mapLanguageOptions}
                     />
                     <Group mt={6} gap="xs">
                       <Switch
@@ -1805,18 +1813,43 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   </Grid.Col>
                   <Grid.Col
                     span={{ base: 12, sm: 5, lg: 3 }}
-                    style={{ display: "flex", justifyContent: "center" }}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-end",
+                      minWidth: 0,
+                    }}
                   >
-                    <Button
-                      color="green"
-                      size="lg"
-                      variant="filled"
-                      onClick={handleSaveMap}
-                      style={{ fontWeight: 700 }}
-                      leftSection={<IconDownload />}
+                    <Tooltip
+                      label={mapDownloadWarningText ?? ""}
+                      disabled={!mapDownloadWarningText}
+                      multiline
+                      w={280}
+                      withArrow
                     >
-                      {t("input.save")}
-                    </Button>
+                      <Button
+                        color={mapDownloadTextTooSmall ? "yellow" : "green"}
+                        size="lg"
+                        variant="filled"
+                        onClick={handleSaveMap}
+                        fullWidth
+                        style={{ fontWeight: 700, minWidth: 0 }}
+                        leftSection={
+                          mapDownloadTextTooSmall ? (
+                            <IconAlertTriangle />
+                          ) : (
+                            <IconDownload />
+                          )
+                        }
+                        title={mapDownloadWarningText ?? undefined}
+                        aria-label={
+                          mapDownloadWarningText
+                            ? `${t("input.save")}: ${mapDownloadWarningText}`
+                            : t("input.save")
+                        }
+                      >
+                        {t("input.save")}
+                      </Button>
+                    </Tooltip>
                   </Grid.Col>
                 </Grid>
               </>

@@ -187,6 +187,7 @@ route:
     all: Todas as empresas
     delete-confirm: Eliminar esta linha?
     prefix-preview: Visualização do selo do indicador de linha
+    station-number-preview: Pré-visualização do número da estação (01)
   through-route:
     title: Rotas diretas
     add: Adicionar rota direta
@@ -267,6 +268,7 @@ route:
     range-end: Para
     transit-filter: Mostrar linhas de transporte público
     transit-show-names: Mostrar nomes das linhas de correspondência
+    download-text-warning: Guardar (o segundo idioma pode ficar ilegível)
     font-size: Tamanho da fonte do nome da estação
     overlap-warning-title: Sobreposição de rótulo detectada
     overlap-warning: Alguns nomes de estações se sobrepõem. Tente reduzir o tamanho da fonte.

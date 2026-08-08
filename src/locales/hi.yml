@@ -187,6 +187,7 @@ route:
     all: सभी कंपनियाँ
     delete-confirm: यह पंक्ति हटाएं?
     prefix-preview: लाइन सूचक बैज पूर्वावलोकन
+    station-number-preview: स्टेशन संख्या पूर्वावलोकन (01)
   through-route:
     title: सीधी सेवा के मार्ग
     add: सीधी सेवा मार्ग जोड़ें
@@ -267,6 +268,7 @@ route:
     range-end: को
     transit-filter: पारगमन रेखाएँ दिखाएँ
     transit-show-names: इंटरचेंज लाइन के नाम दिखाएँ
+    download-text-warning: सहेजें (दूसरी भाषा अस्पष्ट हो सकती है)
     font-size: स्टेशन का नाम फ़ॉन्ट आकार
     overlap-warning-title: लेबल ओवरलैप का पता चला
     overlap-warning: कुछ स्टेशनों के नाम ओवरलैप होते हैं। फ़ॉन्ट का आकार कम करने का प्रयास करें.

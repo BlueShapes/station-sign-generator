@@ -195,6 +195,7 @@ route:
     all: すべての会社
     delete-confirm: この路線を削除しますか？
     prefix-preview: 路線インジケータバッジのプレビュー
+    station-number-preview: 駅番号のプレビュー（01）
   through-route:
     title: 直通経路
     add: 直通経路を追加
@@ -275,6 +276,7 @@ route:
     range-end: 終着駅
     transit-filter: 乗換路線を表示
     transit-show-names: 乗換先の路線名を表示
+    download-text-warning: 保存（第2言語が読めない可能性）
     font-size: 駅名フォントサイズ
     overlap-warning-title: 駅名の重なりを検出
     overlap-warning: 一部の駅名が重なっています。フォントサイズを小さくしてみてください。

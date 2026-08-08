@@ -143,7 +143,7 @@ describe("through-service sample routes", () => {
     expect(route("line-toyo-rapid")).toMatchObject({
       name: "東葉高速線",
       prefix: "TR",
-      line_color: "#e95513",
+      line_color: "#78e900",
       station_count: 9,
       first_number: 1,
       last_number: 9,

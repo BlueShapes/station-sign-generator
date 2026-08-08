@@ -187,6 +187,7 @@ route:
     all: 所有公司
     delete-confirm: 删除这一行吗？
     prefix-preview: 线路指示器徽章预览
+    station-number-preview: 车站编号预览（01）
   through-route:
     title: 直通路径
     add: 添加直通路径
@@ -267,6 +268,7 @@ route:
     range-end: 至
     transit-filter: 显示公交线路
     transit-show-names: 显示换乘线路名称
+    download-text-warning: 保存（第二语言可能无法辨认）
     font-size: 站名字体大小
     overlap-warning-title: 检测到标签重叠
     overlap-warning: 有些站名重叠。尝试减小字体大小。

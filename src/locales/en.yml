@@ -195,6 +195,7 @@ route:
     all: All Companies
     delete-confirm: Delete this line?
     prefix-preview: Line indicator badge preview
+    station-number-preview: Station number preview (01)
   through-route:
     title: Through Routes
     add: Add Through Route
@@ -275,6 +276,7 @@ route:
     range-end: To
     transit-filter: Show Transit Lines
     transit-show-names: Show transfer line names
+    download-text-warning: Save (secondary name may be unreadable)
     font-size: Station Name Font Size
     overlap-warning-title: Label Overlap Detected
     overlap-warning: Some station names overlap. Try reducing the font size.
