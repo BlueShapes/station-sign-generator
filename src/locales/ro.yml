@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Descărcați SQLite
   import-sqlite: Importă SQLite
-  import-sample: Încărcați date eșantion (linia Yamanote)
+  import-sample: Încărcați date eșantion
   import-error:
     invalid-file: Fișierul selectat nu este o bază de date SQLite validă.
     missing-table: "Din baza de date lipsește un tabel obligatoriu: {detail}"

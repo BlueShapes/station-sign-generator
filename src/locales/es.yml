@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Descargar SQLite
   import-sqlite: Importar SQLite
-  import-sample: Cargar datos de muestra (Línea Yamanote)
+  import-sample: Cargar datos de muestra
   import-error:
     invalid-file: El archivo seleccionado no es una base de datos SQLite válida.
     missing-table: "A la base de datos le falta una tabla requerida: {detail}"

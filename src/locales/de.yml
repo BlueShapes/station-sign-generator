@@ -146,7 +146,7 @@ settings:
 route:
   download-sqlite: SQLite herunterladen
   import-sqlite: SQLite importieren
-  import-sample: Beispieldaten laden (Yamanote-Linie)
+  import-sample: Beispieldaten laden
   import-error:
     invalid-file: Die ausgewählte Datei ist keine gültige SQLite-Datenbank.
     missing-table: "In der Datenbank fehlt eine erforderliche Tabelle: {detail}"

@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Stáhněte si SQLite
   import-sqlite: Importujte SQLite
-  import-sample: Načíst ukázková data (Yamanote Line)
+  import-sample: Načíst ukázková data
   import-error:
     invalid-file: Vybraný soubor není platná databáze SQLite.
     missing-table: "V databázi chybí požadovaná tabulka: {detail}"

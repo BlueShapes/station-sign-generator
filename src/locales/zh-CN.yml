@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: 下载SQLite
   import-sqlite: 导入SQLite
-  import-sample: 加载样本数据（山手线）
+  import-sample: 加载样本数据
   import-error:
     invalid-file: 所选文件不是有效的 SQLite 数据库。
     missing-table: 数据库缺少所需的表：{detail}

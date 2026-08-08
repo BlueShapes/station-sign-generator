@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: SQLite डाउनलोड करें
   import-sqlite: SQLite आयात करें
-  import-sample: नमूना डेटा लोड करें (यमानोट लाइन)
+  import-sample: नमूना डेटा लोड करें
   import-error:
     invalid-file: चयनित फ़ाइल वैध SQLite डेटाबेस नहीं है।
     missing-table: "डेटाबेस में एक आवश्यक तालिका गुम है: {detail}"

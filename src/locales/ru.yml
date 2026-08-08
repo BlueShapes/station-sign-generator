@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Скачать SQLite
   import-sqlite: Импортировать SQLite
-  import-sample: Загрузка выборочных данных (линия Яманотэ)
+  import-sample: Загрузка выборочных данных
   import-error:
     invalid-file: Выбранный файл не является допустимой базой данных SQLite.
     missing-table: "В базе данных отсутствует необходимая таблица: {detail}."

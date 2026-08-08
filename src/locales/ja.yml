@@ -146,7 +146,7 @@ settings:
 route:
   download-sqlite: SQLiteをダウンロード
   import-sqlite: SQLiteをインポート
-  import-sample: サンプルデータを読み込む（山手線）
+  import-sample: サンプルデータを読み込む
   import-error:
     invalid-file: "選択されたファイルは有効なSQLiteデータベースではありません。"
     missing-table: "必要なテーブルが見つかりません: {detail}"

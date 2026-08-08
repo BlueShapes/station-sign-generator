@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a sample SQLite database pre-populated with Yamanote Line,
-Keihin-Tohoku / Negishi Line, and Shonan-Shinjuku Line data."""
+"""Generate the pre-populated sample SQLite database."""
 
 import sqlite3
 import os
@@ -312,6 +311,140 @@ MARUNOUCHI_BRANCH_STATIONS = [
 ]
 
 
+# ── Chuo Line (Rapid) (JC) ───────────────────────────────────────────────────
+# (number, station_id, primary_name, furigana, english)
+# Existing station IDs are reused so a physical station can belong to many lines.
+CHUO_RAPID_STATIONS = [
+    ( 1, "station-jy01", "東京",       "とうきょう",       "Tōkyō"),
+    ( 2, "station-jy02", "神田",       "かんだ",           "Kanda"),
+    ( 3, "station-m20",  "御茶ノ水",   "おちゃのみず",     "Ochanomizu"),
+    ( 4, "station-m12",  "四ツ谷",     "よつや",           "Yotsuya"),
+    ( 5, "station-jy17", "新宿",       "しんじゅく",       "Shinjuku"),
+    ( 6, "station-jc06", "中野",       "なかの",           "Nakano"),
+    ( 7, "station-jc07", "高円寺",     "こうえんじ",       "Koenji"),
+    ( 8, "station-jc08", "阿佐ケ谷",   "あさがや",         "Asagaya"),
+    ( 9, "station-m01",  "荻窪",       "おぎくぼ",         "Ogikubo"),
+    (10, "station-jc10", "西荻窪",     "にしおぎくぼ",     "Nishi-Ogikubo"),
+    (11, "station-jc11", "吉祥寺",     "きちじょうじ",     "Kichijoji"),
+    (12, "station-jc12", "三鷹",       "みたか",           "Mitaka"),
+    (13, "station-jc13", "武蔵境",     "むさしさかい",     "Musashi-Sakai"),
+    (14, "station-jc14", "東小金井",   "ひがしこがねい",   "Higashi-Koganei"),
+    (15, "station-jc15", "武蔵小金井", "むさしこがねい",   "Musashi-Koganei"),
+    (16, "station-jc16", "国分寺",     "こくぶんじ",       "Kokubunji"),
+    (17, "station-jc17", "西国分寺",   "にしこくぶんじ",   "Nishi-Kokubunji"),
+    (18, "station-jc18", "国立",       "くにたち",         "Kunitachi"),
+    (19, "station-jc19", "立川",       "たちかわ",         "Tachikawa"),
+    (20, "station-jc20", "日野",       "ひの",             "Hino"),
+    (21, "station-jc21", "豊田",       "とよだ",           "Toyoda"),
+    (22, "station-jc22", "八王子",     "はちおうじ",       "Hachioji"),
+    (23, "station-jc23", "西八王子",   "にしはちおうじ",   "Nishi-Hachioji"),
+    (24, "station-jc24", "高尾",       "たかお",           "Takao"),
+]
+
+
+# ── Chuo-Sobu Line (Local) (JB) ──────────────────────────────────────────────
+CHUO_SOBU_LOCAL_STATIONS = [
+    ( 1, "station-jc12", "三鷹",       "みたか",             "Mitaka"),
+    ( 2, "station-jc11", "吉祥寺",     "きちじょうじ",       "Kichijoji"),
+    ( 3, "station-jc10", "西荻窪",     "にしおぎくぼ",       "Nishi-Ogikubo"),
+    ( 4, "station-m01",  "荻窪",       "おぎくぼ",           "Ogikubo"),
+    ( 5, "station-jc08", "阿佐ケ谷",   "あさがや",           "Asagaya"),
+    ( 6, "station-jc07", "高円寺",     "こうえんじ",         "Koenji"),
+    ( 7, "station-jc06", "中野",       "なかの",             "Nakano"),
+    ( 8, "station-jb08", "東中野",     "ひがしなかの",       "Higashi-Nakano"),
+    ( 9, "station-jb09", "大久保",     "おおくぼ",           "Okubo"),
+    (10, "station-jy17", "新宿",       "しんじゅく",         "Shinjuku"),
+    (11, "station-jy18", "代々木",     "よよぎ",             "Yoyogi"),
+    (12, "station-jb12", "千駄ケ谷",   "せんだがや",         "Sendagaya"),
+    (13, "station-jb13", "信濃町",     "しなのまち",         "Shinanomachi"),
+    (14, "station-m12",  "四ツ谷",     "よつや",             "Yotsuya"),
+    (15, "station-jb15", "市ケ谷",     "いちがや",           "Ichigaya"),
+    (16, "station-jb16", "飯田橋",     "いいだばし",         "Iidabashi"),
+    (17, "station-jb17", "水道橋",     "すいどうばし",       "Suidobashi"),
+    (18, "station-m20",  "御茶ノ水",   "おちゃのみず",       "Ochanomizu"),
+    (19, "station-jy03", "秋葉原",     "あきはばら",         "Akihabara"),
+    (20, "station-jb20", "浅草橋",     "あさくさばし",       "Asakusabashi"),
+    (21, "station-jb21", "両国",       "りょうごく",         "Ryogoku"),
+    (22, "station-jb22", "錦糸町",     "きんしちょう",       "Kinshicho"),
+    (23, "station-jb23", "亀戸",       "かめいど",           "Kameido"),
+    (24, "station-jb24", "平井",       "ひらい",             "Hirai"),
+    (25, "station-jb25", "新小岩",     "しんこいわ",         "Shin-Koiwa"),
+    (26, "station-jb26", "小岩",       "こいわ",             "Koiwa"),
+    (27, "station-jb27", "市川",       "いちかわ",           "Ichikawa"),
+    (28, "station-jb28", "本八幡",     "もとやわた",         "Motoyawata"),
+    (29, "station-jb29", "下総中山",   "しもうさなかやま",   "Shimosa-Nakayama"),
+    (30, "station-jb30", "西船橋",     "にしふなばし",       "Nishi-Funabashi"),
+    (31, "station-jb31", "船橋",       "ふなばし",           "Funabashi"),
+    (32, "station-jb32", "東船橋",     "ひがしふなばし",     "Higashi-Funabashi"),
+    (33, "station-jb33", "津田沼",     "つだぬま",           "Tsudanuma"),
+    (34, "station-jb34", "幕張本郷",   "まくはりほんごう",   "Makuhari-Hongo"),
+    (35, "station-jb35", "幕張",       "まくはり",           "Makuhari"),
+    (36, "station-jb36", "新検見川",   "しんけみがわ",       "Shin-Kemigawa"),
+    (37, "station-jb37", "稲毛",       "いなげ",             "Inage"),
+    (38, "station-jb38", "西千葉",     "にしちば",           "Nishi-Chiba"),
+    (39, "station-jb39", "千葉",       "ちば",               "Chiba"),
+]
+
+
+# ── Tokyo Metro Tozai Line (T) ───────────────────────────────────────────────
+TOZAI_STATIONS = [
+    ( 1, "station-jc06", "中野",       "なかの",           "Nakano"),
+    ( 2, "station-t02",  "落合",       "おちあい",         "Ochiai"),
+    ( 3, "station-jy15", "高田馬場",   "たかだのばば",     "Takadanobaba"),
+    ( 4, "station-t04",  "早稲田",     "わせだ",           "Waseda"),
+    ( 5, "station-t05",  "神楽坂",     "かぐらざか",       "Kagurazaka"),
+    ( 6, "station-jb16", "飯田橋",     "いいだばし",       "Iidabashi"),
+    ( 7, "station-t07",  "九段下",     "くだんした",       "Kudanshita"),
+    ( 8, "station-t08",  "竹橋",       "たけばし",         "Takebashi"),
+    ( 9, "station-m18",  "大手町",     "おおてまち",       "Otemachi"),
+    (10, "station-t10",  "日本橋",     "にほんばし",       "Nihombashi"),
+    (11, "station-t11",  "茅場町",     "かやばちょう",     "Kayabacho"),
+    (12, "station-t12",  "門前仲町",   "もんぜんなかちょう", "Monzen-nakacho"),
+    (13, "station-t13",  "木場",       "きば",             "Kiba"),
+    (14, "station-t14",  "東陽町",     "とうようちょう",   "Toyocho"),
+    (15, "station-t15",  "南砂町",     "みなみすなまち",   "Minami-sunamachi"),
+    (16, "station-t16",  "西葛西",     "にしかさい",       "Nishi-kasai"),
+    (17, "station-t17",  "葛西",       "かさい",           "Kasai"),
+    (18, "station-t18",  "浦安",       "うらやす",         "Urayasu"),
+    (19, "station-t19",  "南行徳",     "みなみぎょうとく", "Minami-gyotoku"),
+    (20, "station-t20",  "行徳",       "ぎょうとく",       "Gyotoku"),
+    (21, "station-t21",  "妙典",       "みょうでん",       "Myoden"),
+    (22, "station-t22",  "原木中山",   "ばらきなかやま",   "Baraki-nakayama"),
+    (23, "station-jb30", "西船橋",     "にしふなばし",     "Nishi-Funabashi"),
+]
+
+
+# ── Toyo Rapid Line (TR) ─────────────────────────────────────────────────────
+TOYO_RAPID_STATIONS = [
+    (1, "station-jb30", "西船橋",       "にしふなばし",       "Nishi-Funabashi"),
+    (2, "station-tr02", "東海神",       "ひがしかいじん",     "Higashi-kaijin"),
+    (3, "station-tr03", "飯山満",       "はさま",             "Hasama"),
+    (4, "station-tr04", "北習志野",     "きたならしの",       "Kita-narashino"),
+    (5, "station-tr05", "船橋日大前",   "ふなばしにちだいまえ", "Funabashi-nichidaimae"),
+    (6, "station-tr06", "八千代緑が丘", "やちよみどりがおか", "Yachiyo-midorigaoka"),
+    (7, "station-tr07", "八千代中央",   "やちよちゅうおう",   "Yachiyo-chuo"),
+    (8, "station-tr08", "村上",         "むらかみ",           "Murakami"),
+    (9, "station-tr09", "東葉勝田台",   "とうようかつただい", "Toyo-katsutadai"),
+]
+
+
+def insert_numbered_line_stations(cursor, line_id, id_prefix, stations):
+    """Insert a route while reusing any station records already in the sample."""
+    for number, station_id, primary_name, furigana, english in stations:
+        cursor.execute(
+            "INSERT OR IGNORE INTO stations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (station_id, primary_name, furigana, english, None, None, None, None, None, number),
+        )
+        cursor.execute(
+            "INSERT INTO station_lines VALUES (?, ?, ?, ?)",
+            (f"sl-{id_prefix}{number:02d}", station_id, line_id, number),
+        )
+        cursor.execute(
+            "INSERT INTO station_numbers VALUES (?, ?, ?, ?)",
+            (f"sn-{id_prefix}{number:02d}", station_id, line_id, f"{number:02d}"),
+        )
+
+
 def main():
     script_dir = os.path.dirname(__file__)
     out_path = os.path.normpath(os.path.join(script_dir, "..", ".claude", "output", "sample-yamanote-keihintouhoku-negishi.sqlite"))
@@ -325,7 +458,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.5.2')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.5.3')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -616,6 +749,43 @@ def main():
         )
         mb_sort += 1
 
+    # ── Chuo Line (Rapid) ─────────────────────────────────────────────────────
+    jc_line_id = "line-chuo-rapid"
+    c.execute(
+        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (jc_line_id, company_id, "中央線快速", "#f15a22", "JC", 5, 0),
+    )
+    insert_numbered_line_stations(c, jc_line_id, "jc", CHUO_RAPID_STATIONS)
+
+    # ── Chuo-Sobu Line (Local) ────────────────────────────────────────────────
+    jb_line_id = "line-chuo-sobu-local"
+    c.execute(
+        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (jb_line_id, company_id, "中央・総武線各駅停車", "#ffd400", "JB", 6, 0),
+    )
+    insert_numbered_line_stations(c, jb_line_id, "jb", CHUO_SOBU_LOCAL_STATIONS)
+
+    # ── Tokyo Metro Tozai Line ────────────────────────────────────────────────
+    t_line_id = "line-tozai"
+    c.execute(
+        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (t_line_id, company_metro_id, "東西線", "#00a7db", "T", 3, 0),
+    )
+    insert_numbered_line_stations(c, t_line_id, "t", TOZAI_STATIONS)
+
+    # ── Toyo Rapid Line ───────────────────────────────────────────────────────
+    company_toyo_id = "company-toyo-rapid"
+    c.execute(
+        "INSERT INTO companies VALUES (?, ?, ?, ?)",
+        (company_toyo_id, "東葉高速鉄道", "#e95513", "tokyometro"),
+    )
+    tr_line_id = "line-toyo-rapid"
+    c.execute(
+        "INSERT INTO lines (id, company_id, name, line_color, prefix, priority, is_loop) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (tr_line_id, company_toyo_id, "東葉高速線", "#e95513", "TR", 1, 0),
+    )
+    insert_numbered_line_stations(c, tr_line_id, "tr", TOYO_RAPID_STATIONS)
+
     conn.commit()
     conn.close()
 
@@ -630,16 +800,20 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.5.2")
+    print(f"  - version: 0.5.3")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
-    print(f"  - 2 companies (JR東日本 jreast, 東京メトロ tokyometro)")
-    print(f"  - 6 lines:")
+    print(f"  - 3 companies (JR東日本, 東京メトロ, 東葉高速鉄道)")
+    print(f"  - 10 lines:")
     print(f"      山手線          (JY, #8cc800,  is_loop=1): {len(YAMANOTE_STATIONS)} stations")
     print(f"      京浜東北線・根岸線 (JK, #5f9de9, is_loop=0): {jk_shared} shared + {jk_exclusive} exclusive = {jk_shared + jk_exclusive} total; 2 services (普通, 快速)")
     print(f"      根岸線          (no prefix, #8bd900, is_loop=0): {len(NEGISHI_JK_NUMS)} stations (shared with JK, no station numbers)")
     print(f"      湘南新宿ライン  (JS, #c61c1b,  is_loop=0): {len(JS_STATIONS)} stations ({js_new} new + {js_reuse} reused); 4 services")
     print(f"      丸ノ内線        (M,  #dd3839,  is_loop=0): {len(MARUNOUCHI_STATIONS)} stations; 1 service")
     print(f"      丸ノ内線（方南町支線）(Mb, #dd3839, is_loop=0): {len(MARUNOUCHI_BRANCH_STATIONS)} stations (1 shared + {mb_new} new); 1 service")
+    print(f"      中央線快速      (JC, #f15a22,  is_loop=0): {len(CHUO_RAPID_STATIONS)} stations")
+    print(f"      中央・総武線各駅停車 (JB, #ffd400, is_loop=0): {len(CHUO_SOBU_LOCAL_STATIONS)} stations")
+    print(f"      東西線          (T,  #00a7db,  is_loop=0): {len(TOZAI_STATIONS)} stations")
+    print(f"      東葉高速線      (TR, #e95513,  is_loop=0): {len(TOYO_RAPID_STATIONS)} stations")
 
 
 if __name__ == "__main__":

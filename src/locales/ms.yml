@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Muat turun SQLite
   import-sqlite: Import SQLite
-  import-sample: Muatkan Data Contoh (Baris Yamanote)
+  import-sample: Muatkan Data Contoh
   import-error:
     invalid-file: Fail yang dipilih bukan pangkalan data SQLite yang sah.
     missing-table: "Pangkalan data tiada jadual yang diperlukan: {detail}"
