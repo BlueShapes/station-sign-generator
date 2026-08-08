@@ -28,10 +28,12 @@ import {
 import Konva from "konva";
 import DirectInput from "@/components/inputs/DirectInput";
 import Footer from "@/components/Footer";
-import { useTranslations } from "@/i18n/useTranslation";
+import { useLocale, useTranslations } from "@/i18n/useTranslation";
 import { useDatabase } from "@/db/useDatabase";
 import { DEFAULT_DATA } from "@/db/seed";
 import { waitForCanvasFonts } from "@/lib/fonts";
+import { DEFAULT_COMPANY_LANGUAGES } from "@/lib/railwayLanguages";
+import { getLocalizedRailwayName } from "@/lib/localizedRailwayName";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 import {
@@ -115,6 +117,7 @@ function validateDirectInputData(text: string): DirectInputStationProps {
 export default function SimpleInputTab() {
   const ref = useRef<Konva.Stage>(null);
   const t = useTranslations();
+  const locale = useLocale();
 
   const {
     data: savedData,
@@ -248,7 +251,19 @@ export default function SimpleInputTab() {
         pixelRatio: saveSize / currentBaseScale,
       });
       const link = document.createElement("a");
-      link.download = `${latestDataRef.current.primaryName}.png`;
+      const data = latestDataRef.current;
+      const filename = getLocalizedRailwayName(
+        locale,
+        DEFAULT_COMPANY_LANGUAGES,
+        [
+          data.primaryName,
+          data.secondaryName,
+          data.tertiaryName,
+          data.quaternaryName,
+        ],
+        "station",
+      );
+      link.download = `${filename}.png`;
       link.href = uri;
       document.body.appendChild(link);
       link.click();

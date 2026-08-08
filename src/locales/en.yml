@@ -269,6 +269,7 @@ route:
     linemap: Line Map (Single/Through)
     multiline-linemap: Line Map (Multiple Lines)
   linemap:
+    filename-suffix: Line Map
     orientation: Orientation
     horizontal: Horizontal
     vertical: Vertical

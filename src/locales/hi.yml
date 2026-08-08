@@ -261,6 +261,7 @@ route:
     linemap: लाइन मानचित्र (एकल/सीधी)
     multiline-linemap: लाइन मानचित्र (एकाधिक लाइनें)
   linemap:
+    filename-suffix: मार्ग मानचित्र
     orientation: अभिमुखीकरण
     horizontal: क्षैतिज
     vertical: लंबवत

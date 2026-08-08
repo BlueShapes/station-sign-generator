@@ -48,8 +48,9 @@ import {
   IconAlertTriangle,
 } from "@tabler/icons-react";
 import Konva from "konva";
-import { useTranslations } from "@/i18n/useTranslation";
+import { useLocale, useTranslations } from "@/i18n/useTranslation";
 import { waitForCanvasFonts } from "@/lib/fonts";
+import { getLocalizedRailwayName } from "@/lib/localizedRailwayName";
 import {
   getCompanyLanguages,
   getRailwayLanguageLabel,
@@ -171,6 +172,7 @@ interface RouteInputTabProps {
 
 export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const t = useTranslations();
+  const locale = useLocale();
   const signRef = useRef<Konva.Stage>(null);
   const mapRef = useRef<Konva.Stage>(null);
 
@@ -874,7 +876,18 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         pixelRatio: saveSize / baseScale,
       });
       const link = document.createElement("a");
-      link.download = `${signData.primaryName}.png`;
+      const filename = getLocalizedRailwayName(
+        locale,
+        getCompanyLanguages(mapCompany),
+        [
+          signData.primaryName,
+          signData.secondaryName,
+          signData.tertiaryName,
+          signData.quaternaryName,
+        ],
+        "station",
+      );
+      link.download = `${filename}.png`;
       link.href = uri;
       document.body.appendChild(link);
       link.click();
@@ -891,7 +904,18 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       pixelRatio: mapSaveSize / LineMapScale,
     });
     const link = document.createElement("a");
-    link.download = `${selectedLine.name}_路線図.png`;
+    const filename = getLocalizedRailwayName(
+      locale,
+      getCompanyLanguages(mapCompany),
+      [
+        selectedLine.name,
+        selectedLine.secondary_name,
+        selectedLine.tertiary_name,
+        selectedLine.quaternary_name,
+      ],
+      "line",
+    );
+    link.download = `${filename}_${t("route.linemap.filename-suffix")}.png`;
     link.href = uri;
     document.body.appendChild(link);
     link.click();

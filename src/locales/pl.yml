@@ -261,6 +261,7 @@ route:
     linemap: Mapa linii (pojedyncza/bezpośrednia)
     multiline-linemap: Mapa linii (wiele linii)
   linemap:
+    filename-suffix: Schemat linii
     orientation: Orientacja
     horizontal: Poziomy
     vertical: Pionowe

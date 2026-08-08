@@ -269,6 +269,7 @@ route:
     linemap: 路線図（単線・直通）
     multiline-linemap: 路線図（複線）
   linemap:
+    filename-suffix: 路線図
     orientation: 向き
     horizontal: 横
     vertical: 縦

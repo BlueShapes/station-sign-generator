@@ -269,6 +269,7 @@ route:
     linemap: Linienplan (Einzellinie/Durchbindung)
     multiline-linemap: Linienplan (mehrere Linien)
   linemap:
+    filename-suffix: Linienplan
     orientation: Ausrichtung
     horizontal: Horizontal
     vertical: Vertikal

@@ -261,6 +261,7 @@ route:
     linemap: Linková mapa (jedna linka / přímý spoj)
     multiline-linemap: Linková mapa (více linek)
   linemap:
+    filename-suffix: Mapa linky
     orientation: Orientace
     horizontal: Horizontální
     vertical: Vertikální

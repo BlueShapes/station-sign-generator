@@ -261,6 +261,7 @@ route:
     linemap: Harta liniilor (o linie/direct)
     multiline-linemap: Harta liniilor (linii multiple)
   linemap:
+    filename-suffix: Harta Liniei
     orientation: Orientare
     horizontal: Orizontală
     vertical: Pe verticală

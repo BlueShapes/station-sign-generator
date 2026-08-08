@@ -261,6 +261,7 @@ route:
     linemap: Схема линии (одна/сквозная)
     multiline-linemap: Схема линий (несколько)
   linemap:
+    filename-suffix: Схема линии
     orientation: Ориентация
     horizontal: Горизонтальный
     vertical: Вертикальный
