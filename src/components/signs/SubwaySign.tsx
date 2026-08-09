@@ -12,9 +12,10 @@ import {
   spaceSubwayPrimaryName,
 } from "./stationNameLayout";
 import {
-  getMetroSmallBadgeTextAdjustments,
+  getSubwayBadgeTextAdjustments,
+  getToeiMainLayout,
   METRO_MEDIUM_DIMENSIONS,
-  type MetroSmallBadgeKind,
+  type SubwayBadgeKind,
 } from "./subwaySignGeometry";
 import { getSubwayMediumArrowPoints } from "./arrowGeometry";
 
@@ -118,7 +119,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       value,
       diameter,
       whiteOutline = false,
-      metroSmallBadgeKind,
+      emphasizedNumberKind,
     }: {
       cx: number;
       cy: number;
@@ -126,12 +127,12 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       value?: string;
       diameter: number;
       whiteOutline?: boolean;
-      metroSmallBadgeKind?: MetroSmallBadgeKind;
+      emphasizedNumberKind?: SubwayBadgeKind;
     }) => {
       if (!prefix || !value) return null;
       const metrics = getTokyoMetroStationNumberMetrics(diameter);
-      const textAdjustments = metroSmallBadgeKind
-        ? getMetroSmallBadgeTextAdjustments(diameter, metroSmallBadgeKind)
+      const textAdjustments = emphasizedNumberKind
+        ? getSubwayBadgeTextAdjustments(diameter, emphasizedNumberKind)
         : {
           prefixFontSizeDelta: 0,
           valueFontSizeDelta: 2,
@@ -320,7 +321,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               value: station.numberPrimaryValue,
               diameter: 29,
               whiteOutline: true,
-              metroSmallBadgeKind: "side",
+              emphasizedNumberKind: "side",
             })}
         </Group>
       );
@@ -407,7 +408,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             value: numberPrimaryValue,
             diameter: 34,
             whiteOutline: true,
-            metroSmallBadgeKind: "main",
+            emphasizedNumberKind: "main",
           })}
         </>
       );
@@ -422,19 +423,19 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       const active = isActive(side);
       const isLeft = side === "left";
       const blockWidth = large ? 154 : 150;
-      const margin = large ? 14 : 12;
+      const margin = large ? 14 : 10;
       const x = isLeft ? margin : width - blockWidth - margin;
       const align = isLeft ? "left" : "right";
-      const nameY = large ? 190 : 139;
+      const nameY = large ? 190 : 137;
       const secondaryY = large ? 214 : 161;
-      const arrowY = large ? 150 : 99;
-      const arrowWidth = large ? 50 : 48;
+      const arrowY = large ? 150 : 106;
+      const arrowWidth = large ? 50 : 42;
       const arrowHeight = large ? 31 : 29;
       const arrowX = isLeft ? x : x + blockWidth - arrowWidth;
       const badgeCx = isLeft
         ? arrowX + arrowWidth + (large ? 17 : 15)
         : arrowX - (large ? 17 : 15);
-      const sideNameSize = large ? 25 : 24;
+      const sideNameSize = large ? 25 : 22;
       const naturalNameWidth = measureText(
         station.primaryName,
         sideNameSize,
@@ -458,6 +459,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               prefix: station.numberPrimaryPrefix,
               value: station.numberPrimaryValue,
               diameter: large ? 29 : 27,
+              emphasizedNumberKind: large ? undefined : "side",
             })}
           <Text
             text={station.primaryName}
@@ -489,15 +491,16 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
     };
 
     const renderToei = (large: boolean) => {
-      const bandHeight = large ? 18 : 16;
+      const bandHeight = large ? 18 : 17;
       const maxMainNameSize = large ? 49 : 48;
-      const maxMainFuriganaSize = large ? 18 : 17;
+      const maxMainFuriganaSize = large ? 18 : 18;
       const maxMainSecondarySize = large ? 23 : 22;
       const mainBadgeDiameter = large ? 43 : 42;
       const displayName = spaceSubwayPrimaryName(primaryName);
       const badgeMetrics = getTokyoMetroStationNumberMetrics(mainBadgeDiameter);
       const badgeOuter = mainBadgeDiameter + Math.max(2.4, badgeMetrics.strokeWidth * 0.72);
-      const maxTextWidth = width - badgeOuter - 34;
+      const maxMainNameWidth = width - 2 * (badgeOuter + 24);
+      const maxSubtextWidth = width - 48;
       const naturalMainNameWidth = measureText(
         displayName,
         maxMainNameSize,
@@ -507,32 +510,49 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       const mainNameScaleX = getSubwayStationNameScaleX(
         primaryName,
         naturalMainNameWidth,
-        maxTextWidth,
+        maxMainNameWidth,
       );
       const renderedMainNameWidth = naturalMainNameWidth * mainNameScaleX;
       const mainFuriganaSize = fitFontSize(
         primaryNameFurigana,
         maxMainFuriganaSize,
-        maxTextWidth,
+        maxSubtextWidth,
         "NotoSansJP",
         "600",
       );
       const mainSecondarySize = fitFontSize(
         secondaryName,
         maxMainSecondarySize,
-        maxTextWidth,
+        maxSubtextWidth,
         "Jost",
+        "500",
+      );
+      const measuredFuriganaWidth = measureText(
+        primaryNameFurigana,
+        mainFuriganaSize,
+        "NotoSansJP",
         "600",
       );
-      const nameWidth = Math.min(maxTextWidth, Math.max(
+      const measuredSecondaryWidth = measureText(
+        secondaryName,
+        mainSecondarySize,
+        "Jost",
+        "500",
+      );
+      const nameWidth = Math.min(maxSubtextWidth, Math.max(
         renderedMainNameWidth,
-        measureText(primaryNameFurigana, mainFuriganaSize, "NotoSansJP", "600"),
-        measureText(secondaryName, mainSecondarySize, "Jost", "600"),
+        measuredFuriganaWidth,
+        measuredSecondaryWidth,
       ));
-      const groupWidth = badgeOuter + 10 + nameWidth;
-      const groupX = Math.max(12, (width - groupWidth) / 2);
-      const mainTop = large ? 47 : 27;
-      const textX = groupX + badgeOuter + 10;
+      const mainTop = large ? 47 : 22;
+      const mainLayout = getToeiMainLayout({
+        width,
+        renderedMainNameWidth,
+        secondaryNameWidth: measuredSecondaryWidth,
+        badgeOuter,
+        large,
+      });
+      const textX = mainLayout.textCenterX - nameWidth / 2;
       return (
         <>
           <Rect fill={lineColor} x={0} y={0} width={width} height={bandHeight} />
@@ -545,15 +565,16 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
           />
           <Group>
             {renderBadge({
-              cx: groupX + badgeOuter / 2,
-              cy: mainTop + 32,
+              cx: mainLayout.badgeCx,
+              cy: mainTop + mainLayout.badgeCyOffset,
               prefix: numberPrimaryPrefix,
               value: numberPrimaryValue,
               diameter: mainBadgeDiameter,
+              emphasizedNumberKind: large ? undefined : "main",
             })}
             <Text
               text={displayName}
-              x={textX + (nameWidth - renderedMainNameWidth) / 2}
+              x={mainLayout.textCenterX - renderedMainNameWidth / 2}
               y={mainTop}
               width={naturalMainNameWidth}
               fontSize={maxMainNameSize}
@@ -567,7 +588,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             <Text
               text={primaryNameFurigana}
               x={textX}
-              y={mainTop + 58}
+              y={mainTop + 48}
               width={nameWidth}
               fontSize={mainFuriganaSize}
               fontFamily="NotoSansJP"
@@ -579,11 +600,11 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             <Text
               text={secondaryName}
               x={textX}
-              y={mainTop + 80}
+              y={mainTop + 68}
               width={nameWidth}
               fontSize={mainSecondarySize}
               fontFamily="Jost"
-              fontStyle="600"
+              fontStyle="500"
               align="center"
               wrap="none"
               fill="#202126"

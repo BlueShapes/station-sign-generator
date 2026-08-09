@@ -6,11 +6,49 @@ export const METRO_MEDIUM_DIMENSIONS = {
   bandHeight: 48,
 } as const;
 
-export type MetroSmallBadgeKind = "main" | "side";
+type ToeiMainLayoutOptions = {
+  width: number;
+  renderedMainNameWidth: number;
+  secondaryNameWidth: number;
+  badgeOuter: number;
+  large: boolean;
+};
 
-export function getMetroSmallBadgeTextAdjustments(
+export function getToeiMainLayout({
+  width,
+  renderedMainNameWidth,
+  secondaryNameWidth,
+  badgeOuter,
+  large,
+}: ToeiMainLayoutOptions) {
+  const horizontalMargin = 12;
+  const badgeGap = large ? 10 : 12;
+  const maxSecondaryShift = large ? 10 : 8;
+  const longSecondaryThreshold = width * 0.42;
+  const secondaryShift = Math.min(
+    maxSecondaryShift,
+    Math.max(0, secondaryNameWidth - longSecondaryThreshold) * 0.12,
+  );
+  const textCenterX = width / 2 - secondaryShift;
+  const mainNameLeft = textCenterX - renderedMainNameWidth / 2;
+  const badgeCx = Math.max(
+    horizontalMargin + badgeOuter / 2,
+    mainNameLeft - badgeGap - badgeOuter / 2,
+  );
+
+  return {
+    textCenterX,
+    badgeCx,
+    badgeGap,
+    badgeCyOffset: large ? 45 : 44,
+  };
+}
+
+export type SubwayBadgeKind = "main" | "side";
+
+export function getSubwayBadgeTextAdjustments(
   diameter: number,
-  kind: MetroSmallBadgeKind,
+  kind: SubwayBadgeKind,
 ) {
   const referenceDiameter = kind === "main" ? 38 * 1.3 : 22 * 1.3;
   const scale = diameter / referenceDiameter;

@@ -6,7 +6,8 @@ import {
   SUBWAY_NAME_COMPRESSION_THRESHOLD,
 } from "../src/components/signs/stationNameLayout.ts";
 import {
-  getMetroSmallBadgeTextAdjustments,
+  getSubwayBadgeTextAdjustments,
+  getToeiMainLayout,
   METRO_MEDIUM_DIMENSIONS,
 } from "../src/components/signs/subwaySignGeometry.ts";
 
@@ -62,8 +63,8 @@ describe("subway sign style fields", () => {
   });
 
   test("matches the small Metro badge typography ratios in the medium sign", () => {
-    const main = getMetroSmallBadgeTextAdjustments(34, "main");
-    const side = getMetroSmallBadgeTextAdjustments(29, "side");
+    const main = getSubwayBadgeTextAdjustments(34, "main");
+    const side = getSubwayBadgeTextAdjustments(29, "side");
     expect(main.prefixFontSizeDelta).toBeLessThan(main.valueFontSizeDelta);
     expect(main.valueFontSizeDelta).toBeCloseTo((8 * 34) / (38 * 1.3));
     expect(side.prefixFontSizeDelta).toBe(0);
@@ -72,5 +73,28 @@ describe("subway sign style fields", () => {
     expect(side.valueLetterSpacing).toBeCloseTo((2 * 29) / (22 * 1.3) - 1);
     expect(main.valueFontStyle).toBe("bold");
     expect(side.valueFontStyle).toBe("bold");
+  });
+
+  test("centers Toei names independently and places the badge left and lower", () => {
+    const centered = getToeiMainLayout({
+      width: 494,
+      renderedMainNameWidth: 180,
+      secondaryNameWidth: 160,
+      badgeOuter: 46,
+      large: false,
+    });
+    expect(centered.textCenterX).toBe(247);
+    expect(centered.badgeCx + 23 + centered.badgeGap).toBe(157);
+    expect(centered.badgeCyOffset).toBeGreaterThan(42 / 2);
+
+    const longSecondary = getToeiMainLayout({
+      width: 494,
+      renderedMainNameWidth: 180,
+      secondaryNameWidth: 300,
+      badgeOuter: 46,
+      large: false,
+    });
+    expect(longSecondary.textCenterX).toBeLessThan(247);
+    expect(longSecondary.textCenterX).toBeGreaterThanOrEqual(247 - 8);
   });
 });
