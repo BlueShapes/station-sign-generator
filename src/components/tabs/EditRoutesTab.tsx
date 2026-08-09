@@ -38,7 +38,13 @@ import {
 } from "@tabler/icons-react";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
-import { waitForCanvasFonts } from "@/lib/fonts";
+import { getStationNumberFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
+import {
+  DEFAULT_COMPANY_LANGUAGES,
+  getCompanyLanguages,
+  getRailwayLanguageLabel,
+  getRailwayLanguageOptions,
+} from "@/lib/railwayLanguages";
 import {
   downloadDatabase,
   overwriteDatabaseInPlace,
@@ -51,6 +57,15 @@ import {
   deleteCompany,
 } from "@/db/repositories/companies";
 import { getAllLines, upsertLine, deleteLine } from "@/db/repositories/lines";
+import {
+  deleteThroughRoute,
+  getAllThroughRoutes,
+  getThroughRouteSegments,
+  replaceThroughRouteSegments,
+  upsertThroughRoute,
+  validateThroughRouteSegments,
+  type ThroughRouteValidationError,
+} from "@/db/repositories/through-routes";
 import {
   getServicesByLine,
   upsertService,
@@ -77,6 +92,11 @@ import {
   getStationAreas,
   syncStationAreas,
 } from "@/db/repositories/stations";
+import {
+  deleteStationTransfer,
+  getConnectingStations,
+  upsertStationTransfer,
+} from "@/db/repositories/station-transfers";
 import type {
   Company,
   Line,
@@ -85,9 +105,30 @@ import type {
   SpecialZone,
   Service,
   ServiceStopStatus,
+  ThroughRoute,
+  ThroughRouteDirection,
+  ThroughRouteSegment,
 } from "@/db/types";
 
 const TOKYO_METRO_COLOR = "#00a3d9";
+const LINE_FORM_STATION_NUMBER_PREVIEW = "01";
+
+const LANGUAGE_SLOT_LABEL_KEYS = [
+  "route.linemap.lang-1st",
+  "route.linemap.lang-2nd",
+  "route.linemap.lang-3rd",
+  "route.linemap.lang-4th",
+] as const;
+
+function getLanguageFieldLabels(
+  company: Company | null | undefined,
+  t: ReturnType<typeof useTranslations>,
+): string[] {
+  return getCompanyLanguages(company).map(
+    (language, index) =>
+      `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
+  );
+}
 
 function buildStationNumberSourceOptions(
   currentLine: Line | undefined,
@@ -355,7 +396,17 @@ function StationNumberBadgePreview({
       ctx.restore();
     };
 
-    waitForCanvasFonts().then(draw).catch(draw);
+    let cancelled = false;
+    const drawWhenReady = () => {
+      if (!cancelled) draw();
+    };
+    waitForCanvasFonts(getStationNumberFontSpecs(style)).then(
+      drawWhenReady,
+      drawWhenReady,
+    );
+    return () => {
+      cancelled = true;
+    };
   }, [color, style, prefix, value, threeLetterCode, compact]);
 
   return <canvas ref={canvasRef} style={{ display: "block" }} />;
@@ -466,7 +517,17 @@ function LineIndicatorBadgePreview({
       ctx.restore();
     };
 
-    waitForCanvasFonts().then(draw).catch(draw);
+    let cancelled = false;
+    const drawWhenReady = () => {
+      if (!cancelled) draw();
+    };
+    waitForCanvasFonts(getStationNumberFontSpecs(style)).then(
+      drawWhenReady,
+      drawWhenReady,
+    );
+    return () => {
+      cancelled = true;
+    };
   }, [color, prefix, style, compact]);
 
   return <canvas ref={canvasRef} style={{ display: "block" }} />;
@@ -492,6 +553,9 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
   const [stationNumberStyle, setStationNumberStyle] = useState(
     company?.station_number_style ?? "jreast",
   );
+  const [languages, setLanguages] = useState<string[]>(() =>
+    company ? getCompanyLanguages(company) : [...DEFAULT_COMPANY_LANGUAGES],
+  );
 
   useEffect(() => {
     if (company || colorDirty) return;
@@ -505,6 +569,10 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
       name: name.trim(),
       company_color: color,
       station_number_style: stationNumberStyle,
+      primary_language: languages[0],
+      secondary_language: languages[1],
+      tertiary_language: languages[2],
+      quaternary_language: languages[3],
     });
     onSave();
     onClose();
@@ -518,6 +586,24 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
         onChange={(e) => setName(e.target.value)}
         required
       />
+      {languages.map((language, index) => (
+        <Select
+          key={LANGUAGE_SLOT_LABEL_KEYS[index]}
+          label={`${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`}
+          value={language}
+          onChange={(value) => {
+            if (!value) return;
+            setLanguages((current) =>
+              current.map((item, itemIndex) =>
+                itemIndex === index ? value : item,
+              ),
+            );
+          }}
+          data={getRailwayLanguageOptions(language)}
+          searchable
+          allowDeselect={false}
+        />
+      ))}
       <ColorInput
         label={t("route.company.color")}
         value={color}
@@ -582,6 +668,15 @@ interface LineFormProps {
 function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
   const t = useTranslations();
   const [name, setName] = useState(line?.name ?? "");
+  const [secondaryName, setSecondaryName] = useState(
+    line?.secondary_name ?? "",
+  );
+  const [tertiaryName, setTertiaryName] = useState(
+    line?.tertiary_name ?? "",
+  );
+  const [quaternaryName, setQuaternaryName] = useState(
+    line?.quaternary_name ?? "",
+  );
   const [prefix, setPrefix] = useState(line?.prefix ?? "");
   const [color, setColor] = useState(line?.line_color ?? "#8cc800");
   const [companyId, setCompanyId] = useState<string | null>(
@@ -591,6 +686,10 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
     line?.priority ?? "",
   );
   const [isLoop, setIsLoop] = useState((line?.is_loop ?? 0) === 1);
+  const selectedCompany = companies.find((company) => company.id === companyId);
+  const stationNumberStyle =
+    selectedCompany?.station_number_style ?? "jreast";
+  const languageFieldLabels = getLanguageFieldLabels(selectedCompany, t);
 
   const [draftServices, setDraftServices] = useState<
     { id: string | null; name: string; color: string }[]
@@ -627,6 +726,9 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
     upsertLine(db, {
       id: lineId,
       name: name.trim(),
+      secondary_name: secondaryName.trim() || null,
+      tertiary_name: tertiaryName.trim() || null,
+      quaternary_name: quaternaryName.trim() || null,
       prefix: prefix.trim(),
       line_color: color,
       company_id: companyId,
@@ -665,11 +767,34 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
 
   return (
     <Stack gap="md">
+      <Select
+        label={t("route.line.company")}
+        value={companyId}
+        onChange={setCompanyId}
+        data={companies.map((c) => ({ value: c.id, label: c.name }))}
+        clearable
+        placeholder="—"
+      />
       <TextInput
-        label={t("route.line.name")}
+        label={languageFieldLabels[0]}
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
+      />
+      <TextInput
+        label={languageFieldLabels[1]}
+        value={secondaryName}
+        onChange={(e) => setSecondaryName(e.target.value)}
+      />
+      <TextInput
+        label={languageFieldLabels[2]}
+        value={tertiaryName}
+        onChange={(e) => setTertiaryName(e.target.value)}
+      />
+      <TextInput
+        label={languageFieldLabels[3]}
+        value={quaternaryName}
+        onChange={(e) => setQuaternaryName(e.target.value)}
       />
       <TextInput
         label={t("route.line.prefix")}
@@ -684,28 +809,30 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
         swatches={["#8cc800", "#ffffff", "#000000", "#ffdd00", "#f97f00"]}
       />
       {prefix.trim() && (
-        <Group align="center" gap="md">
-          <LineIndicatorBadgePreview
-            color={color}
-            prefix={prefix.trim()}
-            style={
-              companies.find((c) => c.id === companyId)?.station_number_style ??
-              ""
-            }
-          />
-          <Text size="xs" c="dimmed">
-            {t("route.line.prefix-preview")}
-          </Text>
+        <Group align="flex-start" gap="xl">
+          <Stack align="center" gap={4}>
+            <LineIndicatorBadgePreview
+              color={color}
+              prefix={prefix.trim()}
+              style={stationNumberStyle}
+            />
+            <Text size="xs" c="dimmed" ta="center">
+              {t("route.line.prefix-preview")}
+            </Text>
+          </Stack>
+          <Stack align="center" gap={4}>
+            <StationNumberBadgePreview
+              color={color}
+              style={stationNumberStyle}
+              prefix={prefix.trim()}
+              value={LINE_FORM_STATION_NUMBER_PREVIEW}
+            />
+            <Text size="xs" c="dimmed" ta="center">
+              {t("route.line.station-number-preview")}
+            </Text>
+          </Stack>
         </Group>
       )}
-      <Select
-        label={t("route.line.company")}
-        value={companyId}
-        onChange={setCompanyId}
-        data={companies.map((c) => ({ value: c.id, label: c.name }))}
-        clearable
-        placeholder="—"
-      />
       <NumberInput
         label={t("route.line.priority")}
         value={priority}
@@ -785,6 +912,326 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
   );
 }
 
+// ── Through Route Form Modal ─────────────────────────────────────────────────
+
+type DraftThroughRouteSegment = {
+  id: string;
+  lineId: string;
+  entryStationId: string;
+  exitStationId: string;
+  direction: ThroughRouteDirection;
+};
+
+interface ThroughRouteFormProps {
+  db: Database;
+  route?: ThroughRoute;
+  nextSortOrder: number;
+  onSave: () => void;
+  onClose: () => void;
+}
+
+function ThroughRouteForm({
+  db,
+  route,
+  nextSortOrder,
+  onSave,
+  onClose,
+}: ThroughRouteFormProps) {
+  const t = useTranslations();
+  const lines = getAllLines(db);
+  const [name, setName] = useState(route?.name ?? "");
+  const [segments, setSegments] = useState<DraftThroughRouteSegment[]>(() => {
+    const existing = route ? getThroughRouteSegments(db, route.id) : [];
+    if (existing.length > 0) {
+      return existing.map((segment) => ({
+        id: segment.id,
+        lineId: segment.line_id,
+        entryStationId: segment.entry_station_id,
+        exitStationId: segment.exit_station_id,
+        direction: segment.direction,
+      }));
+    }
+    return [
+      {
+        id: uuidv7(),
+        lineId: "",
+        entryStationId: "",
+        exitStationId: "",
+        direction: "forward",
+      },
+    ];
+  });
+
+  const routeId = route?.id ?? "draft-through-route";
+  const complete = segments.every(
+    (segment) =>
+      segment.lineId &&
+      segment.entryStationId &&
+      segment.exitStationId,
+  );
+  const persistedSegments: ThroughRouteSegment[] = segments.map(
+    (segment, index) => ({
+      id: segment.id,
+      through_route_id: routeId,
+      line_id: segment.lineId,
+      entry_station_id: segment.entryStationId,
+      exit_station_id: segment.exitStationId,
+      direction: segment.direction,
+      sort_order: index,
+    }),
+  );
+  const validationError: ThroughRouteValidationError | "incomplete" | null =
+    complete
+      ? validateThroughRouteSegments(db, persistedSegments)
+      : "incomplete";
+
+  const updateSegment = (
+    index: number,
+    update: Partial<DraftThroughRouteSegment>,
+  ) => {
+    setSegments((current) =>
+      current.map((segment, currentIndex) =>
+        currentIndex === index ? { ...segment, ...update } : segment,
+      ),
+    );
+  };
+
+  const setSegmentLine = (index: number, lineId: string | null) => {
+    const lineStations = lineId ? getStationsByLine(db, lineId) : [];
+    updateSegment(index, {
+      lineId: lineId ?? "",
+      entryStationId: lineStations[0]?.id ?? "",
+      exitStationId: lineStations.at(-1)?.id ?? "",
+      direction: "forward",
+    });
+  };
+
+  const setSegmentDirection = (
+    index: number,
+    direction: ThroughRouteDirection,
+  ) => {
+    const segment = segments[index];
+    if (!segment) return;
+    const line = lines.find((candidate) => candidate.id === segment.lineId);
+    const shouldSwapEndpoints =
+      line?.is_loop !== 1 && segment.direction !== direction;
+    updateSegment(index, {
+      direction,
+      entryStationId: shouldSwapEndpoints
+        ? segment.exitStationId
+        : segment.entryStationId,
+      exitStationId: shouldSwapEndpoints
+        ? segment.entryStationId
+        : segment.exitStationId,
+    });
+  };
+
+  const moveSegment = (index: number, offset: -1 | 1) => {
+    const target = index + offset;
+    if (target < 0 || target >= segments.length) return;
+    setSegments((current) => {
+      const updated = [...current];
+      [updated[index], updated[target]] = [updated[target]!, updated[index]!];
+      return updated;
+    });
+  };
+
+  const handleSave = () => {
+    if (!name.trim() || validationError) return;
+    const id = route?.id ?? uuidv7();
+    const finalSegments = persistedSegments.map((segment) => ({
+      ...segment,
+      through_route_id: id,
+    }));
+    upsertThroughRoute(db, {
+      id,
+      name: name.trim(),
+      sort_order: route?.sort_order ?? nextSortOrder,
+    });
+    replaceThroughRouteSegments(db, id, finalSegments);
+    onSave();
+    onClose();
+  };
+
+  return (
+    <Stack gap="md">
+      <TextInput
+        label={t("route.through-route.name")}
+        value={name}
+        onChange={(event) => setName(event.currentTarget.value)}
+        required
+      />
+
+      <Stack gap="sm">
+        {segments.map((segment, index) => {
+          const lineStations = segment.lineId
+            ? getStationsByLine(db, segment.lineId)
+            : [];
+          const stationOptions = lineStations.map((station) => ({
+            value: station.id,
+            label: station.primary_name,
+          }));
+          const entryName = lineStations.find(
+            (station) => station.id === segment.entryStationId,
+          )?.primary_name;
+          const exitName = lineStations.find(
+            (station) => station.id === segment.exitStationId,
+          )?.primary_name;
+
+          return (
+            <Box
+              key={segment.id}
+              p="sm"
+              style={{
+                border: "1px solid var(--mantine-color-default-border)",
+                borderRadius: "var(--mantine-radius-sm)",
+              }}
+            >
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" fw={600}>
+                  {t("route.through-route.segment-number", {
+                    number: String(index + 1),
+                  })}
+                </Text>
+                <Group gap={4}>
+                  <ActionIcon
+                    variant="subtle"
+                    disabled={index === 0}
+                    onClick={() => moveSegment(index, -1)}
+                  >
+                    <IconArrowUp size={16} />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="subtle"
+                    disabled={index === segments.length - 1}
+                    onClick={() => moveSegment(index, 1)}
+                  >
+                    <IconArrowDown size={16} />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    disabled={segments.length === 1}
+                    onClick={() =>
+                      setSegments((current) =>
+                        current.filter((_, currentIndex) => currentIndex !== index),
+                      )
+                    }
+                  >
+                    <IconTrash size={16} />
+                  </ActionIcon>
+                </Group>
+              </Group>
+
+              <Stack gap="xs">
+                <Select
+                  label={t("route.through-route.line")}
+                  value={segment.lineId || null}
+                  onChange={(value) => setSegmentLine(index, value)}
+                  data={lines.map((line) => ({
+                    value: line.id,
+                    label: `[${line.prefix}] ${line.name}`,
+                  }))}
+                  searchable
+                  required
+                />
+                <Group grow align="start">
+                  <Select
+                    label={t("route.through-route.entry-station")}
+                    value={segment.entryStationId || null}
+                    onChange={(value) =>
+                      updateSegment(index, {
+                        entryStationId: value ?? "",
+                      })
+                    }
+                    data={stationOptions}
+                    searchable
+                    disabled={!segment.lineId}
+                    required
+                  />
+                  <Select
+                    label={t("route.through-route.exit-station")}
+                    value={segment.exitStationId || null}
+                    onChange={(value) =>
+                      updateSegment(index, {
+                        exitStationId: value ?? "",
+                      })
+                    }
+                    data={stationOptions}
+                    searchable
+                    disabled={!segment.lineId}
+                    required
+                  />
+                </Group>
+                <Select
+                  label={t("route.through-route.direction")}
+                  value={segment.direction}
+                  onChange={(value) =>
+                    value &&
+                    setSegmentDirection(index, value as ThroughRouteDirection)
+                  }
+                  data={[
+                    {
+                      value: "forward",
+                      label: t("route.through-route.forward"),
+                    },
+                    {
+                      value: "reverse",
+                      label: t("route.through-route.reverse"),
+                    },
+                  ]}
+                />
+                {entryName && exitName && (
+                  <Text size="xs" c="dimmed">
+                    {entryName} → {exitName}
+                  </Text>
+                )}
+              </Stack>
+            </Box>
+          );
+        })}
+      </Stack>
+
+      <Button
+        variant="outline"
+        leftSection={<IconPlus size={16} />}
+        onClick={() =>
+          setSegments((current) => [
+            ...current,
+            {
+              id: uuidv7(),
+              lineId: "",
+              entryStationId: "",
+              exitStationId: "",
+              direction: "forward",
+            },
+          ])
+        }
+      >
+        {t("route.through-route.add-segment")}
+      </Button>
+
+      {validationError && (
+        <Alert icon={<IconAlertCircle size={16} />} color="red">
+          {t(`route.through-route.error-${validationError}`)}
+        </Alert>
+      )}
+
+      <Group justify="flex-end" mt="md">
+        <Button variant="default" onClick={onClose}>
+          {t("common.close")}
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={!name.trim() || validationError !== null}
+        >
+          {t("common.save")}
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
+
 // ── Station Form Modal ────────────────────────────────────────────────────────
 
 interface StationFormProps {
@@ -809,6 +1256,11 @@ function StationForm({
   const t = useTranslations();
   const allLines = useMemo(() => getAllLines(db), [db]);
   const currentLine = allLines.find((l) => l.id === lineId);
+  const allCompanies = useMemo(() => getAllCompanies(db), [db]);
+  const currentCompany = allCompanies.find(
+    (company) => company.id === currentLine?.company_id,
+  );
+  const languageFieldLabels = getLanguageFieldLabels(currentCompany, t);
   const parentLine = currentLine?.parent_line_id
     ? allLines.find((l) => l.id === currentLine.parent_line_id)
     : undefined;
@@ -947,7 +1399,7 @@ function StationForm({
   return (
     <Stack gap="md">
       <TextInput
-        label={t("route.station.name")}
+        label={languageFieldLabels[0]}
         value={primaryName}
         onChange={(e) => setPrimaryName(e.target.value)}
         required
@@ -958,17 +1410,17 @@ function StationForm({
         onChange={(e) => setFurigana(e.target.value)}
       />
       <TextInput
-        label={t("route.station.en")}
+        label={languageFieldLabels[1]}
         value={secondaryName}
         onChange={(e) => setSecondaryName(e.target.value)}
       />
       <TextInput
-        label={t("route.station.ko")}
+        label={languageFieldLabels[2]}
         value={tertiaryName}
         onChange={(e) => setTertiaryName(e.target.value)}
       />
       <TextInput
-        label={t("route.station.zh")}
+        label={languageFieldLabels[3]}
         value={quaternaryName}
         onChange={(e) => setQuaternaryName(e.target.value)}
       />
@@ -1089,6 +1541,11 @@ function LinkExistingStationForm({
   const t = useTranslations();
   const allLines = useMemo(() => getAllLines(db), [db]);
   const currentLine = allLines.find((l) => l.id === lineId);
+  const allCompanies = useMemo(() => getAllCompanies(db), [db]);
+  const currentCompany = allCompanies.find(
+    (company) => company.id === currentLine?.company_id,
+  );
+  const languageFieldLabels = getLanguageFieldLabels(currentCompany, t);
   const parentLine = currentLine?.parent_line_id
     ? allLines.find((l) => l.id === currentLine.parent_line_id)
     : undefined;
@@ -1149,9 +1606,9 @@ function LinkExistingStationForm({
 
   const infoRows: [string, string | null | undefined][] = [
     [t("route.station.furigana"), selectedStation?.primary_name_furigana],
-    [t("route.station.en"), selectedStation?.secondary_name],
-    [t("route.station.ko"), selectedStation?.tertiary_name],
-    [t("route.station.zh"), selectedStation?.quaternary_name],
+    [languageFieldLabels[1], selectedStation?.secondary_name],
+    [languageFieldLabels[2], selectedStation?.tertiary_name],
+    [languageFieldLabels[3], selectedStation?.quaternary_name],
     [t("route.station.note"), selectedStation?.note],
     [t("route.station.trc"), selectedStation?.three_letter_code],
   ];
@@ -1258,6 +1715,166 @@ function LinkExistingStationForm({
 }
 
 // ── Main EditRoutesTab ────────────────────────────────────────────────────────
+
+interface StationTransferFormProps {
+  db: Database;
+  station: Station;
+  lineId: string;
+  onSave: () => void;
+  onClose: () => void;
+}
+
+function StationTransferForm({
+  db,
+  station,
+  lineId,
+  onSave,
+  onClose,
+}: StationTransferFormProps) {
+  const t = useTranslations();
+  const allStations = getAllStations(db);
+  const allLines = getAllLines(db);
+  const connectingStations = getConnectingStations(db, station.id);
+  const connectedStationIds = new Set(
+    connectingStations.map((connectedStation) => connectedStation.id),
+  );
+  const sameStationLineIds = new Set(
+    getStationLines(db, station.id).map((stationLine) => stationLine.line_id),
+  );
+  const sameStationTransferLines = allLines.filter(
+    (line) => line.id !== lineId && sameStationLineIds.has(line.id),
+  );
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(
+    null,
+  );
+
+  const getStationLineNames = (stationId: string): string => {
+    const stationLineIds = new Set(
+      getStationLines(db, stationId).map((stationLine) => stationLine.line_id),
+    );
+    return allLines
+      .filter((line) => stationLineIds.has(line.id))
+      .map((line) => line.name)
+      .join(", ");
+  };
+
+  const availableStations = allStations.filter(
+    (candidate) =>
+      candidate.id !== station.id && !connectedStationIds.has(candidate.id),
+  );
+
+  const handleAdd = () => {
+    if (!selectedStationId) return;
+    upsertStationTransfer(db, uuidv7(), station.id, selectedStationId);
+    setSelectedStationId(null);
+    onSave();
+  };
+
+  const handleDelete = (connectingStationId: string) => {
+    deleteStationTransfer(db, station.id, connectingStationId);
+    onSave();
+  };
+
+  return (
+    <Stack gap="md">
+      <Divider
+        label={t("route.station.same-id-lines")}
+        labelPosition="left"
+      />
+      <Text size="sm" c="dimmed">
+        {t("route.station.same-id-lines-help")}
+      </Text>
+      {sameStationTransferLines.length === 0 ? (
+        <Text size="sm" c="dimmed">
+          {t("route.station.same-id-lines-empty")}
+        </Text>
+      ) : (
+        <Group gap="xs">
+          {sameStationTransferLines.map((line) => (
+            <Badge key={line.id} variant="light" color="blue">
+              {line.prefix ? `[${line.prefix}] ${line.name}` : line.name}
+            </Badge>
+          ))}
+        </Group>
+      )}
+
+      <Divider
+        label={t("route.station.explicit-transfers")}
+        labelPosition="left"
+      />
+      <Text size="sm" c="dimmed">
+        {t("route.station.explicit-transfers-help")}
+      </Text>
+      <Group align="flex-end" wrap="nowrap">
+        <Select
+          style={{ flex: 1 }}
+          label={t("route.station.transfer-select")}
+          value={selectedStationId}
+          onChange={setSelectedStationId}
+          data={availableStations.map((candidate) => {
+            const lineNames = getStationLineNames(candidate.id);
+            return {
+              value: candidate.id,
+              label: lineNames
+                ? `${candidate.primary_name} (${lineNames})`
+                : candidate.primary_name,
+            };
+          })}
+          searchable
+          clearable
+        />
+        <Button onClick={handleAdd} disabled={!selectedStationId}>
+          {t("common.add")}
+        </Button>
+      </Group>
+
+      {connectingStations.length === 0 ? (
+        <Text size="sm" c="dimmed">
+          {t("route.station.transfer-empty")}
+        </Text>
+      ) : (
+        <Stack gap="xs">
+          {connectingStations.map((connectingStation) => {
+            const lineNames = getStationLineNames(connectingStation.id);
+            return (
+              <Group
+                key={connectingStation.id}
+                justify="space-between"
+                wrap="nowrap"
+              >
+                <Box>
+                  <Text size="sm" fw={600}>
+                    {connectingStation.primary_name}
+                  </Text>
+                  {lineNames && (
+                    <Text size="xs" c="dimmed">
+                      {lineNames}
+                    </Text>
+                  )}
+                </Box>
+                <ActionIcon
+                  variant="subtle"
+                  color="red"
+                  aria-label={t("common.delete")}
+                  title={t("common.delete")}
+                  onClick={() => handleDelete(connectingStation.id)}
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Group>
+            );
+          })}
+        </Stack>
+      )}
+
+      <Group justify="flex-end">
+        <Button variant="default" onClick={onClose}>
+          {t("common.close")}
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
 
 export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const t = useTranslations();
@@ -1367,6 +1984,15 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     null,
   );
 
+  // Through route state
+  const [
+    throughRouteModalOpened,
+    { open: openThroughRouteModal, close: closeThroughRouteModal },
+  ] = useDisclosure(false);
+  const [editingThroughRoute, setEditingThroughRoute] = useState<
+    ThroughRoute | undefined
+  >(undefined);
+
   // Station state
   const [
     stationModalOpened,
@@ -1379,6 +2005,11 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const [editingStation, setEditingStation] = useState<Station | undefined>(
     undefined,
   );
+  const [
+    stationTransferModalOpened,
+    { open: openStationTransferModal, close: closeStationTransferModal },
+  ] = useDisclosure(false);
+  const [transferStation, setTransferStation] = useState<Station | null>(null);
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
   const [newServiceName, setNewServiceName] = useState("");
 
@@ -1416,6 +2047,38 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const specialZones = getAllSpecialZones(db);
   const companies = getAllCompanies(db);
   const allLines = getAllLines(db);
+  const knownCompanyIds = new Set(companies.map((company) => company.id));
+  const toLineSelectItem = (line: Line) => ({
+    value: line.id,
+    label: `[${line.prefix}] ${line.name}`,
+  });
+  const unassignedLines = allLines.filter(
+    (line) => !line.company_id || !knownCompanyIds.has(line.company_id),
+  );
+  const lineSelectData = [
+    ...companies.flatMap((company) => {
+      const companyLines = allLines.filter(
+        (line) => line.company_id === company.id,
+      );
+      return companyLines.length > 0
+        ? [
+            {
+              group: company.name,
+              items: companyLines.map(toLineSelectItem),
+            },
+          ]
+        : [];
+    }),
+    ...(unassignedLines.length > 0
+      ? [
+          {
+            group: t("route.line.unassigned-company"),
+            items: unassignedLines.map(toLineSelectItem),
+          },
+        ]
+      : []),
+  ];
+  const throughRoutes = getAllThroughRoutes(db);
   const filteredLines = lineCompanyFilter
     ? allLines.filter((l) => l.company_id === lineCompanyFilter)
     : allLines;
@@ -1450,6 +2113,13 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const handleDeleteLine = (id: string) => {
     openConfirmModal(t("route.line.delete-confirm"), () => {
       deleteLine(db, id);
+      refresh();
+    });
+  };
+
+  const handleDeleteThroughRoute = (id: string) => {
+    openConfirmModal(t("route.through-route.delete-confirm"), () => {
+      deleteThroughRoute(db, id);
       refresh();
     });
   };
@@ -1871,6 +2541,111 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
 
         <Divider />
 
+        {/* ── Through Routes section ── */}
+        <Box>
+          <Group justify="space-between" mb="md">
+            <Title order={3}>{t("route.through-route.title")}</Title>
+            <Button
+              size="sm"
+              leftSection={<IconPlus size={16} />}
+              disabled={allLines.length === 0}
+              onClick={() => {
+                setEditingThroughRoute(undefined);
+                openThroughRouteModal();
+              }}
+            >
+              {t("route.through-route.add")}
+            </Button>
+          </Group>
+
+          {throughRoutes.length === 0 ? (
+            <Text c="dimmed" size="sm">
+              {t("route.through-route.empty")}
+            </Text>
+          ) : (
+            <ScrollArea>
+              <Table
+                withTableBorder
+                withColumnBorders
+                style={{ minWidth: 620 }}
+              >
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("route.through-route.name")}</Table.Th>
+                    <Table.Th>{t("route.through-route.segments")}</Table.Th>
+                    <Table.Th style={{ width: 100 }}></Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {throughRoutes.map((route) => {
+                    const routeSegments = getThroughRouteSegments(db, route.id);
+                    return (
+                      <Table.Tr key={route.id}>
+                        <Table.Td>{route.name}</Table.Td>
+                        <Table.Td>
+                          <Group gap="xs" wrap="wrap">
+                            {routeSegments.map((segment) => {
+                              const line = allLines.find(
+                                (candidate) => candidate.id === segment.line_id,
+                              );
+                              const lineStations = getStationsByLine(
+                                db,
+                                segment.line_id,
+                              );
+                              const start = lineStations.find(
+                                (station) =>
+                                  station.id === segment.entry_station_id,
+                              );
+                              const end = lineStations.find(
+                                (station) =>
+                                  station.id === segment.exit_station_id,
+                              );
+                              return (
+                                <Badge
+                                  key={segment.id}
+                                  variant="light"
+                                  color="gray"
+                                  tt="none"
+                                >
+                                  {line?.name ?? "—"}: {start?.primary_name ?? "—"}
+                                  {" → "}
+                                  {end?.primary_name ?? "—"}
+                                </Badge>
+                              );
+                            })}
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap="xs">
+                            <ActionIcon
+                              variant="subtle"
+                              onClick={() => {
+                                setEditingThroughRoute(route);
+                                openThroughRouteModal();
+                              }}
+                            >
+                              <IconEdit size={16} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() => handleDeleteThroughRoute(route.id)}
+                            >
+                              <IconTrash size={16} />
+                            </ActionIcon>
+                          </Group>
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  })}
+                </Table.Tbody>
+              </Table>
+            </ScrollArea>
+          )}
+        </Box>
+
+        <Divider />
+
         {/* ── Stations section ── */}
         <Box>
           <Group justify="space-between" mb="md">
@@ -1903,10 +2678,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             label={t("route.line.title")}
             value={selectedLineId}
             onChange={setSelectedLineId}
-            data={allLines.map((l) => ({
-              value: l.id,
-              label: `[${l.prefix}] ${l.name}`,
-            }))}
+            data={lineSelectData}
             placeholder={t("route.line.select")}
             mb="md"
             clearable
@@ -2219,6 +2991,19 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   </ActionIcon>
                                   <ActionIcon
                                     variant="subtle"
+                                    aria-label={t(
+                                      "route.station.transfer-manage",
+                                    )}
+                                    title={t("route.station.transfer-manage")}
+                                    onClick={() => {
+                                      setTransferStation(station);
+                                      openStationTransferModal();
+                                    }}
+                                  >
+                                    <IconLink size={16} />
+                                  </ActionIcon>
+                                  <ActionIcon
+                                    variant="subtle"
                                     onClick={() => {
                                       setEditingStation(station);
                                       openStationModal();
@@ -2353,6 +3138,27 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         />
       </Modal>
 
+      <Modal
+        opened={throughRouteModalOpened}
+        onClose={closeThroughRouteModal}
+        title={
+          editingThroughRoute
+            ? t("route.through-route.edit")
+            : t("route.through-route.add")
+        }
+        centered
+        size="xl"
+        scrollAreaComponent={ScrollArea.Autosize}
+      >
+        <ThroughRouteForm
+          db={db}
+          route={editingThroughRoute}
+          nextSortOrder={throughRoutes.length}
+          onSave={refresh}
+          onClose={closeThroughRouteModal}
+        />
+      </Modal>
+
       {selectedLine && (
         <Modal
           opened={stationModalOpened}
@@ -2396,6 +3202,32 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
       )}
 
       {/* ── Confirm modal ── */}
+      {transferStation && selectedLineId && (
+        <Modal
+          opened={stationTransferModalOpened}
+          onClose={() => {
+            closeStationTransferModal();
+            setTransferStation(null);
+          }}
+          title={t("route.station.transfer-title", {
+            name: transferStation.primary_name,
+          })}
+          centered
+          size="lg"
+        >
+          <StationTransferForm
+            db={db}
+            station={transferStation}
+            lineId={selectedLineId}
+            onSave={refresh}
+            onClose={() => {
+              closeStationTransferModal();
+              setTransferStation(null);
+            }}
+          />
+        </Modal>
+      )}
+
       <Modal
         opened={confirmOpened}
         onClose={closeConfirm}

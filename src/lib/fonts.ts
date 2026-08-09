@@ -1,12 +1,125 @@
-export const CANVAS_FONT_SPECS = [
-  "1em NotoSansJP",
+const NOTO_SANS_JP_FONT_SPECS = [
+  "400 1em NotoSansJP",
+  "500 1em NotoSansJP",
+  "600 1em NotoSansJP",
+  "700 1em NotoSansJP",
+  "800 1em NotoSansJP",
   "900 1em NotoSansJP",
-  "1em NotoSansTC",
-  "1em NotoSansKR",
-  "1em OverusedGrotesk",
-  "600 1em HindSemiBold",
-  "600 1em JostTrispaceHybrid",
 ] as const;
+
+const CJK_FONT_SPECS = [
+  ...NOTO_SANS_JP_FONT_SPECS,
+  "400 1em NotoSansTC",
+  "400 1em NotoSansKR",
+  "400 1em OverusedGrotesk",
+] as const;
+
+const HIND_BADGE_FONT_SPECS = ["600 1em HindSemiBold"] as const;
+const METRO_BADGE_FONT_SPECS = [
+  "600 1em JostTrispaceHybrid",
+  "700 1em JostTrispaceHybrid",
+] as const;
+const JOST_FONT_SPECS = ["500 1em Jost", "600 1em Jost"] as const;
+
+/** Fonts needed by the default JR East sign shown at startup. */
+export const JR_EAST_FONT_SPECS = [
+  ...CJK_FONT_SPECS,
+  ...HIND_BADGE_FONT_SPECS,
+] as const;
+
+const JR_EAST_METRO_BADGE_FONT_SPECS = [
+  ...CJK_FONT_SPECS,
+  ...METRO_BADGE_FONT_SPECS,
+] as const;
+
+export const JR_WEST_FONT_SPECS = [...NOTO_SANS_JP_FONT_SPECS] as const;
+
+export const METRO_LONG_FONT_SPECS = [
+  ...NOTO_SANS_JP_FONT_SPECS,
+  ...METRO_BADGE_FONT_SPECS,
+  ...JOST_FONT_SPECS,
+] as const;
+
+/** A line map can contain both JR-style and Tokyo Metro-style transfer badges. */
+export const LINE_MAP_FONT_SPECS = [
+  ...NOTO_SANS_JP_FONT_SPECS,
+  ...HIND_BADGE_FONT_SPECS,
+  ...METRO_BADGE_FONT_SPECS,
+] as const;
+
+/** Complete set, used only for optional background prefetching. */
+export const CANVAS_FONT_SPECS = [
+  ...CJK_FONT_SPECS,
+  ...HIND_BADGE_FONT_SPECS,
+  ...METRO_BADGE_FONT_SPECS,
+  ...JOST_FONT_SPECS,
+] as const;
+
+export type CanvasSignStyle =
+  | "jreast"
+  | "jrwest"
+  | "jrwestlarge"
+  | "metrolong"
+  | "metroforeign"
+  | "metromedium"
+  | "toeimedium"
+  | "toeilarge";
+
+export function getStationNumberFontSpecs(
+  stationNumberStyle?: string,
+): readonly string[] {
+  return stationNumberStyle === "tokyometro"
+    ? METRO_BADGE_FONT_SPECS
+    : HIND_BADGE_FONT_SPECS;
+}
+
+export function getStationSignFontSpecs(
+  style: CanvasSignStyle,
+  stationNumberStyle?: string,
+): readonly string[] {
+  if (
+    style === "metrolong" ||
+    style === "metroforeign" ||
+    style === "metromedium" ||
+    style === "toeimedium" ||
+    style === "toeilarge"
+  ) {
+    return METRO_LONG_FONT_SPECS;
+  }
+  if (style === "jrwest" || style === "jrwestlarge") {
+    return JR_WEST_FONT_SPECS;
+  }
+  if (stationNumberStyle === "tokyometro") {
+    return JR_EAST_METRO_BADGE_FONT_SPECS;
+  }
+  return JR_EAST_FONT_SPECS;
+}
+
+const loadedFontSpecs = new Set<string>();
+const pendingFontLoads = new Map<string, Promise<void>>();
+
+function loadFontSpec(spec: string): Promise<void> {
+  if (loadedFontSpecs.has(spec)) return Promise.resolve();
+
+  const pending = pendingFontLoads.get(spec);
+  if (pending) return pending;
+
+  const load = document.fonts
+    .load(spec)
+    .then(() => {
+      loadedFontSpecs.add(spec);
+    })
+    .finally(() => {
+      pendingFontLoads.delete(spec);
+    });
+  pendingFontLoads.set(spec, load);
+  return load;
+}
+
+export function areCanvasFontsLoaded(specs: readonly string[]): boolean {
+  if (typeof document === "undefined" || !("fonts" in document)) return true;
+  return specs.every((spec) => loadedFontSpecs.has(spec));
+}
 
 async function waitForNextFrame(): Promise<void> {
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -17,10 +130,68 @@ export async function waitForCanvasFonts(
 ): Promise<void> {
   if (typeof document === "undefined" || !("fonts" in document)) return;
 
-  await Promise.all(specs.map((spec) => document.fonts.load(spec)));
+  // Do not let one failed face make us stop waiting for the remaining faces.
+  // A fail-fast Promise.all could otherwise expose a canvas while another
+  // bundled font is still downloading.
+  const results = await Promise.allSettled(specs.map(loadFontSpec));
   await document.fonts.ready;
 
-  // Give canvas/Konva one paint cycle after FontFaceSet settles.
+  // Give canvas/Konva two paint cycles after FontFaceSet settles.
   await waitForNextFrame();
   await waitForNextFrame();
+
+  const failures = results.filter(
+    (result): result is PromiseRejectedResult => result.status === "rejected",
+  );
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures.map((failure) => failure.reason),
+      `Failed to load ${failures.length} canvas font(s)`,
+    );
+  }
+}
+
+type NetworkInformation = {
+  effectiveType?: string;
+  saveData?: boolean;
+};
+
+type IdleWindow = Window & {
+  requestIdleCallback?: (callback: () => void) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+
+/**
+ * Prefetch optional fonts after the initial preview is usable. Slow or
+ * data-saving connections keep the strictly on-demand behavior.
+ */
+export function prefetchCanvasFontsWhenIdle(): () => void {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return () => undefined;
+  }
+
+  const connection = (
+    navigator as Navigator & { connection?: NetworkInformation }
+  ).connection;
+  if (
+    connection?.saveData ||
+    connection?.effectiveType === "slow-2g" ||
+    connection?.effectiveType === "2g" ||
+    connection?.effectiveType === "3g"
+  ) {
+    return () => undefined;
+  }
+
+  const idleWindow = window as IdleWindow;
+  const prefetch = () => {
+    waitForCanvasFonts(CANVAS_FONT_SPECS).catch(() => undefined);
+  };
+
+  if (idleWindow.requestIdleCallback) {
+    const handle = idleWindow.requestIdleCallback(prefetch);
+    return () => idleWindow.cancelIdleCallback?.(handle);
+  }
+
+  const handle = window.setTimeout(prefetch, 1500);
+  return () => window.clearTimeout(handle);
 }

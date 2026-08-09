@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: SQLite डाउनलोड करें
   import-sqlite: SQLite आयात करें
-  import-sample: नमूना डेटा लोड करें (यमानोट लाइन)
+  import-sample: नमूना डेटा लोड करें
   import-error:
     invalid-file: चयनित फ़ाइल वैध SQLite डेटाबेस नहीं है।
     missing-table: "डेटाबेस में एक आवश्यक तालिका गुम है: {detail}"
@@ -185,8 +185,31 @@ route:
     empty: अभी तक कोई पंक्ति नहीं
     select: एक पंक्ति चुनें
     all: सभी कंपनियाँ
+    unassigned-company: कंपनी निर्दिष्ट नहीं
     delete-confirm: यह पंक्ति हटाएं?
     prefix-preview: लाइन सूचक बैज पूर्वावलोकन
+    station-number-preview: स्टेशन संख्या पूर्वावलोकन (01)
+  through-route:
+    title: सीधी सेवा के मार्ग
+    add: सीधी सेवा मार्ग जोड़ें
+    edit: सीधी सेवा मार्ग संपादित करें
+    name: मार्ग का नाम
+    empty: अभी कोई सीधी सेवा मार्ग नहीं है
+    segments: लाइन खंड
+    segment-number: "खंड {number}"
+    add-segment: लाइन खंड जोड़ें
+    line: लाइन
+    entry-station: प्रवेश स्टेशन
+    exit-station: निकास स्टेशन
+    direction: खंड की दिशा
+    forward: सीधी दिशा (स्टेशन क्रम)
+    reverse: उलटी दिशा (स्टेशन क्रम के विपरीत)
+    delete-confirm: इस सीधी सेवा मार्ग को हटाएँ?
+    error-incomplete: हर खंड के लिए लाइन और दोनों अंतिम स्टेशन चुनें।
+    error-empty: कम से कम एक लाइन खंड जोड़ें।
+    error-station-not-on-line: चुना गया स्टेशन संबंधित लाइन पर नहीं है।
+    error-invalid-direction: चुनी गई दिशा में प्रवेश स्टेशन से निकास स्टेशन तक नहीं पहुँचा जा सकता।
+    error-disconnected: पास-पास के लाइन खंड एक ही जोड़ स्टेशन पर नहीं मिलते।
   service:
     title: सेवाएँ
     local: स्थानीय
@@ -219,6 +242,15 @@ route:
     duplicate-number-warning: "इस लाइन में डुप्लिकेट स्टेशन नंबर: {numbers}"
     delete-confirm: इस स्टेशन को लाइन से हटाएं?
     select: एक स्टेशन चुनें
+    transfer-title: "इंटरचेंज जानकारी — {name}"
+    transfer-manage: इंटरचेंज जानकारी देखें और संपादित करें
+    transfer-select: इंटरचेंज स्टेशन
+    transfer-empty: कोई इंटरचेंज संबंध नहीं है
+    same-id-lines: समान स्टेशन ID वाली लाइनें
+    same-id-lines-help: ये लाइनें एक ही स्टेशन रिकॉर्ड साझा करती हैं और स्वतः इंटरचेंज मानी जाती हैं। यहाँ इन्हें बदला नहीं जा सकता।
+    same-id-lines-empty: कोई अन्य लाइन यह स्टेशन ID साझा नहीं करती
+    explicit-transfers: स्टेशनों के बीच स्पष्ट इंटरचेंज
+    explicit-transfers-help: अलग-अलग स्टेशन ID के बीच इंटरचेंज जोड़ें या हटाएँ।
   sign:
     style: अंदाज
     direction: दिशा
@@ -229,21 +261,29 @@ route:
     jreast: जेआर ईस्ट स्टाइल
     jrwest: जेआर वेस्ट स्टाइल
     jrwestlarge: जेआर वेस्ट स्टाइल (बड़ा)
-    metrolong: टोक्यो मेट्रो / टोई सबवे शैली (चौड़ा)
+    metrolong: टोक्यो मेट्रो शैली (छोटा / जापानी)
+    metroforeign: टोक्यो मेट्रो शैली (छोटा / विदेशी भाषा)
+    metromedium: टोक्यो मेट्रो शैली (मध्यम)
+    toeimedium: टोई सबवे शैली (मध्यम)
+    toeilarge: टोई सबवे शैली (बड़ा)
     metrolong-subtext: उपपाठ
     metrolong-subtext-furigana: फुरिगाना
     metrolong-subtext-secondary: द्वितीयक भाषा
     center-colors: केंद्र चौकोर रंग
   mode:
     sign: स्टेशन चिन्ह
-    linemap: रेखा मानचित्र
+    linemap: लाइन मानचित्र (एकल/सीधी)
+    multiline-linemap: लाइन मानचित्र (एकाधिक लाइनें)
   linemap:
+    filename-suffix: मार्ग मानचित्र
     orientation: अभिमुखीकरण
     horizontal: क्षैतिज
     vertical: लंबवत
     range-start: से
     range-end: को
     transit-filter: पारगमन रेखाएँ दिखाएँ
+    transit-show-names: इंटरचेंज लाइन के नाम दिखाएँ
+    download-text-warning: सहेजें (दूसरी भाषा अस्पष्ट हो सकती है)
     font-size: स्टेशन का नाम फ़ॉन्ट आकार
     overlap-warning-title: लेबल ओवरलैप का पता चला
     overlap-warning: कुछ स्टेशनों के नाम ओवरलैप होते हैं। फ़ॉन्ट का आकार कम करने का प्रयास करें.
@@ -256,6 +296,7 @@ route:
     name-style-above: ऊपर
     name-style-below: नीचे
     station-spacing: स्टेशन रिक्ति
+    line-width: लाइन की मोटाई
     primary-lang: प्राथमिक भाषा
     secondary-lang: द्वितीयक भाषा
     show-secondary-lang: दिखाओ

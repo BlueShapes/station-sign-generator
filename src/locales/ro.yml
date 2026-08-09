@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Descărcați SQLite
   import-sqlite: Importă SQLite
-  import-sample: Încărcați date eșantion (linia Yamanote)
+  import-sample: Încărcați date eșantion
   import-error:
     invalid-file: Fișierul selectat nu este o bază de date SQLite validă.
     missing-table: "Din baza de date lipsește un tabel obligatoriu: {detail}"
@@ -185,8 +185,31 @@ route:
     empty: Încă nu există linii
     select: Selectați o linie
     all: Toate Companiile
+    unassigned-company: Companie neatribuită
     delete-confirm: Ștergeți această linie?
     prefix-preview: Previzualizarea insignei cu indicator de linie
+    station-number-preview: Previzualizarea numărului stației (01)
+  through-route:
+    title: Rute directe
+    add: Adăugați o rută directă
+    edit: Editați ruta directă
+    name: Numele rutei
+    empty: Nu există încă rute directe
+    segments: Segmente de linie
+    segment-number: "Segmentul {number}"
+    add-segment: Adăugați un segment de linie
+    line: Linie
+    entry-station: Stația de intrare
+    exit-station: Stația de ieșire
+    direction: Direcția segmentului
+    forward: Înainte (ordinea stațiilor)
+    reverse: Invers (ordinea opusă)
+    delete-confirm: Ștergeți această rută directă?
+    error-incomplete: Selectați linia și ambele stații terminale pentru fiecare segment.
+    error-empty: Adăugați cel puțin un segment de linie.
+    error-station-not-on-line: O stație selectată nu aparține liniei.
+    error-invalid-direction: Stația de ieșire nu poate fi atinsă din stația de intrare în direcția selectată.
+    error-disconnected: Segmentele adiacente nu au aceeași stație de legătură.
   service:
     title: Servicii
     local: Local
@@ -219,6 +242,15 @@ route:
     duplicate-number-warning: "Numerele stației duplicate în această linie: {numbers}"
     delete-confirm: Eliminați această stație de pe linie?
     select: Selectați o stație
+    transfer-title: "Informații despre transfer — {name}"
+    transfer-manage: Vezi și gestionează transferurile
+    transfer-select: Stație de transfer
+    transfer-empty: Nu există legături de transfer
+    same-id-lines: Linii cu același ID de stație
+    same-id-lines-help: Aceste linii folosesc aceeași înregistrare de stație și sunt considerate automat transferuri. Aici sunt doar pentru citire.
+    same-id-lines-empty: Nicio altă linie nu folosește acest ID de stație
+    explicit-transfers: Transferuri explicite între stații
+    explicit-transfers-help: Adăugați sau eliminați transferuri între ID-uri de stație diferite.
   sign:
     style: Stil
     direction: Direcția
@@ -229,21 +261,29 @@ route:
     jreast: JR East Style
     jrwest: JR West Style
     jrwestlarge: JR West Style (mare)
-    metrolong: Metrou din Tokyo/Stil de metrou Toei (lat)
+    metrolong: Stil metrou Tokyo (mic / japoneză)
+    metroforeign: Stil metrou Tokyo (mic / limbă străină)
+    metromedium: Stil metrou Tokyo (mediu)
+    toeimedium: Stil metrou Toei (mediu)
+    toeilarge: Stil metrou Toei (mare)
     metrolong-subtext: Subtext
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Limba secundară
     center-colors: Culori Piața Centrală
   mode:
     sign: Semnul stației
-    linemap: Harta liniilor
+    linemap: Harta liniilor (o linie/direct)
+    multiline-linemap: Harta liniilor (linii multiple)
   linemap:
+    filename-suffix: Harta Liniei
     orientation: Orientare
     horizontal: Orizontală
     vertical: Pe verticală
     range-start: De la
     range-end: Pentru a
     transit-filter: Afișați liniile de transport public
+    transit-show-names: Afișează numele liniilor de transfer
+    download-text-warning: Salvează (a doua limbă poate fi ilizibilă)
     font-size: Nume stație Dimensiune font
     overlap-warning-title: S-a detectat suprapunerea etichetelor
     overlap-warning: Unele nume de stații se suprapun. Încercați să reduceți dimensiunea fontului.
@@ -256,6 +296,7 @@ route:
     name-style-above: Mai sus
     name-style-below: Mai jos
     station-spacing: Spațierea stațiilor
+    line-width: Grosimea liniei
     primary-lang: Limba primară
     secondary-lang: Limba secundară
     show-secondary-lang: Arată

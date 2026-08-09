@@ -3,12 +3,19 @@ export interface Company {
   name: string;
   company_color: string;
   station_number_style: string;
+  primary_language: string;
+  secondary_language: string;
+  tertiary_language: string;
+  quaternary_language: string;
 }
 
 export interface Line {
   id: string;
   company_id: string | null;
   name: string;
+  secondary_name: string | null;
+  tertiary_name: string | null;
+  quaternary_name: string | null;
   line_color: string;
   prefix: string;
   priority: number | null;
@@ -34,6 +41,12 @@ export interface StationLine {
   station_id: string;
   line_id: string;
   sort_order: number;
+}
+
+export interface StationTransfer {
+  id: string;
+  station_a_id: string;
+  station_b_id: string;
 }
 
 export interface StationNumber {
@@ -72,6 +85,24 @@ export interface StationServiceStop {
   station_id: string;
   service_id: string;
   status: ServiceStopStatus;
+}
+
+export interface ThroughRoute {
+  id: string;
+  name: string;
+  sort_order: number;
+}
+
+export type ThroughRouteDirection = "forward" | "reverse";
+
+export interface ThroughRouteSegment {
+  id: string;
+  through_route_id: string;
+  line_id: string;
+  entry_station_id: string;
+  exit_station_id: string;
+  direction: ThroughRouteDirection;
+  sort_order: number;
 }
 
 export interface StationAreaWithZone {

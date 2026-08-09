@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: 下载SQLite
   import-sqlite: 导入SQLite
-  import-sample: 加载样本数据（山手线）
+  import-sample: 加载样本数据
   import-error:
     invalid-file: 所选文件不是有效的 SQLite 数据库。
     missing-table: 数据库缺少所需的表：{detail}
@@ -185,8 +185,31 @@ route:
     empty: 还没有线路
     select: 选择一行
     all: 所有公司
+    unassigned-company: 未指定公司
     delete-confirm: 删除这一行吗？
     prefix-preview: 线路指示器徽章预览
+    station-number-preview: 车站编号预览（01）
+  through-route:
+    title: 直通路径
+    add: 添加直通路径
+    edit: 编辑直通路径
+    name: 路径名称
+    empty: 暂无直通路径
+    segments: 线路区间
+    segment-number: "区间 {number}"
+    add-segment: 添加线路区间
+    line: 线路
+    entry-station: 入口站
+    exit-station: 出口站
+    direction: 区间方向
+    forward: 正向（按车站顺序）
+    reverse: 反向（逆车站顺序）
+    delete-confirm: 删除此直通路径？
+    error-incomplete: 请为每个区间选择线路和两个端点站。
+    error-empty: 请至少添加一个线路区间。
+    error-station-not-on-line: 所选车站不属于对应线路。
+    error-invalid-direction: 无法按所选方向从入口站到达出口站。
+    error-disconnected: 相邻线路区间的连接站不一致。
   service:
     title: 服务
     local: 本地
@@ -219,6 +242,15 @@ route:
     duplicate-number-warning: 此线路中有重复的车站编号：{numbers}
     delete-confirm: 从线路中删除该站吗？
     select: 选择电台
+    transfer-title: "换乘信息 — {name}"
+    transfer-manage: 查看和编辑换乘信息
+    transfer-select: 换乘车站
+    transfer-empty: 暂无换乘关系
+    same-id-lines: 使用相同车站ID的线路
+    same-id-lines-help: 这些线路共享同一车站记录，并会自动视为换乘线路。此处仅供查看。
+    same-id-lines-empty: 没有其他线路使用此车站ID
+    explicit-transfers: 不同车站间的明确换乘关系
+    explicit-transfers-help: 添加或删除不同车站ID之间的换乘关系。
   sign:
     style: 风格
     direction: 方向
@@ -229,21 +261,29 @@ route:
     jreast: JR东日本风格
     jrwest: JR西日本风格
     jrwestlarge: JR西日本风格（大）
-    metrolong: 东京地铁/都营地铁风格（宽幅）
+    metrolong: 东京地铁风格（小・日文）
+    metroforeign: 东京地铁风格（小・外语）
+    metromedium: 东京地铁风格（中）
+    toeimedium: 都营地铁风格（中）
+    toeilarge: 都营地铁风格（大）
     metrolong-subtext: 潜台词
     metrolong-subtext-furigana: 汉字注假名
     metrolong-subtext-secondary: 第二语言
     center-colors: 中心正方形颜色
   mode:
     sign: 车站标志
-    linemap: 线路图
+    linemap: 线路图（单线/直通）
+    multiline-linemap: 线路图（多线）
   linemap:
+    filename-suffix: 线路图
     orientation: 方向
     horizontal: 卧式
     vertical: 垂直
     range-start: 来自
     range-end: 至
     transit-filter: 显示公交线路
+    transit-show-names: 显示换乘线路名称
+    download-text-warning: 保存（第二语言可能无法辨认）
     font-size: 站名字体大小
     overlap-warning-title: 检测到标签重叠
     overlap-warning: 有些站名重叠。尝试减小字体大小。
@@ -256,6 +296,7 @@ route:
     name-style-above: 以上
     name-style-below: 下面
     station-spacing: 站间距
+    line-width: 线路粗细
     primary-lang: 主要语言
     secondary-lang: 第二语言
     show-secondary-lang: 显示

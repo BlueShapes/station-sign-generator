@@ -146,7 +146,7 @@ settings:
 route:
   download-sqlite: SQLite herunterladen
   import-sqlite: SQLite importieren
-  import-sample: Beispieldaten laden (Yamanote-Linie)
+  import-sample: Beispieldaten laden
   import-error:
     invalid-file: Die ausgewählte Datei ist keine gültige SQLite-Datenbank.
     missing-table: "In der Datenbank fehlt eine erforderliche Tabelle: {detail}"
@@ -193,8 +193,31 @@ route:
     empty: Noch keine Linien vorhanden
     select: Linie auswählen
     all: Alle Unternehmen
+    unassigned-company: Kein Unternehmen zugewiesen
     delete-confirm: Diese Linie löschen?
     prefix-preview: Vorschau der Linienplakette
+    station-number-preview: Vorschau der Stationsnummer (01)
+  through-route:
+    title: Durchgehende Routen
+    add: Durchgehende Route hinzufügen
+    edit: Durchgehende Route bearbeiten
+    name: Routenname
+    empty: Noch keine durchgehenden Routen
+    segments: Linienabschnitte
+    segment-number: "Abschnitt {number}"
+    add-segment: Linienabschnitt hinzufügen
+    line: Linie
+    entry-station: Einfahrtsbahnhof
+    exit-station: Ausfahrtsbahnhof
+    direction: Abschnittsrichtung
+    forward: Vorwärts (Bahnhofsreihenfolge)
+    reverse: Rückwärts (entgegen der Bahnhofsreihenfolge)
+    delete-confirm: Diese durchgehende Route löschen?
+    error-incomplete: Wählen Sie für jeden Abschnitt eine Linie und beide Endbahnhöfe aus.
+    error-empty: Fügen Sie mindestens einen Linienabschnitt hinzu.
+    error-station-not-on-line: Ein ausgewählter Bahnhof gehört nicht zur Linie.
+    error-invalid-direction: Der Ausfahrtsbahnhof ist vom Einfahrtsbahnhof in der gewählten Richtung nicht erreichbar.
+    error-disconnected: Benachbarte Linienabschnitte haben keinen gemeinsamen Anschlussbahnhof.
   service:
     title: Zugarten
     local: Nahverkehr
@@ -227,6 +250,15 @@ route:
     duplicate-number-warning: "Doppelte Stationsnummern in dieser Linie: {numbers}"
     delete-confirm: Diese Station aus der Linie entfernen?
     select: Station auswählen
+    transfer-title: "Umsteigeinformationen — {name}"
+    transfer-manage: Umsteigeinformationen anzeigen und bearbeiten
+    transfer-select: Umsteigebahnhof
+    transfer-empty: Keine Umsteigebeziehungen
+    same-id-lines: Linien mit derselben Bahnhofs-ID
+    same-id-lines-help: Diese Linien teilen denselben Bahnhofseintrag und gelten automatisch als Umstieg. Sie sind hier schreibgeschützt.
+    same-id-lines-empty: Keine andere Linie teilt diese Bahnhofs-ID
+    explicit-transfers: Explizite Umstiege zwischen Bahnhöfen
+    explicit-transfers-help: Umstiege zwischen unterschiedlichen Bahnhofs-IDs hinzufügen oder entfernen.
   sign:
     style: Stil
     direction: Richtung
@@ -237,21 +269,29 @@ route:
     jreast: Stil von JR East
     jrwest: Stil von JR West
     jrwestlarge: Stil von JR West (groß)
-    metrolong: Stil von Tokyo Metro / Toei Subway (breit)
+    metrolong: Tokyo-Metro-Stil (klein / Japanisch)
+    metroforeign: Tokyo-Metro-Stil (klein / Fremdsprache)
+    metromedium: Tokyo-Metro-Stil (mittel)
+    toeimedium: Toei-U-Bahn-Stil (mittel)
+    toeilarge: Toei-U-Bahn-Stil (groß)
     metrolong-subtext: Untertext
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Zweitsprache
     center-colors: Farben der mittleren Quadrate
   mode:
     sign: Bahnhofsschild
-    linemap: Linienplan
+    linemap: Linienplan (Einzellinie/Durchbindung)
+    multiline-linemap: Linienplan (mehrere Linien)
   linemap:
+    filename-suffix: Linienplan
     orientation: Ausrichtung
     horizontal: Horizontal
     vertical: Vertikal
     range-start: Von
     range-end: Bis
     transit-filter: Umsteigelinien anzeigen
+    transit-show-names: Namen der Umsteigelinien anzeigen
+    download-text-warning: Speichern (zweite Sprache evtl. unleserlich)
     font-size: Schriftgröße des Stationsnamens
     overlap-warning-title: Überlappende Beschriftungen erkannt
     overlap-warning: Einige Stationsnamen überlappen sich. Verkleinere die Schrift.
@@ -264,6 +304,7 @@ route:
     name-style-above: Oben
     name-style-below: Unten
     station-spacing: Stationsabstand
+    line-width: Linienstärke
     primary-lang: Primärsprache
     secondary-lang: Sekundärsprache
     show-secondary-lang: Anzeigen

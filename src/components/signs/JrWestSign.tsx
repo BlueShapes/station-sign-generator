@@ -4,8 +4,10 @@ import type { AdjacentStationProps } from "./DirectInputStationProps";
 import { Rect, Layer, Stage, Text, Line } from "react-konva";
 import Konva from "konva";
 import { isMobile } from "react-device-detect";
+import { JR_WEST_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
 import spacedStationName from "@/functions/spaceStationName";
+import { getJrWestArrowPoints } from "./arrowGeometry";
 
 export const height = 140;
 export const scale = 3;
@@ -43,10 +45,22 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
       : undefined;
 
     useEffect(() => {
-      document.fonts.ready.then(() => setStageKey((k) => k + 1));
+      let cancelled = false;
+      waitForCanvasFonts(JR_WEST_FONT_SPECS)
+        .catch(() => undefined)
+        .then(() => {
+          if (!cancelled) setStageKey((k) => k + 1);
+        });
+      return () => {
+        cancelled = true;
+      };
     }, []);
 
     useEffect(() => {
+      if (stageKey < 1) {
+        setCanvasImage("");
+        return;
+      }
       const render = () => {
         ref && "current" in ref && ref.current
           ? setCanvasImage(ref.current.toDataURL())
@@ -58,28 +72,6 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
       }
       render();
     }, [props, stageKey]);
-
-    // Arrow shape pointing right; origin is (0,0), tip at (size, size/2)
-    const arrowPoints = (size: number) => [
-      3,
-      0,
-      11,
-      0,
-      size,
-      size / 2,
-      11,
-      size,
-      3,
-      size,
-      size - 10.5,
-      size / 2 + 2.5,
-      -11,
-      size / 2 + 2.5,
-      -11,
-      size / 2 - 2.5,
-      size - 10.5,
-      size / 2 - 2.5,
-    ];
 
     const renderStation = (s: AdjacentStationProps, secX: number) => {
       const isRight = secX !== 0;
@@ -145,17 +137,19 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
           : stations[0];
 
       const arrowSize = 24;
-      const actualX = isLeft ? 8 + arrowSize : width - 8 - arrowSize;
+      const actualX = isLeft ? 8 : width - 8 - arrowSize;
 
       return (
         <>
           {showArrow && (
             <Line
               closed
-              points={arrowPoints(arrowSize)}
+              points={getJrWestArrowPoints(
+                arrowSize,
+                isLeft ? "left" : "right",
+              )}
               x={actualX}
               y={108}
-              scaleX={isLeft ? -1 : 1}
               fill="white"
               strokeWidth={0}
             />

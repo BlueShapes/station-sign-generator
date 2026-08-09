@@ -146,7 +146,7 @@ settings:
 route:
   download-sqlite: Download SQLite
   import-sqlite: Import SQLite
-  import-sample: Load Sample Data (Yamanote Line)
+  import-sample: Load Sample Data
   import-error:
     invalid-file: "The selected file is not a valid SQLite database."
     missing-table: "The database is missing a required table: {detail}"
@@ -193,8 +193,31 @@ route:
     empty: No lines yet
     select: Select a line
     all: All Companies
+    unassigned-company: Unassigned company
     delete-confirm: Delete this line?
     prefix-preview: Line indicator badge preview
+    station-number-preview: Station number preview (01)
+  through-route:
+    title: Through Routes
+    add: Add Through Route
+    edit: Edit Through Route
+    name: Route Name
+    empty: No through routes yet
+    segments: Line Sections
+    segment-number: "Section {number}"
+    add-segment: Add Line Section
+    line: Line
+    entry-station: Entry Station
+    exit-station: Exit Station
+    direction: Section Direction
+    forward: Forward (station order)
+    reverse: Reverse (opposite station order)
+    delete-confirm: Delete this through route?
+    error-incomplete: Select a line and both endpoint stations for every section.
+    error-empty: Add at least one line section.
+    error-station-not-on-line: A selected station does not belong to its line.
+    error-invalid-direction: The exit station is not reachable from the entry station in the selected direction.
+    error-disconnected: Adjacent line sections do not share the same connection station.
   service:
     title: Services
     local: Local
@@ -227,6 +250,15 @@ route:
     duplicate-number-warning: "Duplicate station numbers in this line: {numbers}"
     delete-confirm: Remove this station from the line?
     select: Select a station
+    transfer-title: "Transfer information — {name}"
+    transfer-manage: View and manage transfer information
+    transfer-select: Connecting station
+    transfer-empty: No transfer connections
+    same-id-lines: Lines sharing the same station ID
+    same-id-lines-help: These lines share this station record and are automatically treated as transfers. They are read-only here.
+    same-id-lines-empty: No other line shares this station ID
+    explicit-transfers: Explicit transfers between stations
+    explicit-transfers-help: Add or remove transfers between different station IDs.
   sign:
     style: Style
     direction: Direction
@@ -237,21 +269,29 @@ route:
     jreast: JR East Style
     jrwest: JR West Style
     jrwestlarge: JR West Style (Large)
-    metrolong: Tokyo Metro / Toei Subway Style (Wide)
+    metrolong: Tokyo Metro Style (Small / Japanese)
+    metroforeign: Tokyo Metro Style (Small / Foreign language)
+    metromedium: Tokyo Metro Style (Medium)
+    toeimedium: Toei Subway Style (Medium)
+    toeilarge: Toei Subway Style (Large)
     metrolong-subtext: Subtext
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Secondary language
     center-colors: Center Square Colors
   mode:
     sign: Station Sign
-    linemap: Line Map
+    linemap: Line Map (Single/Through)
+    multiline-linemap: Line Map (Multiple Lines)
   linemap:
+    filename-suffix: Line Map
     orientation: Orientation
     horizontal: Horizontal
     vertical: Vertical
     range-start: From
     range-end: To
     transit-filter: Show Transit Lines
+    transit-show-names: Show transfer line names
+    download-text-warning: Save (secondary name may be unreadable)
     font-size: Station Name Font Size
     overlap-warning-title: Label Overlap Detected
     overlap-warning: Some station names overlap. Try reducing the font size.
@@ -264,6 +304,7 @@ route:
     name-style-above: Above
     name-style-below: Below
     station-spacing: Station Spacing
+    line-width: Line Thickness
     primary-lang: Primary Language
     secondary-lang: Secondary Language
     show-secondary-lang: Show

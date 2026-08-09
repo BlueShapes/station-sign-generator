@@ -8,6 +8,9 @@ import migrateV030toV040 from "./migrations/v0.3.0_to_v0.4.0";
 import migrateV040toV050 from "./migrations/v0.4.0_to_v0.5.0";
 import migrateV050toV051 from "./migrations/v0.5.0_to_v0.5.1";
 import migrateV051toV052 from "./migrations/v0.5.1_to_v0.5.2";
+import migrateV054toV060 from "./migrations/v0.5.4_to_v0.6.0";
+import migrateV060toV070 from "./migrations/v0.6.0_to_v0.7.0";
+import migrateV071toV080 from "./migrations/v0.7.1_to_v0.8.0";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -21,18 +24,25 @@ CREATE TABLE IF NOT EXISTS companies (
   id                   TEXT PRIMARY KEY,
   name                 TEXT NOT NULL,
   company_color        TEXT NOT NULL DEFAULT '#3a9200',
-  station_number_style TEXT NOT NULL DEFAULT 'jreast'
+  station_number_style TEXT NOT NULL DEFAULT 'jreast',
+  primary_language     TEXT NOT NULL DEFAULT 'ja',
+  secondary_language   TEXT NOT NULL DEFAULT 'en',
+  tertiary_language    TEXT NOT NULL DEFAULT 'ko',
+  quaternary_language  TEXT NOT NULL DEFAULT 'zh-CN'
 );
 
 CREATE TABLE IF NOT EXISTS lines (
-  id             TEXT PRIMARY KEY,
-  company_id     TEXT REFERENCES companies(id) ON DELETE SET NULL,
-  name           TEXT NOT NULL,
-  line_color     TEXT NOT NULL DEFAULT '#8cc800',
-  prefix         TEXT NOT NULL,
-  priority       INTEGER,
-  is_loop        INTEGER NOT NULL DEFAULT 0,
-  parent_line_id TEXT REFERENCES lines(id) ON DELETE SET NULL
+  id              TEXT PRIMARY KEY,
+  company_id      TEXT REFERENCES companies(id) ON DELETE SET NULL,
+  name            TEXT NOT NULL,
+  secondary_name  TEXT,
+  tertiary_name   TEXT,
+  quaternary_name TEXT,
+  line_color      TEXT NOT NULL DEFAULT '#8cc800',
+  prefix          TEXT NOT NULL,
+  priority        INTEGER,
+  is_loop         INTEGER NOT NULL DEFAULT 0,
+  parent_line_id  TEXT REFERENCES lines(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS stations (
@@ -98,6 +108,36 @@ CREATE TABLE IF NOT EXISTS station_service_stops (
   service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
   status     TEXT NOT NULL DEFAULT 'stop'
 );
+
+CREATE TABLE IF NOT EXISTS station_transfers (
+  id           TEXT PRIMARY KEY,
+  station_a_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  station_b_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  CHECK (station_a_id < station_b_id),
+  UNIQUE (station_a_id, station_b_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_station_transfers_station_b
+  ON station_transfers (station_b_id);
+
+CREATE TABLE IF NOT EXISTS through_routes (
+  id         TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS through_route_segments (
+  id                    TEXT PRIMARY KEY,
+  through_route_id      TEXT NOT NULL REFERENCES through_routes(id) ON DELETE CASCADE,
+  line_id               TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
+  entry_station_id      TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  exit_station_id       TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  direction             TEXT NOT NULL DEFAULT 'forward' CHECK (direction IN ('forward', 'reverse')),
+  sort_order            INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_through_route_segments_route_order
+  ON through_route_segments (through_route_id, sort_order);
 `;
 
 let SQL: SqlJsStatic | null = null;
@@ -117,6 +157,9 @@ function migrateDatabase(database: Database): void {
     migrateV040toV050,
     migrateV050toV051,
     migrateV051toV052,
+    migrateV054toV060,
+    migrateV060toV070,
+    migrateV071toV080,
   ];
 
   for (const migrate of migrations) {
@@ -175,15 +218,44 @@ export function persistDatabase(database: Database): void {
 
 // Minimum required columns per table (subset that the app actively reads/writes)
 const REQUIRED_SCHEMA: Record<string, string[]> = {
-  companies: ["id", "name", "company_color", "station_number_style"],
-  lines: ["id", "name", "line_color", "prefix", "parent_line_id"],
+  companies: [
+    "id",
+    "name",
+    "company_color",
+    "station_number_style",
+    "primary_language",
+    "secondary_language",
+    "tertiary_language",
+    "quaternary_language",
+  ],
+  lines: [
+    "id",
+    "name",
+    "secondary_name",
+    "tertiary_name",
+    "quaternary_name",
+    "line_color",
+    "prefix",
+    "parent_line_id",
+  ],
   stations: ["id", "primary_name"],
   station_lines: ["id", "station_id", "line_id", "sort_order"],
+  station_transfers: ["id", "station_a_id", "station_b_id"],
   station_numbers: ["id", "station_id", "line_id", "value"],
   special_zones: ["id", "name", "abbreviation", "is_black"],
   station_areas: ["id", "station_id", "zone_id", "sort_order"],
   services: ["id", "line_id", "name", "color", "sort_order"],
   station_service_stops: ["id", "station_id", "service_id", "status"],
+  through_routes: ["id", "name", "sort_order"],
+  through_route_segments: [
+    "id",
+    "through_route_id",
+    "line_id",
+    "entry_station_id",
+    "exit_station_id",
+    "direction",
+    "sort_order",
+  ],
 };
 
 export type ValidationResult =
@@ -273,11 +345,14 @@ const MERGE_TABLES = [
   "lines",
   "stations",
   "station_lines",
+  "station_transfers",
   "station_numbers",
   "special_zones",
   "station_areas",
   "services",
   "station_service_stops",
+  "through_routes",
+  "through_route_segments",
 ] as const;
 
 /**

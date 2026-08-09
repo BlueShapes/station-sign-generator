@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Скачать SQLite
   import-sqlite: Импортировать SQLite
-  import-sample: Загрузка выборочных данных (линия Яманотэ)
+  import-sample: Загрузка выборочных данных
   import-error:
     invalid-file: Выбранный файл не является допустимой базой данных SQLite.
     missing-table: "В базе данных отсутствует необходимая таблица: {detail}."
@@ -185,8 +185,31 @@ route:
     empty: Очередей пока нет
     select: Выберите линию
     all: Все компании
+    unassigned-company: Компания не назначена
     delete-confirm: Удалить эту строку?
     prefix-preview: Предварительный просмотр значка линейного индикатора
+    station-number-preview: Предварительный просмотр номера станции (01)
+  through-route:
+    title: Сквозные маршруты
+    add: Добавить сквозной маршрут
+    edit: Изменить сквозной маршрут
+    name: Название маршрута
+    empty: Сквозных маршрутов пока нет
+    segments: Участки линий
+    segment-number: "Участок {number}"
+    add-segment: Добавить участок линии
+    line: Линия
+    entry-station: Станция входа
+    exit-station: Станция выхода
+    direction: Направление участка
+    forward: Прямое (по порядку станций)
+    reverse: Обратное (против порядка станций)
+    delete-confirm: Удалить этот сквозной маршрут?
+    error-incomplete: Выберите линию и обе конечные станции каждого участка.
+    error-empty: Добавьте хотя бы один участок линии.
+    error-station-not-on-line: Выбранная станция не относится к этой линии.
+    error-invalid-direction: В выбранном направлении нельзя доехать от станции входа до станции выхода.
+    error-disconnected: Соседние участки не имеют общей станции соединения.
   service:
     title: Услуги
     local: Местный
@@ -219,6 +242,15 @@ route:
     duplicate-number-warning: "Повторяющиеся номера станций в этой строке: {numbers}."
     delete-confirm: Убрать эту станцию с линии?
     select: Выберите станцию
+    transfer-title: "Информация о пересадках — {name}"
+    transfer-manage: Просмотр и изменение пересадок
+    transfer-select: Пересадочная станция
+    transfer-empty: Пересадок нет
+    same-id-lines: Линии с одинаковым ID станции
+    same-id-lines-help: Эти линии используют одну запись станции и автоматически считаются пересадочными. Здесь они доступны только для чтения.
+    same-id-lines-empty: Другие линии не используют этот ID станции
+    explicit-transfers: Явные пересадки между станциями
+    explicit-transfers-help: Добавляйте или удаляйте пересадки между разными ID станций.
   sign:
     style: Стиль
     direction: Направление
@@ -229,21 +261,29 @@ route:
     jreast: JR Восточный стиль
     jrwest: JR Вест Стиль
     jrwestlarge: JR West Style (большой)
-    metrolong: Токийское метро / стиль метро Toei (широкий)
+    metrolong: Стиль Токийского метро (малый / японский)
+    metroforeign: Стиль Токийского метро (малый / иностранный язык)
+    metromedium: Стиль Токийского метро (средний)
+    toeimedium: Стиль метро Toei (средний)
+    toeilarge: Стиль метро Toei (большой)
     metrolong-subtext: Подтекст
     metrolong-subtext-furigana: Фуригана
     metrolong-subtext-secondary: Второй язык
     center-colors: Цвета центральной площади
   mode:
     sign: Знак станции
-    linemap: Линейная карта
+    linemap: Схема линии (одна/сквозная)
+    multiline-linemap: Схема линий (несколько)
   linemap:
+    filename-suffix: Схема линии
     orientation: Ориентация
     horizontal: Горизонтальный
     vertical: Вертикальный
     range-start: От
     range-end: Чтобы
     transit-filter: Показать транзитные линии
+    transit-show-names: Показывать названия линий пересадки
+    download-text-warning: Сохранить (второй язык может быть нечитаемым)
     font-size: Название станции Размер шрифта
     overlap-warning-title: Обнаружено перекрытие этикеток
     overlap-warning: Названия некоторых станций совпадают. Попробуйте уменьшить размер шрифта.
@@ -256,6 +296,7 @@ route:
     name-style-above: Выше
     name-style-below: Ниже
     station-spacing: Расстояние между станциями
+    line-width: Толщина линии
     primary-lang: Основной язык
     secondary-lang: Второй язык
     show-secondary-lang: Показать

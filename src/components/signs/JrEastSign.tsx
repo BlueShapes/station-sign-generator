@@ -5,7 +5,9 @@ import Konva from "konva";
 import { v7 as uuidv7 } from "uuid";
 import { isMobile } from "react-device-detect";
 import { getTokyoMetroStationNumberMetrics } from "@/components/signs/stationNumberBadgeMetrics";
+import { getStationSignFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
+import { getJrEastLineArrowPoints } from "./arrowGeometry";
 
 export const height = 140;
 export const scale = 3;
@@ -44,6 +46,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       !stationNumberStyle || stationNumberStyle === "jreast"
         ? threeLetterCodeRaw
         : undefined;
+    const fontSpecs = getStationSignFontSpecs("jreast", stationNumberStyle);
 
     const getLineColor = (prefix?: string): string => {
       if (!prefix) return "#000000";
@@ -123,10 +126,16 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       : undefined;
 
     useEffect(() => {
-      document.fonts.ready.then(() => {
-        setStageKey((prevKey) => prevKey + 1);
-      });
-    }, []);
+      let cancelled = false;
+      waitForCanvasFonts(fontSpecs)
+        .catch(() => undefined)
+        .then(() => {
+          if (!cancelled) setStageKey((prevKey) => prevKey + 1);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [fontSpecs]);
 
     const autoSpace = (str: string) => {
       return str.length <= 2 ? str.split("").join(" ") : str;
@@ -165,6 +174,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
 
     const [canvasImage, setCanvasImage] = useState("");
     useEffect(() => {
+      if (stageKey < 1) {
+        setCanvasImage("");
+        return;
+      }
       const renderFunction = () => {
         ref && "current" in ref && ref.current
           ? setCanvasImage(ref.current.toDataURL())
@@ -211,28 +224,26 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               />
               <Line
                 closed
-                points={[
-                  startingPoint,
-                  linePosY,
-                  startingPoint,
-                  linePosY + lineHeight,
-                  15,
-                  linePosY + 12,
-                ]}
+                points={getJrEastLineArrowPoints(
+                  startingPoint - 15,
+                  lineHeight,
+                  "left",
+                )}
+                x={15}
+                y={linePosY}
                 fill={baseColor}
                 strokeWidth={1}
                 stroke={baseColor}
               />
               <Line
                 closed
-                points={[
-                  width - startingPoint,
-                  linePosY,
-                  width - startingPoint,
-                  linePosY + lineHeight,
-                  width - 15,
-                  linePosY + 12,
-                ]}
+                points={getJrEastLineArrowPoints(
+                  startingPoint - 15,
+                  lineHeight,
+                  "right",
+                )}
+                x={width - startingPoint}
+                y={linePosY}
                 fill={baseColor}
                 strokeWidth={1}
                 stroke={baseColor}

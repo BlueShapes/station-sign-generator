@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Pobierz SQLite
   import-sqlite: Importuj SQLite
-  import-sample: Załaduj przykładowe dane (linia Yamanote)
+  import-sample: Załaduj przykładowe dane
   import-error:
     invalid-file: Wybrany plik nie jest prawidłową bazą danych SQLite.
     missing-table: "W bazie danych brakuje wymaganej tabeli: {detail}"
@@ -185,8 +185,31 @@ route:
     empty: Jeszcze nie ma linii
     select: Wybierz linię
     all: Wszystkie firmy
+    unassigned-company: Brak przypisanej firmy
     delete-confirm: Usunąć tę linię?
     prefix-preview: Podgląd plakietki wskaźnika linii
+    station-number-preview: Podgląd numeru stacji (01)
+  through-route:
+    title: Trasy bezpośrednie
+    add: Dodaj trasę bezpośrednią
+    edit: Edytuj trasę bezpośrednią
+    name: Nazwa trasy
+    empty: Brak tras bezpośrednich
+    segments: Odcinki linii
+    segment-number: "Odcinek {number}"
+    add-segment: Dodaj odcinek linii
+    line: Linia
+    entry-station: Stacja wjazdowa
+    exit-station: Stacja wyjazdowa
+    direction: Kierunek odcinka
+    forward: Do przodu (kolejność stacji)
+    reverse: Odwrotnie (przeciwnie do kolejności stacji)
+    delete-confirm: Usunąć tę trasę bezpośrednią?
+    error-incomplete: Wybierz linię i obie stacje końcowe każdego odcinka.
+    error-empty: Dodaj co najmniej jeden odcinek linii.
+    error-station-not-on-line: Wybrana stacja nie należy do tej linii.
+    error-invalid-direction: Nie można dotrzeć do stacji wyjazdowej ze stacji wjazdowej w wybranym kierunku.
+    error-disconnected: Sąsiednie odcinki nie mają wspólnej stacji połączenia.
   service:
     title: Usługi
     local: Lokalny
@@ -219,6 +242,15 @@ route:
     duplicate-number-warning: "Zduplikowane numery stacji w tej linii: {numbers}"
     delete-confirm: Usunąć tę stację z linii?
     select: Wybierz stację
+    transfer-title: "Informacje o przesiadkach — {name}"
+    transfer-manage: Wyświetl i edytuj informacje o przesiadkach
+    transfer-select: Stacja przesiadkowa
+    transfer-empty: Brak połączeń przesiadkowych
+    same-id-lines: Linie z tym samym ID stacji
+    same-id-lines-help: Te linie współdzielą rekord stacji i są automatycznie traktowane jako przesiadki. Tutaj są tylko do odczytu.
+    same-id-lines-empty: Żadna inna linia nie współdzieli tego ID stacji
+    explicit-transfers: Jawne przesiadki między stacjami
+    explicit-transfers-help: Dodawaj lub usuwaj przesiadki między różnymi ID stacji.
   sign:
     style: Styl
     direction: Kierunek
@@ -229,21 +261,29 @@ route:
     jreast: Styl JR Wschodni
     jrwest: Styl JR Westa
     jrwestlarge: Styl JR West (duży)
-    metrolong: Styl metra Tokyo / Toei Subway (szeroki)
+    metrolong: Styl metra tokijskiego (mały / japoński)
+    metroforeign: Styl metra tokijskiego (mały / język obcy)
+    metromedium: Styl metra tokijskiego (średni)
+    toeimedium: Styl metra Toei (średni)
+    toeilarge: Styl metra Toei (duży)
     metrolong-subtext: Podtekst
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Język wtórny
     center-colors: Kolory kwadratu centralnego
   mode:
     sign: Znak stacji
-    linemap: Mapa linii
+    linemap: Mapa linii (pojedyncza/bezpośrednia)
+    multiline-linemap: Mapa linii (wiele linii)
   linemap:
+    filename-suffix: Schemat linii
     orientation: Orientacja
     horizontal: Poziomy
     vertical: Pionowe
     range-start: Od
     range-end: Do
     transit-filter: Pokaż linie tranzytowe
+    transit-show-names: Pokaż nazwy linii przesiadkowych
+    download-text-warning: Zapisz (drugi język może być nieczytelny)
     font-size: Rozmiar czcionki nazwy stacji
     overlap-warning-title: Wykryto nakładanie się etykiet
     overlap-warning: Niektóre nazwy stacji pokrywają się. Spróbuj zmniejszyć rozmiar czcionki.
@@ -256,6 +296,7 @@ route:
     name-style-above: Powyżej
     name-style-below: Poniżej
     station-spacing: Rozstaw stacji
+    line-width: Grubość linii
     primary-lang: Język podstawowy
     secondary-lang: Język dodatkowy
     show-secondary-lang: Pokaż

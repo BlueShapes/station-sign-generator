@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: TransferirSQLite
   import-sqlite: Importar SQLite
-  import-sample: Carregar dados de amostra (Linha Yamanote)
+  import-sample: Carregar dados de amostra
   import-error:
     invalid-file: O ficheiro selecionado não é um base de dados SQLite válido.
     missing-table: "Falta uma tabela obrigatória no base de dados: {detail}"
@@ -185,8 +185,31 @@ route:
     empty: Ainda não há linhas
     select: Selecione uma linha
     all: Todas as empresas
+    unassigned-company: Empresa não atribuída
     delete-confirm: Eliminar esta linha?
     prefix-preview: Visualização do selo do indicador de linha
+    station-number-preview: Pré-visualização do número da estação (01)
+  through-route:
+    title: Rotas diretas
+    add: Adicionar rota direta
+    edit: Editar rota direta
+    name: Nome da rota
+    empty: Ainda não existem rotas diretas
+    segments: Troços de linha
+    segment-number: "Troço {number}"
+    add-segment: Adicionar troço de linha
+    line: Linha
+    entry-station: Estação de entrada
+    exit-station: Estação de saída
+    direction: Direção do troço
+    forward: Direta (ordem das estações)
+    reverse: Inversa (ordem oposta)
+    delete-confirm: Eliminar esta rota direta?
+    error-incomplete: Selecione uma linha e as duas estações terminais de cada troço.
+    error-empty: Adicione pelo menos um troço de linha.
+    error-station-not-on-line: Uma estação selecionada não pertence à linha.
+    error-invalid-direction: Não é possível chegar à estação de saída a partir da entrada na direção selecionada.
+    error-disconnected: Troços adjacentes não partilham a mesma estação de ligação.
   service:
     title: Serviços
     local: locais
@@ -219,6 +242,15 @@ route:
     duplicate-number-warning: "Números de estação duplicados nesta linha: {numbers}"
     delete-confirm: Remover esta estação da linha?
     select: Selecione uma estação
+    transfer-title: "Informações de transbordo — {name}"
+    transfer-manage: Ver e gerir transbordos
+    transfer-select: Estação de transbordo
+    transfer-empty: Sem ligações de transbordo
+    same-id-lines: Linhas com o mesmo ID de estação
+    same-id-lines-help: Estas linhas partilham o registo da estação e são tratadas automaticamente como transbordos. Aqui são apenas de leitura.
+    same-id-lines-empty: Nenhuma outra linha partilha este ID de estação
+    explicit-transfers: Transbordos explícitos entre estações
+    explicit-transfers-help: Adicione ou remova transbordos entre IDs de estação diferentes.
   sign:
     style: Estilo
     direction: Direção
@@ -229,21 +261,29 @@ route:
     jreast: JR Estilo Leste
     jrwest: Estilo JR Oeste
     jrwestlarge: Estilo JR West (grande)
-    metrolong: Estilo Metrô de Tóquio / Metrô Toei (Largo)
+    metrolong: Estilo Metro de Tóquio (pequeno / japonês)
+    metroforeign: Estilo Metro de Tóquio (pequeno / língua estrangeira)
+    metromedium: Estilo Metro de Tóquio (médio)
+    toeimedium: Estilo Metro Toei (médio)
+    toeilarge: Estilo Metro Toei (grande)
     metrolong-subtext: Subtexto
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Idioma secundário
     center-colors: Cores do quadrado central
   mode:
     sign: Sinal de estação
-    linemap: Mapa de linhas
+    linemap: Mapa de linhas (linha única/direta)
+    multiline-linemap: Mapa de linhas (várias linhas)
   linemap:
+    filename-suffix: Mapa da Linha
     orientation: Orientação
     horizontal: Horizontais
     vertical: Verticais
     range-start: De
     range-end: Para
     transit-filter: Mostrar linhas de transporte público
+    transit-show-names: Mostrar nomes das linhas de correspondência
+    download-text-warning: Guardar (o segundo idioma pode ficar ilegível)
     font-size: Tamanho da fonte do nome da estação
     overlap-warning-title: Sobreposição de rótulo detectada
     overlap-warning: Alguns nomes de estações se sobrepõem. Tente reduzir o tamanho da fonte.
@@ -256,6 +296,7 @@ route:
     name-style-above: Acima
     name-style-below: Abaixo
     station-spacing: Espaçamento entre estações
+    line-width: Espessura da linha
     primary-lang: Idioma principal
     secondary-lang: Idioma Secundário
     show-secondary-lang: Mostrar

@@ -1,7 +1,8 @@
 /*
  * JR East sign format — required data from DB:
  * Current station: primary_name, primary_name_furigana, secondary_name,
- *   tertiary_name (Korean), quaternary_name (Chinese), note, three_letter_code,
+ *   tertiary_name, quaternary_name (language order is owned by the company),
+ *   note, three_letter_code,
  *   station_number (value from station_numbers for this line),
  *   station_areas (from station_areas)
  * Adjacent stations (left/right by sort_order ±1 in station_lines):
@@ -30,6 +31,7 @@ import {
   SegmentedControl,
   Slider,
   Switch,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconDownload,
@@ -46,26 +48,45 @@ import {
   IconAlertTriangle,
 } from "@tabler/icons-react";
 import Konva from "konva";
-import { useTranslations } from "@/i18n/useTranslation";
-import { waitForCanvasFonts } from "@/lib/fonts";
+import { useLocale, useTranslations } from "@/i18n/useTranslation";
+import {
+  getStationSignFontSpecs,
+  LINE_MAP_FONT_SPECS,
+  waitForCanvasFonts,
+} from "@/lib/fonts";
+import { useCanvasFonts } from "@/lib/useCanvasFonts";
+import { getLocalizedRailwayName } from "@/lib/localizedRailwayName";
+import {
+  getCompanyLanguages,
+  getRailwayLanguageLabel,
+} from "@/lib/railwayLanguages";
 import { getAllLines } from "@/db/repositories/lines";
 import { getAllCompanies } from "@/db/repositories/companies";
 import {
+  getAllStations,
   getStationsByLine,
   getStationLines,
   getResolvedStationNumber,
   getStationAreasWithZones,
 } from "@/db/repositories/stations";
 import {
+  getConnectingStations,
+  getTransferLineIds,
+} from "@/db/repositories/station-transfers";
+import {
   getServicesByLine,
   getServiceStopsByLine,
 } from "@/db/repositories/services";
-import type { Line, Station, Service } from "@/db/types";
+import {
+  getAllThroughRoutes,
+  getRelativeLineDirectionAtStation,
+  getThroughRoutePath,
+} from "@/db/repositories/through-routes";
+import type { Line, Station, Service, ThroughRoute } from "@/db/types";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import type {
   AdjacentStationProps,
   Direction,
-  MetroLongSubTextMode,
 } from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 
@@ -82,25 +103,68 @@ import JrWestSignLarge, {
   scale as JrWestSignLargeBaseScale,
 } from "@/components/signs/JrWestSignLarge";
 import MetroLongSign, {
+  MetroLongForeignSign,
   height as MetroLongSignHeight,
   scale as MetroLongSignBaseScale,
 } from "@/components/signs/MetroLongSign";
+import {
+  MetroMediumSign,
+  ToeiLargeSign,
+  ToeiMediumSign,
+  scale as SubwaySignBaseScale,
+  subwaySignDimensions,
+} from "@/components/signs/SubwaySign";
 import LineMapRenderer, {
   scale as LineMapScale,
   CIRCULAR_FONT_DEFAULT,
   JP_FONT,
   detectCircularOverlaps,
   getMapCanvasDimensions,
+  getStationNumberGroupExtraExtent,
   type StationNumberMode,
+  type StationNumberGroupMap,
+  type StationNumberInfo,
+  type StationNumberMap,
   type StationNameField,
   type ServiceInfo,
   type ServiceStopMap,
 } from "@/components/signs/LineMapRenderer";
+import {
+  DEFAULT_TRACK_WIDTH,
+  MAX_TRACK_WIDTH,
+  MIN_TRACK_WIDTH,
+} from "@/components/signs/lineMapGeometry";
+import {
+  isTransitSecondaryNameExportTooSmall,
+} from "@/components/signs/transitLineLayout";
+import CanvasFontLoading from "@/components/CanvasFontLoading";
 
-type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
-type TabMode = "sign" | "linemap";
+type SignStyle =
+  | "jreast"
+  | "jrwest"
+  | "jrwestlarge"
+  | "metrolong"
+  | "metroforeign"
+  | "metromedium"
+  | "toeimedium"
+  | "toeilarge";
+type TabMode = "sign" | "linemap" | "multiline-linemap";
 type MapOrientation = "horizontal" | "vertical";
 type AdjacentSide = "left" | "right";
+
+const STATION_NAME_FIELDS: StationNameField[] = [
+  "primary_name",
+  "secondary_name",
+  "tertiary_name",
+  "quaternary_name",
+];
+
+const LANGUAGE_SLOT_LABEL_KEYS = [
+  "route.linemap.lang-1st",
+  "route.linemap.lang-2nd",
+  "route.linemap.lang-3rd",
+  "route.linemap.lang-4th",
+] as const;
 
 type AdjacentCandidate = AdjacentStationProps & {
   optionValue: string;
@@ -133,6 +197,26 @@ const SIGN_STYLES: Record<
     height: MetroLongSignHeight,
     scale: MetroLongSignBaseScale,
   },
+  metroforeign: {
+    Component: MetroLongForeignSign,
+    height: MetroLongSignHeight,
+    scale: MetroLongSignBaseScale,
+  },
+  metromedium: {
+    Component: MetroMediumSign,
+    height: subwaySignDimensions.metroMedium.height,
+    scale: SubwaySignBaseScale,
+  },
+  toeimedium: {
+    Component: ToeiMediumSign,
+    height: subwaySignDimensions.toeiMedium.height,
+    scale: SubwaySignBaseScale,
+  },
+  toeilarge: {
+    Component: ToeiLargeSign,
+    height: subwaySignDimensions.toeiLarge.height,
+    scale: SubwaySignBaseScale,
+  },
 };
 
 interface RouteInputTabProps {
@@ -142,12 +226,17 @@ interface RouteInputTabProps {
 
 export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const t = useTranslations();
+  const locale = useLocale();
   const signRef = useRef<Konva.Stage>(null);
   const mapRef = useRef<Konva.Stage>(null);
 
   const [lines, setLines] = useState<Line[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const [throughRoutes, setThroughRoutes] = useState<ThroughRoute[]>([]);
+  const [selectedThroughRouteId, setSelectedThroughRouteId] = useState<
+    string | null
+  >(null);
 
   // ── Sign mode state ──────────────────────────────────────────────────────
   const [selectedStationId, setSelectedStationId] = useState<string | null>(
@@ -162,8 +251,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [centerSquareLineIds, setCenterSquareLineIds] = useState<string[]>([]);
   const [stationLines, setStationLines] = useState<Line[]>([]);
   const [signStyle, setSignStyle] = useState<SignStyle>("jreast");
-  const [metroLongSubTextMode, setMetroLongSubTextMode] =
-    useState<MetroLongSubTextMode>("furigana");
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<
     { label: string; value: number }[]
@@ -184,29 +271,21 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapShowFadeBefore, setMapShowFadeBefore] = useState(true);
   const [mapShowFadeAfter, setMapShowFadeAfter] = useState(true);
   const [mapTransits, setMapTransits] = useState<Record<string, Line[]>>({});
-  /** null = show all transit lines; array = show only these line IDs */
-  const [mapTransitFilter, setMapTransitFilter] = useState<string[] | null>(
-    null,
-  );
+  const [mapTransitFilter, setMapTransitFilter] = useState<string[]>([]);
+  const [mapShowTransitNames, setMapShowTransitNames] = useState(true);
   const [mapFontSize, setMapFontSize] = useState(CIRCULAR_FONT_DEFAULT);
   const [mapSaveSize, setMapSaveSize] = useState(LineMapScale);
   const [mapStationNumberMode, setMapStationNumberMode] =
     useState<StationNumberMode>("none");
-  const [mapStationNumbers, setMapStationNumbers] = useState<
-    Record<
-      string,
-      {
-        prefix: string;
-        value: string;
-        threeLetterCode?: string | null;
-        color?: string;
-      }
-    >
-  >({});
+  const [mapStationNumbers, setMapStationNumbers] =
+    useState<StationNumberMap>({});
+  const [mapStationNumberGroups, setMapStationNumberGroups] =
+    useState<StationNumberGroupMap>({});
   const [mapNameStyle, setMapNameStyle] = useState<
     "normal" | "above" | "below"
   >("normal");
-  const [mapStationSpacing, setMapStationSpacing] = useState(90);
+  const [mapStationSpacing, setMapStationSpacing] = useState(75);
+  const [mapTrackWidth, setMapTrackWidth] = useState(DEFAULT_TRACK_WIDTH);
   const [mapPrimaryLang, setMapPrimaryLang] =
     useState<StationNameField>("primary_name");
   const [mapSecondaryLang, setMapSecondaryLang] =
@@ -231,6 +310,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   useEffect(() => {
     if (!db) return;
     setLines(getAllLines(db));
+    setThroughRoutes(getAllThroughRoutes(db));
   }, [db]);
 
   // Load stations when line changes
@@ -245,9 +325,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     const stns = getStationsByLine(db, selectedLineId);
     setStations(stns);
     setSelectedStationId(null);
-    setMapStartId(stns[0]?.id ?? null);
-    setMapEndId(stns[stns.length - 1]?.id ?? null);
-    setMapTransitFilter(null);
+    setMapTransitFilter([]);
   }, [db, selectedLineId]);
 
   // Load services and service stops when line changes
@@ -279,69 +357,120 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   }, [selectedStationId, selectedLineId]);
 
   const adjacentOptions = useMemo(() => {
-    if (!db || !selectedStationId) {
+    if (!db || !selectedLineId || !selectedStationId) {
       return {
         left: [] as AdjacentCandidate[],
         right: [] as AdjacentCandidate[],
       };
     }
 
-    const stationLineRecords = getStationLines(db, selectedStationId);
     const result: Record<AdjacentSide, AdjacentCandidate[]> = {
       left: [],
       right: [],
     };
 
-    for (const stationLine of stationLineRecords) {
-      const line = lines.find((candidate) => candidate.id === stationLine.line_id);
-      if (!line) continue;
+    const stationContexts = [
+      {
+        stationId: selectedStationId,
+        stationLines: getStationLines(db, selectedStationId),
+      },
+      ...getConnectingStations(db, selectedStationId).map((station) => ({
+        stationId: station.id,
+        stationLines: getStationLines(db, station.id),
+      })),
+    ];
 
-      const lineStations = getStationsByLine(db, line.id);
-      const stationIndex = lineStations.findIndex((s) => s.id === selectedStationId);
-      if (stationIndex === -1) continue;
+    for (const stationContext of stationContexts) {
+      for (const stationLine of stationContext.stationLines) {
+        const line = lines.find(
+          (candidate) => candidate.id === stationLine.line_id,
+        );
+        if (!line) continue;
 
-      const isLoop = line.is_loop === 1;
-      const previousStation =
-        stationIndex > 0
-          ? lineStations[stationIndex - 1]
-          : isLoop
-            ? lineStations[lineStations.length - 1]
-            : null;
-      const nextStation =
-        stationIndex < lineStations.length - 1
-          ? lineStations[stationIndex + 1]
-          : isLoop
-            ? lineStations[0]
-            : null;
+        const lineStations = getStationsByLine(db, line.id);
+        const stationIndex = lineStations.findIndex(
+          (station) => station.id === stationContext.stationId,
+        );
+        if (stationIndex === -1) continue;
 
-      const buildCandidate = (
-        station: Station | null,
-        side: AdjacentSide,
-      ): AdjacentCandidate | null => {
-        if (!station) return null;
-        const stationNumber = getResolvedStationNumber(db, station.id, line.id);
-        return {
-          optionValue: `${side}:${line.id}:${station.id}`,
-          lineId: line.id,
-          lineName: line.name,
-          side,
-          id: `${line.id}:${station.id}`,
-          primaryName: station.primary_name,
-          primaryNameFurigana: station.primary_name_furigana ?? "",
-          secondaryName: station.secondary_name ?? "",
-          numberPrimaryPrefix: stationNumber?.prefix ?? "",
-          numberPrimaryValue: stationNumber?.value ?? "",
+        const isLoop = line.is_loop === 1;
+        const previousStation =
+          stationIndex > 0
+            ? lineStations[stationIndex - 1]
+            : isLoop
+              ? lineStations[lineStations.length - 1]
+              : null;
+        const nextStation =
+          stationIndex < lineStations.length - 1
+            ? lineStations[stationIndex + 1]
+            : isLoop
+              ? lineStations[0]
+              : null;
+
+        const buildCandidate = (
+          station: Station | null,
+          side: AdjacentSide,
+        ): AdjacentCandidate | null => {
+          if (!station) return null;
+          const stationNumber = getResolvedStationNumber(
+            db,
+            station.id,
+            line.id,
+          );
+          return {
+            optionValue: `${side}:${line.id}:${station.id}`,
+            lineId: line.id,
+            lineName: line.name,
+            side,
+            id: `${line.id}:${station.id}`,
+            primaryName: station.primary_name,
+            primaryNameFurigana: station.primary_name_furigana ?? "",
+            secondaryName: station.secondary_name ?? "",
+            numberPrimaryPrefix: stationNumber?.prefix ?? "",
+            numberPrimaryValue: stationNumber?.value ?? "",
+          };
         };
-      };
 
-      const leftCandidate = buildCandidate(previousStation, "left");
-      const rightCandidate = buildCandidate(nextStation, "right");
-      if (leftCandidate) result.left.push(leftCandidate);
-      if (rightCandidate) result.right.push(rightCandidate);
+        const relativeDirection =
+          stationContext.stationId === selectedStationId
+            ? getRelativeLineDirectionAtStation(
+                db,
+                selectedLineId,
+                line.id,
+                selectedStationId,
+              )
+            : null;
+        const addCandidate = (station: Station | null, side: AdjacentSide) => {
+          const candidate = buildCandidate(station, side);
+          if (
+            candidate &&
+            !result[side].some(
+              (existing) => existing.optionValue === candidate.optionValue,
+            )
+          ) {
+            result[side].push(candidate);
+          }
+        };
+
+        if (relativeDirection === "reverse") {
+          addCandidate(nextStation, "left");
+          addCandidate(previousStation, "right");
+        } else if (relativeDirection === "forward") {
+          addCandidate(previousStation, "left");
+          addCandidate(nextStation, "right");
+        } else {
+          // A single junction does not contain enough information to infer
+          // orientation. Offer both neighbours for explicit user selection.
+          addCandidate(previousStation, "left");
+          addCandidate(nextStation, "left");
+          addCandidate(previousStation, "right");
+          addCandidate(nextStation, "right");
+        }
+      }
     }
 
     return result;
-  }, [db, selectedStationId, lines]);
+  }, [db, selectedLineId, selectedStationId, lines]);
 
   useEffect(() => {
     const defaultLeft =
@@ -418,10 +547,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       }
     }
 
-    // All lines this station belongs to
+    // Lines belonging to this station plus lines reachable through explicit
+    // connections to distinct stations.
     const stationLineRecords = getStationLines(db, currentStation.id);
+    const transferLineIds = new Set(
+      getTransferLineIds(db, currentStation.id),
+    );
     const allStationLines = lines.filter((l) =>
-      stationLineRecords.some((sl) => sl.line_id === l.id),
+      stationLineRecords.some((stationLine) => stationLine.line_id === l.id) ||
+      transferLineIds.has(l.id),
     );
     setStationLines(allStationLines);
 
@@ -492,7 +626,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ].map((l) => ({ id: l.id, prefix: l.prefix, color: l.line_color })),
       ratio,
       direction,
-      subTextMode: metroLongSubTextMode,
     };
 
     setSignData(data);
@@ -504,7 +637,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     lines,
     ratio,
     direction,
-    metroLongSubTextMode,
     flipped,
     centerSquareLineIds,
     adjacentOptions,
@@ -526,65 +658,256 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setSaveSize(baseScale);
   }, [ratio, signStyle]);
 
+  const selectedThroughRoute =
+    throughRoutes.find((route) => route.id === selectedThroughRouteId) ?? null;
+
+  const throughRoutePath = useMemo(() => {
+    if (!db || !selectedThroughRouteId) {
+      return {
+        stations: [] as Station[],
+        edgeLineIds: [] as string[],
+        lineIds: [] as string[],
+      };
+    }
+
+    const stationById = new Map(
+      getAllStations(db).map((station) => [station.id, station]),
+    );
+    const { stationIds, edgeLineIds, lineIds } = getThroughRoutePath(
+      db,
+      selectedThroughRouteId,
+    );
+
+    return {
+      stations: stationIds
+        .map((stationId) => stationById.get(stationId))
+        .filter((station): station is Station => !!station),
+      edgeLineIds,
+      lineIds,
+    };
+  }, [db, selectedThroughRouteId]);
+
+  const mapSourceStations = selectedThroughRouteId
+    ? throughRoutePath.stations
+    : stations;
+  const mapSourceEdgeLineIds = useMemo(
+    () =>
+      selectedThroughRouteId
+        ? throughRoutePath.edgeLineIds
+        : Array.from(
+            { length: Math.max(0, stations.length - 1) },
+            () => selectedLineId ?? "",
+          ),
+    [selectedThroughRouteId, throughRoutePath.edgeLineIds, stations, selectedLineId],
+  );
+  const mapRouteLineIds = useMemo(
+    () =>
+      selectedThroughRouteId
+        ? throughRoutePath.lineIds
+        : selectedLineId
+          ? [selectedLineId]
+          : [],
+    [selectedThroughRouteId, throughRoutePath.lineIds, selectedLineId],
+  );
+
+  useEffect(() => {
+    setMapStartId(mapSourceStations[0]?.id ?? null);
+    setMapEndId(mapSourceStations[mapSourceStations.length - 1]?.id ?? null);
+    setMapTransitFilter([]);
+  }, [selectedLineId, selectedThroughRouteId, mapSourceStations]);
+
   // Compute transit lines for all stations when in line map mode
   useEffect(() => {
-    if (!db || !selectedLineId || stations.length === 0) {
+    if (!db || mapRouteLineIds.length === 0 || mapSourceStations.length === 0) {
       setMapTransits({});
       return;
     }
     const result: Record<string, Line[]> = {};
-    for (const station of stations) {
-      const slRecords = getStationLines(db, station.id);
+    const routeLineIdSet = new Set(mapRouteLineIds);
+    for (const station of mapSourceStations) {
+      const transferLineIds = new Set(getTransferLineIds(db, station.id));
+      const stationLineRecords = getStationLines(db, station.id);
       const otherLines = lines.filter(
         (l) =>
-          l.id !== selectedLineId &&
-          slRecords.some((sl) => sl.line_id === l.id),
+          !routeLineIdSet.has(l.id) &&
+          (stationLineRecords.some(
+            (stationLine) => stationLine.line_id === l.id,
+          ) ||
+            transferLineIds.has(l.id)),
       );
       if (otherLines.length > 0) result[station.id] = otherLines;
     }
     setMapTransits(result);
-  }, [db, selectedLineId, stations, lines]);
+  }, [db, mapRouteLineIds, mapSourceStations, lines]);
 
   // ── Derived: stations in selected map range (respects direction) ─────────
-  const { mapStations, mapHasMoreBefore, mapHasMoreAfter } = useMemo(() => {
-    if (stations.length === 0)
+  const {
+    mapStations,
+    mapEdgeLineIds,
+    mapHasMoreBefore,
+    mapHasMoreAfter,
+  } = useMemo(() => {
+    if (mapSourceStations.length === 0)
       return {
         mapStations: [],
+        mapEdgeLineIds: [] as string[],
         mapHasMoreBefore: false,
         mapHasMoreAfter: false,
       };
     const startIdx = mapStartId
-      ? stations.findIndex((s) => s.id === mapStartId)
+      ? mapSourceStations.findIndex((s) => s.id === mapStartId)
       : 0;
     const endIdx = mapEndId
-      ? stations.findIndex((s) => s.id === mapEndId)
-      : stations.length - 1;
+      ? mapSourceStations.findIndex((s) => s.id === mapEndId)
+      : mapSourceStations.length - 1;
     const si = startIdx === -1 ? 0 : startIdx;
-    const ei = endIdx === -1 ? stations.length - 1 : endIdx;
+    const ei = endIdx === -1 ? mapSourceStations.length - 1 : endIdx;
     const reversed = si > ei;
     const sliced = reversed
-      ? stations.slice(ei, si + 1).reverse()
-      : stations.slice(si, ei + 1);
+      ? mapSourceStations.slice(ei, si + 1).reverse()
+      : mapSourceStations.slice(si, ei + 1);
+    const slicedEdgeLineIds = reversed
+      ? mapSourceEdgeLineIds.slice(ei, si).reverse()
+      : mapSourceEdgeLineIds.slice(si, ei);
     // "More before/after" tracks whether the route continues beyond each
     // displayed end in the direction of travel.
-    const hasMoreBefore = reversed ? si < stations.length - 1 : si > 0;
-    const hasMoreAfter = reversed ? ei > 0 : ei < stations.length - 1;
+    const hasMoreBefore = reversed
+      ? si < mapSourceStations.length - 1
+      : si > 0;
+    const hasMoreAfter = reversed
+      ? ei > 0
+      : ei < mapSourceStations.length - 1;
     return {
       mapStations: sliced,
+      mapEdgeLineIds: slicedEdgeLineIds,
       mapHasMoreBefore: hasMoreBefore,
       mapHasMoreAfter: hasMoreAfter,
     };
-  }, [stations, mapStartId, mapEndId]);
+  }, [mapSourceStations, mapSourceEdgeLineIds, mapStartId, mapEndId]);
 
-  const selectedLine = lines.find((l) => l.id === selectedLineId) ?? null;
+  const selectedBaseLine = lines.find((l) => l.id === selectedLineId) ?? null;
+  const firstThroughLine = selectedThroughRouteId
+    ? lines.find((line) => line.id === throughRoutePath.lineIds[0]) ?? null
+    : null;
+  const selectedLine: Line | null = selectedThroughRoute
+    ? {
+        ...(firstThroughLine ?? {
+          id: selectedThroughRoute.id,
+          company_id: null,
+          secondary_name: null,
+          tertiary_name: null,
+          quaternary_name: null,
+          line_color: "#333333",
+          prefix: "",
+          priority: null,
+          is_loop: 0,
+          parent_line_id: null,
+        }),
+        id: selectedThroughRoute.id,
+        name: selectedThroughRoute.name,
+        prefix: "",
+        is_loop: 0,
+        parent_line_id: null,
+      }
+    : selectedBaseLine;
+  const mapRouteSelectValue = selectedThroughRouteId
+    ? `through:${selectedThroughRouteId}`
+    : selectedLineId
+      ? `line:${selectedLineId}`
+      : null;
+  const mapRouteSelectData = [
+    {
+      group: t("route.line.title"),
+      items: lines.map((routeLine) => ({
+        value: `line:${routeLine.id}`,
+        label: `[${routeLine.prefix}] ${routeLine.name}`,
+      })),
+    },
+    ...(throughRoutes.length > 0
+      ? [
+          {
+            group: t("route.through-route.title"),
+            items: throughRoutes.map((route) => ({
+              value: `through:${route.id}`,
+              label: route.name,
+            })),
+          },
+        ]
+      : []),
+  ];
   const isLoopLine = selectedLine?.is_loop === 1;
   // When the user opts into linear rendering for a loop line, treat it as non-loop.
   const effectiveIsLoop = isLoopLine && !mapForceLinear;
-  const mapCompanyStyle = useMemo(() => {
-    if (!db || !selectedLine?.company_id) return undefined;
-    return getAllCompanies(db).find((c) => c.id === selectedLine.company_id)
-      ?.station_number_style;
-  }, [db, selectedLine?.company_id]);
+  const routeCompanies = useMemo(() => (db ? getAllCompanies(db) : []), [db]);
+  const mapCompany = routeCompanies.find(
+    (company) => company.id === selectedLine?.company_id,
+  );
+  const mapCompanyStyle = mapCompany?.station_number_style;
+  const signFontSpecs = getStationSignFontSpecs(signStyle, mapCompanyStyle);
+  const signFonts = useCanvasFonts(signFontSpecs, tabMode === "sign");
+  const mapFonts = useCanvasFonts(
+    LINE_MAP_FONT_SPECS,
+    tabMode === "linemap",
+  );
+  const mapLanguageOptions = getCompanyLanguages(mapCompany).map(
+    (language, index) => ({
+      value: STATION_NAME_FIELDS[index],
+      label: `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
+    }),
+  );
+  const mapLineIndicatorStyles = useMemo(() => {
+    const styleByCompanyId = new Map(
+      routeCompanies.map((company) => [
+        company.id,
+        company.station_number_style,
+      ]),
+    );
+    return Object.fromEntries(
+      lines.map((routeLine) => [
+        routeLine.id,
+        routeLine.company_id
+          ? (styleByCompanyId.get(routeLine.company_id) ?? "jreast")
+          : "jreast",
+      ]),
+    );
+  }, [lines, routeCompanies]);
+
+  const lineById = useMemo(
+    () => new Map(lines.map((routeLine) => [routeLine.id, routeLine])),
+    [lines],
+  );
+  const mapTrackColors = useMemo(
+    () =>
+      mapEdgeLineIds.map(
+        (lineId) =>
+          lineById.get(lineId)?.line_color ??
+          selectedLine?.line_color ??
+          "#333333",
+      ),
+    [mapEdgeLineIds, lineById, selectedLine],
+  );
+  const mapStationLineIds = useMemo(
+    () =>
+      mapStations.map((_, index) => {
+        if (mapEdgeLineIds.length === 0) return mapRouteLineIds[0] ?? "";
+        return (
+          mapEdgeLineIds[Math.min(index, mapEdgeLineIds.length - 1)] ?? ""
+        );
+      }),
+    [mapStations, mapEdgeLineIds, mapRouteLineIds],
+  );
+  const mapStationColors = useMemo(
+    () =>
+      Object.fromEntries(
+        mapStations.map((station, index) => [
+          station.id,
+          lineById.get(mapStationLineIds[index] ?? "")?.line_color ??
+            selectedLine?.line_color ??
+            "#333333",
+        ]),
+      ),
+    [mapStations, mapStationLineIds, lineById, selectedLine],
+  );
 
   // Derive ServiceInfo list (1+ services) for renderer
   const mapServiceInfos = useMemo((): ServiceInfo[] => {
@@ -620,45 +943,110 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
   // Build label map: stationId -> "[JY01] 東京" format for dropdowns
   const stationLabelMap = useMemo(() => {
-    if (!db || !selectedLineId || stations.length === 0)
+    if (!db || mapSourceStations.length === 0)
       return {} as Record<string, string>;
     const result: Record<string, string> = {};
-    for (const s of stations) {
-      const num = getResolvedStationNumber(db, s.id, selectedLineId);
+    for (const [index, s] of mapSourceStations.entries()) {
+      const edgeIndex = Math.min(index, mapSourceEdgeLineIds.length - 1);
+      const lineId =
+        mapSourceEdgeLineIds[edgeIndex] ?? mapRouteLineIds[0] ?? selectedLineId;
+      const num = lineId ? getResolvedStationNumber(db, s.id, lineId) : null;
       const badge = num?.prefix ? `[${num.prefix}${num.value}] ` : "";
       result[s.id] = `${badge}${s.primary_name}`;
     }
     return result;
-  }, [db, selectedLineId, stations]);
+  }, [
+    db,
+    mapSourceStations,
+    mapSourceEdgeLineIds,
+    mapRouteLineIds,
+    selectedLineId,
+  ]);
 
   // Load station numbers for map range
   useEffect(() => {
-    if (!db || !selectedLineId || mapStations.length === 0) {
+    if (!db || mapStations.length === 0) {
       setMapStationNumbers({});
+      setMapStationNumberGroups({});
       return;
     }
-    const result: Record<
-      string,
-      {
-        prefix: string;
-        value: string;
-        threeLetterCode?: string | null;
-        color?: string;
+    const result: StationNumberMap = {};
+    const groups: StationNumberGroupMap = {};
+    const toStationNumberInfo = (
+      lineId: string,
+      station: Station,
+    ): StationNumberInfo | null => {
+      const number = getResolvedStationNumber(db, station.id, lineId);
+      if (!number) return null;
+      return {
+        prefix: number.prefix,
+        value: number.value,
+        threeLetterCode: station.three_letter_code,
+        color: number.line_color,
+        style: mapLineIndicatorStyles[lineId] ?? "jreast",
+      };
+    };
+
+    for (const [index, station] of mapStations.entries()) {
+      const lineId = mapStationLineIds[index];
+      if (!lineId) continue;
+      const displayNumber = toStationNumberInfo(lineId, station);
+      if (displayNumber) result[station.id] = displayNumber;
+
+      const incomingLineId = mapEdgeLineIds[index - 1];
+      const outgoingLineId = mapEdgeLineIds[index];
+      if (
+        !selectedThroughRouteId ||
+        !incomingLineId ||
+        !outgoingLineId ||
+        incomingLineId === outgoingLineId
+      ) {
+        continue;
       }
-    > = {};
-    for (const station of mapStations) {
-      const num = getResolvedStationNumber(db, station.id, selectedLineId);
-      if (num) {
-        result[station.id] = {
-          prefix: num.prefix,
-          value: num.value,
+      const incomingResolved = getResolvedStationNumber(
+        db,
+        station.id,
+        incomingLineId,
+      );
+      const outgoingResolved = getResolvedStationNumber(
+        db,
+        station.id,
+        outgoingLineId,
+      );
+      if (
+        !incomingResolved ||
+        !outgoingResolved ||
+        incomingResolved.id === outgoingResolved.id
+      ) {
+        continue;
+      }
+      groups[station.id] = [
+        {
+          prefix: incomingResolved.prefix,
+          value: incomingResolved.value,
           threeLetterCode: station.three_letter_code,
-          color: num.line_color,
-        };
-      }
+          color: incomingResolved.line_color,
+          style: mapLineIndicatorStyles[incomingLineId] ?? "jreast",
+        },
+        {
+          prefix: outgoingResolved.prefix,
+          value: outgoingResolved.value,
+          threeLetterCode: station.three_letter_code,
+          color: outgoingResolved.line_color,
+          style: mapLineIndicatorStyles[outgoingLineId] ?? "jreast",
+        },
+      ];
     }
     setMapStationNumbers(result);
-  }, [db, selectedLineId, mapStations]);
+    setMapStationNumberGroups(groups);
+  }, [
+    db,
+    mapStations,
+    mapStationLineIds,
+    mapEdgeLineIds,
+    selectedThroughRouteId,
+    mapLineIndicatorStyles,
+  ]);
 
   // All unique transit lines that appear in the current map range
   const allTransitLines = useMemo(() => {
@@ -679,24 +1067,42 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const mapMaxNameExtent = useMemo(() => {
     if (mapStations.length === 0) return 60;
     const maxCharCount = Math.max(
-      ...mapStations.map((s) => [...(s[mapPrimaryLang] ?? "")].length),
+      ...mapStations.map((station) =>
+        Math.max(
+          [...(station[mapPrimaryLang] ?? "")].length,
+          mapShowSecondaryLang
+            ? [...(station[mapSecondaryLang] ?? "")].length
+            : 0,
+        ),
+      ),
     );
     return maxCharCount > 0 ? maxCharCount * (JP_FONT + 1) - 1 : 60;
-  }, [mapStations, mapPrimaryLang]);
+  }, [
+    mapStations,
+    mapPrimaryLang,
+    mapSecondaryLang,
+    mapShowSecondaryLang,
+  ]);
 
   // Apply transit filter before passing to renderer
   const filteredMapTransits = useMemo<Record<string, Line[]>>(
     () =>
-      mapTransitFilter === null
-        ? mapTransits
-        : Object.fromEntries(
-            Object.entries(mapTransits).map(([stationId, tlines]) => [
-              stationId,
-              tlines.filter((tl) => mapTransitFilter.includes(tl.id)),
-            ]),
-          ),
+      Object.fromEntries(
+        Object.entries(mapTransits).map(([stationId, tlines]) => [
+          stationId,
+          tlines.filter((tl) => mapTransitFilter.includes(tl.id)),
+        ]),
+      ),
     [mapTransits, mapTransitFilter],
   );
+  const mapStationNumberExtraExtent =
+    mapStationNumberMode === "dot"
+      ? getStationNumberGroupExtraExtent(
+          mapStationNumberGroups,
+          mapOrientation,
+          1,
+        )
+      : 0;
 
   // Save size options for line map (multiples of native canvas resolution)
   const mapSaveSizeList = useMemo(() => {
@@ -710,6 +1116,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapStationSpacing,
       mapForceLinear ? true : mapHasMoreBefore && mapShowFadeBefore,
       mapForceLinear ? true : mapHasMoreAfter && mapShowFadeAfter,
+      mapShowTransitNames,
+      mapTrackWidth,
+      mapStationNumberExtraExtent,
     );
     return [1, 2, 3, 4].map((mult) => ({
       label: `${w * mult} × ${h * mult} (${["SS", "M", "L", "XL"][mult - 1]})`,
@@ -728,6 +1137,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapShowFadeBefore,
     mapHasMoreAfter,
     mapShowFadeAfter,
+    mapShowTransitNames,
+    mapTrackWidth,
+    mapStationNumberExtraExtent,
   ]);
 
   // Overlap warnings for circular maps
@@ -742,6 +1154,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapPrimaryLang,
       mapSecondaryLang,
       mapShowSecondaryLang,
+      mapShowTransitNames,
+      mapTrackWidth,
     );
   }, [
     effectiveIsLoop,
@@ -753,18 +1167,45 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapPrimaryLang,
     mapSecondaryLang,
     mapShowSecondaryLang,
+    mapShowTransitNames,
+    mapTrackWidth,
   ]);
+
+  const hasVisibleTransitSecondaryNames =
+    mapShowTransitNames &&
+    mapDisplayStations.some((station) =>
+      filteredMapTransits[station.id]?.some(
+        (transitLine) => !!transitLine.secondary_name?.trim(),
+      ),
+    );
+  const mapDownloadTextTooSmall =
+    hasVisibleTransitSecondaryNames &&
+    isTransitSecondaryNameExportTooSmall(mapSaveSize);
+  const mapDownloadWarningText = mapDownloadTextTooSmall
+    ? t("route.linemap.download-text-warning")
+    : null;
 
   const handleSaveSign = async () => {
     if (!signData) return;
     if (signRef.current) {
-      await waitForCanvasFonts();
+      await waitForCanvasFonts(signFontSpecs).catch(() => undefined);
       const { scale: baseScale } = SIGN_STYLES[signStyle];
       const uri = signRef.current.toDataURL({
         pixelRatio: saveSize / baseScale,
       });
       const link = document.createElement("a");
-      link.download = `${signData.primaryName}.png`;
+      const filename = getLocalizedRailwayName(
+        locale,
+        getCompanyLanguages(mapCompany),
+        [
+          signData.primaryName,
+          signData.secondaryName,
+          signData.tertiaryName,
+          signData.quaternaryName,
+        ],
+        "station",
+      );
+      link.download = `${filename}.png`;
       link.href = uri;
       document.body.appendChild(link);
       link.click();
@@ -776,12 +1217,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
   const handleSaveMap = async () => {
     if (!mapRef.current || !selectedLine) return;
-    await waitForCanvasFonts();
+    await waitForCanvasFonts(LINE_MAP_FONT_SPECS).catch(() => undefined);
     const uri = mapRef.current.toDataURL({
       pixelRatio: mapSaveSize / LineMapScale,
     });
     const link = document.createElement("a");
-    link.download = `${selectedLine.name}_路線図.png`;
+    const filename = getLocalizedRailwayName(
+      locale,
+      getCompanyLanguages(mapCompany),
+      [
+        selectedLine.name,
+        selectedLine.secondary_name,
+        selectedLine.tertiary_name,
+        selectedLine.quaternary_name,
+      ],
+      "line",
+    );
+    link.download = `${filename}_${t("route.linemap.filename-suffix")}.png`;
     link.href = uri;
     document.body.appendChild(link);
     link.click();
@@ -838,6 +1290,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   </Group>
                 ),
               },
+              {
+                value: "multiline-linemap",
+                label: (
+                  <Group gap={6}>
+                    <IconMap size={16} />
+                    {t("route.mode.multiline-linemap")}
+                  </Group>
+                ),
+              },
             ]}
           />
         </Group>
@@ -862,6 +1323,22 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       value: "metrolong",
                       label: t("route.sign.metrolong"),
                     },
+                    {
+                      value: "metroforeign",
+                      label: t("route.sign.metroforeign"),
+                    },
+                    {
+                      value: "metromedium",
+                      label: t("route.sign.metromedium"),
+                    },
+                    {
+                      value: "toeimedium",
+                      label: t("route.sign.toeimedium"),
+                    },
+                    {
+                      value: "toeilarge",
+                      label: t("route.sign.toeilarge"),
+                    },
                   ]}
                 />
               </Grid.Col>
@@ -869,7 +1346,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 <Select
                   label={t("route.line.title")}
                   value={selectedLineId}
-                  onChange={setSelectedLineId}
+                  onChange={(value) => {
+                    setSelectedLineId(value);
+                    if (value) setSelectedThroughRouteId(null);
+                  }}
                   data={lines.map((l) => ({
                     value: l.id,
                     label: `[${l.prefix}] ${l.name}`,
@@ -913,27 +1393,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   ]}
                 />
               </Grid.Col>
-              {signStyle === "metrolong" && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <Select
-                    label={t("route.sign.metrolong-subtext")}
-                    value={metroLongSubTextMode}
-                    onChange={(v) =>
-                      v && setMetroLongSubTextMode(v as MetroLongSubTextMode)
-                    }
-                    data={[
-                      {
-                        value: "furigana",
-                        label: t("route.sign.metrolong-subtext-furigana"),
-                      },
-                      {
-                        value: "secondary",
-                        label: t("route.sign.metrolong-subtext-secondary"),
-                      },
-                    ]}
-                  />
-                </Grid.Col>
-              )}
               {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
                 "hidden" && (
                 <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
@@ -1074,16 +1533,20 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   <IconEye size="1.6em" />
                   {t("common.preview")}
                 </Title>
-                {(() => {
-                  const { Component: SignComponent } = SIGN_STYLES[signStyle];
-                  return (
-                    <SignComponent
-                      {...signData}
-                      direction={direction}
-                      ref={signRef}
-                    />
-                  );
-                })()}
+                {signFonts.ready ? (
+                  (() => {
+                    const { Component: SignComponent } = SIGN_STYLES[signStyle];
+                    return (
+                      <SignComponent
+                        {...signData}
+                        direction={direction}
+                        ref={signRef}
+                      />
+                    );
+                  })()
+                ) : (
+                  <CanvasFontLoading show={signFonts.showLoader} />
+                )}
 
                 {/* Download controls */}
                 <Grid gutter="md" style={{ padding: "10px" }}>
@@ -1107,6 +1570,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       size="lg"
                       variant="filled"
                       onClick={handleSaveSign}
+                      disabled={!signFonts.ready}
                       style={{ fontWeight: 700 }}
                       leftSection={<IconDownload />}
                     >
@@ -1124,15 +1588,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           <>
             {/* ── Route ── */}
             <Grid gutter="md">
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                 <Select
                   label={t("route.line.title")}
-                  value={selectedLineId}
-                  onChange={setSelectedLineId}
-                  data={lines.map((l) => ({
-                    value: l.id,
-                    label: `[${l.prefix}] ${l.name}`,
-                  }))}
+                  value={mapRouteSelectValue}
+                  onChange={(value) => {
+                    if (value?.startsWith("line:")) {
+                      setSelectedLineId(value.slice("line:".length));
+                      setSelectedThroughRouteId(null);
+                    } else if (value?.startsWith("through:")) {
+                      setSelectedThroughRouteId(value.slice("through:".length));
+                      setSelectedLineId(null);
+                    } else {
+                      setSelectedLineId(null);
+                      setSelectedThroughRouteId(null);
+                    }
+                  }}
+                  data={mapRouteSelectData}
                   placeholder={t("route.line.select")}
                   clearable
                 />
@@ -1142,16 +1614,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   label={t("route.linemap.range-start")}
                   value={mapStartId}
                   onChange={setMapStartId}
-                  data={stations.map((s) => ({
+                  data={mapSourceStations.map((s) => ({
                     value: s.id,
                     label: stationLabelMap[s.id] ?? s.primary_name,
                   }))}
                   placeholder={
-                    selectedLineId
+                    selectedLine
                       ? t("route.station.select")
                       : t("route.station.empty")
                   }
-                  disabled={!selectedLineId}
+                  disabled={!selectedLine}
                 />
               </Grid.Col>
               <Grid.Col
@@ -1161,7 +1633,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 <Button
                   variant="default"
                   fullWidth
-                  disabled={!selectedLineId}
+                  disabled={!selectedLine}
                   onClick={() => {
                     const tmp = mapStartId;
                     setMapStartId(mapEndId);
@@ -1177,16 +1649,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   label={t("route.linemap.range-end")}
                   value={mapEndId}
                   onChange={setMapEndId}
-                  data={stations.map((s) => ({
+                  data={mapSourceStations.map((s) => ({
                     value: s.id,
                     label: stationLabelMap[s.id] ?? s.primary_name,
                   }))}
                   placeholder={
-                    selectedLineId
+                    selectedLine
                       ? t("route.station.select")
                       : t("route.station.empty")
                   }
-                  disabled={!selectedLineId}
+                  disabled={!selectedLine}
                 />
               </Grid.Col>
             </Grid>
@@ -1440,6 +1912,35 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Box>
                     </Grid.Col>
                   )}
+                  <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                    <Text size="sm" fw={500} mb={8}>
+                      {t("route.linemap.line-width")}
+                    </Text>
+                    <Box
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <IconRuler size={20} style={{ flexShrink: 0 }} />
+                      <Slider
+                        value={mapTrackWidth}
+                        label={(value) => `${value}`}
+                        labelAlwaysOn
+                        step={1}
+                        min={MIN_TRACK_WIDTH}
+                        max={MAX_TRACK_WIDTH}
+                        style={{ width: "100%" }}
+                        onChange={setMapTrackWidth}
+                        marks={[
+                          { value: DEFAULT_TRACK_WIDTH, label: "6" },
+                          { value: 18, label: "18" },
+                          { value: MAX_TRACK_WIDTH, label: "30" },
+                        ]}
+                      />
+                    </Box>
+                  </Grid.Col>
                 </Grid>
               </>
             )}
@@ -1459,24 +1960,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       onChange={(v) =>
                         v && setMapPrimaryLang(v as StationNameField)
                       }
-                      data={[
-                        {
-                          value: "primary_name",
-                          label: t("route.linemap.lang-1st"),
-                        },
-                        {
-                          value: "secondary_name",
-                          label: t("route.linemap.lang-2nd"),
-                        },
-                        {
-                          value: "tertiary_name",
-                          label: t("route.linemap.lang-3rd"),
-                        },
-                        {
-                          value: "quaternary_name",
-                          label: t("route.linemap.lang-4th"),
-                        },
-                      ]}
+                      data={mapLanguageOptions}
                     />
                     {mapStations.length > 0 && (
                       <Text size="xs" c="dimmed" mt={4} truncate>
@@ -1495,24 +1979,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         v && setMapSecondaryLang(v as StationNameField)
                       }
                       disabled={!mapShowSecondaryLang}
-                      data={[
-                        {
-                          value: "primary_name",
-                          label: t("route.linemap.lang-1st"),
-                        },
-                        {
-                          value: "secondary_name",
-                          label: t("route.linemap.lang-2nd"),
-                        },
-                        {
-                          value: "tertiary_name",
-                          label: t("route.linemap.lang-3rd"),
-                        },
-                        {
-                          value: "quaternary_name",
-                          label: t("route.linemap.lang-4th"),
-                        },
-                      ]}
+                      data={mapLanguageOptions}
                     />
                     <Group mt={6} gap="xs">
                       <Switch
@@ -1563,18 +2030,22 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     <Grid.Col span={{ base: 12, md: 6 }}>
                       <MultiSelect
                         label={t("route.linemap.transit-filter")}
-                        value={
-                          mapTransitFilter ?? allTransitLines.map((l) => l.id)
-                        }
-                        onChange={(v) =>
-                          setMapTransitFilter(
-                            v.length === allTransitLines.length ? null : v,
-                          )
-                        }
+                        value={mapTransitFilter}
+                        onChange={setMapTransitFilter}
                         data={allTransitLines.map((l) => ({
                           value: l.id,
-                          label: `[${l.prefix}] ${l.name}`,
+                          label: l.prefix ? `[${l.prefix}] ${l.name}` : l.name,
                         }))}
+                      />
+                      <Switch
+                        mt="xs"
+                        label={t("route.linemap.transit-show-names")}
+                        checked={mapShowTransitNames}
+                        onChange={(event) =>
+                          setMapShowTransitNames(event.currentTarget.checked)
+                        }
+                        disabled={mapTransitFilter.length === 0}
+                        size="xs"
                       />
                     </Grid.Col>
                   )}
@@ -1640,42 +2111,58 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   {t("common.preview")}
                 </Title>
 
-                <Box className="map-preview" style={{ overflowX: "auto" }}>
-                  <LineMapRenderer
-                    ref={mapRef}
-                    stations={mapDisplayStations}
-                    line={selectedLine}
-                    isLoop={effectiveIsLoop}
-                    transits={filteredMapTransits}
-                    orientation={mapOrientation}
-                    nameStyle={mapNameStyle}
-                    verticalNameSide={mapVerticalNameSide}
-                    circularFontSize={mapFontSize}
-                    stationNumberMode={mapStationNumberMode}
-                    stationNumbers={mapStationNumbers}
-                    stationSpacing={mapStationSpacing}
-                    primaryLangField={mapPrimaryLang}
-                    secondaryLangField={mapSecondaryLang}
-                    showSecondaryLang={mapShowSecondaryLang}
-                    hasMoreBefore={
-                      mapForceLinear
-                        ? true
-                        : mapHasMoreBefore && mapShowFadeBefore
-                    }
-                    hasMoreAfter={
-                      mapForceLinear
-                        ? true
-                        : mapHasMoreAfter && mapShowFadeAfter
-                    }
-                    companyStyle={mapCompanyStyle}
-                    services={
-                      mapServiceInfos.length >= 1 ? mapServiceInfos : undefined
-                    }
-                    serviceStops={mapServiceStops}
-                    showPassedStations={mapPassedMode !== "hide-gap"}
-                    serviceNameStyle={mapServiceNameStyle}
-                  />
-                </Box>
+                {mapFonts.ready ? (
+                  <Box className="map-preview" style={{ overflowX: "auto" }}>
+                    <LineMapRenderer
+                      ref={mapRef}
+                      stations={mapDisplayStations}
+                      line={selectedLine}
+                      isLoop={effectiveIsLoop}
+                      transits={filteredMapTransits}
+                      transitLineStyles={mapLineIndicatorStyles}
+                      showTransitNames={mapShowTransitNames}
+                      orientation={mapOrientation}
+                      nameStyle={mapNameStyle}
+                      verticalNameSide={mapVerticalNameSide}
+                      circularFontSize={mapFontSize}
+                      stationNumberMode={mapStationNumberMode}
+                      stationNumbers={mapStationNumbers}
+                      stationNumberGroups={mapStationNumberGroups}
+                      trackColors={
+                        selectedThroughRouteId ? mapTrackColors : undefined
+                      }
+                      stationColors={
+                        selectedThroughRouteId ? mapStationColors : undefined
+                      }
+                      stationSpacing={mapStationSpacing}
+                      trackWidth={mapTrackWidth}
+                      primaryLangField={mapPrimaryLang}
+                      secondaryLangField={mapSecondaryLang}
+                      showSecondaryLang={mapShowSecondaryLang}
+                      hasMoreBefore={
+                        mapForceLinear
+                          ? true
+                          : mapHasMoreBefore && mapShowFadeBefore
+                      }
+                      hasMoreAfter={
+                        mapForceLinear
+                          ? true
+                          : mapHasMoreAfter && mapShowFadeAfter
+                      }
+                      companyStyle={mapCompanyStyle}
+                      services={
+                        mapServiceInfos.length >= 1
+                          ? mapServiceInfos
+                          : undefined
+                      }
+                      serviceStops={mapServiceStops}
+                      showPassedStations={mapPassedMode !== "hide-gap"}
+                      serviceNameStyle={mapServiceNameStyle}
+                    />
+                  </Box>
+                ) : (
+                  <CanvasFontLoading show={mapFonts.showLoader} />
+                )}
 
                 {/* Download controls */}
                 <Grid gutter="md" style={{ padding: "10px" }}>
@@ -1692,18 +2179,44 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   </Grid.Col>
                   <Grid.Col
                     span={{ base: 12, sm: 5, lg: 3 }}
-                    style={{ display: "flex", justifyContent: "center" }}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-end",
+                      minWidth: 0,
+                    }}
                   >
-                    <Button
-                      color="green"
-                      size="lg"
-                      variant="filled"
-                      onClick={handleSaveMap}
-                      style={{ fontWeight: 700 }}
-                      leftSection={<IconDownload />}
+                    <Tooltip
+                      label={mapDownloadWarningText ?? ""}
+                      disabled={!mapDownloadWarningText}
+                      multiline
+                      w={280}
+                      withArrow
                     >
-                      {t("input.save")}
-                    </Button>
+                      <Button
+                        color={mapDownloadTextTooSmall ? "yellow" : "green"}
+                        size="lg"
+                        variant="filled"
+                        onClick={handleSaveMap}
+                        disabled={!mapFonts.ready}
+                        fullWidth
+                        style={{ fontWeight: 700, minWidth: 0 }}
+                        leftSection={
+                          mapDownloadTextTooSmall ? (
+                            <IconAlertTriangle />
+                          ) : (
+                            <IconDownload />
+                          )
+                        }
+                        title={mapDownloadWarningText ?? undefined}
+                        aria-label={
+                          mapDownloadWarningText
+                            ? `${t("input.save")}: ${mapDownloadWarningText}`
+                            : t("input.save")
+                        }
+                      >
+                        {t("input.save")}
+                      </Button>
+                    </Tooltip>
                   </Grid.Col>
                 </Grid>
               </>

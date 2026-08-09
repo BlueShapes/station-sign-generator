@@ -28,10 +28,16 @@ import {
 import Konva from "konva";
 import DirectInput from "@/components/inputs/DirectInput";
 import Footer from "@/components/Footer";
-import { useTranslations } from "@/i18n/useTranslation";
+import { useLocale, useTranslations } from "@/i18n/useTranslation";
 import { useDatabase } from "@/db/useDatabase";
 import { DEFAULT_DATA } from "@/db/seed";
-import { waitForCanvasFonts } from "@/lib/fonts";
+import {
+  getStationSignFontSpecs,
+  waitForCanvasFonts,
+} from "@/lib/fonts";
+import { useCanvasFonts } from "@/lib/useCanvasFonts";
+import { DEFAULT_COMPANY_LANGUAGES } from "@/lib/railwayLanguages";
+import { getLocalizedRailwayName } from "@/lib/localizedRailwayName";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 import {
@@ -52,11 +58,28 @@ import JrWestSignLarge, {
   scale as JrWestSignLargeBaseScale,
 } from "@/components/signs/JrWestSignLarge";
 import MetroLongSign, {
+  MetroLongForeignSign,
   height as MetroLongSignHeight,
   scale as MetroLongSignBaseScale,
 } from "@/components/signs/MetroLongSign";
+import {
+  MetroMediumSign,
+  ToeiLargeSign,
+  ToeiMediumSign,
+  scale as SubwaySignBaseScale,
+  subwaySignDimensions,
+} from "@/components/signs/SubwaySign";
+import CanvasFontLoading from "@/components/CanvasFontLoading";
 
-type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
+type SignStyle =
+  | "jreast"
+  | "jrwest"
+  | "jrwestlarge"
+  | "metrolong"
+  | "metroforeign"
+  | "metromedium"
+  | "toeimedium"
+  | "toeilarge";
 
 const SIGN_STYLES: Record<
   SignStyle,
@@ -81,6 +104,26 @@ const SIGN_STYLES: Record<
     Component: MetroLongSign,
     height: MetroLongSignHeight,
     scale: MetroLongSignBaseScale,
+  },
+  metroforeign: {
+    Component: MetroLongForeignSign,
+    height: MetroLongSignHeight,
+    scale: MetroLongSignBaseScale,
+  },
+  metromedium: {
+    Component: MetroMediumSign,
+    height: subwaySignDimensions.metroMedium.height,
+    scale: SubwaySignBaseScale,
+  },
+  toeimedium: {
+    Component: ToeiMediumSign,
+    height: subwaySignDimensions.toeiMedium.height,
+    scale: SubwaySignBaseScale,
+  },
+  toeilarge: {
+    Component: ToeiLargeSign,
+    height: subwaySignDimensions.toeiLarge.height,
+    scale: SubwaySignBaseScale,
   },
 };
 
@@ -115,6 +158,7 @@ function validateDirectInputData(text: string): DirectInputStationProps {
 export default function SimpleInputTab() {
   const ref = useRef<Konva.Stage>(null);
   const t = useTranslations();
+  const locale = useLocale();
 
   const {
     data: savedData,
@@ -223,6 +267,12 @@ export default function SimpleInputTab() {
     sessionStorage.setItem("sign-style-v1", currentStyle);
   }, [currentStyle]);
 
+  const signFontSpecs = getStationSignFontSpecs(
+    currentStyle,
+    currentStyle === "jreast" ? "jreast" : undefined,
+  );
+  const signFonts = useCanvasFonts(signFontSpecs);
+
   const { height: currentCanvasHeight, scale: currentBaseScale } =
     SIGN_STYLES[currentStyle];
 
@@ -243,12 +293,24 @@ export default function SimpleInputTab() {
 
   const handleSave = async () => {
     if (ref.current) {
-      await waitForCanvasFonts();
+      await waitForCanvasFonts(signFontSpecs).catch(() => undefined);
       const uri = ref.current.toDataURL({
         pixelRatio: saveSize / currentBaseScale,
       });
       const link = document.createElement("a");
-      link.download = `${latestDataRef.current.primaryName}.png`;
+      const data = latestDataRef.current;
+      const filename = getLocalizedRailwayName(
+        locale,
+        DEFAULT_COMPANY_LANGUAGES,
+        [
+          data.primaryName,
+          data.secondaryName,
+          data.tertiaryName,
+          data.quaternaryName,
+        ],
+        "station",
+      );
+      link.download = `${filename}.png`;
       link.href = uri;
       document.body.appendChild(link);
       link.click();
@@ -347,6 +409,10 @@ export default function SimpleInputTab() {
             { value: "jrwest", label: t("route.sign.jrwest") },
             { value: "jrwestlarge", label: t("route.sign.jrwestlarge") },
             { value: "metrolong", label: t("route.sign.metrolong") },
+            { value: "metroforeign", label: t("route.sign.metroforeign") },
+            { value: "metromedium", label: t("route.sign.metromedium") },
+            { value: "toeimedium", label: t("route.sign.toeimedium") },
+            { value: "toeilarge", label: t("route.sign.toeilarge") },
           ]}
           style={{ maxWidth: 240 }}
         />
@@ -365,11 +431,17 @@ export default function SimpleInputTab() {
         <IconEye size="1.6em" />
         {t("common.preview")}
       </Title>
-      <SignComponent
-        {...previewData}
-        stationNumberStyle={currentStyle === "jreast" ? "jreast" : undefined}
-        ref={ref}
-      />
+      {signFonts.ready ? (
+        <SignComponent
+          {...previewData}
+          stationNumberStyle={
+            currentStyle === "jreast" ? "jreast" : undefined
+          }
+          ref={ref}
+        />
+      ) : (
+        <CanvasFontLoading show={signFonts.showLoader} />
+      )}
       <Box style={{ width: "100%", padding: "25px" }}>
         <Grid gutter="md" style={{ padding: "10px", overflow: "hidden" }}>
           <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
@@ -392,6 +464,7 @@ export default function SimpleInputTab() {
               size="lg"
               variant="filled"
               onClick={handleSave}
+              disabled={!signFonts.ready}
               style={{ fontWeight: 700 }}
               leftSection={<IconDownload />}
             >

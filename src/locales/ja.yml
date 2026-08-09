@@ -146,7 +146,7 @@ settings:
 route:
   download-sqlite: SQLiteをダウンロード
   import-sqlite: SQLiteをインポート
-  import-sample: サンプルデータを読み込む（山手線）
+  import-sample: サンプルデータを読み込む
   import-error:
     invalid-file: "選択されたファイルは有効なSQLiteデータベースではありません。"
     missing-table: "必要なテーブルが見つかりません: {detail}"
@@ -193,8 +193,31 @@ route:
     empty: 路線がありません
     select: 路線を選択してください
     all: すべての会社
+    unassigned-company: 会社未設定
     delete-confirm: この路線を削除しますか？
     prefix-preview: 路線インジケータバッジのプレビュー
+    station-number-preview: 駅番号のプレビュー（01）
+  through-route:
+    title: 直通経路
+    add: 直通経路を追加
+    edit: 直通経路を編集
+    name: 経路名
+    empty: 直通経路がありません
+    segments: 路線区間
+    segment-number: "区間 {number}"
+    add-segment: 路線区間を追加
+    line: 路線
+    entry-station: 入口駅
+    exit-station: 出口駅
+    direction: 区間の向き
+    forward: 順方向（駅順に進む）
+    reverse: 逆方向（駅順を戻る）
+    delete-confirm: この直通経路を削除しますか？
+    error-incomplete: すべての区間で路線と両端駅を選択してください。
+    error-empty: 路線区間を1件以上追加してください。
+    error-station-not-on-line: 選択した駅が路線に含まれていません。
+    error-invalid-direction: 入口駅から出口駅へ指定した方向では進めません。
+    error-disconnected: 隣り合う路線区間の接続駅が一致していません。
   service:
     title: 種別
     local: 各駅停車
@@ -227,6 +250,15 @@ route:
     duplicate-number-warning: "この路線に重複する駅番号があります: {numbers}"
     delete-confirm: この駅をこの路線から削除しますか？
     select: 駅を選択してください
+    transfer-title: "乗換情報 — {name}"
+    transfer-manage: 乗換情報を確認・編集
+    transfer-select: 乗換先の駅
+    transfer-empty: 乗換関係はありません
+    same-id-lines: 同一駅IDで所属する他路線
+    same-id-lines-help: 同じ駅データを共有する路線です。乗換候補に自動で含まれ、この画面からは変更できません。
+    same-id-lines-empty: 同一駅IDを共有する他路線はありません
+    explicit-transfers: 別駅間の乗換関係
+    explicit-transfers-help: 異なる駅ID同士を乗換可能として追加・削除します。
   sign:
     style: スタイル
     direction: 表示方向
@@ -237,21 +269,29 @@ route:
     jreast: JR東日本風
     jrwest: JR西日本風
     jrwestlarge: JR西日本風（大）
-    metrolong: 東京メトロ・都営地下鉄風（横長）
+    metrolong: 東京メトロ風（小・日）
+    metroforeign: 東京メトロ風（小・外）
+    metromedium: 東京メトロ風（中）
+    toeimedium: 都営地下鉄風（中）
+    toeilarge: 都営地下鉄風（大）
     metrolong-subtext: サブテキスト
     metrolong-subtext-furigana: ふりがな
     metrolong-subtext-secondary: 第二言語
     center-colors: 中央四角の色
   mode:
     sign: 駅名標
-    linemap: 路線図
+    linemap: 路線図（単線・直通）
+    multiline-linemap: 路線図（複線）
   linemap:
+    filename-suffix: 路線図
     orientation: 向き
     horizontal: 横
     vertical: 縦
     range-start: 始発駅
     range-end: 終着駅
     transit-filter: 乗換路線を表示
+    transit-show-names: 乗換先の路線名を表示
+    download-text-warning: 保存（第2言語が読めない可能性）
     font-size: 駅名フォントサイズ
     overlap-warning-title: 駅名の重なりを検出
     overlap-warning: 一部の駅名が重なっています。フォントサイズを小さくしてみてください。
@@ -264,6 +304,7 @@ route:
     name-style-above: 上（縦書き）
     name-style-below: 下（縦書き）
     station-spacing: 駅間隔
+    line-width: 路線の太さ
     primary-lang: 主表示
     secondary-lang: 副表示
     show-secondary-lang: 表示

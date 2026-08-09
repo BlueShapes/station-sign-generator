@@ -38,3 +38,7 @@ export function useTranslations(namespace?: string) {
     return value;
   };
 }
+
+export function useLocale(): string {
+  return useContext(TranslationContext).locale;
+}

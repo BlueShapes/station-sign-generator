@@ -23,7 +23,11 @@ import Header from "@/components/Header";
 import { TranslationProvider } from "@/i18n/TranslationProvider";
 import { useTranslations } from "@/i18n/useTranslation";
 import { useRouteDb } from "@/db/useRouteDb";
-import { waitForCanvasFonts } from "@/lib/fonts";
+import {
+  JR_EAST_FONT_SPECS,
+  prefetchCanvasFontsWhenIdle,
+  waitForCanvasFonts,
+} from "@/lib/fonts";
 import SimpleInputTab from "@/components/tabs/SimpleInputTab";
 import RouteInputTab from "@/components/tabs/RouteInputTab";
 import EditRoutesTab from "@/components/tabs/EditRoutesTab";
@@ -64,10 +68,15 @@ function AppContent({
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
-    waitForCanvasFonts()
+    waitForCanvasFonts(JR_EAST_FONT_SPECS)
       .catch(() => undefined)
       .then(() => setFontsLoaded(true));
   }, []);
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    return prefetchCanvasFontsWhenIdle();
+  }, [fontsLoaded]);
 
   if (!fontsLoaded) {
     return (

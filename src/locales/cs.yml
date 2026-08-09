@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Stáhněte si SQLite
   import-sqlite: Importujte SQLite
-  import-sample: Načíst ukázková data (Yamanote Line)
+  import-sample: Načíst ukázková data
   import-error:
     invalid-file: Vybraný soubor není platná databáze SQLite.
     missing-table: "V databázi chybí požadovaná tabulka: {detail}"
@@ -185,8 +185,31 @@ route:
     empty: Zatím žádné linky
     select: Vyberte řádek
     all: Všechny společnosti
+    unassigned-company: Bez přiřazené společnosti
     delete-confirm: Smazat tento řádek?
     prefix-preview: Náhled odznaku indikátoru čáry
+    station-number-preview: Náhled čísla stanice (01)
+  through-route:
+    title: Průjezdné trasy
+    add: Přidat průjezdnou trasu
+    edit: Upravit průjezdnou trasu
+    name: Název trasy
+    empty: Zatím nejsou žádné průjezdné trasy
+    segments: Úseky linek
+    segment-number: "Úsek {number}"
+    add-segment: Přidat úsek linky
+    line: Linka
+    entry-station: Vstupní stanice
+    exit-station: Výstupní stanice
+    direction: Směr úseku
+    forward: Vpřed (pořadí stanic)
+    reverse: Obráceně (proti pořadí stanic)
+    delete-confirm: Smazat tuto průjezdnou trasu?
+    error-incomplete: Pro každý úsek vyberte linku a obě koncové stanice.
+    error-empty: Přidejte alespoň jeden úsek linky.
+    error-station-not-on-line: Vybraná stanice nepatří k dané lince.
+    error-invalid-direction: Z výstupní stanice nelze ve zvoleném směru dojet ze vstupní stanice.
+    error-disconnected: Sousední úseky nemají stejnou přestupní stanici.
   service:
     title: Služby
     local: Místní
@@ -219,6 +242,15 @@ route:
     duplicate-number-warning: "Duplicitní čísla stanic na této lince: {numbers}"
     delete-confirm: Odstranit tuto stanici z linky?
     select: Vyberte stanici
+    transfer-title: "Informace o přestupech — {name}"
+    transfer-manage: Zobrazit a upravit přestupy
+    transfer-select: Přestupní stanice
+    transfer-empty: Žádné přestupní vazby
+    same-id-lines: Linky se stejným ID stanice
+    same-id-lines-help: Tyto linky sdílejí stejný záznam stanice a automaticky se považují za přestupní. Zde je nelze upravit.
+    same-id-lines-empty: Stejné ID stanice nesdílí žádná další linka
+    explicit-transfers: Výslovné přestupy mezi stanicemi
+    explicit-transfers-help: Přidejte nebo odeberte přestupy mezi různými ID stanic.
   sign:
     style: styl
     direction: Směr
@@ -229,21 +261,29 @@ route:
     jreast: JR východní styl
     jrwest: JR West Style
     jrwestlarge: JR West Style (velký)
-    metrolong: Tokijské metro / styl metra Toei (široký)
+    metrolong: Styl Tokyo Metro (malý / japonsky)
+    metroforeign: Styl Tokyo Metro (malý / cizí jazyk)
+    metromedium: Styl Tokyo Metro (střední)
+    toeimedium: Styl metra Toei (střední)
+    toeilarge: Styl metra Toei (velký)
     metrolong-subtext: Podtext
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Sekundární jazyk
     center-colors: Barvy středového čtverce
   mode:
     sign: Znamení stanice
-    linemap: Linková mapa
+    linemap: Linková mapa (jedna linka / přímý spoj)
+    multiline-linemap: Linková mapa (více linek)
   linemap:
+    filename-suffix: Mapa linky
     orientation: Orientace
     horizontal: Horizontální
     vertical: Vertikální
     range-start: Od
     range-end: Komu
     transit-filter: Zobrazit linky veřejné dopravy
+    transit-show-names: Zobrazit názvy přestupních linek
+    download-text-warning: Uložit (druhý jazyk může být nečitelný)
     font-size: Název stanice Velikost písma
     overlap-warning-title: Bylo zjištěno překrývání štítků
     overlap-warning: Některé názvy stanic se překrývají. Zkuste zmenšit velikost písma.
@@ -256,6 +296,7 @@ route:
     name-style-above: Nahoře
     name-style-below: Níže
     station-spacing: Rozteč stanic
+    line-width: Tloušťka linky
     primary-lang: Primární jazyk
     secondary-lang: Sekundární jazyk
     show-secondary-lang: Zobrazit

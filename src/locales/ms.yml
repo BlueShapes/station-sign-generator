@@ -138,7 +138,7 @@ settings:
 route:
   download-sqlite: Muat turun SQLite
   import-sqlite: Import SQLite
-  import-sample: Muatkan Data Contoh (Baris Yamanote)
+  import-sample: Muatkan Data Contoh
   import-error:
     invalid-file: Fail yang dipilih bukan pangkalan data SQLite yang sah.
     missing-table: "Pangkalan data tiada jadual yang diperlukan: {detail}"
@@ -185,8 +185,31 @@ route:
     empty: Tiada baris lagi
     select: Pilih satu baris
     all: Semua Syarikat
+    unassigned-company: Syarikat belum ditetapkan
     delete-confirm: Padamkan baris ini?
     prefix-preview: Pratonton lencana penunjuk baris
+    station-number-preview: Pratonton nombor stesen (01)
+  through-route:
+    title: Laluan Terus
+    add: Tambah Laluan Terus
+    edit: Edit Laluan Terus
+    name: Nama Laluan
+    empty: Belum ada laluan terus
+    segments: Segmen Laluan
+    segment-number: "Segmen {number}"
+    add-segment: Tambah Segmen Laluan
+    line: Laluan
+    entry-station: Stesen Masuk
+    exit-station: Stesen Keluar
+    direction: Arah Segmen
+    forward: Ke hadapan (susunan stesen)
+    reverse: Terbalik (lawan susunan stesen)
+    delete-confirm: Padam laluan terus ini?
+    error-incomplete: Pilih laluan dan kedua-dua stesen hujung bagi setiap segmen.
+    error-empty: Tambah sekurang-kurangnya satu segmen laluan.
+    error-station-not-on-line: Stesen yang dipilih bukan dalam laluan tersebut.
+    error-invalid-direction: Stesen keluar tidak boleh dicapai dari stesen masuk dalam arah yang dipilih.
+    error-disconnected: Segmen bersebelahan tidak berkongsi stesen sambungan yang sama.
   service:
     title: Perkhidmatan
     local: Tempatan
@@ -219,6 +242,15 @@ route:
     duplicate-number-warning: "Nombor stesen pendua dalam baris ini: {numbers}"
     delete-confirm: Alih keluar stesen ini daripada talian?
     select: Pilih stesen
+    transfer-title: "Maklumat pertukaran — {name}"
+    transfer-manage: Lihat dan urus maklumat pertukaran
+    transfer-select: Stesen pertukaran
+    transfer-empty: Tiada hubungan pertukaran
+    same-id-lines: Laluan dengan ID stesen yang sama
+    same-id-lines-help: Laluan ini berkongsi rekod stesen dan dianggap sebagai pertukaran secara automatik. Ia hanya boleh dibaca di sini.
+    same-id-lines-empty: Tiada laluan lain berkongsi ID stesen ini
+    explicit-transfers: Pertukaran nyata antara stesen
+    explicit-transfers-help: Tambah atau padam pertukaran antara ID stesen yang berbeza.
   sign:
     style: Gaya
     direction: Arah
@@ -229,21 +261,29 @@ route:
     jreast: Gaya JR Timur
     jrwest: Gaya JR Barat
     jrwestlarge: Gaya JR West (Besar)
-    metrolong: Metro Tokyo / Gaya Kereta Api Bawah Tanah Toei (Lebar)
+    metrolong: Gaya Metro Tokyo (kecil / Jepun)
+    metroforeign: Gaya Metro Tokyo (kecil / bahasa asing)
+    metromedium: Gaya Metro Tokyo (sederhana)
+    toeimedium: Gaya Kereta Api Bawah Tanah Toei (sederhana)
+    toeilarge: Gaya Kereta Api Bawah Tanah Toei (besar)
     metrolong-subtext: Subteks
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: bahasa sekunder
     center-colors: Warna Segi Empat Tengah
   mode:
     sign: Tanda Stesen
-    linemap: Peta Garisan
+    linemap: Peta Garisan (Tunggal/Terus)
+    multiline-linemap: Peta Garisan (Berbilang)
   linemap:
+    filename-suffix: Peta Laluan
     orientation: Orientasi
     horizontal: Mendatar
     vertical: Menegak
     range-start: daripada
     range-end: Kepada
     transit-filter: Tunjukkan Laluan Transit
+    transit-show-names: Tunjukkan nama laluan pertukaran
+    download-text-warning: Simpan (bahasa kedua mungkin tidak dapat dibaca)
     font-size: Saiz Font Nama Stesen
     overlap-warning-title: Pertindihan Label Dikesan
     overlap-warning: Beberapa nama stesen bertindih. Cuba kecilkan saiz fon.
@@ -256,6 +296,7 @@ route:
     name-style-above: Di atas
     name-style-below: Di bawah
     station-spacing: Jarak Stesen
+    line-width: Ketebalan Laluan
     primary-lang: Bahasa Utama
     secondary-lang: Bahasa Menengah
     show-secondary-lang: Tunjukkan
