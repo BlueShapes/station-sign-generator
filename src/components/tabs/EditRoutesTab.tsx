@@ -38,7 +38,7 @@ import {
 } from "@tabler/icons-react";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
-import { waitForCanvasFonts } from "@/lib/fonts";
+import { getStationNumberFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import {
   DEFAULT_COMPANY_LANGUAGES,
   getCompanyLanguages,
@@ -396,7 +396,17 @@ function StationNumberBadgePreview({
       ctx.restore();
     };
 
-    waitForCanvasFonts().then(draw).catch(draw);
+    let cancelled = false;
+    const drawWhenReady = () => {
+      if (!cancelled) draw();
+    };
+    waitForCanvasFonts(getStationNumberFontSpecs(style)).then(
+      drawWhenReady,
+      drawWhenReady,
+    );
+    return () => {
+      cancelled = true;
+    };
   }, [color, style, prefix, value, threeLetterCode, compact]);
 
   return <canvas ref={canvasRef} style={{ display: "block" }} />;
@@ -507,7 +517,17 @@ function LineIndicatorBadgePreview({
       ctx.restore();
     };
 
-    waitForCanvasFonts().then(draw).catch(draw);
+    let cancelled = false;
+    const drawWhenReady = () => {
+      if (!cancelled) draw();
+    };
+    waitForCanvasFonts(getStationNumberFontSpecs(style)).then(
+      drawWhenReady,
+      drawWhenReady,
+    );
+    return () => {
+      cancelled = true;
+    };
   }, [color, prefix, style, compact]);
 
   return <canvas ref={canvasRef} style={{ display: "block" }} />;

@@ -4,6 +4,7 @@ import type { AdjacentStationProps } from "./DirectInputStationProps";
 import { Circle, Group, Layer, Line, Rect, Stage, Text } from "react-konva";
 import Konva from "konva";
 import { isMobile } from "react-device-detect";
+import { METRO_LONG_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
 import { getTokyoMetroStationNumberMetrics } from "./stationNumberBadgeMetrics";
 
@@ -38,10 +39,22 @@ const MetroLongSign = forwardRef<Konva.Stage, StationProps>(
     const [canvasImage, setCanvasImage] = useState("");
 
     useEffect(() => {
-      document.fonts.ready.then(() => setStageKey((k) => k + 1));
+      let cancelled = false;
+      waitForCanvasFonts(METRO_LONG_FONT_SPECS)
+        .catch(() => undefined)
+        .then(() => {
+          if (!cancelled) setStageKey((k) => k + 1);
+        });
+      return () => {
+        cancelled = true;
+      };
     }, []);
 
     useEffect(() => {
+      if (stageKey < 1) {
+        setCanvasImage("");
+        return;
+      }
       const render = () => {
         ref && "current" in ref && ref.current
           ? setCanvasImage(ref.current.toDataURL())

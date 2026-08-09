@@ -5,6 +5,7 @@ import Konva from "konva";
 import { v7 as uuidv7 } from "uuid";
 import { isMobile } from "react-device-detect";
 import { getTokyoMetroStationNumberMetrics } from "@/components/signs/stationNumberBadgeMetrics";
+import { getStationSignFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
 
 export const height = 140;
@@ -44,6 +45,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       !stationNumberStyle || stationNumberStyle === "jreast"
         ? threeLetterCodeRaw
         : undefined;
+    const fontSpecs = getStationSignFontSpecs("jreast", stationNumberStyle);
 
     const getLineColor = (prefix?: string): string => {
       if (!prefix) return "#000000";
@@ -123,10 +125,16 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       : undefined;
 
     useEffect(() => {
-      document.fonts.ready.then(() => {
-        setStageKey((prevKey) => prevKey + 1);
-      });
-    }, []);
+      let cancelled = false;
+      waitForCanvasFonts(fontSpecs)
+        .catch(() => undefined)
+        .then(() => {
+          if (!cancelled) setStageKey((prevKey) => prevKey + 1);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [fontSpecs]);
 
     const autoSpace = (str: string) => {
       return str.length <= 2 ? str.split("").join(" ") : str;
@@ -165,6 +173,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
 
     const [canvasImage, setCanvasImage] = useState("");
     useEffect(() => {
+      if (stageKey < 1) {
+        setCanvasImage("");
+        return;
+      }
       const renderFunction = () => {
         ref && "current" in ref && ref.current
           ? setCanvasImage(ref.current.toDataURL())

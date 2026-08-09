@@ -26,6 +26,7 @@ import {
   shouldRotateVerticalGlyph,
 } from "@/components/signs/transitLineLayout";
 import { getLineIndicatorVisualStyle } from "@/components/signs/lineIndicatorStyle";
+import { LINE_MAP_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import {
   ceilCanvasDimensions,
   DEFAULT_TRACK_WIDTH,
@@ -1390,7 +1391,15 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
     // Re-render once fonts are ready (same pattern as JrEastSign)
     useEffect(() => {
-      document.fonts.ready.then(() => setStageKey((k) => k + 1));
+      let cancelled = false;
+      waitForCanvasFonts(LINE_MAP_FONT_SPECS)
+        .catch(() => undefined)
+        .then(() => {
+          if (!cancelled) setStageKey((k) => k + 1);
+        });
+      return () => {
+        cancelled = true;
+      };
     }, []);
 
     // Also re-key when data changes so Konva re-renders correctly

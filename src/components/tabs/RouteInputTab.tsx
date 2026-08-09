@@ -49,7 +49,12 @@ import {
 } from "@tabler/icons-react";
 import Konva from "konva";
 import { useLocale, useTranslations } from "@/i18n/useTranslation";
-import { waitForCanvasFonts } from "@/lib/fonts";
+import {
+  getStationSignFontSpecs,
+  LINE_MAP_FONT_SPECS,
+  waitForCanvasFonts,
+} from "@/lib/fonts";
+import { useCanvasFonts } from "@/lib/useCanvasFonts";
 import { getLocalizedRailwayName } from "@/lib/localizedRailwayName";
 import {
   getCompanyLanguages,
@@ -125,6 +130,7 @@ import {
 import {
   isTransitSecondaryNameExportTooSmall,
 } from "@/components/signs/transitLineLayout";
+import CanvasFontLoading from "@/components/CanvasFontLoading";
 
 type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
 type TabMode = "sign" | "linemap" | "multiline-linemap";
@@ -806,6 +812,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     (company) => company.id === selectedLine?.company_id,
   );
   const mapCompanyStyle = mapCompany?.station_number_style;
+  const signFontSpecs = getStationSignFontSpecs(signStyle, mapCompanyStyle);
+  const signFonts = useCanvasFonts(signFontSpecs, tabMode === "sign");
+  const mapFonts = useCanvasFonts(
+    LINE_MAP_FONT_SPECS,
+    tabMode === "linemap",
+  );
   const mapLanguageOptions = getCompanyLanguages(mapCompany).map(
     (language, index) => ({
       value: STATION_NAME_FIELDS[index],
@@ -1145,7 +1157,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const handleSaveSign = async () => {
     if (!signData) return;
     if (signRef.current) {
-      await waitForCanvasFonts();
+      await waitForCanvasFonts(signFontSpecs).catch(() => undefined);
       const { scale: baseScale } = SIGN_STYLES[signStyle];
       const uri = signRef.current.toDataURL({
         pixelRatio: saveSize / baseScale,
@@ -1174,7 +1186,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
   const handleSaveMap = async () => {
     if (!mapRef.current || !selectedLine) return;
-    await waitForCanvasFonts();
+    await waitForCanvasFonts(LINE_MAP_FONT_SPECS).catch(() => undefined);
     const uri = mapRef.current.toDataURL({
       pixelRatio: mapSaveSize / LineMapScale,
     });
@@ -1495,16 +1507,20 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   <IconEye size="1.6em" />
                   {t("common.preview")}
                 </Title>
-                {(() => {
-                  const { Component: SignComponent } = SIGN_STYLES[signStyle];
-                  return (
-                    <SignComponent
-                      {...signData}
-                      direction={direction}
-                      ref={signRef}
-                    />
-                  );
-                })()}
+                {signFonts.ready ? (
+                  (() => {
+                    const { Component: SignComponent } = SIGN_STYLES[signStyle];
+                    return (
+                      <SignComponent
+                        {...signData}
+                        direction={direction}
+                        ref={signRef}
+                      />
+                    );
+                  })()
+                ) : (
+                  <CanvasFontLoading show={signFonts.showLoader} />
+                )}
 
                 {/* Download controls */}
                 <Grid gutter="md" style={{ padding: "10px" }}>
@@ -1528,6 +1544,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       size="lg"
                       variant="filled"
                       onClick={handleSaveSign}
+                      disabled={!signFonts.ready}
                       style={{ fontWeight: 700 }}
                       leftSection={<IconDownload />}
                     >
@@ -2068,52 +2085,58 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   {t("common.preview")}
                 </Title>
 
-                <Box className="map-preview" style={{ overflowX: "auto" }}>
-                  <LineMapRenderer
-                    ref={mapRef}
-                    stations={mapDisplayStations}
-                    line={selectedLine}
-                    isLoop={effectiveIsLoop}
-                    transits={filteredMapTransits}
-                    transitLineStyles={mapLineIndicatorStyles}
-                    showTransitNames={mapShowTransitNames}
-                    orientation={mapOrientation}
-                    nameStyle={mapNameStyle}
-                    verticalNameSide={mapVerticalNameSide}
-                    circularFontSize={mapFontSize}
-                    stationNumberMode={mapStationNumberMode}
-                    stationNumbers={mapStationNumbers}
-                    stationNumberGroups={mapStationNumberGroups}
-                    trackColors={
-                      selectedThroughRouteId ? mapTrackColors : undefined
-                    }
-                    stationColors={
-                      selectedThroughRouteId ? mapStationColors : undefined
-                    }
-                    stationSpacing={mapStationSpacing}
-                    trackWidth={mapTrackWidth}
-                    primaryLangField={mapPrimaryLang}
-                    secondaryLangField={mapSecondaryLang}
-                    showSecondaryLang={mapShowSecondaryLang}
-                    hasMoreBefore={
-                      mapForceLinear
-                        ? true
-                        : mapHasMoreBefore && mapShowFadeBefore
-                    }
-                    hasMoreAfter={
-                      mapForceLinear
-                        ? true
-                        : mapHasMoreAfter && mapShowFadeAfter
-                    }
-                    companyStyle={mapCompanyStyle}
-                    services={
-                      mapServiceInfos.length >= 1 ? mapServiceInfos : undefined
-                    }
-                    serviceStops={mapServiceStops}
-                    showPassedStations={mapPassedMode !== "hide-gap"}
-                    serviceNameStyle={mapServiceNameStyle}
-                  />
-                </Box>
+                {mapFonts.ready ? (
+                  <Box className="map-preview" style={{ overflowX: "auto" }}>
+                    <LineMapRenderer
+                      ref={mapRef}
+                      stations={mapDisplayStations}
+                      line={selectedLine}
+                      isLoop={effectiveIsLoop}
+                      transits={filteredMapTransits}
+                      transitLineStyles={mapLineIndicatorStyles}
+                      showTransitNames={mapShowTransitNames}
+                      orientation={mapOrientation}
+                      nameStyle={mapNameStyle}
+                      verticalNameSide={mapVerticalNameSide}
+                      circularFontSize={mapFontSize}
+                      stationNumberMode={mapStationNumberMode}
+                      stationNumbers={mapStationNumbers}
+                      stationNumberGroups={mapStationNumberGroups}
+                      trackColors={
+                        selectedThroughRouteId ? mapTrackColors : undefined
+                      }
+                      stationColors={
+                        selectedThroughRouteId ? mapStationColors : undefined
+                      }
+                      stationSpacing={mapStationSpacing}
+                      trackWidth={mapTrackWidth}
+                      primaryLangField={mapPrimaryLang}
+                      secondaryLangField={mapSecondaryLang}
+                      showSecondaryLang={mapShowSecondaryLang}
+                      hasMoreBefore={
+                        mapForceLinear
+                          ? true
+                          : mapHasMoreBefore && mapShowFadeBefore
+                      }
+                      hasMoreAfter={
+                        mapForceLinear
+                          ? true
+                          : mapHasMoreAfter && mapShowFadeAfter
+                      }
+                      companyStyle={mapCompanyStyle}
+                      services={
+                        mapServiceInfos.length >= 1
+                          ? mapServiceInfos
+                          : undefined
+                      }
+                      serviceStops={mapServiceStops}
+                      showPassedStations={mapPassedMode !== "hide-gap"}
+                      serviceNameStyle={mapServiceNameStyle}
+                    />
+                  </Box>
+                ) : (
+                  <CanvasFontLoading show={mapFonts.showLoader} />
+                )}
 
                 {/* Download controls */}
                 <Grid gutter="md" style={{ padding: "10px" }}>
@@ -2148,6 +2171,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         size="lg"
                         variant="filled"
                         onClick={handleSaveMap}
+                        disabled={!mapFonts.ready}
                         fullWidth
                         style={{ fontWeight: 700, minWidth: 0 }}
                         leftSection={

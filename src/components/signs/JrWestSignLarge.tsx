@@ -4,6 +4,7 @@ import type { AdjacentStationProps } from "./DirectInputStationProps";
 import { Rect, Layer, Stage, Text, Line } from "react-konva";
 import Konva from "konva";
 import { isMobile } from "react-device-detect";
+import { JR_WEST_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
 import spacedStationName from "@/functions/spaceStationName";
 
@@ -43,10 +44,22 @@ const JrWestSignLarge = forwardRef<Konva.Stage, StationProps>(
       : undefined;
 
     useEffect(() => {
-      document.fonts.ready.then(() => setStageKey((k) => k + 1));
+      let cancelled = false;
+      waitForCanvasFonts(JR_WEST_FONT_SPECS)
+        .catch(() => undefined)
+        .then(() => {
+          if (!cancelled) setStageKey((k) => k + 1);
+        });
+      return () => {
+        cancelled = true;
+      };
     }, []);
 
     useEffect(() => {
+      if (stageKey < 1) {
+        setCanvasImage("");
+        return;
+      }
       const render = () => {
         ref && "current" in ref && ref.current
           ? setCanvasImage(ref.current.toDataURL())
