@@ -7,7 +7,7 @@ export const METRO_MEDIUM_DIMENSIONS = {
 } as const;
 
 export const TOEI_BADGE_DIAMETERS = {
-  medium: { main: 55, side: 35 },
+  medium: { main: 55, side: 34 },
   large: { main: 52, side: 31 },
 } as const;
 
@@ -24,9 +24,9 @@ export const TOEI_SHARED_LAYOUT = {
   horizontalMargin: 10,
   sideNameSize: 22,
   sideSecondarySize: 13,
-  arrowWidth: 45,
-  arrowHeight: 31,
-  badgeArrowDistance: 18,
+  arrowWidth: 51,
+  arrowHeight: 37,
+  badgeArrowDistance: 19,
   mainFuriganaYOffset: 50,
   mainSecondaryYOffset: 72,
 } as const;
@@ -35,7 +35,7 @@ export function getToeiVerticalLayout(height: number, large: boolean) {
   if (!large) {
     return {
       mainTop: 22,
-      arrowY: 103,
+      arrowY: 98,
       sideNameY: 137,
       sideSecondaryY: 161,
     };
