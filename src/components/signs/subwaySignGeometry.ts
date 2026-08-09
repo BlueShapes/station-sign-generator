@@ -12,6 +12,7 @@ export const TOEI_BADGE_DIAMETERS = {
 } as const;
 
 export const TOEI_JAPANESE_LETTER_SPACING = 1.5;
+export const TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH = 0.6;
 
 type ToeiMainLayoutOptions = {
   width: number;

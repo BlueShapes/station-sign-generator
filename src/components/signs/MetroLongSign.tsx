@@ -6,7 +6,10 @@ import Konva from "konva";
 import { isMobile } from "react-device-detect";
 import { METRO_LONG_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
-import { getTokyoMetroStationNumberMetrics } from "./stationNumberBadgeMetrics";
+import {
+  getTokyoMetroStationNumberMetrics,
+  TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
+} from "./stationNumberBadgeMetrics";
 import {
   getSubwayStationNameScaleX,
   spaceTokyoMetroPrimaryName,
@@ -143,6 +146,8 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
             fontFamily="JostTrispaceHybrid"
             fontStyle={metrics.valueFontWeight}
             letterSpacing={2}
+            stroke="#1f2230"
+            strokeWidth={TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH}
             fill="#1f2230"
             align="center"
           />

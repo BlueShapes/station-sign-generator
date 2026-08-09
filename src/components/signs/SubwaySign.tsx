@@ -6,7 +6,10 @@ import styled from "styled-components";
 import type StationProps from "./DirectInputStationProps";
 import type { AdjacentStationProps } from "./DirectInputStationProps";
 import { METRO_LONG_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
-import { getTokyoMetroStationNumberMetrics } from "./stationNumberBadgeMetrics";
+import {
+  getTokyoMetroStationNumberMetrics,
+  TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
+} from "./stationNumberBadgeMetrics";
 import {
   getSubwayStationNameScaleX,
   spaceToeiPrimaryName,
@@ -18,6 +21,7 @@ import {
   METRO_MEDIUM_DIMENSIONS,
   TOEI_BADGE_DIAMETERS,
   TOEI_JAPANESE_LETTER_SPACING,
+  TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH,
   type SubwayBadgeKind,
 } from "./subwaySignGeometry";
 import { getSubwayMediumArrowPoints } from "./arrowGeometry";
@@ -133,6 +137,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       diameter,
       whiteOutline = false,
       emphasizedNumberKind,
+      valueStrokeWidth = 0,
     }: {
       cx: number;
       cy: number;
@@ -141,6 +146,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       diameter: number;
       whiteOutline?: boolean;
       emphasizedNumberKind?: SubwayBadgeKind;
+      valueStrokeWidth?: number;
     }) => {
       if (!prefix || !value) return null;
       const metrics = getTokyoMetroStationNumberMetrics(diameter);
@@ -213,6 +219,8 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             fontFamily="JostTrispaceHybrid"
             fontStyle={textAdjustments.valueFontStyle}
             letterSpacing={textAdjustments.valueLetterSpacing}
+            stroke={valueStrokeWidth > 0 ? "#202126" : undefined}
+            strokeWidth={valueStrokeWidth}
             align="center"
             fill="#202126"
           />
@@ -335,6 +343,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               diameter: 29,
               whiteOutline: true,
               emphasizedNumberKind: "side",
+              valueStrokeWidth: TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
             })}
         </Group>
       );
@@ -422,6 +431,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             diameter: 34,
             whiteOutline: true,
             emphasizedNumberKind: "main",
+            valueStrokeWidth: TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
           })}
         </>
       );
@@ -478,6 +488,9 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               value: station.numberPrimaryValue,
               diameter: sideBadgeDiameter,
               emphasizedNumberKind: large ? undefined : "side",
+              valueStrokeWidth: large
+                ? 0
+                : TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH,
             })}
           <Text
             text={station.primaryName}
@@ -595,6 +608,9 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               value: numberPrimaryValue,
               diameter: mainBadgeDiameter,
               emphasizedNumberKind: large ? undefined : "main",
+              valueStrokeWidth: large
+                ? 0
+                : TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH,
             })}
             <Text
               text={displayName}

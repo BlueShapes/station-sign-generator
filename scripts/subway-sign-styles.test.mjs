@@ -12,7 +12,9 @@ import {
   METRO_MEDIUM_DIMENSIONS,
   TOEI_BADGE_DIAMETERS,
   TOEI_JAPANESE_LETTER_SPACING,
+  TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH,
 } from "../src/components/signs/subwaySignGeometry.ts";
+import { TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH } from "../src/components/signs/stationNumberBadgeMetrics.ts";
 
 describe("subway sign style fields", () => {
   test("small Tokyo Metro variants expose only their displayed subtext", () => {
@@ -116,8 +118,8 @@ describe("subway sign style fields", () => {
   });
 
   test("uses larger station-number badges only in the Toei medium sign", () => {
-    expect(TOEI_BADGE_DIAMETERS.medium.main).toBe(51);
-    expect(TOEI_BADGE_DIAMETERS.medium.side).toBe(33);
+    expect(TOEI_BADGE_DIAMETERS.medium.main).toBe(55);
+    expect(TOEI_BADGE_DIAMETERS.medium.side).toBe(35);
     expect(TOEI_BADGE_DIAMETERS.medium.main).toBeGreaterThan(
       TOEI_BADGE_DIAMETERS.large.main,
     );
@@ -129,5 +131,15 @@ describe("subway sign style fields", () => {
   test("adds subtle letter spacing to Toei Japanese names and readings", () => {
     expect(TOEI_JAPANESE_LETTER_SPACING).toBeGreaterThanOrEqual(1);
     expect(TOEI_JAPANESE_LETTER_SPACING).toBeLessThanOrEqual(2);
+  });
+
+  test("adds a subtle number-only weight boost to Toei medium badges", () => {
+    expect(TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH).toBeGreaterThan(0);
+    expect(TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH).toBeLessThanOrEqual(1);
+  });
+
+  test("adds a subtle number-only weight boost to all Tokyo Metro badges", () => {
+    expect(TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH).toBeGreaterThan(0);
+    expect(TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH).toBeLessThanOrEqual(1);
   });
 });

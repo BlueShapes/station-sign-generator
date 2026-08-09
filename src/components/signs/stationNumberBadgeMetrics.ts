@@ -9,6 +9,8 @@ export const TOKYO_METRO_STATION_NUMBER_REF = {
   valueFontWeight: "700",
 } as const;
 
+export const TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH = 0.6;
+
 export function getTokyoMetroStationNumberMetrics(
   innerSize: number,
 ) {
