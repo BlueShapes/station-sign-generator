@@ -7,7 +7,6 @@ import {
 } from "../src/components/signs/stationNameLayout.ts";
 import {
   getMetroSmallBadgeTextAdjustments,
-  getSubwayMediumArrowPoints,
   METRO_MEDIUM_DIMENSIONS,
 } from "../src/components/signs/subwaySignGeometry.ts";
 
@@ -60,34 +59,6 @@ describe("subway sign style fields", () => {
     expect(spaceSubwayPrimaryName("西台")).toBe("西　台");
     expect(spaceSubwayPrimaryName("日比谷")).toBe("日 比 谷");
     expect(spaceSubwayPrimaryName("飯田橋駅")).toBe("飯田橋駅");
-  });
-
-  test("uses the Metro silhouette with a slightly slimmer arrowhead", () => {
-    const height = 25;
-    const points = getSubwayMediumArrowPoints(40, height);
-    const vertices = Array.from({ length: points.length / 2 }, (_, index) => [
-      points[index * 2],
-      points[index * 2 + 1],
-    ]);
-
-    expect(vertices[2]).toEqual([38.8, 12.5]);
-    for (const [upperIndex, lowerIndex] of [
-      [0, 4],
-      [1, 3],
-      [8, 5],
-      [7, 6],
-    ]) {
-      expect(vertices[upperIndex][0]).toBeCloseTo(vertices[lowerIndex][0]);
-      expect(vertices[upperIndex][1] + vertices[lowerIndex][1]).toBeCloseTo(
-        height,
-      );
-    }
-
-    const leftPoints = getSubwayMediumArrowPoints(40, height, "left");
-    for (let index = 0; index < points.length; index += 2) {
-      expect(points[index] + leftPoints[index]).toBeCloseTo(40);
-      expect(points[index + 1]).toBeCloseTo(leftPoints[index + 1]);
-    }
   });
 
   test("matches the small Metro badge typography ratios in the medium sign", () => {

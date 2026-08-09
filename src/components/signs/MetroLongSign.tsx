@@ -11,6 +11,7 @@ import {
   getSubwayStationNameScaleX,
   spaceSubwayPrimaryName,
 } from "./stationNameLayout";
+import { getMetroSmallArrowPoints } from "./arrowGeometry";
 
 export const height = 105;
 export const scale = 3;
@@ -94,27 +95,6 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
       Math.max(1, sideBadgeMetrics.strokeWidth * 0.5) * BADGE_SCALE;
     const mainBadgeOuter = mainBadgeInner + mainBadgeStroke * 2;
     const sideBadgeOuter = sideBadgeInner + sideBadgeStroke * 2;
-
-    const arrowPoints = (size: number) => [
-      6,
-      0,
-      18,
-      0,
-      size,
-      size / 2,
-      18,
-      size,
-      6,
-      size,
-      size - 12.5,
-      size / 2 + 4,
-      -9,
-      size / 2 + 4,
-      -9,
-      size / 2 - 4,
-      size - 12.5,
-      size / 2 - 4,
-    ];
 
     const renderBadge = (
       cx: number,
@@ -431,10 +411,9 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
               {(direction === "left" || direction === "both") && (
                 <Line
                   closed
-                  points={arrowPoints(leftArrowSize)}
-                  x={14 + leftArrowSize}
+                  points={getMetroSmallArrowPoints(leftArrowSize, "left")}
+                  x={14}
                   y={27}
-                  scaleX={-1}
                   fill="#1b1831"
                   strokeWidth={0}
                 />
@@ -442,7 +421,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
               {(direction === "right" || direction === "both") && (
                 <Line
                   closed
-                  points={arrowPoints(rightArrowSize)}
+                  points={getMetroSmallArrowPoints(rightArrowSize, "right")}
                   x={width - 14 - rightArrowSize}
                   y={27}
                   fill="#1b1831"

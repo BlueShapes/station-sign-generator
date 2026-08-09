@@ -13,10 +13,10 @@ import {
 } from "./stationNameLayout";
 import {
   getMetroSmallBadgeTextAdjustments,
-  getSubwayMediumArrowPoints,
   METRO_MEDIUM_DIMENSIONS,
   type MetroSmallBadgeKind,
 } from "./subwaySignGeometry";
+import { getSubwayMediumArrowPoints } from "./arrowGeometry";
 
 export type SubwaySignVariant = "metroMedium" | "toeiMedium" | "toeiLarge";
 

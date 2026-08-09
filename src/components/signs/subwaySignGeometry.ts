@@ -6,43 +6,6 @@ export const METRO_MEDIUM_DIMENSIONS = {
   bandHeight: 48,
 } as const;
 
-/**
- * Medium/large subway arrow based on the Tokyo Metro small-sign silhouette.
- * Its arrowhead is inset slightly at the top and bottom so it is a little
- * slimmer than the small-sign version while retaining the same shaft shape.
- */
-export function getSubwayMediumArrowPoints(
-  width: number,
-  height: number,
-  direction: "left" | "right" = "right",
-): number[] {
-  type Point = readonly [x: number, y: number];
-  const mirrorVertically = ([x, y]: Point): Point => [x, height - y];
-
-  const outerTopLeft: Point = [width * 0.44, 0];
-  const outerTopRight: Point = [width * 0.63, 0];
-  const tip: Point = [width * 0.95, height * 0.5];
-  const shaftTopLeft: Point = [5, height * 0.40];
-  const shaftTopRight: Point = [width * 0.71, height * 0.38];
-
-  const rightArrow = [
-    outerTopLeft,
-    outerTopRight,
-    tip,
-    mirrorVertically(outerTopRight),
-    mirrorVertically(outerTopLeft),
-    mirrorVertically(shaftTopRight),
-    mirrorVertically(shaftTopLeft),
-    shaftTopLeft,
-    shaftTopRight,
-  ];
-
-  return rightArrow.flatMap(([x, y]) => [
-    direction === "left" ? width - x : x,
-    y,
-  ]);
-}
-
 export type MetroSmallBadgeKind = "main" | "side";
 
 export function getMetroSmallBadgeTextAdjustments(

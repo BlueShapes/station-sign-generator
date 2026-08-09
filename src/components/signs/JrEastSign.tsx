@@ -7,6 +7,7 @@ import { isMobile } from "react-device-detect";
 import { getTokyoMetroStationNumberMetrics } from "@/components/signs/stationNumberBadgeMetrics";
 import { getStationSignFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
+import { getJrEastLineArrowPoints } from "./arrowGeometry";
 
 export const height = 140;
 export const scale = 3;
@@ -223,28 +224,26 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               />
               <Line
                 closed
-                points={[
-                  startingPoint,
-                  linePosY,
-                  startingPoint,
-                  linePosY + lineHeight,
-                  15,
-                  linePosY + 12,
-                ]}
+                points={getJrEastLineArrowPoints(
+                  startingPoint - 15,
+                  lineHeight,
+                  "left",
+                )}
+                x={15}
+                y={linePosY}
                 fill={baseColor}
                 strokeWidth={1}
                 stroke={baseColor}
               />
               <Line
                 closed
-                points={[
-                  width - startingPoint,
-                  linePosY,
-                  width - startingPoint,
-                  linePosY + lineHeight,
-                  width - 15,
-                  linePosY + 12,
-                ]}
+                points={getJrEastLineArrowPoints(
+                  startingPoint - 15,
+                  lineHeight,
+                  "right",
+                )}
+                x={width - startingPoint}
+                y={linePosY}
                 fill={baseColor}
                 strokeWidth={1}
                 stroke={baseColor}
