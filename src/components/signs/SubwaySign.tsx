@@ -8,6 +8,7 @@ import type { AdjacentStationProps } from "./DirectInputStationProps";
 import { METRO_LONG_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import {
   getTokyoMetroStationNumberMetrics,
+  SUBWAY_MAIN_BADGE_NUMBER_FONT_SIZE_DELTA,
   TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
 } from "./stationNumberBadgeMetrics";
 import {
@@ -140,6 +141,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       diameter,
       whiteOutline = false,
       emphasizedNumberKind,
+      valueFontSizeDelta = 0,
       valueStrokeWidth = 0,
     }: {
       cx: number;
@@ -149,6 +151,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       diameter: number;
       whiteOutline?: boolean;
       emphasizedNumberKind?: SubwayBadgeKind;
+      valueFontSizeDelta?: number;
       valueStrokeWidth?: number;
     }) => {
       if (!prefix || !value) return null;
@@ -217,7 +220,9 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             }
             width={diameter}
             fontSize={
-              metrics.valueFontSize + textAdjustments.valueFontSizeDelta
+              metrics.valueFontSize +
+              textAdjustments.valueFontSizeDelta +
+              valueFontSizeDelta
             }
             fontFamily="JostTrispaceHybrid"
             fontStyle={textAdjustments.valueFontStyle}
@@ -434,6 +439,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             diameter: 34,
             whiteOutline: true,
             emphasizedNumberKind: "main",
+            valueFontSizeDelta: SUBWAY_MAIN_BADGE_NUMBER_FONT_SIZE_DELTA,
             valueStrokeWidth: TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
           })}
         </>
@@ -610,6 +616,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               value: numberPrimaryValue,
               diameter: mainBadgeDiameter,
               emphasizedNumberKind: "main",
+              valueFontSizeDelta: SUBWAY_MAIN_BADGE_NUMBER_FONT_SIZE_DELTA,
               valueStrokeWidth: TOEI_BADGE_NUMBER_STROKE_WIDTH,
             })}
             <Text

@@ -8,6 +8,7 @@ import { METRO_LONG_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
 import {
   getTokyoMetroStationNumberMetrics,
+  SUBWAY_MAIN_BADGE_NUMBER_FONT_SIZE_DELTA,
   TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
 } from "./stationNumberBadgeMetrics";
 import {
@@ -451,7 +452,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
                   mainBadgeStroke,
                   mainBadgeMetrics,
                   3,
-                  8,
+                  8 + SUBWAY_MAIN_BADGE_NUMBER_FONT_SIZE_DELTA,
                   -2,
                   0,
                   0,

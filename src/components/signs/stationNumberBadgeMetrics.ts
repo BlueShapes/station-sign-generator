@@ -10,6 +10,7 @@ export const TOKYO_METRO_STATION_NUMBER_REF = {
 } as const;
 
 export const TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH = 0.6;
+export const SUBWAY_MAIN_BADGE_NUMBER_FONT_SIZE_DELTA = -2;
 
 export function getTokyoMetroStationNumberMetrics(
   innerSize: number,
