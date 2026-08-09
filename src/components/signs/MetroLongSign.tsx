@@ -9,7 +9,7 @@ import styled from "styled-components";
 import { getTokyoMetroStationNumberMetrics } from "./stationNumberBadgeMetrics";
 import {
   getSubwayStationNameScaleX,
-  spaceSubwayPrimaryName,
+  spaceTokyoMetroPrimaryName,
 } from "./stationNameLayout";
 import { getMetroSmallArrowPoints } from "./arrowGeometry";
 
@@ -217,7 +217,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
       primaryNameFurigana,
       secondaryName,
     });
-    const displayPrimaryName = spaceSubwayPrimaryName(primaryName);
+    const displayPrimaryName = spaceTokyoMetroPrimaryName(primaryName);
     const centerSubFontFamily =
       effectiveSubTextMode === "secondary" ? "Jost" : "NotoSansJP";
     const centerSubFontSize =

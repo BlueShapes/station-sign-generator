@@ -9,12 +9,15 @@ import { METRO_LONG_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import { getTokyoMetroStationNumberMetrics } from "./stationNumberBadgeMetrics";
 import {
   getSubwayStationNameScaleX,
-  spaceSubwayPrimaryName,
+  spaceToeiPrimaryName,
+  spaceTokyoMetroPrimaryName,
 } from "./stationNameLayout";
 import {
   getSubwayBadgeTextAdjustments,
   getToeiMainLayout,
   METRO_MEDIUM_DIMENSIONS,
+  TOEI_BADGE_DIAMETERS,
+  TOEI_JAPANESE_LETTER_SPACING,
   type SubwayBadgeKind,
 } from "./subwaySignGeometry";
 import { getSubwayMediumArrowPoints } from "./arrowGeometry";
@@ -92,7 +95,15 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       fontSize: number,
       fontFamily: string,
       fontStyle: string,
-    ) => new Konva.Text({ text, fontSize, fontFamily, fontStyle }).width();
+      letterSpacing = 0,
+    ) =>
+      new Konva.Text({
+        text,
+        fontSize,
+        fontFamily,
+        fontStyle,
+        letterSpacing,
+      }).width();
 
     const fitFontSize = (
       text: string,
@@ -100,12 +111,14 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       maxWidth: number,
       fontFamily: string,
       fontStyle: string,
+      letterSpacing = 0,
     ) => {
       const measuredWidth = measureText(
         text,
         maxFontSize,
         fontFamily,
         fontStyle,
+        letterSpacing,
       );
       return measuredWidth > maxWidth
         ? maxFontSize * (maxWidth / measuredWidth)
@@ -330,7 +343,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
     const renderMetroMedium = () => {
       const bandTop = METRO_MEDIUM_DIMENSIONS.bandTop;
       const centerWidth = width - 268;
-      const displayName = spaceSubwayPrimaryName(primaryName);
+      const displayName = spaceTokyoMetroPrimaryName(primaryName);
       const naturalMainNameWidth = measureText(
         displayName,
         39,
@@ -428,19 +441,24 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       const align = isLeft ? "left" : "right";
       const nameY = large ? 190 : 137;
       const secondaryY = large ? 214 : 161;
-      const arrowY = large ? 150 : 106;
-      const arrowWidth = large ? 50 : 42;
-      const arrowHeight = large ? 31 : 29;
+      const arrowY = large ? 150 : 103;
+      const arrowWidth = large ? 50 : 45;
+      const arrowHeight = large ? 31 : 31;
       const arrowX = isLeft ? x : x + blockWidth - arrowWidth;
+      const sideBadgeDiameter = large
+        ? TOEI_BADGE_DIAMETERS.large.side
+        : TOEI_BADGE_DIAMETERS.medium.side;
+      const badgeArrowDistance = 18;
       const badgeCx = isLeft
-        ? arrowX + arrowWidth + (large ? 17 : 15)
-        : arrowX - (large ? 17 : 15);
+        ? arrowX + arrowWidth + badgeArrowDistance
+        : arrowX - badgeArrowDistance;
       const sideNameSize = large ? 25 : 22;
       const naturalNameWidth = measureText(
         station.primaryName,
         sideNameSize,
         "NotoSansJP",
         "600",
+        TOEI_JAPANESE_LETTER_SPACING,
       );
       const nameScaleX = getSubwayStationNameScaleX(
         station.primaryName,
@@ -458,7 +476,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               cy: arrowY + arrowHeight / 2,
               prefix: station.numberPrimaryPrefix,
               value: station.numberPrimaryValue,
-              diameter: large ? 29 : 27,
+              diameter: sideBadgeDiameter,
               emphasizedNumberKind: large ? undefined : "side",
             })}
           <Text
@@ -469,6 +487,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             fontSize={sideNameSize}
             fontFamily="NotoSansJP"
             fontStyle="600"
+            letterSpacing={TOEI_JAPANESE_LETTER_SPACING}
             align="left"
             scaleX={nameScaleX}
             wrap="none"
@@ -493,10 +512,12 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
     const renderToei = (large: boolean) => {
       const bandHeight = large ? 18 : 17;
       const maxMainNameSize = large ? 49 : 48;
-      const maxMainFuriganaSize = large ? 18 : 18;
-      const maxMainSecondarySize = large ? 23 : 22;
-      const mainBadgeDiameter = large ? 43 : 42;
-      const displayName = spaceSubwayPrimaryName(primaryName);
+      const maxMainFuriganaSize = large ? 18 : 20;
+      const maxMainSecondarySize = large ? 23 : 23;
+      const mainBadgeDiameter = large
+        ? TOEI_BADGE_DIAMETERS.large.main
+        : TOEI_BADGE_DIAMETERS.medium.main;
+      const displayName = spaceToeiPrimaryName(primaryName);
       const badgeMetrics = getTokyoMetroStationNumberMetrics(mainBadgeDiameter);
       const badgeOuter = mainBadgeDiameter + Math.max(2.4, badgeMetrics.strokeWidth * 0.72);
       const maxMainNameWidth = width - 2 * (badgeOuter + 24);
@@ -506,6 +527,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
         maxMainNameSize,
         "NotoSansJP",
         "600",
+        TOEI_JAPANESE_LETTER_SPACING,
       );
       const mainNameScaleX = getSubwayStationNameScaleX(
         primaryName,
@@ -519,6 +541,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
         maxSubtextWidth,
         "NotoSansJP",
         "600",
+        TOEI_JAPANESE_LETTER_SPACING,
       );
       const mainSecondarySize = fitFontSize(
         secondaryName,
@@ -532,6 +555,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
         mainFuriganaSize,
         "NotoSansJP",
         "600",
+        TOEI_JAPANESE_LETTER_SPACING,
       );
       const measuredSecondaryWidth = measureText(
         secondaryName,
@@ -580,6 +604,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               fontSize={maxMainNameSize}
               fontFamily="NotoSansJP"
               fontStyle="600"
+              letterSpacing={TOEI_JAPANESE_LETTER_SPACING}
               align="left"
               scaleX={mainNameScaleX}
               wrap="none"
@@ -588,11 +613,12 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             <Text
               text={primaryNameFurigana}
               x={textX}
-              y={mainTop + 48}
+              y={mainTop + 50}
               width={nameWidth}
               fontSize={mainFuriganaSize}
               fontFamily="NotoSansJP"
               fontStyle="600"
+              letterSpacing={TOEI_JAPANESE_LETTER_SPACING}
               align="center"
               wrap="none"
               fill="#202126"
@@ -600,7 +626,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             <Text
               text={secondaryName}
               x={textX}
-              y={mainTop + 68}
+              y={mainTop + 72}
               width={nameWidth}
               fontSize={mainSecondarySize}
               fontFamily="Jost"

@@ -6,6 +6,13 @@ export const METRO_MEDIUM_DIMENSIONS = {
   bandHeight: 48,
 } as const;
 
+export const TOEI_BADGE_DIAMETERS = {
+  medium: { main: 55, side: 35 },
+  large: { main: 43, side: 29 },
+} as const;
+
+export const TOEI_JAPANESE_LETTER_SPACING = 1.5;
+
 type ToeiMainLayoutOptions = {
   width: number;
   renderedMainNameWidth: number;
@@ -22,7 +29,7 @@ export function getToeiMainLayout({
   large,
 }: ToeiMainLayoutOptions) {
   const horizontalMargin = 12;
-  const badgeGap = large ? 10 : 12;
+  const badgeGap = large ? 8 : 10;
   const maxSecondaryShift = large ? 10 : 8;
   const longSecondaryThreshold = width * 0.42;
   const secondaryShift = Math.min(

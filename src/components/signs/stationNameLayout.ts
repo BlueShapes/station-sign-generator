@@ -1,9 +1,15 @@
 export const SUBWAY_NAME_COMPRESSION_THRESHOLD = 6;
 
-export function spaceSubwayPrimaryName(name: string): string {
+export function spaceTokyoMetroPrimaryName(name: string): string {
   const characters = Array.from(name);
   if (characters.length === 2) return characters.join("　");
   if (characters.length === 3) return characters.join(" ");
+  return name;
+}
+
+export function spaceToeiPrimaryName(name: string): string {
+  const characters = Array.from(name);
+  if (characters.length === 2) return characters.join("　");
   return name;
 }
 

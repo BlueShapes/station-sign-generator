@@ -2,13 +2,16 @@ import { describe, expect, test } from "bun:test";
 import { SIGN_STYLE_FIELDS } from "../src/components/signs/signStyles.ts";
 import {
   getSubwayStationNameScaleX,
-  spaceSubwayPrimaryName,
+  spaceToeiPrimaryName,
+  spaceTokyoMetroPrimaryName,
   SUBWAY_NAME_COMPRESSION_THRESHOLD,
 } from "../src/components/signs/stationNameLayout.ts";
 import {
   getSubwayBadgeTextAdjustments,
   getToeiMainLayout,
   METRO_MEDIUM_DIMENSIONS,
+  TOEI_BADGE_DIAMETERS,
+  TOEI_JAPANESE_LETTER_SPACING,
 } from "../src/components/signs/subwaySignGeometry.ts";
 
 describe("subway sign style fields", () => {
@@ -56,10 +59,14 @@ describe("subway sign style fields", () => {
     );
   });
 
-  test("uses full-width spacing for two-character center names and half-width spacing for three", () => {
-    expect(spaceSubwayPrimaryName("西台")).toBe("西　台");
-    expect(spaceSubwayPrimaryName("日比谷")).toBe("日 比 谷");
-    expect(spaceSubwayPrimaryName("飯田橋駅")).toBe("飯田橋駅");
+  test("keeps the operator-specific center-name spacing rules", () => {
+    expect(spaceTokyoMetroPrimaryName("西台")).toBe("西　台");
+    expect(spaceTokyoMetroPrimaryName("日比谷")).toBe("日 比 谷");
+    expect(spaceTokyoMetroPrimaryName("飯田橋駅")).toBe("飯田橋駅");
+
+    expect(spaceToeiPrimaryName("西台")).toBe("西　台");
+    expect(spaceToeiPrimaryName("日比谷")).toBe("日比谷");
+    expect(spaceToeiPrimaryName("飯田橋駅")).toBe("飯田橋駅");
   });
 
   test("matches the small Metro badge typography ratios in the medium sign", () => {
@@ -84,6 +91,7 @@ describe("subway sign style fields", () => {
       large: false,
     });
     expect(centered.textCenterX).toBe(247);
+    expect(centered.badgeGap).toBe(10);
     expect(centered.badgeCx + 23 + centered.badgeGap).toBe(157);
     expect(centered.badgeCyOffset).toBeGreaterThan(42 / 2);
 
@@ -96,5 +104,30 @@ describe("subway sign style fields", () => {
     });
     expect(longSecondary.textCenterX).toBeLessThan(247);
     expect(longSecondary.textCenterX).toBeGreaterThanOrEqual(247 - 8);
+
+    const large = getToeiMainLayout({
+      width: 494,
+      renderedMainNameWidth: 180,
+      secondaryNameWidth: 160,
+      badgeOuter: 46,
+      large: true,
+    });
+    expect(large.badgeGap).toBe(8);
+  });
+
+  test("uses larger station-number badges only in the Toei medium sign", () => {
+    expect(TOEI_BADGE_DIAMETERS.medium.main).toBe(51);
+    expect(TOEI_BADGE_DIAMETERS.medium.side).toBe(33);
+    expect(TOEI_BADGE_DIAMETERS.medium.main).toBeGreaterThan(
+      TOEI_BADGE_DIAMETERS.large.main,
+    );
+    expect(TOEI_BADGE_DIAMETERS.medium.side).toBeGreaterThan(
+      TOEI_BADGE_DIAMETERS.large.side,
+    );
+  });
+
+  test("adds subtle letter spacing to Toei Japanese names and readings", () => {
+    expect(TOEI_JAPANESE_LETTER_SPACING).toBeGreaterThanOrEqual(1);
+    expect(TOEI_JAPANESE_LETTER_SPACING).toBeLessThanOrEqual(2);
   });
 });
