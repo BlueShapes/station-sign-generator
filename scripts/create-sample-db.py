@@ -565,7 +565,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.7.0')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.7.1')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -907,7 +907,7 @@ def main():
     insert_numbered_line_stations(c, tr_line_id, "tr", TOYO_RAPID_STATIONS)
     insert_line_services(c, tr_line_id, "tr", TOYO_RAPID_STATIONS, TOYO_RAPID_SERVICES)
 
-    # ── Direction-aware through routes ────────────────────────────────────────
+    # ── Canonical through routes ──────────────────────────────────────────────
     c.execute(
         "INSERT INTO through_routes VALUES (?, ?, ?)",
         ("through-mitaka-to-toyo-katsutadai", "三鷹 → 東葉勝田台（東西線直通）", 0),
@@ -923,14 +923,14 @@ def main():
 
     c.execute(
         "INSERT INTO through_routes VALUES (?, ?, ?)",
-        ("through-toyo-katsutadai-to-mitaka", "東葉勝田台 → 三鷹（東西線直通）", 1),
+        ("through-mitaka-to-tsudanuma", "三鷹 → 津田沼（東西線直通）", 1),
     )
     c.executemany(
         "INSERT INTO through_route_segments VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
-            ("trs-west-01", "through-toyo-katsutadai-to-mitaka", tr_line_id, "station-tr09", "station-jb30", "reverse", 0),
-            ("trs-west-02", "through-toyo-katsutadai-to-mitaka", t_line_id, "station-jb30", "station-jc06", "reverse", 1),
-            ("trs-west-03", "through-toyo-katsutadai-to-mitaka", jb_line_id, "station-jc06", "station-jc12", "reverse", 2),
+            ("trs-tsudanuma-01", "through-mitaka-to-tsudanuma", jb_line_id, "station-jc12", "station-jc06", "forward", 0),
+            ("trs-tsudanuma-02", "through-mitaka-to-tsudanuma", t_line_id, "station-jc06", "station-jb30", "forward", 1),
+            ("trs-tsudanuma-03", "through-mitaka-to-tsudanuma", jb_line_id, "station-jb30", "station-jb33", "forward", 2),
         ],
     )
 
@@ -948,7 +948,7 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.7.0")
+    print(f"  - version: 0.7.1")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
     print(f"  - 3 companies (JR東日本, 東京メトロ, 東葉高速鉄道)")
     print(f"  - 10 lines:")
@@ -962,7 +962,7 @@ def main():
     print(f"      中央・総武線各駅停車 (JB, #ffd400, is_loop=0): {len(CHUO_SOBU_LOCAL_STATIONS)} stations")
     print(f"      東西線          (T,  #00a7db,  is_loop=0): {len(TOZAI_STATIONS)} stations; 3 services")
     print(f"      東葉高速線      (TR, #78e900,  is_loop=0): {len(TOYO_RAPID_STATIONS)} stations; 3 services")
-    print(f"  - 2 direction-aware through routes (3 line sections each)")
+    print(f"  - 2 canonical through routes (3 line sections each)")
 
 
 if __name__ == "__main__":

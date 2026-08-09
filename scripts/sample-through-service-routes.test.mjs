@@ -221,7 +221,7 @@ describe("through-service sample routes", () => {
     expect(servicesForLine("line-chuo-sobu-local")).toEqual([]);
   });
 
-  test("stores both directions of the Tozai through route as oriented sections", () => {
+  test("stores each Tozai through route once in its canonical direction", () => {
     expect(throughRouteSegments("through-mitaka-to-toyo-katsutadai")).toEqual([
       {
         name: "三鷹 → 東葉勝田台（東西線直通）",
@@ -248,15 +248,33 @@ describe("through-service sample routes", () => {
         sort_order: 2,
       },
     ]);
-    expect(
-      throughRouteSegments("through-toyo-katsutadai-to-mitaka").map(
-        ({ line_id, direction }) => ({ line_id, direction }),
-      ),
-    ).toEqual([
-      { line_id: "line-toyo-rapid", direction: "reverse" },
-      { line_id: "line-tozai", direction: "reverse" },
-      { line_id: "line-chuo-sobu-local", direction: "reverse" },
+    expect(throughRouteSegments("through-mitaka-to-tsudanuma")).toEqual([
+      {
+        name: "三鷹 → 津田沼（東西線直通）",
+        line_id: "line-chuo-sobu-local",
+        entry_station_id: "station-jc12",
+        exit_station_id: "station-jc06",
+        direction: "forward",
+        sort_order: 0,
+      },
+      {
+        name: "三鷹 → 津田沼（東西線直通）",
+        line_id: "line-tozai",
+        entry_station_id: "station-jc06",
+        exit_station_id: "station-jb30",
+        direction: "forward",
+        sort_order: 1,
+      },
+      {
+        name: "三鷹 → 津田沼（東西線直通）",
+        line_id: "line-chuo-sobu-local",
+        entry_station_id: "station-jb30",
+        exit_station_id: "station-jb33",
+        direction: "forward",
+        sort_order: 2,
+      },
     ]);
+    expect(throughRouteSegments("through-toyo-katsutadai-to-mitaka")).toEqual([]);
   });
 
   test("aligns adjacent lines for route-input station signs", () => {

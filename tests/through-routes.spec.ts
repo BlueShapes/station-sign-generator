@@ -9,7 +9,7 @@ async function loadSampleDatabase(page: Page) {
   await expect(importDialog).not.toBeVisible();
 }
 
-test("shows direction-aware through routes from the sample database", async ({
+test("shows canonical through routes from the sample database", async ({
   page,
 }) => {
   await page.goto("/");
@@ -28,19 +28,20 @@ test("shows direction-aware through routes from the sample database", async ({
     .click();
   await expect(importDialog).not.toBeVisible();
 
-  const reverseRouteRow = page
+  const tsudanumaRouteRow = page
     .getByRole("row")
-    .filter({ hasText: "東葉勝田台 → 三鷹（東西線直通）" });
-  await expect(reverseRouteRow).toContainText("東葉高速線: 東葉勝田台 → 西船橋");
-  await expect(reverseRouteRow).toContainText("東西線: 西船橋 → 中野");
-  await expect(reverseRouteRow).toContainText("中央・総武線各駅停車: 中野 → 三鷹");
+    .filter({ hasText: "三鷹 → 津田沼（東西線直通）" });
+  await expect(tsudanumaRouteRow).toContainText("中央・総武線各駅停車: 三鷹 → 中野");
+  await expect(tsudanumaRouteRow).toContainText("東西線: 中野 → 西船橋");
+  await expect(tsudanumaRouteRow).toContainText("中央・総武線各駅停車: 西船橋 → 津田沼");
+  await expect(page.getByText("東葉勝田台 → 三鷹（東西線直通）")).toHaveCount(0);
 
-  await reverseRouteRow.getByRole("button").first().click();
+  await tsudanumaRouteRow.getByRole("button").first().click();
   const editDialog = page.getByRole("dialog");
   await expect(editDialog).toContainText(/edit through route|直通経路を編集/i);
-  await expect(editDialog.getByText("東葉勝田台 → 西船橋")).toBeVisible();
-  await expect(editDialog.getByText("西船橋 → 中野")).toBeVisible();
-  await expect(editDialog.getByText("中野 → 三鷹")).toBeVisible();
+  await expect(editDialog.getByText("三鷹 → 中野")).toBeVisible();
+  await expect(editDialog.getByText("中野 → 西船橋")).toBeVisible();
+  await expect(editDialog.getByText("西船橋 → 津田沼")).toBeVisible();
 });
 
 test("aligns reversed adjacent lines in route input", async ({ page }) => {
