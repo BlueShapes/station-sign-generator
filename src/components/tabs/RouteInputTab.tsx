@@ -65,6 +65,10 @@ import {
   getStationAreasWithZones,
 } from "@/db/repositories/stations";
 import {
+  getConnectingStations,
+  getTransferLineIds,
+} from "@/db/repositories/station-transfers";
+import {
   getServicesByLine,
   getServiceStopsByLine,
 } from "@/db/repositories/services";
@@ -321,85 +325,108 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       };
     }
 
-    const stationLineRecords = getStationLines(db, selectedStationId);
     const result: Record<AdjacentSide, AdjacentCandidate[]> = {
       left: [],
       right: [],
     };
 
-    for (const stationLine of stationLineRecords) {
-      const line = lines.find((candidate) => candidate.id === stationLine.line_id);
-      if (!line) continue;
+    const stationContexts = [
+      {
+        stationId: selectedStationId,
+        stationLines: getStationLines(db, selectedStationId),
+      },
+      ...getConnectingStations(db, selectedStationId).map((station) => ({
+        stationId: station.id,
+        stationLines: getStationLines(db, station.id),
+      })),
+    ];
 
-      const lineStations = getStationsByLine(db, line.id);
-      const stationIndex = lineStations.findIndex((s) => s.id === selectedStationId);
-      if (stationIndex === -1) continue;
+    for (const stationContext of stationContexts) {
+      for (const stationLine of stationContext.stationLines) {
+        const line = lines.find(
+          (candidate) => candidate.id === stationLine.line_id,
+        );
+        if (!line) continue;
 
-      const isLoop = line.is_loop === 1;
-      const previousStation =
-        stationIndex > 0
-          ? lineStations[stationIndex - 1]
-          : isLoop
-            ? lineStations[lineStations.length - 1]
-            : null;
-      const nextStation =
-        stationIndex < lineStations.length - 1
-          ? lineStations[stationIndex + 1]
-          : isLoop
-            ? lineStations[0]
-            : null;
+        const lineStations = getStationsByLine(db, line.id);
+        const stationIndex = lineStations.findIndex(
+          (station) => station.id === stationContext.stationId,
+        );
+        if (stationIndex === -1) continue;
 
-      const buildCandidate = (
-        station: Station | null,
-        side: AdjacentSide,
-      ): AdjacentCandidate | null => {
-        if (!station) return null;
-        const stationNumber = getResolvedStationNumber(db, station.id, line.id);
-        return {
-          optionValue: `${side}:${line.id}:${station.id}`,
-          lineId: line.id,
-          lineName: line.name,
-          side,
-          id: `${line.id}:${station.id}`,
-          primaryName: station.primary_name,
-          primaryNameFurigana: station.primary_name_furigana ?? "",
-          secondaryName: station.secondary_name ?? "",
-          numberPrimaryPrefix: stationNumber?.prefix ?? "",
-          numberPrimaryValue: stationNumber?.value ?? "",
+        const isLoop = line.is_loop === 1;
+        const previousStation =
+          stationIndex > 0
+            ? lineStations[stationIndex - 1]
+            : isLoop
+              ? lineStations[lineStations.length - 1]
+              : null;
+        const nextStation =
+          stationIndex < lineStations.length - 1
+            ? lineStations[stationIndex + 1]
+            : isLoop
+              ? lineStations[0]
+              : null;
+
+        const buildCandidate = (
+          station: Station | null,
+          side: AdjacentSide,
+        ): AdjacentCandidate | null => {
+          if (!station) return null;
+          const stationNumber = getResolvedStationNumber(
+            db,
+            station.id,
+            line.id,
+          );
+          return {
+            optionValue: `${side}:${line.id}:${station.id}`,
+            lineId: line.id,
+            lineName: line.name,
+            side,
+            id: `${line.id}:${station.id}`,
+            primaryName: station.primary_name,
+            primaryNameFurigana: station.primary_name_furigana ?? "",
+            secondaryName: station.secondary_name ?? "",
+            numberPrimaryPrefix: stationNumber?.prefix ?? "",
+            numberPrimaryValue: stationNumber?.value ?? "",
+          };
         };
-      };
 
-      const relativeDirection = getRelativeLineDirectionAtStation(
-        db,
-        selectedLineId,
-        line.id,
-        selectedStationId,
-      );
-      const addCandidate = (station: Station | null, side: AdjacentSide) => {
-        const candidate = buildCandidate(station, side);
-        if (
-          candidate &&
-          !result[side].some(
-            (existing) => existing.optionValue === candidate.optionValue,
-          )
-        ) {
-          result[side].push(candidate);
+        const relativeDirection =
+          stationContext.stationId === selectedStationId
+            ? getRelativeLineDirectionAtStation(
+                db,
+                selectedLineId,
+                line.id,
+                selectedStationId,
+              )
+            : null;
+        const addCandidate = (station: Station | null, side: AdjacentSide) => {
+          const candidate = buildCandidate(station, side);
+          if (
+            candidate &&
+            !result[side].some(
+              (existing) => existing.optionValue === candidate.optionValue,
+            )
+          ) {
+            result[side].push(candidate);
+          }
+        };
+
+        if (relativeDirection === "reverse") {
+          addCandidate(nextStation, "left");
+          addCandidate(previousStation, "right");
+        } else if (relativeDirection === "forward") {
+          addCandidate(previousStation, "left");
+          addCandidate(nextStation, "right");
+        } else {
+          // A single junction does not contain enough information to infer
+          // orientation. Offer both neighbours for explicit user selection.
+          addCandidate(previousStation, "left");
+          addCandidate(nextStation, "left");
+          addCandidate(previousStation, "right");
+          addCandidate(nextStation, "right");
         }
-      };
-
-      if (relativeDirection === "reverse") {
-        addCandidate(nextStation, "left");
-        addCandidate(previousStation, "right");
-      } else if (relativeDirection === "forward") {
-        addCandidate(previousStation, "left");
-        addCandidate(nextStation, "right");
-      } else {
-        // A single shared junction does not contain enough information to infer
-        // orientation. Offer both neighbours so the user can choose explicitly.
-        addCandidate(previousStation, "left");
-        addCandidate(nextStation, "left");
-        addCandidate(previousStation, "right");
-        addCandidate(nextStation, "right");
       }
     }
 
@@ -481,10 +508,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       }
     }
 
-    // All lines this station belongs to
+    // Lines belonging to this station plus lines reachable through explicit
+    // connections to distinct stations.
     const stationLineRecords = getStationLines(db, currentStation.id);
+    const transferLineIds = new Set(
+      getTransferLineIds(db, currentStation.id),
+    );
     const allStationLines = lines.filter((l) =>
-      stationLineRecords.some((sl) => sl.line_id === l.id),
+      stationLineRecords.some((stationLine) => stationLine.line_id === l.id) ||
+      transferLineIds.has(l.id),
     );
     setStationLines(allStationLines);
 
@@ -656,11 +688,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     const result: Record<string, Line[]> = {};
     const routeLineIdSet = new Set(mapRouteLineIds);
     for (const station of mapSourceStations) {
-      const slRecords = getStationLines(db, station.id);
+      const transferLineIds = new Set(getTransferLineIds(db, station.id));
+      const stationLineRecords = getStationLines(db, station.id);
       const otherLines = lines.filter(
         (l) =>
           !routeLineIdSet.has(l.id) &&
-          slRecords.some((sl) => sl.line_id === l.id),
+          (stationLineRecords.some(
+            (stationLine) => stationLine.line_id === l.id,
+          ) ||
+            transferLineIds.has(l.id)),
       );
       if (otherLines.length > 0) result[station.id] = otherLines;
     }

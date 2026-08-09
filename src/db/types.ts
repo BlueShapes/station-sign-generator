@@ -43,6 +43,12 @@ export interface StationLine {
   sort_order: number;
 }
 
+export interface StationTransfer {
+  id: string;
+  station_a_id: string;
+  station_b_id: string;
+}
+
 export interface StationNumber {
   id: string;
   station_id: string;

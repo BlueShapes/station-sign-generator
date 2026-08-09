@@ -10,6 +10,7 @@ import migrateV050toV051 from "./migrations/v0.5.0_to_v0.5.1";
 import migrateV051toV052 from "./migrations/v0.5.1_to_v0.5.2";
 import migrateV054toV060 from "./migrations/v0.5.4_to_v0.6.0";
 import migrateV060toV070 from "./migrations/v0.6.0_to_v0.7.0";
+import migrateV071toV080 from "./migrations/v0.7.1_to_v0.8.0";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -108,6 +109,17 @@ CREATE TABLE IF NOT EXISTS station_service_stops (
   status     TEXT NOT NULL DEFAULT 'stop'
 );
 
+CREATE TABLE IF NOT EXISTS station_transfers (
+  id           TEXT PRIMARY KEY,
+  station_a_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  station_b_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  CHECK (station_a_id < station_b_id),
+  UNIQUE (station_a_id, station_b_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_station_transfers_station_b
+  ON station_transfers (station_b_id);
+
 CREATE TABLE IF NOT EXISTS through_routes (
   id         TEXT PRIMARY KEY,
   name       TEXT NOT NULL,
@@ -147,6 +159,7 @@ function migrateDatabase(database: Database): void {
     migrateV051toV052,
     migrateV054toV060,
     migrateV060toV070,
+    migrateV071toV080,
   ];
 
   for (const migrate of migrations) {
@@ -227,6 +240,7 @@ const REQUIRED_SCHEMA: Record<string, string[]> = {
   ],
   stations: ["id", "primary_name"],
   station_lines: ["id", "station_id", "line_id", "sort_order"],
+  station_transfers: ["id", "station_a_id", "station_b_id"],
   station_numbers: ["id", "station_id", "line_id", "value"],
   special_zones: ["id", "name", "abbreviation", "is_black"],
   station_areas: ["id", "station_id", "zone_id", "sort_order"],
@@ -331,6 +345,7 @@ const MERGE_TABLES = [
   "lines",
   "stations",
   "station_lines",
+  "station_transfers",
   "station_numbers",
   "special_zones",
   "station_areas",

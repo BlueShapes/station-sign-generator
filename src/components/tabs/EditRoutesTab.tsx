@@ -92,6 +92,11 @@ import {
   getStationAreas,
   syncStationAreas,
 } from "@/db/repositories/stations";
+import {
+  deleteStationTransfer,
+  getConnectingStations,
+  upsertStationTransfer,
+} from "@/db/repositories/station-transfers";
 import type {
   Company,
   Line,
@@ -1691,6 +1696,166 @@ function LinkExistingStationForm({
 
 // ── Main EditRoutesTab ────────────────────────────────────────────────────────
 
+interface StationTransferFormProps {
+  db: Database;
+  station: Station;
+  lineId: string;
+  onSave: () => void;
+  onClose: () => void;
+}
+
+function StationTransferForm({
+  db,
+  station,
+  lineId,
+  onSave,
+  onClose,
+}: StationTransferFormProps) {
+  const t = useTranslations();
+  const allStations = getAllStations(db);
+  const allLines = getAllLines(db);
+  const connectingStations = getConnectingStations(db, station.id);
+  const connectedStationIds = new Set(
+    connectingStations.map((connectedStation) => connectedStation.id),
+  );
+  const sameStationLineIds = new Set(
+    getStationLines(db, station.id).map((stationLine) => stationLine.line_id),
+  );
+  const sameStationTransferLines = allLines.filter(
+    (line) => line.id !== lineId && sameStationLineIds.has(line.id),
+  );
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(
+    null,
+  );
+
+  const getStationLineNames = (stationId: string): string => {
+    const stationLineIds = new Set(
+      getStationLines(db, stationId).map((stationLine) => stationLine.line_id),
+    );
+    return allLines
+      .filter((line) => stationLineIds.has(line.id))
+      .map((line) => line.name)
+      .join(", ");
+  };
+
+  const availableStations = allStations.filter(
+    (candidate) =>
+      candidate.id !== station.id && !connectedStationIds.has(candidate.id),
+  );
+
+  const handleAdd = () => {
+    if (!selectedStationId) return;
+    upsertStationTransfer(db, uuidv7(), station.id, selectedStationId);
+    setSelectedStationId(null);
+    onSave();
+  };
+
+  const handleDelete = (connectingStationId: string) => {
+    deleteStationTransfer(db, station.id, connectingStationId);
+    onSave();
+  };
+
+  return (
+    <Stack gap="md">
+      <Divider
+        label={t("route.station.same-id-lines")}
+        labelPosition="left"
+      />
+      <Text size="sm" c="dimmed">
+        {t("route.station.same-id-lines-help")}
+      </Text>
+      {sameStationTransferLines.length === 0 ? (
+        <Text size="sm" c="dimmed">
+          {t("route.station.same-id-lines-empty")}
+        </Text>
+      ) : (
+        <Group gap="xs">
+          {sameStationTransferLines.map((line) => (
+            <Badge key={line.id} variant="light" color="blue">
+              {line.prefix ? `[${line.prefix}] ${line.name}` : line.name}
+            </Badge>
+          ))}
+        </Group>
+      )}
+
+      <Divider
+        label={t("route.station.explicit-transfers")}
+        labelPosition="left"
+      />
+      <Text size="sm" c="dimmed">
+        {t("route.station.explicit-transfers-help")}
+      </Text>
+      <Group align="flex-end" wrap="nowrap">
+        <Select
+          style={{ flex: 1 }}
+          label={t("route.station.transfer-select")}
+          value={selectedStationId}
+          onChange={setSelectedStationId}
+          data={availableStations.map((candidate) => {
+            const lineNames = getStationLineNames(candidate.id);
+            return {
+              value: candidate.id,
+              label: lineNames
+                ? `${candidate.primary_name} (${lineNames})`
+                : candidate.primary_name,
+            };
+          })}
+          searchable
+          clearable
+        />
+        <Button onClick={handleAdd} disabled={!selectedStationId}>
+          {t("common.add")}
+        </Button>
+      </Group>
+
+      {connectingStations.length === 0 ? (
+        <Text size="sm" c="dimmed">
+          {t("route.station.transfer-empty")}
+        </Text>
+      ) : (
+        <Stack gap="xs">
+          {connectingStations.map((connectingStation) => {
+            const lineNames = getStationLineNames(connectingStation.id);
+            return (
+              <Group
+                key={connectingStation.id}
+                justify="space-between"
+                wrap="nowrap"
+              >
+                <Box>
+                  <Text size="sm" fw={600}>
+                    {connectingStation.primary_name}
+                  </Text>
+                  {lineNames && (
+                    <Text size="xs" c="dimmed">
+                      {lineNames}
+                    </Text>
+                  )}
+                </Box>
+                <ActionIcon
+                  variant="subtle"
+                  color="red"
+                  aria-label={t("common.delete")}
+                  title={t("common.delete")}
+                  onClick={() => handleDelete(connectingStation.id)}
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Group>
+            );
+          })}
+        </Stack>
+      )}
+
+      <Group justify="flex-end">
+        <Button variant="default" onClick={onClose}>
+          {t("common.close")}
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
+
 export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const t = useTranslations();
   const [, setRefreshKey] = useState(0);
@@ -1820,6 +1985,11 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const [editingStation, setEditingStation] = useState<Station | undefined>(
     undefined,
   );
+  const [
+    stationTransferModalOpened,
+    { open: openStationTransferModal, close: closeStationTransferModal },
+  ] = useDisclosure(false);
+  const [transferStation, setTransferStation] = useState<Station | null>(null);
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
   const [newServiceName, setNewServiceName] = useState("");
 
@@ -1857,6 +2027,37 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const specialZones = getAllSpecialZones(db);
   const companies = getAllCompanies(db);
   const allLines = getAllLines(db);
+  const knownCompanyIds = new Set(companies.map((company) => company.id));
+  const toLineSelectItem = (line: Line) => ({
+    value: line.id,
+    label: `[${line.prefix}] ${line.name}`,
+  });
+  const unassignedLines = allLines.filter(
+    (line) => !line.company_id || !knownCompanyIds.has(line.company_id),
+  );
+  const lineSelectData = [
+    ...companies.flatMap((company) => {
+      const companyLines = allLines.filter(
+        (line) => line.company_id === company.id,
+      );
+      return companyLines.length > 0
+        ? [
+            {
+              group: company.name,
+              items: companyLines.map(toLineSelectItem),
+            },
+          ]
+        : [];
+    }),
+    ...(unassignedLines.length > 0
+      ? [
+          {
+            group: t("route.line.unassigned-company"),
+            items: unassignedLines.map(toLineSelectItem),
+          },
+        ]
+      : []),
+  ];
   const throughRoutes = getAllThroughRoutes(db);
   const filteredLines = lineCompanyFilter
     ? allLines.filter((l) => l.company_id === lineCompanyFilter)
@@ -2457,10 +2658,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             label={t("route.line.title")}
             value={selectedLineId}
             onChange={setSelectedLineId}
-            data={allLines.map((l) => ({
-              value: l.id,
-              label: `[${l.prefix}] ${l.name}`,
-            }))}
+            data={lineSelectData}
             placeholder={t("route.line.select")}
             mb="md"
             clearable
@@ -2773,6 +2971,19 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   </ActionIcon>
                                   <ActionIcon
                                     variant="subtle"
+                                    aria-label={t(
+                                      "route.station.transfer-manage",
+                                    )}
+                                    title={t("route.station.transfer-manage")}
+                                    onClick={() => {
+                                      setTransferStation(station);
+                                      openStationTransferModal();
+                                    }}
+                                  >
+                                    <IconLink size={16} />
+                                  </ActionIcon>
+                                  <ActionIcon
+                                    variant="subtle"
                                     onClick={() => {
                                       setEditingStation(station);
                                       openStationModal();
@@ -2971,6 +3182,32 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
       )}
 
       {/* ── Confirm modal ── */}
+      {transferStation && selectedLineId && (
+        <Modal
+          opened={stationTransferModalOpened}
+          onClose={() => {
+            closeStationTransferModal();
+            setTransferStation(null);
+          }}
+          title={t("route.station.transfer-title", {
+            name: transferStation.primary_name,
+          })}
+          centered
+          size="lg"
+        >
+          <StationTransferForm
+            db={db}
+            station={transferStation}
+            lineId={selectedLineId}
+            onSave={refresh}
+            onClose={() => {
+              closeStationTransferModal();
+              setTransferStation(null);
+            }}
+          />
+        </Modal>
+      )}
+
       <Modal
         opened={confirmOpened}
         onClose={closeConfirm}

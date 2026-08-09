@@ -193,6 +193,7 @@ route:
     empty: Noch keine Linien vorhanden
     select: Linie auswählen
     all: Alle Unternehmen
+    unassigned-company: Kein Unternehmen zugewiesen
     delete-confirm: Diese Linie löschen?
     prefix-preview: Vorschau der Linienplakette
     station-number-preview: Vorschau der Stationsnummer (01)
@@ -249,6 +250,15 @@ route:
     duplicate-number-warning: "Doppelte Stationsnummern in dieser Linie: {numbers}"
     delete-confirm: Diese Station aus der Linie entfernen?
     select: Station auswählen
+    transfer-title: "Umsteigeinformationen — {name}"
+    transfer-manage: Umsteigeinformationen anzeigen und bearbeiten
+    transfer-select: Umsteigebahnhof
+    transfer-empty: Keine Umsteigebeziehungen
+    same-id-lines: Linien mit derselben Bahnhofs-ID
+    same-id-lines-help: Diese Linien teilen denselben Bahnhofseintrag und gelten automatisch als Umstieg. Sie sind hier schreibgeschützt.
+    same-id-lines-empty: Keine andere Linie teilt diese Bahnhofs-ID
+    explicit-transfers: Explizite Umstiege zwischen Bahnhöfen
+    explicit-transfers-help: Umstiege zwischen unterschiedlichen Bahnhofs-IDs hinzufügen oder entfernen.
   sign:
     style: Stil
     direction: Richtung

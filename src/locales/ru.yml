@@ -185,6 +185,7 @@ route:
     empty: Очередей пока нет
     select: Выберите линию
     all: Все компании
+    unassigned-company: Компания не назначена
     delete-confirm: Удалить эту строку?
     prefix-preview: Предварительный просмотр значка линейного индикатора
     station-number-preview: Предварительный просмотр номера станции (01)
@@ -241,6 +242,15 @@ route:
     duplicate-number-warning: "Повторяющиеся номера станций в этой строке: {numbers}."
     delete-confirm: Убрать эту станцию с линии?
     select: Выберите станцию
+    transfer-title: "Информация о пересадках — {name}"
+    transfer-manage: Просмотр и изменение пересадок
+    transfer-select: Пересадочная станция
+    transfer-empty: Пересадок нет
+    same-id-lines: Линии с одинаковым ID станции
+    same-id-lines-help: Эти линии используют одну запись станции и автоматически считаются пересадочными. Здесь они доступны только для чтения.
+    same-id-lines-empty: Другие линии не используют этот ID станции
+    explicit-transfers: Явные пересадки между станциями
+    explicit-transfers-help: Добавляйте или удаляйте пересадки между разными ID станций.
   sign:
     style: Стиль
     direction: Направление

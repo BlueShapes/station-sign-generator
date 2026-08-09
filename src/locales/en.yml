@@ -193,6 +193,7 @@ route:
     empty: No lines yet
     select: Select a line
     all: All Companies
+    unassigned-company: Unassigned company
     delete-confirm: Delete this line?
     prefix-preview: Line indicator badge preview
     station-number-preview: Station number preview (01)
@@ -249,6 +250,15 @@ route:
     duplicate-number-warning: "Duplicate station numbers in this line: {numbers}"
     delete-confirm: Remove this station from the line?
     select: Select a station
+    transfer-title: "Transfer information — {name}"
+    transfer-manage: View and manage transfer information
+    transfer-select: Connecting station
+    transfer-empty: No transfer connections
+    same-id-lines: Lines sharing the same station ID
+    same-id-lines-help: These lines share this station record and are automatically treated as transfers. They are read-only here.
+    same-id-lines-empty: No other line shares this station ID
+    explicit-transfers: Explicit transfers between stations
+    explicit-transfers-help: Add or remove transfers between different station IDs.
   sign:
     style: Style
     direction: Direction

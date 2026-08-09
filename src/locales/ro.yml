@@ -185,6 +185,7 @@ route:
     empty: Încă nu există linii
     select: Selectați o linie
     all: Toate Companiile
+    unassigned-company: Companie neatribuită
     delete-confirm: Ștergeți această linie?
     prefix-preview: Previzualizarea insignei cu indicator de linie
     station-number-preview: Previzualizarea numărului stației (01)
@@ -241,6 +242,15 @@ route:
     duplicate-number-warning: "Numerele stației duplicate în această linie: {numbers}"
     delete-confirm: Eliminați această stație de pe linie?
     select: Selectați o stație
+    transfer-title: "Informații despre transfer — {name}"
+    transfer-manage: Vezi și gestionează transferurile
+    transfer-select: Stație de transfer
+    transfer-empty: Nu există legături de transfer
+    same-id-lines: Linii cu același ID de stație
+    same-id-lines-help: Aceste linii folosesc aceeași înregistrare de stație și sunt considerate automat transferuri. Aici sunt doar pentru citire.
+    same-id-lines-empty: Nicio altă linie nu folosește acest ID de stație
+    explicit-transfers: Transferuri explicite între stații
+    explicit-transfers-help: Adăugați sau eliminați transferuri între ID-uri de stație diferite.
   sign:
     style: Stil
     direction: Direcția

@@ -185,6 +185,7 @@ route:
     empty: Tiada baris lagi
     select: Pilih satu baris
     all: Semua Syarikat
+    unassigned-company: Syarikat belum ditetapkan
     delete-confirm: Padamkan baris ini?
     prefix-preview: Pratonton lencana penunjuk baris
     station-number-preview: Pratonton nombor stesen (01)
@@ -241,6 +242,15 @@ route:
     duplicate-number-warning: "Nombor stesen pendua dalam baris ini: {numbers}"
     delete-confirm: Alih keluar stesen ini daripada talian?
     select: Pilih stesen
+    transfer-title: "Maklumat pertukaran — {name}"
+    transfer-manage: Lihat dan urus maklumat pertukaran
+    transfer-select: Stesen pertukaran
+    transfer-empty: Tiada hubungan pertukaran
+    same-id-lines: Laluan dengan ID stesen yang sama
+    same-id-lines-help: Laluan ini berkongsi rekod stesen dan dianggap sebagai pertukaran secara automatik. Ia hanya boleh dibaca di sini.
+    same-id-lines-empty: Tiada laluan lain berkongsi ID stesen ini
+    explicit-transfers: Pertukaran nyata antara stesen
+    explicit-transfers-help: Tambah atau padam pertukaran antara ID stesen yang berbeza.
   sign:
     style: Gaya
     direction: Arah

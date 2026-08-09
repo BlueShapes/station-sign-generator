@@ -193,6 +193,7 @@ route:
     empty: 路線がありません
     select: 路線を選択してください
     all: すべての会社
+    unassigned-company: 会社未設定
     delete-confirm: この路線を削除しますか？
     prefix-preview: 路線インジケータバッジのプレビュー
     station-number-preview: 駅番号のプレビュー（01）
@@ -249,6 +250,15 @@ route:
     duplicate-number-warning: "この路線に重複する駅番号があります: {numbers}"
     delete-confirm: この駅をこの路線から削除しますか？
     select: 駅を選択してください
+    transfer-title: "乗換情報 — {name}"
+    transfer-manage: 乗換情報を確認・編集
+    transfer-select: 乗換先の駅
+    transfer-empty: 乗換関係はありません
+    same-id-lines: 同一駅IDで所属する他路線
+    same-id-lines-help: 同じ駅データを共有する路線です。乗換候補に自動で含まれ、この画面からは変更できません。
+    same-id-lines-empty: 同一駅IDを共有する他路線はありません
+    explicit-transfers: 別駅間の乗換関係
+    explicit-transfers-help: 異なる駅ID同士を乗換可能として追加・削除します。
   sign:
     style: スタイル
     direction: 表示方向

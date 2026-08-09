@@ -185,6 +185,7 @@ route:
     empty: 还没有线路
     select: 选择一行
     all: 所有公司
+    unassigned-company: 未指定公司
     delete-confirm: 删除这一行吗？
     prefix-preview: 线路指示器徽章预览
     station-number-preview: 车站编号预览（01）
@@ -241,6 +242,15 @@ route:
     duplicate-number-warning: 此线路中有重复的车站编号：{numbers}
     delete-confirm: 从线路中删除该站吗？
     select: 选择电台
+    transfer-title: "换乘信息 — {name}"
+    transfer-manage: 查看和编辑换乘信息
+    transfer-select: 换乘车站
+    transfer-empty: 暂无换乘关系
+    same-id-lines: 使用相同车站ID的线路
+    same-id-lines-help: 这些线路共享同一车站记录，并会自动视为换乘线路。此处仅供查看。
+    same-id-lines-empty: 没有其他线路使用此车站ID
+    explicit-transfers: 不同车站间的明确换乘关系
+    explicit-transfers-help: 添加或删除不同车站ID之间的换乘关系。
   sign:
     style: 风格
     direction: 方向

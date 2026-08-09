@@ -99,6 +99,17 @@ CREATE TABLE IF NOT EXISTS station_service_stops (
   status     TEXT NOT NULL DEFAULT 'stop'
 );
 
+CREATE TABLE IF NOT EXISTS station_transfers (
+  id           TEXT PRIMARY KEY,
+  station_a_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  station_b_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  CHECK (station_a_id < station_b_id),
+  UNIQUE (station_a_id, station_b_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_station_transfers_station_b
+  ON station_transfers (station_b_id);
+
 CREATE TABLE IF NOT EXISTS through_routes (
   id         TEXT PRIMARY KEY,
   name       TEXT NOT NULL,
@@ -339,17 +350,18 @@ MARUNOUCHI_BRANCH_STATIONS = [
 
 # ── Chuo Line (Rapid) (JC) ───────────────────────────────────────────────────
 # (number, station_id, primary_name, furigana, english)
-# Existing station IDs are reused so a physical station can belong to many lines.
+# JR station IDs are reused across JR lines. Metro stations remain separate and
+# are connected through STATION_TRANSFERS below.
 CHUO_RAPID_STATIONS = [
     ( 1, "station-jy01", "東京",       "とうきょう",       "Tōkyō"),
     ( 2, "station-jy02", "神田",       "かんだ",           "Kanda"),
-    ( 3, "station-m20",  "御茶ノ水",   "おちゃのみず",     "Ochanomizu"),
-    ( 4, "station-m12",  "四ツ谷",     "よつや",           "Yotsuya"),
+    ( 3, "station-jc03", "御茶ノ水",   "おちゃのみず",     "Ochanomizu"),
+    ( 4, "station-jc04", "四ツ谷",     "よつや",           "Yotsuya"),
     ( 5, "station-jy17", "新宿",       "しんじゅく",       "Shinjuku"),
     ( 6, "station-jc06", "中野",       "なかの",           "Nakano"),
     ( 7, "station-jc07", "高円寺",     "こうえんじ",       "Koenji"),
     ( 8, "station-jc08", "阿佐ケ谷",   "あさがや",         "Asagaya"),
-    ( 9, "station-m01",  "荻窪",       "おぎくぼ",         "Ogikubo"),
+    ( 9, "station-jc09", "荻窪",       "おぎくぼ",         "Ogikubo"),
     (10, "station-jc10", "西荻窪",     "にしおぎくぼ",     "Nishi-Ogikubo"),
     (11, "station-jc11", "吉祥寺",     "きちじょうじ",     "Kichijoji"),
     (12, "station-jc12", "三鷹",       "みたか",           "Mitaka"),
@@ -373,7 +385,7 @@ CHUO_SOBU_LOCAL_STATIONS = [
     ( 1, "station-jc12", "三鷹",       "みたか",             "Mitaka"),
     ( 2, "station-jc11", "吉祥寺",     "きちじょうじ",       "Kichijoji"),
     ( 3, "station-jc10", "西荻窪",     "にしおぎくぼ",       "Nishi-Ogikubo"),
-    ( 4, "station-m01",  "荻窪",       "おぎくぼ",           "Ogikubo"),
+    ( 4, "station-jc09", "荻窪",       "おぎくぼ",           "Ogikubo"),
     ( 5, "station-jc08", "阿佐ケ谷",   "あさがや",           "Asagaya"),
     ( 6, "station-jc07", "高円寺",     "こうえんじ",         "Koenji"),
     ( 7, "station-jc06", "中野",       "なかの",             "Nakano"),
@@ -383,11 +395,11 @@ CHUO_SOBU_LOCAL_STATIONS = [
     (11, "station-jy18", "代々木",     "よよぎ",             "Yoyogi"),
     (12, "station-jb12", "千駄ケ谷",   "せんだがや",         "Sendagaya"),
     (13, "station-jb13", "信濃町",     "しなのまち",         "Shinanomachi"),
-    (14, "station-m12",  "四ツ谷",     "よつや",             "Yotsuya"),
+    (14, "station-jc04", "四ツ谷",     "よつや",             "Yotsuya"),
     (15, "station-jb15", "市ケ谷",     "いちがや",           "Ichigaya"),
     (16, "station-jb16", "飯田橋",     "いいだばし",         "Iidabashi"),
     (17, "station-jb17", "水道橋",     "すいどうばし",       "Suidobashi"),
-    (18, "station-m20",  "御茶ノ水",   "おちゃのみず",       "Ochanomizu"),
+    (18, "station-jc03", "御茶ノ水",   "おちゃのみず",       "Ochanomizu"),
     (19, "station-jy03", "秋葉原",     "あきはばら",         "Akihabara"),
     (20, "station-jb20", "浅草橋",     "あさくさばし",       "Asakusabashi"),
     (21, "station-jb21", "両国",       "りょうごく",         "Ryogoku"),
@@ -422,7 +434,7 @@ TOZAI_STATIONS = [
     ( 6, "station-jb16", "飯田橋",     "いいだばし",       "Iidabashi"),
     ( 7, "station-t07",  "九段下",     "くだんした",       "Kudanshita"),
     ( 8, "station-t08",  "竹橋",       "たけばし",         "Takebashi"),
-    ( 9, "station-m18",  "大手町",     "おおてまち",       "Otemachi"),
+    ( 9, "station-t09",  "大手町",     "おおてまち",       "Otemachi"),
     (10, "station-t10",  "日本橋",     "にほんばし",       "Nihombashi"),
     (11, "station-t11",  "茅場町",     "かやばちょう",     "Kayabacho"),
     (12, "station-t12",  "門前仲町",   "もんぜんなかちょう", "Monzen-nakacho"),
@@ -457,6 +469,20 @@ TOYO_RAPID_STATIONS = [
 # (key, display_name, color, stop_numbers, special_stop_numbers)
 # "special" represents a conditional stop, such as the three stations where
 # Chuo Line rapid trains stop only on weekdays.
+# ── Explicit transfers between distinct station entities ────────────────────
+# Metro and JR station records remain independent even when their display names
+# match. Each tuple is (id, first_station_id, second_station_id).
+STATION_TRANSFERS = [
+    ("transfer-ogikubo-m-jr",    "station-m01", "station-jc09"),
+    ("transfer-shinjuku-m-jr",   "station-m08", "station-jy17"),
+    ("transfer-yotsuya-m-jr",    "station-m12", "station-jc04"),
+    ("transfer-tokyo-m-jr",      "station-m17", "station-jy01"),
+    ("transfer-otemachi-m-t",    "station-m18", "station-t09"),
+    ("transfer-ochanomizu-m-jr", "station-m20", "station-jc03"),
+    ("transfer-ikebukuro-m-jr",  "station-m25", "station-jy13"),
+]
+
+
 CHUO_RAPID_SERVICES = [
     ("kaisoku", "快速", "#f15a22", frozenset(range(1, 25)), frozenset({7, 8, 10})),
     (
@@ -565,7 +591,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.7.1')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.8.0')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -907,6 +933,14 @@ def main():
     insert_numbered_line_stations(c, tr_line_id, "tr", TOYO_RAPID_STATIONS)
     insert_line_services(c, tr_line_id, "tr", TOYO_RAPID_STATIONS, TOYO_RAPID_SERVICES)
 
+    # ── Explicit station transfer connections ────────────────────────────────
+    for transfer_id, first_station_id, second_station_id in STATION_TRANSFERS:
+        station_a_id, station_b_id = sorted((first_station_id, second_station_id))
+        c.execute(
+            "INSERT INTO station_transfers VALUES (?, ?, ?)",
+            (transfer_id, station_a_id, station_b_id),
+        )
+
     # ── Canonical through routes ──────────────────────────────────────────────
     c.execute(
         "INSERT INTO through_routes VALUES (?, ?, ?)",
@@ -948,7 +982,7 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.7.1")
+    print(f"  - version: 0.8.0")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
     print(f"  - 3 companies (JR東日本, 東京メトロ, 東葉高速鉄道)")
     print(f"  - 10 lines:")
@@ -962,6 +996,7 @@ def main():
     print(f"      中央・総武線各駅停車 (JB, #ffd400, is_loop=0): {len(CHUO_SOBU_LOCAL_STATIONS)} stations")
     print(f"      東西線          (T,  #00a7db,  is_loop=0): {len(TOZAI_STATIONS)} stations; 3 services")
     print(f"      東葉高速線      (TR, #78e900,  is_loop=0): {len(TOYO_RAPID_STATIONS)} stations; 3 services")
+    print(f"  - {len(STATION_TRANSFERS)} explicit station transfers")
     print(f"  - 2 canonical through routes (3 line sections each)")
 
 

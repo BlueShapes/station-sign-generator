@@ -185,6 +185,7 @@ route:
     empty: Aún no hay líneas
     select: Seleccione una línea
     all: Todas las empresas
+    unassigned-company: Empresa sin asignar
     delete-confirm: ¿Eliminar esta línea?
     prefix-preview: Vista previa de la insignia del indicador de línea
     station-number-preview: Vista previa del número de estación (01)
@@ -241,6 +242,15 @@ route:
     duplicate-number-warning: "Números de estación duplicados en esta línea: {numbers}"
     delete-confirm: ¿Quitar esta estación de la línea?
     select: Seleccione una estación
+    transfer-title: "Información de transbordos — {name}"
+    transfer-manage: Ver y gestionar transbordos
+    transfer-select: Estación de transbordo
+    transfer-empty: No hay conexiones de transbordo
+    same-id-lines: Líneas con el mismo ID de estación
+    same-id-lines-help: Estas líneas comparten el mismo registro de estación y se consideran transbordos automáticamente. Aquí son de solo lectura.
+    same-id-lines-empty: Ninguna otra línea comparte este ID de estación
+    explicit-transfers: Transbordos explícitos entre estaciones
+    explicit-transfers-help: Añada o elimine transbordos entre distintos ID de estación.
   sign:
     style: Estilo
     direction: Dirección

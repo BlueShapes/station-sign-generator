@@ -185,6 +185,7 @@ route:
     empty: Jeszcze nie ma linii
     select: Wybierz linię
     all: Wszystkie firmy
+    unassigned-company: Brak przypisanej firmy
     delete-confirm: Usunąć tę linię?
     prefix-preview: Podgląd plakietki wskaźnika linii
     station-number-preview: Podgląd numeru stacji (01)
@@ -241,6 +242,15 @@ route:
     duplicate-number-warning: "Zduplikowane numery stacji w tej linii: {numbers}"
     delete-confirm: Usunąć tę stację z linii?
     select: Wybierz stację
+    transfer-title: "Informacje o przesiadkach — {name}"
+    transfer-manage: Wyświetl i edytuj informacje o przesiadkach
+    transfer-select: Stacja przesiadkowa
+    transfer-empty: Brak połączeń przesiadkowych
+    same-id-lines: Linie z tym samym ID stacji
+    same-id-lines-help: Te linie współdzielą rekord stacji i są automatycznie traktowane jako przesiadki. Tutaj są tylko do odczytu.
+    same-id-lines-empty: Żadna inna linia nie współdzieli tego ID stacji
+    explicit-transfers: Jawne przesiadki między stacjami
+    explicit-transfers-help: Dodawaj lub usuwaj przesiadki między różnymi ID stacji.
   sign:
     style: Styl
     direction: Kierunek

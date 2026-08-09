@@ -185,6 +185,7 @@ route:
     empty: अभी तक कोई पंक्ति नहीं
     select: एक पंक्ति चुनें
     all: सभी कंपनियाँ
+    unassigned-company: कंपनी निर्दिष्ट नहीं
     delete-confirm: यह पंक्ति हटाएं?
     prefix-preview: लाइन सूचक बैज पूर्वावलोकन
     station-number-preview: स्टेशन संख्या पूर्वावलोकन (01)
@@ -241,6 +242,15 @@ route:
     duplicate-number-warning: "इस लाइन में डुप्लिकेट स्टेशन नंबर: {numbers}"
     delete-confirm: इस स्टेशन को लाइन से हटाएं?
     select: एक स्टेशन चुनें
+    transfer-title: "इंटरचेंज जानकारी — {name}"
+    transfer-manage: इंटरचेंज जानकारी देखें और संपादित करें
+    transfer-select: इंटरचेंज स्टेशन
+    transfer-empty: कोई इंटरचेंज संबंध नहीं है
+    same-id-lines: समान स्टेशन ID वाली लाइनें
+    same-id-lines-help: ये लाइनें एक ही स्टेशन रिकॉर्ड साझा करती हैं और स्वतः इंटरचेंज मानी जाती हैं। यहाँ इन्हें बदला नहीं जा सकता।
+    same-id-lines-empty: कोई अन्य लाइन यह स्टेशन ID साझा नहीं करती
+    explicit-transfers: स्टेशनों के बीच स्पष्ट इंटरचेंज
+    explicit-transfers-help: अलग-अलग स्टेशन ID के बीच इंटरचेंज जोड़ें या हटाएँ।
   sign:
     style: अंदाज
     direction: दिशा

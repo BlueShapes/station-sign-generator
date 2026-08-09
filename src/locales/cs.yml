@@ -185,6 +185,7 @@ route:
     empty: Zatím žádné linky
     select: Vyberte řádek
     all: Všechny společnosti
+    unassigned-company: Bez přiřazené společnosti
     delete-confirm: Smazat tento řádek?
     prefix-preview: Náhled odznaku indikátoru čáry
     station-number-preview: Náhled čísla stanice (01)
@@ -241,6 +242,15 @@ route:
     duplicate-number-warning: "Duplicitní čísla stanic na této lince: {numbers}"
     delete-confirm: Odstranit tuto stanici z linky?
     select: Vyberte stanici
+    transfer-title: "Informace o přestupech — {name}"
+    transfer-manage: Zobrazit a upravit přestupy
+    transfer-select: Přestupní stanice
+    transfer-empty: Žádné přestupní vazby
+    same-id-lines: Linky se stejným ID stanice
+    same-id-lines-help: Tyto linky sdílejí stejný záznam stanice a automaticky se považují za přestupní. Zde je nelze upravit.
+    same-id-lines-empty: Stejné ID stanice nesdílí žádná další linka
+    explicit-transfers: Výslovné přestupy mezi stanicemi
+    explicit-transfers-help: Přidejte nebo odeberte přestupy mezi různými ID stanic.
   sign:
     style: styl
     direction: Směr

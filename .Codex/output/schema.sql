@@ -1,4 +1,4 @@
--- Station Sign Generator — SQLite Schema (v0.7.0)
+-- Station Sign Generator — SQLite Schema (v0.8.0)
 
 CREATE TABLE IF NOT EXISTS db_metadata (
   key   TEXT PRIMARY KEY,
@@ -49,6 +49,17 @@ CREATE TABLE IF NOT EXISTS station_lines (
   line_id    TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
   sort_order INTEGER DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS station_transfers (
+  id           TEXT PRIMARY KEY,
+  station_a_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  station_b_id TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  CHECK (station_a_id < station_b_id),
+  UNIQUE (station_a_id, station_b_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_station_transfers_station_b
+  ON station_transfers (station_b_id);
 
 CREATE TABLE IF NOT EXISTS station_numbers (
   id         TEXT PRIMARY KEY,

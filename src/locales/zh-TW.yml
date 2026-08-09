@@ -185,6 +185,7 @@ route:
     empty: 還沒有線路
     select: 選取一行
     all: 所有公司
+    unassigned-company: 未指定公司
     delete-confirm: 刪除這一行嗎？
     prefix-preview: 線路指示器徽章預覽
     station-number-preview: 車站編號預覽（01）
@@ -241,6 +242,15 @@ route:
     duplicate-number-warning: 此行中重複的站號：{numbers}
     delete-confirm: 從線路中刪除該站嗎？
     select: 選擇電台
+    transfer-title: "轉乘資訊 — {name}"
+    transfer-manage: 檢視及編輯轉乘資訊
+    transfer-select: 轉乘車站
+    transfer-empty: 尚無轉乘關係
+    same-id-lines: 使用相同車站ID的路線
+    same-id-lines-help: 這些路線共用同一車站資料，並會自動視為轉乘路線。此處僅供檢視。
+    same-id-lines-empty: 沒有其他路線使用此車站ID
+    explicit-transfers: 不同車站間的明確轉乘關係
+    explicit-transfers-help: 新增或刪除不同車站ID之間的轉乘關係。
   sign:
     style: 風格
     direction: 方向

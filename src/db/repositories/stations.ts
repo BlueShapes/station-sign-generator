@@ -73,6 +73,11 @@ export function upsertStation(db: Database, station: Station): void {
 }
 
 export function deleteStation(db: Database, id: string): void {
+  db.run(
+    `DELETE FROM station_transfers
+     WHERE station_a_id = ? OR station_b_id = ?`,
+    [id, id],
+  );
   db.run(`DELETE FROM stations WHERE id = ?`, [id]);
 }
 
