@@ -258,6 +258,8 @@ route:
     prev-station: Estação anterior
     next-station: Próxima estação
     adjacent-select: Selecione até 2 estações
+    adjacent-order: Exterior → interior
+    adjacent-swap-order: Trocar ordem exterior / interior
     jreast: JR Estilo Leste
     jrwest: Estilo JR Oeste
     jrwestlarge: Estilo JR West (grande)

@@ -13,10 +13,36 @@ export function spaceToeiPrimaryName(name: string): string {
   return name;
 }
 
-export function spaceToeiSidePrimaryName(name: string): string {
+export function spaceToeiSidePrimaryName(
+  name: string,
+  adjacentStationCount = 1,
+): string {
   const characters = Array.from(name);
-  if (characters.length === 2) return characters.join(" ");
+  if (adjacentStationCount === 1 && characters.length === 2) {
+    return characters.join(" ");
+  }
   return name;
+}
+
+export function joinSubwayAdjacentText(
+  values: readonly (string | undefined)[],
+): string {
+  return values
+    .slice(0, 2)
+    .map((value) => value ?? "")
+    .join("／");
+}
+
+/**
+ * Badge data is stored outside-to-inside. Text is read left-to-right, so the
+ * right-hand label needs the opposite order to remain aligned with its badges.
+ */
+export function orderSubwayAdjacentTextValues<T>(
+  values: readonly T[],
+  side: "left" | "right",
+): T[] {
+  const orderedValues = values.slice(0, 2);
+  return side === "right" ? orderedValues.reverse() : orderedValues;
 }
 
 /**
@@ -40,4 +66,27 @@ export function getSubwayStationNameScaleX(
   if (!exceedsReferenceLength && !exceedsAvailableWidth) return 1;
 
   return Math.min(1, maxWidth / naturalWidth);
+}
+
+export function getSubwaySideTextFit({
+  text,
+  naturalWidth,
+  maxWidth,
+  originX,
+  side,
+}: {
+  text: string;
+  naturalWidth: number;
+  maxWidth: number;
+  originX: number;
+  side: "left" | "right";
+}): { x: number; width: number; scaleX: number } {
+  const scaleX = getSubwayStationNameScaleX(text, naturalWidth, maxWidth);
+  const renderedWidth = naturalWidth * scaleX;
+
+  return {
+    x: side === "left" ? originX : originX + maxWidth - renderedWidth,
+    width: naturalWidth,
+    scaleX,
+  };
 }

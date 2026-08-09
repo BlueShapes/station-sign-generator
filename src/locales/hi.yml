@@ -258,6 +258,8 @@ route:
     prev-station: पिछला स्टेशन
     next-station: अगला स्टेशन
     adjacent-select: अधिकतम 2 स्टेशन चुनें
+    adjacent-order: बाहर → भीतर
+    adjacent-swap-order: बाहरी / भीतरी क्रम बदलें
     jreast: जेआर ईस्ट स्टाइल
     jrwest: जेआर वेस्ट स्टाइल
     jrwestlarge: जेआर वेस्ट स्टाइल (बड़ा)

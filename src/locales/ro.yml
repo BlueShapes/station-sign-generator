@@ -258,6 +258,8 @@ route:
     prev-station: Stația anterioară
     next-station: Următoarea stație
     adjacent-select: Selectați până la 2 posturi
+    adjacent-order: Exterior → interior
+    adjacent-swap-order: Schimbă ordinea exterioară / interioară
     jreast: JR East Style
     jrwest: JR West Style
     jrwestlarge: JR West Style (mare)

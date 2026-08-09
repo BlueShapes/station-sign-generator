@@ -14,6 +14,24 @@ export const TOEI_BADGE_DIAMETERS = {
 export const TOEI_JAPANESE_LETTER_SPACING = 1.5;
 export const TOEI_BADGE_NUMBER_STROKE_WIDTH = 0.6;
 export const TOEI_LARGE_MAIN_TOP_GAP_EM = 0.5;
+export const SUBWAY_SIDE_BADGE_GAP = 8;
+
+export function getSubwaySideBadgeCenters({
+  outerCenter,
+  diameter,
+  count,
+  side,
+}: {
+  outerCenter: number;
+  diameter: number;
+  count: number;
+  side: "left" | "right";
+}): number[] {
+  const inwardDirection = side === "left" ? 1 : -1;
+  return Array.from({ length: Math.min(2, Math.max(0, count)) }, (_, index) =>
+    outerCenter + inwardDirection * index * (diameter + SUBWAY_SIDE_BADGE_GAP),
+  );
+}
 
 export const TOEI_SHARED_LAYOUT = {
   bandHeight: 17,

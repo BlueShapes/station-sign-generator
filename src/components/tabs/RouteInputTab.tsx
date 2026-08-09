@@ -89,6 +89,7 @@ import type {
   Direction,
 } from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
+import { orderAdjacentStationIds } from "./adjacentStationOrder";
 
 import JrEastSign, {
   height as JrEastSignHeight,
@@ -261,6 +262,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [selectedRightAdjacentIds, setSelectedRightAdjacentIds] = useState<
     string[]
   >([]);
+  const [leftAdjacentOrderReversed, setLeftAdjacentOrderReversed] =
+    useState(false);
+  const [rightAdjacentOrderReversed, setRightAdjacentOrderReversed] =
+    useState(false);
+  const [leftAdjacentDropdownOpened, setLeftAdjacentDropdownOpened] =
+    useState(false);
+  const [rightAdjacentDropdownOpened, setRightAdjacentDropdownOpened] =
+    useState(false);
 
   // ── Line map mode state ──────────────────────────────────────────────────
   const [tabMode, setTabMode] = useState<TabMode>("sign");
@@ -482,7 +491,28 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
     setSelectedLeftAdjacentIds(defaultLeft ? [defaultLeft] : []);
     setSelectedRightAdjacentIds(defaultRight ? [defaultRight] : []);
+    setLeftAdjacentOrderReversed(false);
+    setRightAdjacentOrderReversed(false);
+    setLeftAdjacentDropdownOpened(false);
+    setRightAdjacentDropdownOpened(false);
   }, [adjacentOptions, selectedLineId, selectedStationId]);
+
+  const orderedLeftAdjacentIds = useMemo(
+    () =>
+      orderAdjacentStationIds(
+        selectedLeftAdjacentIds,
+        leftAdjacentOrderReversed,
+      ),
+    [selectedLeftAdjacentIds, leftAdjacentOrderReversed],
+  );
+  const orderedRightAdjacentIds = useMemo(
+    () =>
+      orderAdjacentStationIds(
+        selectedRightAdjacentIds,
+        rightAdjacentOrderReversed,
+      ),
+    [selectedRightAdjacentIds, rightAdjacentOrderReversed],
+  );
 
   // Enforce constraints when services have passed stations
   useEffect(() => {
@@ -569,13 +599,13 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           ? [line.line_color]
           : [];
 
-    const selectedLeftStations = selectedLeftAdjacentIds
+    const selectedLeftStations = orderedLeftAdjacentIds
       .map((optionValue) =>
         adjacentOptions.left.find((candidate) => candidate.optionValue === optionValue),
       )
       .filter((candidate): candidate is AdjacentCandidate => !!candidate)
       .slice(0, 2);
-    const selectedRightStations = selectedRightAdjacentIds
+    const selectedRightStations = orderedRightAdjacentIds
       .map((optionValue) =>
         adjacentOptions.right.find((candidate) => candidate.optionValue === optionValue),
       )
@@ -640,8 +670,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     flipped,
     centerSquareLineIds,
     adjacentOptions,
-    selectedLeftAdjacentIds,
-    selectedRightAdjacentIds,
+    orderedLeftAdjacentIds,
+    orderedRightAdjacentIds,
   ]);
 
   // Update canvas size list
@@ -1414,36 +1444,108 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 </Grid.Col>
               )}
               <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <MultiSelect
-                  label={t("route.sign.prev-station")}
-                  value={selectedLeftAdjacentIds}
-                  onChange={(value) => setSelectedLeftAdjacentIds(value.slice(0, 2))}
-                  data={adjacentOptions.left.map((candidate) => ({
-                    value: candidate.optionValue,
-                    label: `${candidate.primaryName}（${candidate.lineName}）`,
-                  }))}
-                  placeholder={t("route.sign.adjacent-select")}
-                  disabled={!selectedStationId}
-                  maxValues={2}
-                  clearable
-                />
+                <Stack gap={4}>
+                  <MultiSelect
+                    label={t("route.sign.prev-station")}
+                    value={selectedLeftAdjacentIds}
+                    onChange={(value) => {
+                      setSelectedLeftAdjacentIds(value.slice(0, 2));
+                      setLeftAdjacentOrderReversed(false);
+                      if (value.length >= 2) setLeftAdjacentDropdownOpened(false);
+                    }}
+                    dropdownOpened={leftAdjacentDropdownOpened}
+                    onDropdownOpen={() => setLeftAdjacentDropdownOpened(true)}
+                    onDropdownClose={() => setLeftAdjacentDropdownOpened(false)}
+                    data={adjacentOptions.left.map((candidate) => ({
+                      value: candidate.optionValue,
+                      label: `${candidate.primaryName}（${candidate.lineName}）`,
+                    }))}
+                    placeholder={t("route.sign.adjacent-select")}
+                    disabled={!selectedStationId}
+                    maxValues={2}
+                    clearable
+                  />
+                  {selectedLeftAdjacentIds.length === 2 && (
+                    <Stack gap={2}>
+                      <Text size="xs" c="dimmed" ta="center">
+                        {t("route.sign.adjacent-order")}: {orderedLeftAdjacentIds
+                          .map(
+                            (optionValue) =>
+                              adjacentOptions.left.find(
+                                (candidate) =>
+                                  candidate.optionValue === optionValue,
+                              )?.primaryName,
+                          )
+                          .filter(Boolean)
+                          .join(" → ")}
+                      </Text>
+                      <Button
+                        variant="subtle"
+                        size="compact-xs"
+                        leftSection={<IconArrowsLeftRight size={14} />}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setLeftAdjacentOrderReversed((reversed) => !reversed)
+                        }}
+                      >
+                        {t("route.sign.adjacent-swap-order")}
+                      </Button>
+                    </Stack>
+                  )}
+                </Stack>
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <MultiSelect
-                  label={t("route.sign.next-station")}
-                  value={selectedRightAdjacentIds}
-                  onChange={(value) =>
-                    setSelectedRightAdjacentIds(value.slice(0, 2))
-                  }
-                  data={adjacentOptions.right.map((candidate) => ({
-                    value: candidate.optionValue,
-                    label: `${candidate.primaryName}（${candidate.lineName}）`,
-                  }))}
-                  placeholder={t("route.sign.adjacent-select")}
-                  disabled={!selectedStationId}
-                  maxValues={2}
-                  clearable
-                />
+                <Stack gap={4}>
+                  <MultiSelect
+                    label={t("route.sign.next-station")}
+                    value={selectedRightAdjacentIds}
+                    onChange={(value) => {
+                      setSelectedRightAdjacentIds(value.slice(0, 2));
+                      setRightAdjacentOrderReversed(false);
+                      if (value.length >= 2) setRightAdjacentDropdownOpened(false);
+                    }}
+                    dropdownOpened={rightAdjacentDropdownOpened}
+                    onDropdownOpen={() => setRightAdjacentDropdownOpened(true)}
+                    onDropdownClose={() => setRightAdjacentDropdownOpened(false)}
+                    data={adjacentOptions.right.map((candidate) => ({
+                      value: candidate.optionValue,
+                      label: `${candidate.primaryName}（${candidate.lineName}）`,
+                    }))}
+                    placeholder={t("route.sign.adjacent-select")}
+                    disabled={!selectedStationId}
+                    maxValues={2}
+                    clearable
+                  />
+                  {selectedRightAdjacentIds.length === 2 && (
+                    <Stack gap={2}>
+                      <Text size="xs" c="dimmed" ta="center">
+                        {t("route.sign.adjacent-order")}: {orderedRightAdjacentIds
+                          .map(
+                            (optionValue) =>
+                              adjacentOptions.right.find(
+                                (candidate) =>
+                                  candidate.optionValue === optionValue,
+                              )?.primaryName,
+                          )
+                          .filter(Boolean)
+                          .join(" → ")}
+                      </Text>
+                      <Button
+                        variant="subtle"
+                        size="compact-xs"
+                        leftSection={<IconArrowsLeftRight size={14} />}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setRightAdjacentOrderReversed((reversed) => !reversed)
+                        }}
+                      >
+                        {t("route.sign.adjacent-swap-order")}
+                      </Button>
+                    </Stack>
+                  )}
+                </Stack>
               </Grid.Col>
             </Grid>
 
