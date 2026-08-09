@@ -8,7 +8,7 @@ export const METRO_MEDIUM_DIMENSIONS = {
 
 export const TOEI_BADGE_DIAMETERS = {
   medium: { main: 55, side: 35 },
-  large: { main: 55, side: 35 },
+  large: { main: 52, side: 31 },
 } as const;
 
 export const TOEI_JAPANESE_LETTER_SPACING = 1.5;
