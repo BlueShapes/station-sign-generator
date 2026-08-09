@@ -261,7 +261,11 @@ route:
     jreast: Gaya JR Timur
     jrwest: Gaya JR Barat
     jrwestlarge: Gaya JR West (Besar)
-    metrolong: Metro Tokyo / Gaya Kereta Api Bawah Tanah Toei (Lebar)
+    metrolong: Gaya Metro Tokyo (kecil / Jepun)
+    metroforeign: Gaya Metro Tokyo (kecil / bahasa asing)
+    metromedium: Gaya Metro Tokyo (sederhana)
+    toeimedium: Gaya Kereta Api Bawah Tanah Toei (sederhana)
+    toeilarge: Gaya Kereta Api Bawah Tanah Toei (besar)
     metrolong-subtext: Subteks
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: bahasa sekunder

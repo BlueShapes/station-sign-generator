@@ -261,7 +261,11 @@ route:
     jreast: Styl JR Wschodni
     jrwest: Styl JR Westa
     jrwestlarge: Styl JR West (duży)
-    metrolong: Styl metra Tokyo / Toei Subway (szeroki)
+    metrolong: Styl metra tokijskiego (mały / japoński)
+    metroforeign: Styl metra tokijskiego (mały / język obcy)
+    metromedium: Styl metra tokijskiego (średni)
+    toeimedium: Styl metra Toei (średni)
+    toeilarge: Styl metra Toei (duży)
     metrolong-subtext: Podtekst
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Język wtórny

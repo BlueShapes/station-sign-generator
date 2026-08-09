@@ -7,6 +7,10 @@ import { isMobile } from "react-device-detect";
 import { METRO_LONG_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
 import { getTokyoMetroStationNumberMetrics } from "./stationNumberBadgeMetrics";
+import {
+  getSubwayStationNameScaleX,
+  spaceSubwayPrimaryName,
+} from "./stationNameLayout";
 
 export const height = 105;
 export const scale = 3;
@@ -16,7 +20,7 @@ const TEXT_SCALE = 1.3;
 const BADGE_SCALE = 1.3;
 const BADGE_RADIUS_SCALE = 0.9;
 
-const MetroLongSign = forwardRef<Konva.Stage, StationProps>(
+const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
   (props, ref: React.Ref<Konva.Stage>) => {
     const {
       primaryName,
@@ -233,18 +237,27 @@ const MetroLongSign = forwardRef<Konva.Stage, StationProps>(
       primaryNameFurigana,
       secondaryName,
     });
-    const displayPrimaryName =
-      primaryName.length === 2 ? primaryName.split("").join("　") : primaryName;
+    const displayPrimaryName = spaceSubwayPrimaryName(primaryName);
     const centerSubFontFamily =
       effectiveSubTextMode === "secondary" ? "Jost" : "NotoSansJP";
     const centerSubFontSize =
       ((effectiveSubTextMode === "secondary" ? 11 : 13) + 7) * TEXT_SCALE;
     const centerSubFontStyle = effectiveSubTextMode === "secondary" ? "600" : "500";
-    const mainNameWidth = measureText(displayPrimaryName, {
+    const naturalMainNameWidth = measureText(displayPrimaryName, {
       fontSize: 33 * TEXT_SCALE,
       fontFamily: "NotoSansJP",
       fontStyle: "600",
     });
+    const maxMainNameWidth = Math.max(
+      120,
+      rightOccupiedLeft - leftOccupiedRight - mainBadgeOuter - 36,
+    );
+    const mainNameScaleX = getSubwayStationNameScaleX(
+      primaryName,
+      naturalMainNameWidth,
+      maxMainNameWidth,
+    );
+    const mainNameWidth = naturalMainNameWidth * mainNameScaleX;
     const centerSubWidth = measureText(centerSubText, {
       fontSize: centerSubFontSize,
       fontFamily: centerSubFontFamily,
@@ -464,11 +477,13 @@ const MetroLongSign = forwardRef<Konva.Stage, StationProps>(
                   text={displayPrimaryName}
                   x={mainNameX}
                   y={3}
-                  width={mainNameWidth}
+                  width={naturalMainNameWidth}
                   fontSize={33 * TEXT_SCALE}
                   fontFamily="NotoSansJP"
                   fontStyle="600"
                   fill="#202126"
+                  scaleX={mainNameScaleX}
+                  wrap="none"
                 />
                 {centerSubText && (
                   <Text
@@ -503,5 +518,17 @@ const StageWrapper = styled.div`
   left: -999999px;
   top: 0;
 `;
+
+export const MetroLongForeignSign = forwardRef<Konva.Stage, StationProps>(
+  (props, ref) => (
+    <MetroLongSignBase {...props} subTextMode="secondary" ref={ref} />
+  ),
+);
+MetroLongForeignSign.displayName = "MetroLongForeignSign";
+
+const MetroLongSign = forwardRef<Konva.Stage, StationProps>((props, ref) => (
+  <MetroLongSignBase {...props} subTextMode="furigana" ref={ref} />
+));
+MetroLongSign.displayName = "MetroLongSign";
 
 export default MetroLongSign;

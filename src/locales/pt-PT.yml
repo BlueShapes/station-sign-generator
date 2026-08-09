@@ -261,7 +261,11 @@ route:
     jreast: JR Estilo Leste
     jrwest: Estilo JR Oeste
     jrwestlarge: Estilo JR West (grande)
-    metrolong: Estilo Metrô de Tóquio / Metrô Toei (Largo)
+    metrolong: Estilo Metro de Tóquio (pequeno / japonês)
+    metroforeign: Estilo Metro de Tóquio (pequeno / língua estrangeira)
+    metromedium: Estilo Metro de Tóquio (médio)
+    toeimedium: Estilo Metro Toei (médio)
+    toeilarge: Estilo Metro Toei (grande)
     metrolong-subtext: Subtexto
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Idioma secundário

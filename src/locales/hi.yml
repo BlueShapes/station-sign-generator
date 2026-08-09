@@ -261,7 +261,11 @@ route:
     jreast: जेआर ईस्ट स्टाइल
     jrwest: जेआर वेस्ट स्टाइल
     jrwestlarge: जेआर वेस्ट स्टाइल (बड़ा)
-    metrolong: टोक्यो मेट्रो / टोई सबवे शैली (चौड़ा)
+    metrolong: टोक्यो मेट्रो शैली (छोटा / जापानी)
+    metroforeign: टोक्यो मेट्रो शैली (छोटा / विदेशी भाषा)
+    metromedium: टोक्यो मेट्रो शैली (मध्यम)
+    toeimedium: टोई सबवे शैली (मध्यम)
+    toeilarge: टोई सबवे शैली (बड़ा)
     metrolong-subtext: उपपाठ
     metrolong-subtext-furigana: फुरिगाना
     metrolong-subtext-secondary: द्वितीयक भाषा

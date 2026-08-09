@@ -35,6 +35,15 @@ describe("canvas font loading", () => {
     expect(JR_EAST_FONT_SPECS).not.toContain("500 1em Jost");
     expect(METRO_LONG_FONT_SPECS).toContain("500 1em Jost");
     expect(METRO_LONG_FONT_SPECS).not.toContain("400 1em NotoSansTC");
+    for (const style of [
+      "metrolong",
+      "metroforeign",
+      "metromedium",
+      "toeimedium",
+      "toeilarge",
+    ]) {
+      expect(getStationSignFontSpecs(style)).toBe(METRO_LONG_FONT_SPECS);
+    }
     expect(LINE_MAP_FONT_SPECS).toContain("600 1em HindSemiBold");
     expect(LINE_MAP_FONT_SPECS).toContain("700 1em JostTrispaceHybrid");
     expect(getStationSignFontSpecs("jreast", "tokyometro")).toContain(

@@ -87,7 +87,6 @@ import type DirectInputStationProps from "@/components/signs/DirectInputStationP
 import type {
   AdjacentStationProps,
   Direction,
-  MetroLongSubTextMode,
 } from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 
@@ -104,9 +103,17 @@ import JrWestSignLarge, {
   scale as JrWestSignLargeBaseScale,
 } from "@/components/signs/JrWestSignLarge";
 import MetroLongSign, {
+  MetroLongForeignSign,
   height as MetroLongSignHeight,
   scale as MetroLongSignBaseScale,
 } from "@/components/signs/MetroLongSign";
+import {
+  MetroMediumSign,
+  ToeiLargeSign,
+  ToeiMediumSign,
+  scale as SubwaySignBaseScale,
+  subwaySignDimensions,
+} from "@/components/signs/SubwaySign";
 import LineMapRenderer, {
   scale as LineMapScale,
   CIRCULAR_FONT_DEFAULT,
@@ -132,7 +139,15 @@ import {
 } from "@/components/signs/transitLineLayout";
 import CanvasFontLoading from "@/components/CanvasFontLoading";
 
-type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
+type SignStyle =
+  | "jreast"
+  | "jrwest"
+  | "jrwestlarge"
+  | "metrolong"
+  | "metroforeign"
+  | "metromedium"
+  | "toeimedium"
+  | "toeilarge";
 type TabMode = "sign" | "linemap" | "multiline-linemap";
 type MapOrientation = "horizontal" | "vertical";
 type AdjacentSide = "left" | "right";
@@ -182,6 +197,26 @@ const SIGN_STYLES: Record<
     height: MetroLongSignHeight,
     scale: MetroLongSignBaseScale,
   },
+  metroforeign: {
+    Component: MetroLongForeignSign,
+    height: MetroLongSignHeight,
+    scale: MetroLongSignBaseScale,
+  },
+  metromedium: {
+    Component: MetroMediumSign,
+    height: subwaySignDimensions.metroMedium.height,
+    scale: SubwaySignBaseScale,
+  },
+  toeimedium: {
+    Component: ToeiMediumSign,
+    height: subwaySignDimensions.toeiMedium.height,
+    scale: SubwaySignBaseScale,
+  },
+  toeilarge: {
+    Component: ToeiLargeSign,
+    height: subwaySignDimensions.toeiLarge.height,
+    scale: SubwaySignBaseScale,
+  },
 };
 
 interface RouteInputTabProps {
@@ -216,8 +251,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [centerSquareLineIds, setCenterSquareLineIds] = useState<string[]>([]);
   const [stationLines, setStationLines] = useState<Line[]>([]);
   const [signStyle, setSignStyle] = useState<SignStyle>("jreast");
-  const [metroLongSubTextMode, setMetroLongSubTextMode] =
-    useState<MetroLongSubTextMode>("furigana");
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<
     { label: string; value: number }[]
@@ -593,7 +626,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ].map((l) => ({ id: l.id, prefix: l.prefix, color: l.line_color })),
       ratio,
       direction,
-      subTextMode: metroLongSubTextMode,
     };
 
     setSignData(data);
@@ -605,7 +637,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     lines,
     ratio,
     direction,
-    metroLongSubTextMode,
     flipped,
     centerSquareLineIds,
     adjacentOptions,
@@ -1292,6 +1323,22 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       value: "metrolong",
                       label: t("route.sign.metrolong"),
                     },
+                    {
+                      value: "metroforeign",
+                      label: t("route.sign.metroforeign"),
+                    },
+                    {
+                      value: "metromedium",
+                      label: t("route.sign.metromedium"),
+                    },
+                    {
+                      value: "toeimedium",
+                      label: t("route.sign.toeimedium"),
+                    },
+                    {
+                      value: "toeilarge",
+                      label: t("route.sign.toeilarge"),
+                    },
                   ]}
                 />
               </Grid.Col>
@@ -1346,27 +1393,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   ]}
                 />
               </Grid.Col>
-              {signStyle === "metrolong" && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <Select
-                    label={t("route.sign.metrolong-subtext")}
-                    value={metroLongSubTextMode}
-                    onChange={(v) =>
-                      v && setMetroLongSubTextMode(v as MetroLongSubTextMode)
-                    }
-                    data={[
-                      {
-                        value: "furigana",
-                        label: t("route.sign.metrolong-subtext-furigana"),
-                      },
-                      {
-                        value: "secondary",
-                        label: t("route.sign.metrolong-subtext-secondary"),
-                      },
-                    ]}
-                  />
-                </Grid.Col>
-              )}
               {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
                 "hidden" && (
                 <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>

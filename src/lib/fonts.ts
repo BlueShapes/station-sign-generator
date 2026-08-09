@@ -59,7 +59,11 @@ export type CanvasSignStyle =
   | "jreast"
   | "jrwest"
   | "jrwestlarge"
-  | "metrolong";
+  | "metrolong"
+  | "metroforeign"
+  | "metromedium"
+  | "toeimedium"
+  | "toeilarge";
 
 export function getStationNumberFontSpecs(
   stationNumberStyle?: string,
@@ -73,7 +77,15 @@ export function getStationSignFontSpecs(
   style: CanvasSignStyle,
   stationNumberStyle?: string,
 ): readonly string[] {
-  if (style === "metrolong") return METRO_LONG_FONT_SPECS;
+  if (
+    style === "metrolong" ||
+    style === "metroforeign" ||
+    style === "metromedium" ||
+    style === "toeimedium" ||
+    style === "toeilarge"
+  ) {
+    return METRO_LONG_FONT_SPECS;
+  }
   if (style === "jrwest" || style === "jrwestlarge") {
     return JR_WEST_FONT_SPECS;
   }

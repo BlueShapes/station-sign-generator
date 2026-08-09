@@ -261,7 +261,11 @@ route:
     jreast: JR East Style
     jrwest: JR West Style
     jrwestlarge: JR West Style (mare)
-    metrolong: Metrou din Tokyo/Stil de metrou Toei (lat)
+    metrolong: Stil metrou Tokyo (mic / japoneză)
+    metroforeign: Stil metrou Tokyo (mic / limbă străină)
+    metromedium: Stil metrou Tokyo (mediu)
+    toeimedium: Stil metrou Toei (mediu)
+    toeilarge: Stil metrou Toei (mare)
     metrolong-subtext: Subtext
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Limba secundară

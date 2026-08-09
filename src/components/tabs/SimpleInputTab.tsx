@@ -58,12 +58,28 @@ import JrWestSignLarge, {
   scale as JrWestSignLargeBaseScale,
 } from "@/components/signs/JrWestSignLarge";
 import MetroLongSign, {
+  MetroLongForeignSign,
   height as MetroLongSignHeight,
   scale as MetroLongSignBaseScale,
 } from "@/components/signs/MetroLongSign";
+import {
+  MetroMediumSign,
+  ToeiLargeSign,
+  ToeiMediumSign,
+  scale as SubwaySignBaseScale,
+  subwaySignDimensions,
+} from "@/components/signs/SubwaySign";
 import CanvasFontLoading from "@/components/CanvasFontLoading";
 
-type SignStyle = "jreast" | "jrwest" | "jrwestlarge" | "metrolong";
+type SignStyle =
+  | "jreast"
+  | "jrwest"
+  | "jrwestlarge"
+  | "metrolong"
+  | "metroforeign"
+  | "metromedium"
+  | "toeimedium"
+  | "toeilarge";
 
 const SIGN_STYLES: Record<
   SignStyle,
@@ -88,6 +104,26 @@ const SIGN_STYLES: Record<
     Component: MetroLongSign,
     height: MetroLongSignHeight,
     scale: MetroLongSignBaseScale,
+  },
+  metroforeign: {
+    Component: MetroLongForeignSign,
+    height: MetroLongSignHeight,
+    scale: MetroLongSignBaseScale,
+  },
+  metromedium: {
+    Component: MetroMediumSign,
+    height: subwaySignDimensions.metroMedium.height,
+    scale: SubwaySignBaseScale,
+  },
+  toeimedium: {
+    Component: ToeiMediumSign,
+    height: subwaySignDimensions.toeiMedium.height,
+    scale: SubwaySignBaseScale,
+  },
+  toeilarge: {
+    Component: ToeiLargeSign,
+    height: subwaySignDimensions.toeiLarge.height,
+    scale: SubwaySignBaseScale,
   },
 };
 
@@ -373,6 +409,10 @@ export default function SimpleInputTab() {
             { value: "jrwest", label: t("route.sign.jrwest") },
             { value: "jrwestlarge", label: t("route.sign.jrwestlarge") },
             { value: "metrolong", label: t("route.sign.metrolong") },
+            { value: "metroforeign", label: t("route.sign.metroforeign") },
+            { value: "metromedium", label: t("route.sign.metromedium") },
+            { value: "toeimedium", label: t("route.sign.toeimedium") },
+            { value: "toeilarge", label: t("route.sign.toeilarge") },
           ]}
           style={{ maxWidth: 240 }}
         />

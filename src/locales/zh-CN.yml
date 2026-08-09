@@ -261,7 +261,11 @@ route:
     jreast: JR东日本风格
     jrwest: JR西日本风格
     jrwestlarge: JR西日本风格（大）
-    metrolong: 东京地铁/都营地铁风格（宽幅）
+    metrolong: 东京地铁风格（小・日文）
+    metroforeign: 东京地铁风格（小・外语）
+    metromedium: 东京地铁风格（中）
+    toeimedium: 都营地铁风格（中）
+    toeilarge: 都营地铁风格（大）
     metrolong-subtext: 潜台词
     metrolong-subtext-furigana: 汉字注假名
     metrolong-subtext-secondary: 第二语言
