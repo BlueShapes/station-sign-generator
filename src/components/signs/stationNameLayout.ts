@@ -13,6 +13,12 @@ export function spaceToeiPrimaryName(name: string): string {
   return name;
 }
 
+export function spaceToeiSidePrimaryName(name: string): string {
+  const characters = Array.from(name);
+  if (characters.length === 2) return characters.join(" ");
+  return name;
+}
+
 /**
  * Tokyo Metro and Toei names keep their native type size whenever they fit.
  * Names longer than the six-character reference, or shorter names made too

@@ -13,15 +13,18 @@ import {
 import {
   getSubwayStationNameScaleX,
   spaceToeiPrimaryName,
+  spaceToeiSidePrimaryName,
   spaceTokyoMetroPrimaryName,
 } from "./stationNameLayout";
 import {
   getSubwayBadgeTextAdjustments,
   getToeiMainLayout,
+  getToeiVerticalLayout,
   METRO_MEDIUM_DIMENSIONS,
   TOEI_BADGE_DIAMETERS,
+  TOEI_BADGE_NUMBER_STROKE_WIDTH,
   TOEI_JAPANESE_LETTER_SPACING,
-  TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH,
+  TOEI_SHARED_LAYOUT,
   type SubwayBadgeKind,
 } from "./subwaySignGeometry";
 import { getSubwayMediumArrowPoints } from "./arrowGeometry";
@@ -445,26 +448,28 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       if (!station) return null;
       const active = isActive(side);
       const isLeft = side === "left";
-      const blockWidth = large ? 154 : 150;
-      const margin = large ? 14 : 10;
+      const blockWidth = TOEI_SHARED_LAYOUT.sideBlockWidth;
+      const margin = TOEI_SHARED_LAYOUT.horizontalMargin;
       const x = isLeft ? margin : width - blockWidth - margin;
       const align = isLeft ? "left" : "right";
-      const nameY = large ? 190 : 137;
-      const secondaryY = large ? 214 : 161;
-      const arrowY = large ? 150 : 103;
-      const arrowWidth = large ? 50 : 45;
-      const arrowHeight = large ? 31 : 31;
+      const verticalLayout = getToeiVerticalLayout(height, large);
+      const nameY = verticalLayout.sideNameY;
+      const secondaryY = verticalLayout.sideSecondaryY;
+      const arrowY = verticalLayout.arrowY;
+      const arrowWidth = TOEI_SHARED_LAYOUT.arrowWidth;
+      const arrowHeight = TOEI_SHARED_LAYOUT.arrowHeight;
       const arrowX = isLeft ? x : x + blockWidth - arrowWidth;
       const sideBadgeDiameter = large
         ? TOEI_BADGE_DIAMETERS.large.side
         : TOEI_BADGE_DIAMETERS.medium.side;
-      const badgeArrowDistance = 18;
+      const badgeArrowDistance = TOEI_SHARED_LAYOUT.badgeArrowDistance;
       const badgeCx = isLeft
         ? arrowX + arrowWidth + badgeArrowDistance
         : arrowX - badgeArrowDistance;
-      const sideNameSize = large ? 25 : 22;
+      const sideNameSize = TOEI_SHARED_LAYOUT.sideNameSize;
+      const displaySideName = spaceToeiSidePrimaryName(station.primaryName);
       const naturalNameWidth = measureText(
-        station.primaryName,
+        displaySideName,
         sideNameSize,
         "NotoSansJP",
         "600",
@@ -487,13 +492,11 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               prefix: station.numberPrimaryPrefix,
               value: station.numberPrimaryValue,
               diameter: sideBadgeDiameter,
-              emphasizedNumberKind: large ? undefined : "side",
-              valueStrokeWidth: large
-                ? 0
-                : TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH,
+              emphasizedNumberKind: "side",
+              valueStrokeWidth: TOEI_BADGE_NUMBER_STROKE_WIDTH,
             })}
           <Text
-            text={station.primaryName}
+            text={displaySideName}
             x={nameX}
             y={nameY}
             width={naturalNameWidth}
@@ -511,7 +514,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             x={x}
             y={secondaryY}
             width={blockWidth}
-            fontSize={large ? 14 : 13}
+            fontSize={TOEI_SHARED_LAYOUT.sideSecondarySize}
             fontFamily="Jost"
             fontStyle="500"
             align={align}
@@ -523,10 +526,10 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
     };
 
     const renderToei = (large: boolean) => {
-      const bandHeight = large ? 18 : 17;
-      const maxMainNameSize = large ? 49 : 48;
-      const maxMainFuriganaSize = large ? 18 : 20;
-      const maxMainSecondarySize = large ? 23 : 23;
+      const bandHeight = TOEI_SHARED_LAYOUT.bandHeight;
+      const maxMainNameSize = TOEI_SHARED_LAYOUT.mainNameSize;
+      const maxMainFuriganaSize = TOEI_SHARED_LAYOUT.mainFuriganaSize;
+      const maxMainSecondarySize = TOEI_SHARED_LAYOUT.mainSecondarySize;
       const mainBadgeDiameter = large
         ? TOEI_BADGE_DIAMETERS.large.main
         : TOEI_BADGE_DIAMETERS.medium.main;
@@ -581,13 +584,12 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
         measuredFuriganaWidth,
         measuredSecondaryWidth,
       ));
-      const mainTop = large ? 47 : 22;
+      const mainTop = getToeiVerticalLayout(height, large).mainTop;
       const mainLayout = getToeiMainLayout({
         width,
         renderedMainNameWidth,
         secondaryNameWidth: measuredSecondaryWidth,
         badgeOuter,
-        large,
       });
       const textX = mainLayout.textCenterX - nameWidth / 2;
       return (
@@ -607,10 +609,8 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               prefix: numberPrimaryPrefix,
               value: numberPrimaryValue,
               diameter: mainBadgeDiameter,
-              emphasizedNumberKind: large ? undefined : "main",
-              valueStrokeWidth: large
-                ? 0
-                : TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH,
+              emphasizedNumberKind: "main",
+              valueStrokeWidth: TOEI_BADGE_NUMBER_STROKE_WIDTH,
             })}
             <Text
               text={displayName}
@@ -629,7 +629,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             <Text
               text={primaryNameFurigana}
               x={textX}
-              y={mainTop + 50}
+              y={mainTop + TOEI_SHARED_LAYOUT.mainFuriganaYOffset}
               width={nameWidth}
               fontSize={mainFuriganaSize}
               fontFamily="NotoSansJP"
@@ -642,7 +642,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             <Text
               text={secondaryName}
               x={textX}
-              y={mainTop + 72}
+              y={mainTop + TOEI_SHARED_LAYOUT.mainSecondaryYOffset}
               width={nameWidth}
               fontSize={mainSecondarySize}
               fontFamily="Jost"

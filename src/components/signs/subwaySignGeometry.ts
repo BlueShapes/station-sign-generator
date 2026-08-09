@@ -8,18 +8,64 @@ export const METRO_MEDIUM_DIMENSIONS = {
 
 export const TOEI_BADGE_DIAMETERS = {
   medium: { main: 55, side: 35 },
-  large: { main: 43, side: 29 },
+  large: { main: 55, side: 35 },
 } as const;
 
 export const TOEI_JAPANESE_LETTER_SPACING = 1.5;
-export const TOEI_MEDIUM_BADGE_NUMBER_STROKE_WIDTH = 0.6;
+export const TOEI_BADGE_NUMBER_STROKE_WIDTH = 0.6;
+export const TOEI_LARGE_MAIN_TOP_GAP_EM = 0.5;
+
+export const TOEI_SHARED_LAYOUT = {
+  bandHeight: 17,
+  mainNameSize: 48,
+  mainFuriganaSize: 20,
+  mainSecondarySize: 23,
+  sideBlockWidth: 150,
+  horizontalMargin: 10,
+  sideNameSize: 22,
+  sideSecondarySize: 13,
+  arrowWidth: 45,
+  arrowHeight: 31,
+  badgeArrowDistance: 18,
+  mainFuriganaYOffset: 50,
+  mainSecondaryYOffset: 72,
+} as const;
+
+export function getToeiVerticalLayout(height: number, large: boolean) {
+  if (!large) {
+    return {
+      mainTop: 22,
+      arrowY: 103,
+      sideNameY: 137,
+      sideSecondaryY: 161,
+    };
+  }
+
+  const bottomTextGap = 3;
+  const sideSecondaryY =
+    height -
+    TOEI_SHARED_LAYOUT.bandHeight -
+    TOEI_SHARED_LAYOUT.sideSecondarySize -
+    bottomTextGap;
+  const sideNameY = sideSecondaryY - 24;
+  const arrowY =
+    sideNameY - TOEI_SHARED_LAYOUT.arrowHeight - 3;
+
+  return {
+    mainTop:
+      TOEI_SHARED_LAYOUT.bandHeight +
+      TOEI_SHARED_LAYOUT.mainNameSize * TOEI_LARGE_MAIN_TOP_GAP_EM,
+    arrowY,
+    sideNameY,
+    sideSecondaryY,
+  };
+}
 
 type ToeiMainLayoutOptions = {
   width: number;
   renderedMainNameWidth: number;
   secondaryNameWidth: number;
   badgeOuter: number;
-  large: boolean;
 };
 
 export function getToeiMainLayout({
@@ -27,11 +73,10 @@ export function getToeiMainLayout({
   renderedMainNameWidth,
   secondaryNameWidth,
   badgeOuter,
-  large,
 }: ToeiMainLayoutOptions) {
   const horizontalMargin = 12;
-  const badgeGap = large ? 8 : 10;
-  const maxSecondaryShift = large ? 10 : 8;
+  const badgeGap = 7;
+  const maxSecondaryShift = 8;
   const longSecondaryThreshold = width * 0.42;
   const secondaryShift = Math.min(
     maxSecondaryShift,
@@ -48,7 +93,7 @@ export function getToeiMainLayout({
     textCenterX,
     badgeCx,
     badgeGap,
-    badgeCyOffset: large ? 45 : 44,
+    badgeCyOffset: 44,
   };
 }
 
