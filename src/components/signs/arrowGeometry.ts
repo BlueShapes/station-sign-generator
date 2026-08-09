@@ -77,7 +77,7 @@ export function getSubwayMediumArrowPoints(
     ],
     innerTop: [
       [5, height * 0.4],
-      [width * 0.71, height * 0.38],
+      [width * 0.71, height * 0.4],
     ],
     tipX: width * 0.95,
   });

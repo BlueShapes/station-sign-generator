@@ -148,7 +148,7 @@ describe("subway sign style fields", () => {
         TOEI_SHARED_LAYOUT.bandHeight -
         (large.sideSecondaryY + TOEI_SHARED_LAYOUT.sideSecondarySize),
     ).toBe(3);
-    expect(large.arrowY).toBe(149);
+    expect(large.arrowY).toBe(145);
   });
 
   test("adds a subtle number-only weight boost to all Tokyo Metro badges", () => {

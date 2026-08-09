@@ -76,6 +76,9 @@ describe("station sign arrow geometry", () => {
     expect(vertices[1]).toEqual([25.2, 0]);
     expect(vertices[2]).toEqual([38, 12.5]);
     expect(vertices[7]).toEqual([5, 10]);
-    expect(vertices[8]).toEqual([28.4, 9.5]);
+    expect(vertices[8]).toEqual([28.4, 10]);
+    expect(vertices[6][1] - vertices[7][1]).toBeCloseTo(
+      vertices[5][1] - vertices[8][1],
+    );
   });
 });
