@@ -258,6 +258,8 @@ route:
     prev-station: Stesen sebelumnya
     next-station: Stesen seterusnya
     adjacent-select: Pilih sehingga 2 stesen
+    adjacent-order: Luar → dalam
+    adjacent-swap-order: Tukar susunan luar / dalam
     jreast: Gaya JR Timur
     jrwest: Gaya JR Barat
     jrwestlarge: Gaya JR West (Besar)

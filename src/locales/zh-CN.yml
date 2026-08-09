@@ -258,6 +258,8 @@ route:
     prev-station: 上一站
     next-station: 下一站
     adjacent-select: 最多选择 2 个电台
+    adjacent-order: 外侧 → 内侧
+    adjacent-swap-order: 交换外侧/内侧顺序
     jreast: JR东日本风格
     jrwest: JR西日本风格
     jrwestlarge: JR西日本风格（大）

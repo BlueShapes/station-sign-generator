@@ -266,6 +266,8 @@ route:
     prev-station: Previous station
     next-station: Next station
     adjacent-select: Select up to 2 stations
+    adjacent-order: Outer → inner
+    adjacent-swap-order: Swap outer / inner order
     jreast: JR East Style
     jrwest: JR West Style
     jrwestlarge: JR West Style (Large)

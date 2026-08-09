@@ -13,12 +13,16 @@ import {
 } from "./stationNumberBadgeMetrics";
 import {
   getSubwayStationNameScaleX,
+  getSubwaySideTextFit,
+  joinSubwayAdjacentText,
+  orderSubwayAdjacentTextValues,
   spaceToeiPrimaryName,
   spaceToeiSidePrimaryName,
   spaceTokyoMetroPrimaryName,
 } from "./stationNameLayout";
 import {
   getSubwayBadgeTextAdjustments,
+  getSubwaySideBadgeCenters,
   getToeiMainLayout,
   getToeiVerticalLayout,
   METRO_MEDIUM_DIMENSIONS,
@@ -264,35 +268,46 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       direction === "both" || direction === side;
 
     const renderMetroSide = (
-      station: AdjacentStationProps | undefined,
+      adjacentStations: AdjacentStationProps[],
       side: "left" | "right",
     ) => {
-      if (!station) return null;
+      const stations = adjacentStations.slice(0, 2);
+      if (stations.length === 0) return null;
       const active = isActive(side);
       const isLeft = side === "left";
       const blockWidth = 126;
       const x = isLeft ? 12 : width - blockWidth - 12;
       const align = isLeft ? "left" : "right";
+      const textStations = orderSubwayAdjacentTextValues(stations, side);
+      const displaySideName = joinSubwayAdjacentText(
+        textStations.map((station) => station.primaryName),
+      );
+      const displayFurigana = joinSubwayAdjacentText(
+        textStations.map((station) => station.primaryNameFurigana),
+      );
+      const displaySecondary = joinSubwayAdjacentText(
+        textStations.map((station) => station.secondaryName),
+      );
       const naturalNameWidth = measureText(
-        station.primaryName,
+        displaySideName,
         22,
         "NotoSansJP",
         "700",
       );
       const nameScaleX = getSubwayStationNameScaleX(
-        station.primaryName,
+        displaySideName,
         naturalNameWidth,
         blockWidth,
       );
       const furiganaSize = fitFontSize(
-        station.primaryNameFurigana ?? "",
+        displayFurigana,
         11,
         blockWidth,
         "NotoSansJP",
         "500",
       );
       const secondarySize = fitFontSize(
-        station.secondaryName,
+        displaySecondary,
         13,
         blockWidth,
         "Jost",
@@ -300,12 +315,18 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       );
       const renderedNameWidth = naturalNameWidth * nameScaleX;
       const nameX = isLeft ? x : x + blockWidth - renderedNameWidth;
+      const badgeCenters = getSubwaySideBadgeCenters({
+        outerCenter: isLeft ? x + 22 : x + blockWidth - 22,
+        diameter: 29,
+        count: stations.length,
+        side,
+      });
       return (
         <Group>
           {active &&
             renderArrow(side, isLeft ? x : x + blockWidth - 40, 7, 40, 25)}
           <Text
-            text={station.primaryName}
+            text={displaySideName}
             x={nameX}
             y={35}
             width={naturalNameWidth}
@@ -318,7 +339,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             fill={active ? "#202126" : INACTIVE_COLOR}
           />
           <Text
-            text={station.primaryNameFurigana ?? ""}
+            text={displayFurigana}
             x={x}
             y={59}
             width={blockWidth}
@@ -329,7 +350,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             fill={active ? "#202126" : INACTIVE_COLOR}
           />
           <Text
-            text={station.secondaryName}
+            text={displaySecondary}
             x={x}
             y={72}
             width={blockWidth}
@@ -341,18 +362,22 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             fill={active ? "#202126" : INACTIVE_COLOR}
           />
           {active &&
-            renderBadge({
-              cx: isLeft ? x + 22 : x + blockWidth - 22,
-              cy:
-                METRO_MEDIUM_DIMENSIONS.bandTop +
-                METRO_MEDIUM_DIMENSIONS.bandHeight / 2,
-              prefix: station.numberPrimaryPrefix,
-              value: station.numberPrimaryValue,
-              diameter: 29,
-              whiteOutline: true,
-              emphasizedNumberKind: "side",
-              valueStrokeWidth: TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
-            })}
+            stations.map((station, index) => (
+              <Group key={`${station.id}-${index}`}>
+                {renderBadge({
+                  cx: badgeCenters[index],
+                  cy:
+                    METRO_MEDIUM_DIMENSIONS.bandTop +
+                    METRO_MEDIUM_DIMENSIONS.bandHeight / 2,
+                  prefix: station.numberPrimaryPrefix,
+                  value: station.numberPrimaryValue,
+                  diameter: 29,
+                  whiteOutline: true,
+                  emphasizedNumberKind: "side",
+                  valueStrokeWidth: TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
+                })}
+              </Group>
+            ))}
         </Group>
       );
     };
@@ -390,8 +415,8 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       return (
         <>
           <Rect fill={lineColor} x={0} y={bandTop} width={width} height={height - bandTop} />
-          {renderMetroSide(left[0], "left")}
-          {renderMetroSide(right[0], "right")}
+          {renderMetroSide(left, "left")}
+          {renderMetroSide(right, "right")}
           <Text
             text={displayName}
             x={134 + (centerWidth - renderedMainNameWidth) / 2}
@@ -447,17 +472,17 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
     };
 
     const renderToeiSide = (
-      station: AdjacentStationProps | undefined,
+      adjacentStations: AdjacentStationProps[],
       side: "left" | "right",
       large: boolean,
     ) => {
-      if (!station) return null;
+      const stations = adjacentStations.slice(0, 2);
+      if (stations.length === 0) return null;
       const active = isActive(side);
       const isLeft = side === "left";
       const blockWidth = TOEI_SHARED_LAYOUT.sideBlockWidth;
       const margin = TOEI_SHARED_LAYOUT.horizontalMargin;
       const x = isLeft ? margin : width - blockWidth - margin;
-      const align = isLeft ? "left" : "right";
       const verticalLayout = getToeiVerticalLayout(height, large);
       const nameY = verticalLayout.sideNameY;
       const secondaryY = verticalLayout.sideSecondaryY;
@@ -473,7 +498,28 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
         ? arrowX + arrowWidth + badgeArrowDistance
         : arrowX - badgeArrowDistance;
       const sideNameSize = TOEI_SHARED_LAYOUT.sideNameSize;
-      const displaySideName = spaceToeiSidePrimaryName(station.primaryName);
+      const textStations = orderSubwayAdjacentTextValues(stations, side);
+      const displaySideName = joinSubwayAdjacentText(
+        textStations.map((station) =>
+          spaceToeiSidePrimaryName(station.primaryName, textStations.length),
+        ),
+      );
+      const displaySecondary = joinSubwayAdjacentText(
+        textStations.map((station) => station.secondaryName),
+      );
+      const naturalSecondaryWidth = measureText(
+        displaySecondary,
+        TOEI_SHARED_LAYOUT.sideSecondarySize,
+        "Jost",
+        "500",
+      );
+      const secondaryFit = getSubwaySideTextFit({
+        text: displaySecondary,
+        naturalWidth: naturalSecondaryWidth,
+        maxWidth: blockWidth,
+        originX: x,
+        side,
+      });
       const naturalNameWidth = measureText(
         displaySideName,
         sideNameSize,
@@ -482,25 +528,35 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
         TOEI_JAPANESE_LETTER_SPACING,
       );
       const nameScaleX = getSubwayStationNameScaleX(
-        station.primaryName,
+        displaySideName,
         naturalNameWidth,
         blockWidth,
       );
       const renderedNameWidth = naturalNameWidth * nameScaleX;
       const nameX = isLeft ? x : x + blockWidth - renderedNameWidth;
+      const badgeCenters = getSubwaySideBadgeCenters({
+        outerCenter: badgeCx,
+        diameter: sideBadgeDiameter,
+        count: stations.length,
+        side,
+      });
       return (
         <Group>
           {active && renderArrow(side, arrowX, arrowY, arrowWidth, arrowHeight)}
           {active &&
-            renderBadge({
-              cx: badgeCx,
-              cy: arrowY + arrowHeight / 2,
-              prefix: station.numberPrimaryPrefix,
-              value: station.numberPrimaryValue,
-              diameter: sideBadgeDiameter,
-              emphasizedNumberKind: "side",
-              valueStrokeWidth: TOEI_BADGE_NUMBER_STROKE_WIDTH,
-            })}
+            stations.map((station, index) => (
+              <Group key={`${station.id}-${index}`}>
+                {renderBadge({
+                  cx: badgeCenters[index],
+                  cy: arrowY + arrowHeight / 2,
+                  prefix: station.numberPrimaryPrefix,
+                  value: station.numberPrimaryValue,
+                  diameter: sideBadgeDiameter,
+                  emphasizedNumberKind: "side",
+                  valueStrokeWidth: TOEI_BADGE_NUMBER_STROKE_WIDTH,
+                })}
+              </Group>
+            ))}
           <Text
             text={displaySideName}
             x={nameX}
@@ -516,14 +572,15 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             fill={active ? "#202126" : INACTIVE_COLOR}
           />
           <Text
-            text={station.secondaryName}
-            x={x}
+            text={displaySecondary}
+            x={secondaryFit.x}
             y={secondaryY}
-            width={blockWidth}
+            width={secondaryFit.width}
             fontSize={TOEI_SHARED_LAYOUT.sideSecondarySize}
             fontFamily="Jost"
             fontStyle="500"
-            align={align}
+            align="left"
+            scaleX={secondaryFit.scaleX}
             wrap="none"
             fill={active ? "#202126" : INACTIVE_COLOR}
           />
@@ -659,8 +716,8 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               fill="#202126"
             />
           </Group>
-          {renderToeiSide(left[0], "left", large)}
-          {renderToeiSide(right[0], "right", large)}
+          {renderToeiSide(left, "left", large)}
+          {renderToeiSide(right, "right", large)}
         </>
       );
     };

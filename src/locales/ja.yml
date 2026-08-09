@@ -266,6 +266,8 @@ route:
     prev-station: 前の駅
     next-station: 次の駅
     adjacent-select: 駅を選択してください（最大2件）
+    adjacent-order: 外側 → 内側
+    adjacent-swap-order: 外側／内側の順番を入れ替え
     jreast: JR東日本風
     jrwest: JR西日本風
     jrwestlarge: JR西日本風（大）

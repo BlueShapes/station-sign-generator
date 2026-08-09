@@ -2,6 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { SIGN_STYLE_FIELDS } from "../src/components/signs/signStyles.ts";
 import {
   getSubwayStationNameScaleX,
+  getSubwaySideTextFit,
+  joinSubwayAdjacentText,
+  orderSubwayAdjacentTextValues,
   spaceToeiPrimaryName,
   spaceToeiSidePrimaryName,
   spaceTokyoMetroPrimaryName,
@@ -9,6 +12,7 @@ import {
 } from "../src/components/signs/stationNameLayout.ts";
 import {
   getSubwayBadgeTextAdjustments,
+  getSubwaySideBadgeCenters,
   getToeiMainLayout,
   getToeiVerticalLayout,
   METRO_MEDIUM_DIMENSIONS,
@@ -49,12 +53,48 @@ describe("subway sign style fields", () => {
     ).toBe(METRO_MEDIUM_DIMENSIONS.bandHeight);
   });
 
-  test("new vertical layouts accept one adjacent station per side", () => {
+  test("new vertical layouts accept two adjacent stations per side", () => {
     for (const style of ["metromedium", "toeimedium", "toeilarge"]) {
-      expect(SIGN_STYLE_FIELDS[style].maxAdjacentCount).toBe(1);
+      expect(SIGN_STYLE_FIELDS[style].maxAdjacentCount).toBe(2);
       expect(SIGN_STYLE_FIELDS[style].numberPrimary).toBe("required");
       expect(SIGN_STYLE_FIELDS[style].direction).toBe("required");
     }
+  });
+
+  test("joins adjacent subway station labels in outside-to-inside order", () => {
+    expect(joinSubwayAdjacentText(["外側", "内側"])).toBe("外側／内側");
+    expect(joinSubwayAdjacentText(["一駅"])).toBe("一駅");
+    expect(joinSubwayAdjacentText(["一", "二", "三"])).toBe("一／二");
+  });
+
+  test("keeps side labels aligned left-to-right with their badges", () => {
+    expect(orderSubwayAdjacentTextValues(["outer", "inner"], "left")).toEqual([
+      "outer",
+      "inner",
+    ]);
+    expect(orderSubwayAdjacentTextValues(["outer", "inner"], "right")).toEqual([
+      "inner",
+      "outer",
+    ]);
+  });
+
+  test("places up to two side badges from outside toward the center", () => {
+    expect(
+      getSubwaySideBadgeCenters({
+        outerCenter: 34,
+        diameter: 29,
+        count: 2,
+        side: "left",
+      }),
+    ).toEqual([34, 71]);
+    expect(
+      getSubwaySideBadgeCenters({
+        outerCenter: 476,
+        diameter: 29,
+        count: 2,
+        side: "right",
+      }),
+    ).toEqual([476, 439]);
   });
 
   test("condenses long names and any name that exceeds its adjusted layout width", () => {
@@ -78,10 +118,32 @@ describe("subway sign style fields", () => {
     expect(spaceToeiPrimaryName("飯田橋駅")).toBe("飯田橋駅");
   });
 
-  test("uses half-width spacing only for two-character Toei side names", () => {
+  test("spaces a two-character Toei side name only when it is the sole station", () => {
     expect(spaceToeiSidePrimaryName("西台")).toBe("西 台");
+    expect(spaceToeiSidePrimaryName("西台", 2)).toBe("西台");
     expect(spaceToeiSidePrimaryName("日比谷")).toBe("日比谷");
     expect(spaceToeiSidePrimaryName("飯田橋駅")).toBe("飯田橋駅");
+  });
+
+  test("fits Toei side English names without changing their vertical type size", () => {
+    expect(
+      getSubwaySideTextFit({
+        text: "Verylongstationname",
+        naturalWidth: 300,
+        maxWidth: 150,
+        originX: 10,
+        side: "left",
+      }),
+    ).toEqual({ x: 10, width: 300, scaleX: 0.5 });
+    expect(
+      getSubwaySideTextFit({
+        text: "Short",
+        naturalWidth: 100,
+        maxWidth: 150,
+        originX: 10,
+        side: "right",
+      }),
+    ).toEqual({ x: 60, width: 100, scaleX: 1 });
   });
 
   test("matches the small Metro badge typography ratios in the medium sign", () => {
@@ -122,7 +184,7 @@ describe("subway sign style fields", () => {
 
   test("keeps the separately tuned Toei medium and large badge sizes", () => {
     expect(TOEI_BADGE_DIAMETERS.medium.main).toBe(55);
-    expect(TOEI_BADGE_DIAMETERS.medium.side).toBe(35);
+    expect(TOEI_BADGE_DIAMETERS.medium.side).toBe(34);
     expect(TOEI_BADGE_DIAMETERS.large.main).toBe(52);
     expect(TOEI_BADGE_DIAMETERS.large.side).toBe(31);
   });
@@ -148,7 +210,7 @@ describe("subway sign style fields", () => {
         TOEI_SHARED_LAYOUT.bandHeight -
         (large.sideSecondaryY + TOEI_SHARED_LAYOUT.sideSecondarySize),
     ).toBe(3);
-    expect(large.arrowY).toBe(145);
+    expect(large.arrowY).toBe(143);
   });
 
   test("adds a subtle number-only weight boost to all Tokyo Metro badges", () => {

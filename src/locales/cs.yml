@@ -258,6 +258,8 @@ route:
     prev-station: Předchozí stanice
     next-station: Další stanice
     adjacent-select: Vyberte až 2 stanice
+    adjacent-order: Vnější → vnitřní
+    adjacent-swap-order: Prohodit vnější / vnitřní pořadí
     jreast: JR východní styl
     jrwest: JR West Style
     jrwestlarge: JR West Style (velký)
