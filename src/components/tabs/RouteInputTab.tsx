@@ -12,7 +12,13 @@
  * Display: ratio (from user), direction (from user)
  */
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  type CSSProperties,
+} from "react";
 import type { Database } from "sql.js";
 import {
   Alert,
@@ -24,6 +30,7 @@ import {
   Box,
   Select,
   MultiSelect,
+  Paper,
   Title,
   Loader,
   Center,
@@ -146,6 +153,7 @@ import {
   isTransitSecondaryNameExportTooSmall,
 } from "@/components/signs/transitLineLayout";
 import CanvasFontLoading from "@/components/CanvasFontLoading";
+import styles from "./RouteInputTab.module.css";
 
 type SignStyle =
   | "jreast"
@@ -1363,11 +1371,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   }
 
   return (
-    <Box style={{ padding: "16px" }}>
+    <Box className={styles.routeInputShell}>
       <Stack gap="md">
         {/* Mode toggle */}
-        <Group>
+        <Group className={styles.modeBar}>
           <SegmentedControl
+            className={styles.modeControl}
             value={tabMode}
             onChange={(v) => setTabMode(v as TabMode)}
             data={[
@@ -1404,88 +1413,47 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
         {/* ── Sign mode controls ────────────────────────────────────────── */}
         {tabMode === "sign" && (
-          <>
-            <Grid gutter="md">
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Select
-                  label={t("route.sign.style")}
-                  value={signStyle}
-                  onChange={(v) => v && setSignStyle(v as SignStyle)}
-                  data={[
-                    { value: "jreast", label: t("route.sign.jreast") },
-                    {
-                      value: "jreastbranch",
-                      label: t("route.sign.jreastbranch"),
-                    },
-                    { value: "jrwest", label: t("route.sign.jrwest") },
-                    {
-                      value: "jrwestlarge",
-                      label: t("route.sign.jrwestlarge"),
-                    },
-                    {
-                      value: "metrolong",
-                      label: t("route.sign.metrolong"),
-                    },
-                    {
-                      value: "metroforeign",
-                      label: t("route.sign.metroforeign"),
-                    },
-                    {
-                      value: "metromedium",
-                      label: t("route.sign.metromedium"),
-                    },
-                    {
-                      value: "toeimedium",
-                      label: t("route.sign.toeimedium"),
-                    },
-                    {
-                      value: "toeilarge",
-                      label: t("route.sign.toeilarge"),
-                    },
-                  ]}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Select
-                  label={t("route.line.title")}
-                  value={selectedLineId}
-                  onChange={(value) => {
-                    setSelectedLineId(value);
-                    if (value) setSelectedThroughRouteId(null);
-                  }}
-                  data={lines.map((l) => ({
-                    value: l.id,
-                    label: `[${l.prefix}] ${l.name}`,
-                  }))}
-                  placeholder={t("route.line.select")}
-                  clearable
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Select
-                  label={t("route.station.title")}
-                  value={selectedStationId}
-                  onChange={setSelectedStationId}
-                  data={stations.map((s) => ({
-                    value: s.id,
-                    label: stationLabelMap[s.id] ?? s.primary_name,
-                  }))}
-                  placeholder={
-                    selectedLineId
-                      ? t("route.station.select")
-                      : t("route.station.empty")
-                  }
-                  disabled={!selectedLineId}
-                  clearable
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Stack gap="lg" className={styles.signWorkspace}>
+            <Paper withBorder radius="lg" className={styles.formatBar}>
+              <Select
+                className={styles.formatControl}
+                label={t("route.sign.style")}
+                value={signStyle}
+                onChange={(value) => value && setSignStyle(value as SignStyle)}
+                data={[
+                  { value: "jreast", label: t("route.sign.jreast") },
+                  {
+                    value: "jreastbranch",
+                    label: t("route.sign.jreastbranch"),
+                  },
+                  { value: "jrwest", label: t("route.sign.jrwest") },
+                  {
+                    value: "jrwestlarge",
+                    label: t("route.sign.jrwestlarge"),
+                  },
+                  { value: "metrolong", label: t("route.sign.metrolong") },
+                  {
+                    value: "metroforeign",
+                    label: t("route.sign.metroforeign"),
+                  },
+                  {
+                    value: "metromedium",
+                    label: t("route.sign.metromedium"),
+                  },
+                  {
+                    value: "toeimedium",
+                    label: t("route.sign.toeimedium"),
+                  },
+                  { value: "toeilarge", label: t("route.sign.toeilarge") },
+                ]}
+              />
+              <Box className={styles.directionControl}>
                 <Text size="sm" fw={500} mb={4}>
                   {t("route.sign.direction")}
                 </Text>
                 <SegmentedControl
                   value={direction}
-                  onChange={(v) => setDirection(v as Direction)}
+                  onChange={(value) => setDirection(value as Direction)}
                   data={[
                     { value: "left", label: <IconArrowLeft size={16} /> },
                     {
@@ -1495,28 +1463,28 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     { value: "right", label: <IconArrowRight size={16} /> },
                   ]}
                 />
-              </Grid.Col>
-              {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
-                "hidden" && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <MultiSelect
-                    label={t("route.sign.center-colors")}
-                    value={centerSquareLineIds}
-                    onChange={(v) =>
-                      setCenterSquareLineIds(
-                        v.length > 0 ? v.slice(0, 4) : centerSquareLineIds,
-                      )
-                    }
-                    data={stationLines.map((l) => ({
-                      value: l.id,
-                      label: `[${l.prefix}] ${l.name}`,
-                    }))}
-                    disabled={!selectedStationId}
-                    maxValues={4}
-                  />
-                </Grid.Col>
-              )}
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              </Box>
+            </Paper>
+
+            <Box
+              className={styles.signComposer}
+              style={
+                {
+                  "--route-accent": selectedBaseLine?.line_color ?? "#228be6",
+                } as CSSProperties
+              }
+            >
+              <Paper
+                withBorder
+                radius="lg"
+                className={`${styles.stationCard} ${styles.leftStationCard}`}
+              >
+                <Group className={styles.stationCardHeader} gap="sm" wrap="nowrap">
+                  <Box className={styles.stationNode} aria-hidden="true">
+                    <IconArrowLeft size={16} />
+                  </Box>
+                  <Text fw={700}>{t("input.direct.input-left")}</Text>
+                </Group>
                 <Stack gap={4}>
                   <MultiSelect
                     label={t("route.sign.prev-station")}
@@ -1525,8 +1493,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       setSelectedLeftAdjacentIds(
                         value.slice(0, adjacentSelectionLimit),
                       );
-                      if (value.length >= adjacentSelectionLimit)
+                      if (value.length >= adjacentSelectionLimit) {
                         setLeftAdjacentDropdownOpened(false);
+                      }
                     }}
                     dropdownOpened={leftAdjacentDropdownOpened}
                     onDropdownOpen={() => setLeftAdjacentDropdownOpened(true)}
@@ -1555,8 +1524,84 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     />
                   )}
                 </Stack>
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              </Paper>
+
+              <Paper
+                withBorder
+                radius="lg"
+                className={`${styles.stationCard} ${styles.currentStationCard}`}
+              >
+                <Group className={styles.stationCardHeader} gap="sm" wrap="nowrap">
+                  <Box className={styles.stationNode} aria-hidden="true">
+                    <IconSignRight size={17} />
+                  </Box>
+                  <Text fw={700}>{t("input.direct.input-current")}</Text>
+                </Group>
+                <Stack gap="sm">
+                  <Select
+                    label={t("route.line.title")}
+                    value={selectedLineId}
+                    onChange={(value) => {
+                      setSelectedLineId(value);
+                      if (value) setSelectedThroughRouteId(null);
+                    }}
+                    data={lines.map((line) => ({
+                      value: line.id,
+                      label: `[${line.prefix}] ${line.name}`,
+                    }))}
+                    placeholder={t("route.line.select")}
+                    clearable
+                  />
+                  <Select
+                    label={t("route.station.title")}
+                    value={selectedStationId}
+                    onChange={setSelectedStationId}
+                    data={stations.map((station) => ({
+                      value: station.id,
+                      label: stationLabelMap[station.id] ?? station.primary_name,
+                    }))}
+                    placeholder={
+                      selectedLineId
+                        ? t("route.station.select")
+                        : t("route.station.empty")
+                    }
+                    disabled={!selectedLineId}
+                    clearable
+                  />
+                  {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
+                    "hidden" && (
+                    <MultiSelect
+                      label={t("route.sign.center-colors")}
+                      value={centerSquareLineIds}
+                      onChange={(value) =>
+                        setCenterSquareLineIds(
+                          value.length > 0
+                            ? value.slice(0, 4)
+                            : centerSquareLineIds,
+                        )
+                      }
+                      data={stationLines.map((line) => ({
+                        value: line.id,
+                        label: `[${line.prefix}] ${line.name}`,
+                      }))}
+                      disabled={!selectedStationId}
+                      maxValues={4}
+                    />
+                  )}
+                </Stack>
+              </Paper>
+
+              <Paper
+                withBorder
+                radius="lg"
+                className={`${styles.stationCard} ${styles.rightStationCard}`}
+              >
+                <Group className={styles.stationCardHeader} gap="sm" wrap="nowrap">
+                  <Box className={styles.stationNode} aria-hidden="true">
+                    <IconArrowRight size={16} />
+                  </Box>
+                  <Text fw={700}>{t("input.direct.input-right")}</Text>
+                </Group>
                 <Stack gap={4}>
                   <MultiSelect
                     label={t("route.sign.next-station")}
@@ -1565,8 +1610,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       setSelectedRightAdjacentIds(
                         value.slice(0, adjacentSelectionLimit),
                       );
-                      if (value.length >= adjacentSelectionLimit)
+                      if (value.length >= adjacentSelectionLimit) {
                         setRightAdjacentDropdownOpened(false);
+                      }
                     }}
                     dropdownOpened={rightAdjacentDropdownOpened}
                     onDropdownOpen={() => setRightAdjacentDropdownOpened(true)}
@@ -1595,11 +1641,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     />
                   )}
                 </Stack>
-              </Grid.Col>
-            </Grid>
+              </Paper>
+            </Box>
 
             {/* Station navigation + flip */}
-            <Group gap="sm">
+            <Paper withBorder radius="lg" className={styles.adjustmentBar}>
+              <Group gap="sm" className={styles.stationNavigation}>
               <Button
                 variant="outline"
                 size="sm"
@@ -1646,44 +1693,43 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               >
                 {t("route.sign.flip")}
               </Button>
-            </Group>
+              </Group>
 
-            {/* Ratio slider — hidden for fixed-ratio styles */}
-            {SIGN_STYLE_FIELDS[signStyle]?.fixedRatio === undefined && (
-              <Box
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}
-              >
-                <IconRuler size={20} style={{ flexShrink: 0 }} />
-                <Slider
-                  value={ratio}
-                  label={(v) => v}
-                  labelAlwaysOn
-                  step={0.5}
-                  min={2.5}
-                  max={8}
-                  style={{ width: "100%" }}
-                  onChange={setRatio}
-                />
-              </Box>
-            )}
+              {/* Ratio slider — hidden for fixed-ratio styles */}
+              {SIGN_STYLE_FIELDS[signStyle]?.fixedRatio === undefined && (
+                <Box className={styles.ratioControl}>
+                  <IconRuler size={20} className={styles.ratioIcon} />
+                  <Slider
+                    value={ratio}
+                    label={(value) => value}
+                    labelAlwaysOn
+                    step={0.5}
+                    min={2.5}
+                    max={8}
+                    className={styles.ratioSlider}
+                    onChange={setRatio}
+                  />
+                </Box>
+              )}
+            </Paper>
 
             {/* Sign preview */}
-            {signData && (
-              <>
-                <Title
-                  order={2}
-                  style={{
-                    fontSize: "1.2em",
-                    padding: "10px 0 5px 5px",
-                    fontWeight: "bold",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
+            <Paper withBorder radius="xl" className={styles.previewPanel}>
+              <Group justify="space-between" align="center" mb="md">
+                <Title order={2} className={styles.previewTitle}>
                   <IconEye size="1.6em" />
                   {t("common.preview")}
                 </Title>
+                {selectedBaseLine && (
+                  <Box
+                    className={styles.previewLineSwatch}
+                    style={{ backgroundColor: selectedBaseLine.line_color }}
+                    aria-hidden="true"
+                  />
+                )}
+              </Group>
+              {signData ? (
+                <>
                 {signFonts.ready ? (
                   (() => {
                     const { Component: SignComponent } = SIGN_STYLES[signStyle];
@@ -1700,7 +1746,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 )}
 
                 {/* Download controls */}
-                <Grid gutter="md" style={{ padding: "10px" }}>
+                <Grid gutter="md" className={styles.downloadControls}>
                   <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
                     <Select
                       label={t("input.image-size")}
@@ -1714,7 +1760,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   </Grid.Col>
                   <Grid.Col
                     span={{ base: 12, sm: 5, lg: 3 }}
-                    style={{ display: "flex", justifyContent: "center" }}
+                    className={styles.downloadButtonColumn}
                   >
                     <Button
                       color="green"
@@ -1722,6 +1768,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       variant="filled"
                       onClick={handleSaveSign}
                       disabled={!signFonts.ready}
+                      fullWidth
                       style={{ fontWeight: 700 }}
                       leftSection={<IconDownload />}
                     >
@@ -1729,9 +1776,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Button>
                   </Grid.Col>
                 </Grid>
-              </>
-            )}
-          </>
+                </>
+              ) : (
+                <Box className={styles.emptyPreview}>
+                  <Text>{t("input.direct.input-left")}</Text>
+                  <Text fw={700}>{t("input.direct.input-current")}</Text>
+                  <Text>{t("input.direct.input-right")}</Text>
+                </Box>
+              )}
+            </Paper>
+          </Stack>
         )}
 
         {/* ── Line map mode controls ────────────────────────────────────── */}
