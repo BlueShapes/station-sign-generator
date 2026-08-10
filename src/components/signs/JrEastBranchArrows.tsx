@@ -6,13 +6,19 @@ import { getJrEastLineArrowPoints } from "./arrowGeometry";
 import {
   getJrEastBranchArrowColor,
   getJrEastBranchArrowPoints,
+  getJrEastBranchDiagonalLineHeight,
   getJrEastBranchDiagonalDistance,
   getJrEastBranchOffsets,
   getJrEastBranchPrimaryFontSize,
+  getJrEastBranchRenderOrder,
   getJrEastBranchSecondaryNameY,
+  getJrEastBranchSecondaryFontSize,
   getJrEastBranchStartDistance,
   getJrEastBranchStationBadgeX,
   getJrEastBranchStationNameX,
+  getJrEastBranchTrunkLineHeight,
+  getJrEastHorizontalBranchArrowPoints,
+  getJrEastThreeBranchDiagonalGeometry,
   JR_EAST_BRANCH_LAYOUT,
   type BranchSide,
 } from "./jrEastBranchLayout";
@@ -41,6 +47,7 @@ export default function JrEastBranchArrows({
   getLineColor,
 }: JrEastBranchArrowsProps) {
   const centerX = width / 2;
+  const hasThreeBranchLayout = left.length >= 3 || right.length >= 3;
 
   const renderSide = (side: BranchSide, stations: StationProps["left"]) => {
     const shownStations = stations.slice(0, 3);
@@ -52,7 +59,11 @@ export default function JrEastBranchArrows({
 
     if (!isBranched) {
       const station = branches[0];
-      const linePosY = centerY - JR_EAST_BRANCH_LAYOUT.mainLineHeight / 2;
+      const lineHeight = getJrEastBranchTrunkLineHeight(
+        branchCount,
+        hasThreeBranchLayout,
+      );
+      const linePosY = centerY - lineHeight / 2;
       const startingPoint = 40;
       const lineColor = getJrEastBranchArrowColor(
         station?.arrowColor,
@@ -66,6 +77,28 @@ export default function JrEastBranchArrows({
         : isTravelDirection ? -66 : -30;
       const primaryBadgeX = side === "left" ? 44 : width - 60;
       const secondaryBadgeX = side === "left" ? 24 : width - 40;
+      const primaryFontSize = hasThreeBranchLayout
+        ? getJrEastBranchPrimaryFontSize(
+          branchCount,
+          isTravelDirection,
+          true,
+        )
+        : isTravelDirection ? 21 : 15;
+      const secondaryFontSize = getJrEastBranchSecondaryFontSize(
+        branchCount,
+        hasThreeBranchLayout,
+      );
+      const primaryY = hasThreeBranchLayout
+        ? centerY - primaryFontSize / 2
+        : isTravelDirection ? linePosY + 2 : linePosY + 4;
+      const secondaryY = hasThreeBranchLayout
+        ? getJrEastBranchSecondaryNameY(
+          centerY,
+          lineHeight,
+          isTravelDirection,
+        )
+        : linePosY + 28;
+      const badgeY = centerY + lineHeight / 2 + 3;
 
       return (
         <>
@@ -83,7 +116,7 @@ export default function JrEastBranchArrows({
                   : width - startingPoint - centerX
                 : side === "left" ? centerX : width - centerX
             }
-            height={JR_EAST_BRANCH_LAYOUT.mainLineHeight}
+            height={lineHeight}
             fill={lineColor}
             stroke={lineColor}
             strokeWidth={1}
@@ -93,7 +126,7 @@ export default function JrEastBranchArrows({
               closed
               points={getJrEastLineArrowPoints(
                 startingPoint - 15,
-                JR_EAST_BRANCH_LAYOUT.mainLineHeight,
+                lineHeight,
                 side,
               )}
               x={side === "left" ? 15 : width - startingPoint}
@@ -113,8 +146,8 @@ export default function JrEastBranchArrows({
                 }
                 width={width}
                 x={primaryX}
-                y={isTravelDirection ? linePosY + 2 : linePosY + 4}
-                fontSize={isTravelDirection ? 21 : 15}
+                y={primaryY}
+                fontSize={primaryFontSize}
                 fontStyle="400"
                 fontFamily="NotoSansJP"
                 fill="white"
@@ -124,8 +157,8 @@ export default function JrEastBranchArrows({
                 text={station.secondaryName}
                 width={width}
                 x={secondaryX}
-                y={linePosY + 28}
-                fontSize={13}
+                y={secondaryY}
+                fontSize={secondaryFontSize}
                 fontFamily="OverusedGrotesk"
                 fill="black"
                 align={align}
@@ -134,7 +167,7 @@ export default function JrEastBranchArrows({
                 <>
                   <JrEastAdjacentNumberBadge
                     x={primaryBadgeX}
-                    y={linePosY + 27}
+                    y={badgeY}
                     prefix={station.numberPrimaryPrefix}
                     value={station.numberPrimaryValue}
                     color={getLineColor(station.numberPrimaryPrefix)}
@@ -142,7 +175,7 @@ export default function JrEastBranchArrows({
                   />
                   <JrEastAdjacentNumberBadge
                     x={secondaryBadgeX}
-                    y={linePosY + 27}
+                    y={badgeY}
                     prefix={station.numberSecondaryPrefix}
                     value={station.numberSecondaryValue}
                     color={getLineColor(station.numberSecondaryPrefix)}
@@ -157,9 +190,11 @@ export default function JrEastBranchArrows({
     }
 
     const offsets = getJrEastBranchOffsets(branchCount);
+    const renderOrder = getJrEastBranchRenderOrder(branchCount);
     const primaryFontSize = getJrEastBranchPrimaryFontSize(
       branchCount,
       isTravelDirection,
+      hasThreeBranchLayout,
     );
     const primaryX = getJrEastBranchStationNameX(
       side,
@@ -173,19 +208,28 @@ export default function JrEastBranchArrows({
     );
     const branchStartDistance = getJrEastBranchStartDistance(width);
     const branchDiagonalDistance = getJrEastBranchDiagonalDistance(width);
+    const trunkLineHeight = getJrEastBranchTrunkLineHeight(
+      branchCount,
+      hasThreeBranchLayout,
+    );
+    const secondaryFontSize = getJrEastBranchSecondaryFontSize(
+      branchCount,
+      hasThreeBranchLayout,
+    );
 
     return (
       <>
         <Rect
           x={side === "left" ? centerX - branchStartDistance : centerX}
-          y={centerY - JR_EAST_BRANCH_LAYOUT.mainLineHeight / 2}
+          y={centerY - trunkLineHeight / 2}
           width={branchStartDistance}
-          height={JR_EAST_BRANCH_LAYOUT.mainLineHeight}
+          height={trunkLineHeight}
           fill={baseColor}
           stroke={baseColor}
           strokeWidth={1}
         />
-        {branches.map((station, index) => {
+        {renderOrder.map((index) => {
+          const station = branches[index];
           const targetY = centerY + offsets[index];
           const lineHeight = JR_EAST_BRANCH_LAYOUT.branchLineHeight;
           const arrowColor = getJrEastBranchArrowColor(
@@ -205,29 +249,81 @@ export default function JrEastBranchArrows({
             "secondary",
             isTravelDirection,
           );
+          const isOuterThreeBranch =
+            branchCount >= 3 && offsets[index] !== 0;
+          const threeBranchDiagonal = isOuterThreeBranch
+            ? getJrEastThreeBranchDiagonalGeometry({
+              side,
+              width,
+              centerX,
+              centerY,
+              targetY,
+              trunkLineHeight,
+              branchLineHeight: lineHeight,
+              diagonalLineHeight:
+                JR_EAST_BRANCH_LAYOUT.threeBranchDiagonalLineHeight,
+              branchStartDistance,
+              branchDiagonalDistance,
+            })
+            : null;
 
           return (
             <Fragment key={station?.id ?? `${side}-empty`}>
-              <Line
-                closed
-                points={getJrEastBranchArrowPoints({
-                  side,
-                  width,
-                  centerX,
-                  centerY,
-                  targetY,
-                  lineHeight,
-                  diagonalLineHeight:
-                    JR_EAST_BRANCH_LAYOUT.branchDiagonalLineHeight,
-                  branchStartDistance,
-                  branchDiagonalDistance,
-                  showArrowhead: isTravelDirection,
-                })}
-                fill={arrowColor}
-                stroke={arrowColor}
-                strokeWidth={1}
-                lineJoin="miter"
-              />
+              {threeBranchDiagonal ? (
+                <>
+                  <Line
+                    closed
+                    points={threeBranchDiagonal.points}
+                    fill={arrowColor}
+                    stroke={arrowColor}
+                    strokeWidth={1}
+                    lineJoin="miter"
+                  />
+                  <Line
+                    closed
+                    points={getJrEastHorizontalBranchArrowPoints({
+                      side,
+                      width,
+                      startX: threeBranchDiagonal.horizontalStartX,
+                      targetY,
+                      lineHeight,
+                      showArrowhead: isTravelDirection,
+                    })}
+                    fill={arrowColor}
+                    stroke={arrowColor}
+                    strokeWidth={1}
+                    lineJoin="miter"
+                  />
+                </>
+              ) : (
+                <Line
+                  closed
+                  points={getJrEastBranchArrowPoints({
+                    side,
+                    width,
+                    centerX,
+                    centerY,
+                    targetY,
+                    lineHeight,
+                    diagonalLineHeight:
+                      getJrEastBranchDiagonalLineHeight(
+                        branchCount,
+                        offsets[index] === 0,
+                      ),
+                    branchStartDistance,
+                    branchDiagonalDistance,
+                    junctionOverlap:
+                      branchCount >= 3 && offsets[index] === 0
+                        ? JR_EAST_BRANCH_LAYOUT.threeBranchCenterArrowOverlap
+                        : 0,
+                    showArrowhead: isTravelDirection,
+                  })}
+                  fill={arrowColor}
+                  stroke={arrowColor}
+                  strokeWidth={1}
+                  lineJoin="miter"
+                />
+              )}
               {station && (
                 <>
                   <Text
@@ -254,7 +350,7 @@ export default function JrEastBranchArrows({
                       lineHeight,
                       isTravelDirection,
                     )}
-                    fontSize={branchCount === 1 ? 13 : 11}
+                    fontSize={secondaryFontSize}
                     fontFamily="OverusedGrotesk"
                     fill="black"
                     align={align}

@@ -11,6 +11,8 @@ import { getJrEastLineArrowPoints } from "./arrowGeometry";
 import JrEastBranchArrows from "./JrEastBranchArrows";
 import JrEastAdjacentNumberBadge from "./JrEastAdjacentNumberBadge";
 import {
+  getJrEastBranchCanvasHeight,
+  getJrEastBranchCenterSquareSize,
   hasActiveJrEastBranches,
   JR_EAST_BRANCH_LAYOUT,
 } from "./jrEastBranchLayout";
@@ -123,6 +125,17 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     })();
     //const height = 140;
     const width = height * ratio;
+    const canvasHeight = getJrEastBranchCanvasHeight(
+      height,
+      branchMode,
+      left.length,
+      right.length,
+    );
+    const centerSquareSize = getJrEastBranchCenterSquareSize(
+      branchMode,
+      left.length,
+      right.length,
+    );
     const hasActiveBranches = hasActiveJrEastBranches(
       branchMode,
       left.length,
@@ -226,12 +239,18 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
             ref={ref}
             key={stageKey}
             width={width * scale}
-            height={height * scale}
+            height={canvasHeight * scale}
             scaleX={scale}
             scaleY={scale}
           >
             <Layer>
-              <Rect fill="white" x={0} y={0} width={width} height={height} />
+              <Rect
+                fill="white"
+                x={0}
+                y={0}
+                width={width}
+                height={canvasHeight}
+              />
               {hasActiveBranches ? (
                 <JrEastBranchArrows
                   width={width}
@@ -448,7 +467,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                 x={0}
                 y={0}
                 width={width}
-                height={height}
+                height={canvasHeight}
               />
 
               {/* Center Square — 1–4 vertical color segments (top to bottom) */}
@@ -457,14 +476,14 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   centerSquareColors && centerSquareColors.length > 0
                     ? centerSquareColors.slice(0, 4)
                     : [baseColor];
-                const segH = 25 / colors.length;
+                const segH = centerSquareSize / colors.length;
                 return colors.map((color, i) => (
                   <Rect
                     key={i}
                     fill={color}
-                    x={width / 2 - 12}
-                    y={yOffset + 69.5 + i * segH}
-                    width={25}
+                    x={width / 2 - centerSquareSize / 2}
+                    y={linePosY + lineHeight / 2 - centerSquareSize / 2 + i * segH}
+                    width={centerSquareSize}
                     height={segH}
                   />
                 ));

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { JR_EAST_BRANCH_LAYOUT } from "../src/components/signs/jrEastBranchLayout";
 
 const TWO_CHOICE_SIGN_DATA = {
   primaryName: "香取",
@@ -44,16 +45,50 @@ const TWO_CHOICE_SIGN_DATA = {
   direction: "both",
 };
 
+const THREE_CHOICE_SIGN_DATA = {
+  ...TWO_CHOICE_SIGN_DATA,
+  left: [
+    {
+      ...TWO_CHOICE_SIGN_DATA.left[0],
+      arrowColor: "#3030ff",
+    },
+    TWO_CHOICE_SIGN_DATA.left[1],
+    {
+      ...TWO_CHOICE_SIGN_DATA.left[0],
+      id: "third-branch",
+      primaryName: "Third",
+      secondaryName: "Third branch",
+      numberPrimaryValue: "05",
+      arrowColor: "#00adbd",
+    },
+  ],
+};
+
+const THREE_AND_TWO_CHOICE_SIGN_DATA = {
+  ...THREE_CHOICE_SIGN_DATA,
+  right: [
+    TWO_CHOICE_SIGN_DATA.right[0],
+    {
+      ...TWO_CHOICE_SIGN_DATA.right[0],
+      id: "second-right-branch",
+      primaryName: "Second",
+      secondaryName: "Second branch",
+      numberPrimaryValue: "10",
+    },
+  ],
+};
+
 async function setSignStyle(
   page: import("@playwright/test").Page,
   style: "jreast" | "jreastbranch",
+  data = TWO_CHOICE_SIGN_DATA,
 ) {
   await page.evaluate(
     ({ data, selectedStyle }) => {
       sessionStorage.setItem("sign-config-v1", JSON.stringify(data));
       sessionStorage.setItem("sign-style-v1", selectedStyle);
     },
-    { data: TWO_CHOICE_SIGN_DATA, selectedStyle: style },
+    { data, selectedStyle: style },
   );
   await page.reload();
 }
@@ -80,4 +115,70 @@ test("two-choice branch signs keep the standard JR East image ratio", async ({
 
   expect(branchSize).toEqual(standardSize);
   expect(branchSize.width / branchSize.height).toBeCloseTo(3.5);
+});
+
+test("three-choice branch signs add vertical room without changing width", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await setSignStyle(page, "jreastbranch");
+
+  const preview = page.locator('img[src^="data:image/png"]').first();
+  await preview.waitFor({ state: "visible" });
+  const twoChoiceSize = await preview.evaluate((element) => {
+    const image = element as HTMLImageElement;
+    return { width: image.naturalWidth, height: image.naturalHeight };
+  });
+
+  await setSignStyle(page, "jreastbranch", THREE_CHOICE_SIGN_DATA);
+  await preview.waitFor({ state: "visible" });
+  const threeChoiceSize = await preview.evaluate((element) => {
+    const image = element as HTMLImageElement;
+    return { width: image.naturalWidth, height: image.naturalHeight };
+  });
+  expect(threeChoiceSize.width).toBe(twoChoiceSize.width);
+  expect(threeChoiceSize.height).toBe(
+    twoChoiceSize.height + JR_EAST_BRANCH_LAYOUT.threeBranchHeightIncrease * 3,
+  );
+});
+
+test("a three-branch side makes the opposite center line thin", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  for (const data of [THREE_CHOICE_SIGN_DATA, THREE_AND_TWO_CHOICE_SIGN_DATA]) {
+    await setSignStyle(page, "jreastbranch", data);
+    const preview = page.locator('img[src^="data:image/png"]').first();
+    await preview.waitFor({ state: "visible" });
+
+    const pixels = await preview.evaluate((element) => {
+      const image = element as HTMLImageElement;
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas context is unavailable");
+      context.drawImage(image, 0, 0);
+
+      const scale = image.naturalWidth / (140 * 3.5);
+      const readPixel = (x: number, y: number) =>
+        Array.from(
+          context.getImageData(
+            Math.round(x * scale),
+            Math.round(y * scale),
+            1,
+            1,
+          ).data,
+        );
+
+      return {
+        outsideThinLine: readPixel(275, 77),
+        insideThinLine: readPixel(275, 88),
+      };
+    });
+
+    expect(pixels.outsideThinLine.slice(0, 3)).toEqual([255, 255, 255]);
+    expect(pixels.insideThinLine.slice(0, 3)).toEqual([58, 146, 0]);
+  }
 });

@@ -2,15 +2,24 @@ import { describe, expect, test } from "bun:test";
 import {
   getJrEastBranchArrowColor,
   getJrEastBranchArrowPoints,
+  getJrEastBranchCanvasHeight,
+  getJrEastBranchCenterSquareSize,
+  getJrEastBranchDiagonalLineHeight,
   getJrEastBranchDiagonalDistance,
   getJrEastBranchLayoutRenderKey,
   getJrEastBranchOffsets,
   getJrEastBranchPrimaryFontSize,
+  getJrEastBranchRenderOrder,
+  getJrEastBranchSecondaryFontSize,
   getJrEastBranchSecondaryNameY,
   getJrEastBranchStartDistance,
   getJrEastBranchStationBadgeX,
   getJrEastBranchStationNameX,
+  getJrEastBranchTrunkLineHeight,
+  getJrEastHorizontalBranchArrowPoints,
+  getJrEastThreeBranchDiagonalGeometry,
   hasActiveJrEastBranches,
+  hasThreeJrEastBranches,
   JR_EAST_BRANCH_LAYOUT,
 } from "../src/components/signs/jrEastBranchLayout.ts";
 
@@ -26,6 +35,49 @@ describe("JR East branch sign layout", () => {
     expect(hasActiveJrEastBranches(true, 1, 3)).toBe(true);
     expect(hasActiveJrEastBranches(true, 1, 1)).toBe(false);
     expect(hasActiveJrEastBranches(false, 2, 2)).toBe(false);
+  });
+
+  test("adds height only when either side has three branches", () => {
+    expect(hasThreeJrEastBranches(true, 3, 1)).toBe(true);
+    expect(hasThreeJrEastBranches(true, 2, 3)).toBe(true);
+    expect(hasThreeJrEastBranches(true, 2, 2)).toBe(false);
+    expect(hasThreeJrEastBranches(false, 3, 3)).toBe(false);
+    expect(getJrEastBranchCanvasHeight(140, true, 3, 1)).toBe(160);
+    expect(getJrEastBranchCanvasHeight(140, true, 2, 2)).toBe(140);
+    expect(getJrEastBranchCenterSquareSize(true, 3, 1)).toBe(18);
+    expect(getJrEastBranchCenterSquareSize(true, 2, 2)).toBe(25);
+  });
+
+  test("thickens only three-branch diagonals", () => {
+    expect(getJrEastBranchDiagonalLineHeight(2)).toBe(
+      JR_EAST_BRANCH_LAYOUT.branchDiagonalLineHeight,
+    );
+    expect(getJrEastBranchDiagonalLineHeight(3)).toBe(
+      JR_EAST_BRANCH_LAYOUT.threeBranchDiagonalLineHeight,
+    );
+    expect(getJrEastBranchDiagonalLineHeight(3)).toBeGreaterThan(
+      getJrEastBranchDiagonalLineHeight(2),
+    );
+    expect(getJrEastBranchDiagonalLineHeight(3, true)).toBe(
+      JR_EAST_BRANCH_LAYOUT.branchLineHeight,
+    );
+    expect(getJrEastBranchTrunkLineHeight(3)).toBe(
+      JR_EAST_BRANCH_LAYOUT.branchLineHeight,
+    );
+    expect(getJrEastBranchTrunkLineHeight(2)).toBe(
+      JR_EAST_BRANCH_LAYOUT.mainLineHeight,
+    );
+    expect(getJrEastBranchTrunkLineHeight(2, true)).toBe(
+      JR_EAST_BRANCH_LAYOUT.branchLineHeight,
+    );
+    expect(getJrEastBranchTrunkLineHeight(1, true)).toBe(
+      JR_EAST_BRANCH_LAYOUT.branchLineHeight,
+    );
+  });
+
+  test("draws the center three-branch arrow last", () => {
+    expect(getJrEastBranchRenderOrder(2)).toEqual([0, 1]);
+    expect(getJrEastBranchRenderOrder(3)).toEqual([0, 2, 1]);
   });
 
   test("keeps the main badge fixed above the lowered center text", () => {
@@ -80,6 +132,11 @@ describe("JR East branch sign layout", () => {
     expect(getJrEastBranchPrimaryFontSize(1, true)).toBe(18);
     expect(getJrEastBranchPrimaryFontSize(2, true)).toBe(16);
     expect(getJrEastBranchPrimaryFontSize(3, true)).toBe(nonTravelSize);
+    expect(getJrEastBranchPrimaryFontSize(1, true, true)).toBe(nonTravelSize);
+    expect(getJrEastBranchPrimaryFontSize(2, true, true)).toBe(nonTravelSize);
+    expect(getJrEastBranchSecondaryFontSize(1)).toBe(13);
+    expect(getJrEastBranchSecondaryFontSize(1, true)).toBe(11);
+    expect(getJrEastBranchSecondaryFontSize(2, true)).toBe(11);
   });
 
   test("uses company colors for arrows and falls back to the current company", () => {
@@ -174,5 +231,97 @@ describe("JR East branch sign layout", () => {
     expect(points[1]).toBe(centerY - 10);
     expect(points.at(-1)).toBe(centerY + 10);
     expect(points[3]).toBe(68 - 8);
+  });
+
+  test("mirrors the manually tuned upper diagonal exactly onto the lower branch", () => {
+    const centerX = 380;
+    const centerY = 88;
+    const branchStartDistance = 80;
+    const branchDiagonalDistance = 26;
+    for (const side of ["left", "right"]) {
+      const upperGeometry = getJrEastThreeBranchDiagonalGeometry({
+        side,
+        width: 760,
+        centerX,
+        centerY,
+        targetY: 50,
+        trunkLineHeight: 18,
+        branchLineHeight: 18,
+        diagonalLineHeight: 27,
+        branchStartDistance,
+        branchDiagonalDistance,
+      });
+      const lowerGeometry = getJrEastThreeBranchDiagonalGeometry({
+        side,
+        width: 760,
+        centerX,
+        centerY,
+        targetY: 126,
+        trunkLineHeight: 18,
+        branchLineHeight: 18,
+        diagonalLineHeight: 27,
+        branchStartDistance,
+        branchDiagonalDistance,
+      });
+
+      expect(lowerGeometry.horizontalStartX).toBe(
+        upperGeometry.horizontalStartX,
+      );
+      expect(lowerGeometry.points).toHaveLength(upperGeometry.points.length);
+      upperGeometry.points.forEach((coordinate, index) => {
+        const lowerCoordinate = lowerGeometry.points[index];
+        if (index % 2 === 0) {
+          expect(lowerCoordinate).toBe(coordinate);
+        } else {
+          expect(lowerCoordinate).toBe(centerY * 2 - coordinate);
+        }
+      });
+    }
+  });
+
+  test("joins a clipped diagonal to a horizontal branch without a gap", () => {
+    const geometry = getJrEastThreeBranchDiagonalGeometry({
+      side: "right",
+      width: 760,
+      centerX: 380,
+      centerY: 88,
+      targetY: 50,
+      trunkLineHeight: 18,
+      branchLineHeight: 18,
+      diagonalLineHeight: 27,
+      branchStartDistance: 80,
+      branchDiagonalDistance: 26,
+    });
+    const horizontalPoints = getJrEastHorizontalBranchArrowPoints({
+      side: "right",
+      width: 760,
+      startX: geometry.horizontalStartX,
+      targetY: 50,
+      lineHeight: 18,
+      showArrowhead: true,
+    });
+
+    expect(horizontalPoints[0]).toBeGreaterThan(geometry.horizontalStartX);
+    expect(horizontalPoints[0]).toBeLessThanOrEqual(
+      Math.max(geometry.points[2], geometry.points[4]),
+    );
+  });
+
+  test("overlaps the center arrow with the trunk to hide seams", () => {
+    const centerX = 380;
+    const branchStartDistance = 80;
+    const overlap = JR_EAST_BRANCH_LAYOUT.threeBranchCenterArrowOverlap;
+    const points = getJrEastBranchArrowPoints({
+      side: "right",
+      width: 760,
+      centerX,
+      centerY: 88,
+      targetY: 88,
+      lineHeight: 18,
+      branchStartDistance,
+      junctionOverlap: overlap,
+    });
+
+    expect(points[0]).toBe(centerX + branchStartDistance - overlap);
   });
 });
