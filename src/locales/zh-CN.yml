@@ -281,6 +281,9 @@ route:
     linemap: 线路图（单线/直通）
     multiline-linemap: 线路图（多线）
   linemap:
+    section-route: 线路与范围
+    section-layout: 布局
+    section-content: 显示内容
     filename-suffix: 线路图
     orientation: 方向
     horizontal: 卧式

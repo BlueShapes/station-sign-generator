@@ -281,6 +281,9 @@ route:
     linemap: Harta liniilor (o linie/direct)
     multiline-linemap: Harta liniilor (linii multiple)
   linemap:
+    section-route: Rută și interval
+    section-layout: Aspect
+    section-content: Conținut afișat
     filename-suffix: Harta Liniei
     orientation: Orientare
     horizontal: Orizontală

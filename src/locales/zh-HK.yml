@@ -281,6 +281,9 @@ route:
     linemap: 路綫圖（單綫／直通）
     multiline-linemap: 路綫圖（多綫）
   linemap:
+    section-route: 路線與範圍
+    section-layout: 版面配置
+    section-content: 顯示內容
     filename-suffix: 路線圖
     orientation: 方向
     horizontal: 水平

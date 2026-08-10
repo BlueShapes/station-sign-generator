@@ -281,6 +281,9 @@ route:
     linemap: Mapa linii (pojedyncza/bezpośrednia)
     multiline-linemap: Mapa linii (wiele linii)
   linemap:
+    section-route: Trasa i zakres
+    section-layout: Układ
+    section-content: Wyświetlana zawartość
     filename-suffix: Schemat linii
     orientation: Orientacja
     horizontal: Poziomy

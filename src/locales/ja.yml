@@ -289,6 +289,9 @@ route:
     linemap: 路線図（単線・直通）
     multiline-linemap: 路線図（複線）
   linemap:
+    section-route: 路線と表示範囲
+    section-layout: レイアウト
+    section-content: 表示内容
     filename-suffix: 路線図
     orientation: 向き
     horizontal: 横

@@ -281,6 +281,9 @@ route:
     linemap: Linková mapa (jedna linka / přímý spoj)
     multiline-linemap: Linková mapa (více linek)
   linemap:
+    section-route: Trasa a rozsah
+    section-layout: Rozvržení
+    section-content: Zobrazený obsah
     filename-suffix: Mapa linky
     orientation: Orientace
     horizontal: Horizontální

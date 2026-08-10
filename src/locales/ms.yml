@@ -281,6 +281,9 @@ route:
     linemap: Peta Garisan (Tunggal/Terus)
     multiline-linemap: Peta Garisan (Berbilang)
   linemap:
+    section-route: Laluan dan julat
+    section-layout: Reka letak
+    section-content: Kandungan paparan
     filename-suffix: Peta Laluan
     orientation: Orientasi
     horizontal: Mendatar

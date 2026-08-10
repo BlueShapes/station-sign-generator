@@ -289,6 +289,9 @@ route:
     linemap: Line Map (Single/Through)
     multiline-linemap: Line Map (Multiple Lines)
   linemap:
+    section-route: Route and Range
+    section-layout: Layout
+    section-content: Display Content
     filename-suffix: Line Map
     orientation: Orientation
     horizontal: Horizontal

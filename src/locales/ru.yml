@@ -281,6 +281,9 @@ route:
     linemap: Схема линии (одна/сквозная)
     multiline-linemap: Схема линий (несколько)
   linemap:
+    section-route: Маршрут и диапазон
+    section-layout: Макет
+    section-content: Отображение
     filename-suffix: Схема линии
     orientation: Ориентация
     horizontal: Горизонтальный

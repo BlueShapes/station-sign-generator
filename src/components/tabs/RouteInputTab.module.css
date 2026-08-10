@@ -216,6 +216,110 @@
   border-left: 1px dashed var(--mantine-color-default-border);
 }
 
+.linemapWorkspace {
+  --route-accent: var(--mantine-color-blue-6);
+}
+
+.mapSourcePanel,
+.mapSettingsPanel,
+.mapPreviewPanel {
+  position: relative;
+  min-width: 0;
+  padding: clamp(16px, 2.2vw, 24px);
+}
+
+.mapSourcePanel {
+  overflow: hidden;
+  border-top: 4px solid var(--route-accent);
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--route-accent) 8%, transparent),
+      transparent 48%
+    ),
+    var(--mantine-color-body);
+}
+
+.mapSectionHeader {
+  min-height: 34px;
+  margin-bottom: 18px;
+}
+
+.mapSectionHeader h2 {
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+}
+
+.mapSectionIcon,
+.mapSectionIndex {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--route-accent);
+  color: #111827;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mapSectionIndex {
+  border: 2px solid var(--route-accent);
+  background: var(--mantine-color-body);
+  color: var(--mantine-color-text);
+}
+
+.mapSettingsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: start;
+  gap: clamp(14px, 2vw, 24px);
+}
+
+.mapSettingsPanel {
+  height: 100%;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--mantine-color-default) 66%, transparent),
+      var(--mantine-color-body) 54%
+    );
+}
+
+.mapSettingsPanel :global(.mantine-Slider-root) {
+  margin-bottom: 8px;
+}
+
+.mapPreviewPanel {
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      color-mix(in srgb, var(--route-accent) 9%, transparent),
+      transparent 38%
+    ),
+    var(--mantine-color-body);
+}
+
+.mapPreviewViewport {
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--mantine-color-default) 40%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--mantine-color-default) 40%, transparent) 1px, transparent 1px),
+    color-mix(in srgb, var(--mantine-color-body) 92%, var(--mantine-color-default));
+  background-size: 24px 24px;
+}
+
+.downloadButtonColumn > * {
+  width: 100%;
+}
+
 @media (max-width: 75em) {
   .signComposer {
     grid-template-columns: minmax(0, 1fr) minmax(260px, 1.1fr) minmax(0, 1fr);
@@ -224,6 +328,10 @@
 
   .stationCard {
     padding: 14px;
+  }
+
+  .mapSettingsGrid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -309,6 +417,20 @@
 
   .previewPanel {
     padding: 14px;
+  }
+
+  .mapSourcePanel,
+  .mapSettingsPanel,
+  .mapPreviewPanel {
+    padding: 14px;
+  }
+
+  .mapSectionHeader {
+    margin-bottom: 14px;
+  }
+
+  .mapPreviewViewport {
+    padding: 10px;
   }
 
   .emptyPreview {

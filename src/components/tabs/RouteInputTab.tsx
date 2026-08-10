@@ -24,7 +24,6 @@ import {
   Alert,
   ActionIcon,
   Button,
-  Divider,
   Grid,
   Group,
   Box,
@@ -1790,10 +1789,25 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
         {/* ── Line map mode controls ────────────────────────────────────── */}
         {tabMode === "linemap" && (
-          <>
+          <Stack
+            gap="lg"
+            className={styles.linemapWorkspace}
+            style={
+              {
+                "--route-accent": selectedLine?.line_color ?? "#228be6",
+              } as CSSProperties
+            }
+          >
             {/* ── Route ── */}
-            <Grid gutter="md">
-              <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+            <Paper withBorder radius="lg" className={styles.mapSourcePanel}>
+              <Group className={styles.mapSectionHeader} gap="sm">
+                <Box className={styles.mapSectionIcon} aria-hidden="true">
+                  <IconMap size={18} />
+                </Box>
+                <Title order={2}>{t("route.linemap.section-route")}</Title>
+              </Group>
+              <Grid gutter="md">
+              <Grid.Col span={{ base: 12, sm: 12, md: 4 }}>
                 <Select
                   label={t("route.line.title")}
                   value={mapRouteSelectValue}
@@ -1814,7 +1828,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   clearable
                 />
               </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              <Grid.Col span={{ base: 12, sm: 5, md: 4 }}>
                 <Select
                   label={t("route.linemap.range-start")}
                   value={mapStartId}
@@ -1832,7 +1846,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 />
               </Grid.Col>
               <Grid.Col
-                span={{ base: 12, sm: 6, md: 1 }}
+                span={{ base: 12, sm: 2, md: 1 }}
                 style={{ display: "flex", alignItems: "flex-end" }}
               >
                 <Button
@@ -1849,7 +1863,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   <IconArrowsLeftRight size={16} />
                 </Button>
               </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              <Grid.Col span={{ base: 12, sm: 5, md: 3 }}>
                 <Select
                   label={t("route.linemap.range-end")}
                   value={mapEndId}
@@ -1866,15 +1880,18 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   disabled={!selectedLine}
                 />
               </Grid.Col>
-            </Grid>
+              </Grid>
+            </Paper>
 
             {/* ── Services ── */}
             {mapServices.length >= 2 && (
-              <>
-                <Divider
-                  label={t("route.linemap.services")}
-                  labelPosition="left"
-                />
+              <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                <Group className={styles.mapSectionHeader} gap="sm">
+                  <Box className={styles.mapSectionIndex} aria-hidden="true">
+                    <IconArrowsHorizontal size={17} />
+                  </Box>
+                  <Title order={2}>{t("route.linemap.services")}</Title>
+                </Group>
                 <Grid gutter="md">
                   <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                     <MultiSelect
@@ -1918,7 +1935,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Grid.Col>
                   )}
                   {mapSelectedServiceIds.length === 1 && (
-                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                       <Text size="sm" fw={500} mb={4}>
                         {t("route.linemap.service-name-style")}
                       </Text>
@@ -1942,19 +1959,22 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Grid.Col>
                   )}
                 </Grid>
-              </>
+              </Paper>
             )}
 
             {/* ── Layout ── */}
             {selectedLine && (
-              <>
-                <Divider
-                  label={t("route.linemap.orientation")}
-                  labelPosition="left"
-                />
+              <Box className={styles.mapSettingsGrid}>
+                <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                <Group className={styles.mapSectionHeader} gap="sm">
+                  <Box className={styles.mapSectionIndex} aria-hidden="true">
+                    <IconRuler size={17} />
+                  </Box>
+                  <Title order={2}>{t("route.linemap.section-layout")}</Title>
+                </Group>
                 <Grid gutter="md">
                   {isLoopLine && (
-                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                       <Text size="sm" fw={500} mb={4}>
                         {t("route.linemap.loop-render-mode")}
                       </Text>
@@ -2000,7 +2020,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   )}
                   {(!isLoopLine || mapForceLinear) &&
                     mapOrientation === "horizontal" && (
-                      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                         <Text size="sm" fw={500} mb={4}>
                           {t("route.linemap.name-style")}
                         </Text>
@@ -2029,7 +2049,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     )}
                   {(!isLoopLine || mapForceLinear) &&
                     mapOrientation === "vertical" && (
-                      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                         <Text size="sm" fw={500} mb={4}>
                           {t("route.linemap.name-side")}
                         </Text>
@@ -2062,7 +2082,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Grid.Col>
                     )}
                   {effectiveIsLoop && (
-                    <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                       <Text size="sm" fw={500} mb={8}>
                         {t("route.linemap.font-size")}
                       </Text>
@@ -2088,7 +2108,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Grid.Col>
                   )}
                   {!effectiveIsLoop && (
-                    <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                       <Text size="sm" fw={500} mb={8}>
                         {t("route.linemap.station-spacing")}
                       </Text>
@@ -2117,7 +2137,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Box>
                     </Grid.Col>
                   )}
-                  <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                     <Text size="sm" fw={500} mb={8}>
                       {t("route.linemap.line-width")}
                     </Text>
@@ -2147,18 +2167,18 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Box>
                   </Grid.Col>
                 </Grid>
-              </>
-            )}
+                </Paper>
 
-            {/* ── Display ── */}
-            {selectedLine && (
-              <>
-                <Divider
-                  label={t("route.linemap.station-number-mode")}
-                  labelPosition="left"
-                />
+                {/* ── Display ── */}
+                <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                <Group className={styles.mapSectionHeader} gap="sm">
+                  <Box className={styles.mapSectionIndex} aria-hidden="true">
+                    <IconEye size={17} />
+                  </Box>
+                  <Title order={2}>{t("route.linemap.section-content")}</Title>
+                </Group>
                 <Grid gutter="md">
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                     <Select
                       label={t("route.linemap.primary-lang")}
                       value={mapPrimaryLang}
@@ -2176,7 +2196,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Text>
                     )}
                   </Grid.Col>
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                     <Select
                       label={t("route.linemap.secondary-lang")}
                       value={mapSecondaryLang}
@@ -2205,7 +2225,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Text>
                     )}
                   </Grid.Col>
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                     <Text size="sm" fw={500} mb={4}>
                       {t("route.linemap.station-number-mode")}
                     </Text>
@@ -2284,7 +2304,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Grid.Col>
                   )}
                 </Grid>
-              </>
+                </Paper>
+              </Box>
             )}
 
             {/* Overlap warning */}
@@ -2300,24 +2321,21 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
             {/* Map preview */}
             {selectedLine && mapStations.length > 0 && (
-              <>
-                <Title
-                  order={2}
-                  style={{
-                    fontSize: "1.2em",
-                    padding: "10px 0 5px 5px",
-                    fontWeight: "bold",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
+              <Paper withBorder radius="xl" className={styles.mapPreviewPanel}>
+                <Group justify="space-between" align="center" mb="md">
+                  <Title order={2} className={styles.previewTitle}>
                   <IconEye size="1.6em" />
                   {t("common.preview")}
-                </Title>
+                  </Title>
+                  <Box
+                    className={styles.previewLineSwatch}
+                    style={{ backgroundColor: selectedLine.line_color }}
+                    aria-hidden="true"
+                  />
+                </Group>
 
                 {mapFonts.ready ? (
-                  <Box className="map-preview" style={{ overflowX: "auto" }}>
+                  <Box className={`map-preview ${styles.mapPreviewViewport}`}>
                     <LineMapRenderer
                       ref={mapRef}
                       stations={mapDisplayStations}
@@ -2370,7 +2388,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 )}
 
                 {/* Download controls */}
-                <Grid gutter="md" style={{ padding: "10px" }}>
+                <Grid gutter="md" className={styles.downloadControls}>
                   <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
                     <Select
                       label={t("input.image-size")}
@@ -2384,11 +2402,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   </Grid.Col>
                   <Grid.Col
                     span={{ base: 12, sm: 5, lg: 3 }}
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-end",
-                      minWidth: 0,
-                    }}
+                    className={styles.downloadButtonColumn}
                   >
                     <Tooltip
                       label={mapDownloadWarningText ?? ""}
@@ -2424,9 +2438,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Tooltip>
                   </Grid.Col>
                 </Grid>
-              </>
+              </Paper>
             )}
-          </>
+          </Stack>
         )}
       </Stack>
     </Box>

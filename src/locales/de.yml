@@ -289,6 +289,9 @@ route:
     linemap: Linienplan (Einzellinie/Durchbindung)
     multiline-linemap: Linienplan (mehrere Linien)
   linemap:
+    section-route: Strecke und Bereich
+    section-layout: Layout
+    section-content: Anzeigeinhalt
     filename-suffix: Linienplan
     orientation: Ausrichtung
     horizontal: Horizontal
