@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("does not expose a fallback-font preview while a style font is loading", async ({
+test("keeps the current preview until the next style is ready", async ({
   page,
 }) => {
   let releaseJost: (() => void) | undefined;
@@ -17,17 +17,22 @@ test("does not expose a fallback-font preview while a style font is loading", as
     await page.goto("/ja/");
     const previewImage = page.locator('img[src^="data:image/"]');
     await expect(previewImage).toBeVisible({ timeout: 50_000 });
+    const initialPreview = await previewImage.getAttribute("src");
+    expect(initialPreview).not.toBeNull();
 
     await page.getByLabel("スタイル").first().click();
     await page
-      .getByRole("option", { name: "東京メトロ・都営地下鉄風（横長）" })
+      .getByRole("option", { name: "東京メトロ風（小・日）" })
       .click();
 
     await expect(page.getByText("フォントを読み込み中...")).toBeVisible();
-    await expect(previewImage).toHaveCount(0);
+    await expect(previewImage).toBeVisible();
+    await expect(previewImage).toHaveAttribute("src", initialPreview!);
 
     releaseJost?.();
-    await expect(previewImage).toBeVisible({ timeout: 50_000 });
+    await expect
+      .poll(() => previewImage.getAttribute("src"), { timeout: 50_000 })
+      .not.toBe(initialPreview);
   } finally {
     releaseJost?.();
   }
