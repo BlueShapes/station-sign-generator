@@ -14,7 +14,7 @@ export const JR_EAST_BRANCH_LAYOUT = {
   threeBranchCenterArrowOverlap: 2,
   threeBranchHeightIncrease: 20,
   centerSquareSize: 25,
-  threeBranchCenterSquareSize: 18,
+  threeBranchCenterSquareSize: 19,
   branchStartRatio: 0.22,
   branchStartMinDistance: 55,
   branchDiagonalRatio: 0.04,
@@ -53,7 +53,8 @@ export function getJrEastBranchOffsets(branchCount: number): number[] {
 }
 
 export function getJrEastBranchRenderOrder(branchCount: number): number[] {
-  if (branchCount >= 3) return [0, 2, 1];
+  if (branchCount >= 3) return [2, 0, 1];
+  if (branchCount === 2) return [1, 0];
   return Array.from({ length: branchCount }, (_, index) => index);
 }
 
@@ -99,8 +100,12 @@ export function getJrEastBranchCanvasHeight(
 export function getJrEastBranchDiagonalLineHeight(
   branchCount: number,
   isCenterBranch = false,
+  hasThreeBranchLayout = branchCount >= 3,
 ): number {
   if (branchCount >= 3 && isCenterBranch) {
+    return JR_EAST_BRANCH_LAYOUT.branchLineHeight;
+  }
+  if (branchCount === 2 && hasThreeBranchLayout) {
     return JR_EAST_BRANCH_LAYOUT.branchLineHeight;
   }
   return branchCount >= 3

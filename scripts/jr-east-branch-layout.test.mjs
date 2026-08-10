@@ -44,7 +44,7 @@ describe("JR East branch sign layout", () => {
     expect(hasThreeJrEastBranches(false, 3, 3)).toBe(false);
     expect(getJrEastBranchCanvasHeight(140, true, 3, 1)).toBe(160);
     expect(getJrEastBranchCanvasHeight(140, true, 2, 2)).toBe(140);
-    expect(getJrEastBranchCenterSquareSize(true, 3, 1)).toBe(18);
+    expect(getJrEastBranchCenterSquareSize(true, 3, 1)).toBe(19);
     expect(getJrEastBranchCenterSquareSize(true, 2, 2)).toBe(25);
   });
 
@@ -59,6 +59,9 @@ describe("JR East branch sign layout", () => {
       getJrEastBranchDiagonalLineHeight(2),
     );
     expect(getJrEastBranchDiagonalLineHeight(3, true)).toBe(
+      JR_EAST_BRANCH_LAYOUT.branchLineHeight,
+    );
+    expect(getJrEastBranchDiagonalLineHeight(2, false, true)).toBe(
       JR_EAST_BRANCH_LAYOUT.branchLineHeight,
     );
     expect(getJrEastBranchTrunkLineHeight(3)).toBe(
@@ -76,8 +79,8 @@ describe("JR East branch sign layout", () => {
   });
 
   test("draws the center three-branch arrow last", () => {
-    expect(getJrEastBranchRenderOrder(2)).toEqual([0, 1]);
-    expect(getJrEastBranchRenderOrder(3)).toEqual([0, 2, 1]);
+    expect(getJrEastBranchRenderOrder(2)).toEqual([1, 0]);
+    expect(getJrEastBranchRenderOrder(3)).toEqual([2, 0, 1]);
   });
 
   test("keeps the main badge fixed above the lowered center text", () => {

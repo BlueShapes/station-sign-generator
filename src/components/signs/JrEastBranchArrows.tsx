@@ -212,6 +212,11 @@ export default function JrEastBranchArrows({
       branchCount,
       hasThreeBranchLayout,
     );
+    const priorityBranchIndex = renderOrder.at(-1) ?? 0;
+    const trunkColor = getJrEastBranchArrowColor(
+      branches[priorityBranchIndex]?.arrowColor,
+      baseColor,
+    );
     const secondaryFontSize = getJrEastBranchSecondaryFontSize(
       branchCount,
       hasThreeBranchLayout,
@@ -219,16 +224,7 @@ export default function JrEastBranchArrows({
 
     return (
       <>
-        <Rect
-          x={side === "left" ? centerX - branchStartDistance : centerX}
-          y={centerY - trunkLineHeight / 2}
-          width={branchStartDistance}
-          height={trunkLineHeight}
-          fill={baseColor}
-          stroke={baseColor}
-          strokeWidth={1}
-        />
-        {renderOrder.map((index) => {
+        {renderOrder.map((index, renderIndex) => {
           const station = branches[index];
           const targetY = centerY + offsets[index];
           const lineHeight = JR_EAST_BRANCH_LAYOUT.branchLineHeight;
@@ -269,6 +265,21 @@ export default function JrEastBranchArrows({
 
           return (
             <Fragment key={station?.id ?? `${side}-empty`}>
+              {renderIndex === renderOrder.length - 1 && (
+                <Rect
+                  x={
+                    side === "left"
+                      ? centerX - branchStartDistance
+                      : centerX
+                  }
+                  y={centerY - trunkLineHeight / 2}
+                  width={branchStartDistance}
+                  height={trunkLineHeight}
+                  fill={trunkColor}
+                  stroke={trunkColor}
+                  strokeWidth={1}
+                />
+              )}
               {threeBranchDiagonal ? (
                 <>
                   <Line
@@ -309,6 +320,7 @@ export default function JrEastBranchArrows({
                       getJrEastBranchDiagonalLineHeight(
                         branchCount,
                         offsets[index] === 0,
+                        hasThreeBranchLayout,
                       ),
                     branchStartDistance,
                     branchDiagonalDistance,
