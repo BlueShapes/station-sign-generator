@@ -93,11 +93,19 @@ describe("JR East branch sign layout", () => {
     expect(getJrEastBranchStationNameX("left", "secondary", true)).toBe(45);
     expect(getJrEastBranchStationNameX("right", "primary", true)).toBe(-45);
     expect(getJrEastBranchStationNameX("right", "secondary", true)).toBe(-45);
-    expect(getJrEastBranchStationNameX("left", "primary", false)).toBe(50);
-    expect(getJrEastBranchStationNameX("right", "primary", false)).toBe(-50);
-    expect(getJrEastBranchStationNameX("left", "secondary", false)).toBe(50);
+    const nonTravelInset =
+      60 - JR_EAST_BRANCH_LAYOUT.nonTravelTextOutwardShift;
+    expect(getJrEastBranchStationNameX("left", "primary", false)).toBe(
+      nonTravelInset,
+    );
+    expect(getJrEastBranchStationNameX("right", "primary", false)).toBe(
+      -nonTravelInset,
+    );
+    expect(getJrEastBranchStationNameX("left", "secondary", false)).toBe(
+      nonTravelInset,
+    );
     expect(getJrEastBranchStationNameX("right", "secondary", false)).toBe(
-      -50,
+      -nonTravelInset,
     );
   });
 
@@ -308,8 +316,17 @@ describe("JR East branch sign layout", () => {
       lineHeight: 18,
       showArrowhead: true,
     });
+    const nonTravelHorizontalPoints = getJrEastHorizontalBranchArrowPoints({
+      side: "right",
+      width: 760,
+      startX: geometry.horizontalStartX,
+      targetY: 50,
+      lineHeight: 18,
+      showArrowhead: false,
+    });
 
     expect(horizontalPoints[0]).toBeGreaterThan(geometry.horizontalStartX);
+    expect(nonTravelHorizontalPoints[0]).toBe(horizontalPoints[0]);
     expect(horizontalPoints[0]).toBeLessThanOrEqual(
       Math.max(geometry.points[2], geometry.points[4]),
     );

@@ -11,6 +11,7 @@ export const JR_EAST_BRANCH_LAYOUT = {
   branchLineHeight: 18,
   branchDiagonalLineHeight: 23,
   threeBranchDiagonalLineHeight: 27,
+  threeBranchHorizontalStartInset: 25,
   threeBranchCenterArrowOverlap: 2,
   threeBranchHeightIncrease: 20,
   centerSquareSize: 25,
@@ -412,9 +413,11 @@ export function getJrEastHorizontalBranchArrowPoints({
   const halfHeight = lineHeight / 2;
   const bodyEndX = width - edgeInset - 20;
   const tipX = width - edgeInset;
+  const horizontalStartX =
+    startX + JR_EAST_BRANCH_LAYOUT.threeBranchHorizontalStartInset;
   const rightPoints = showArrowhead
     ? [
-      startX + 25,
+      horizontalStartX,
       targetY - halfHeight,
       bodyEndX,
       targetY - halfHeight,
@@ -422,17 +425,17 @@ export function getJrEastHorizontalBranchArrowPoints({
       targetY,
       bodyEndX,
       targetY + halfHeight,
-      startX + 25,
+      horizontalStartX,
       targetY + halfHeight,
     ]
     : [
-      startX,
+      horizontalStartX,
       targetY - halfHeight,
       width,
       targetY - halfHeight,
       width,
       targetY + halfHeight,
-      startX,
+      horizontalStartX,
       targetY + halfHeight,
     ];
 
