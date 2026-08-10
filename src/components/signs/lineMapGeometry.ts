@@ -1,9 +1,11 @@
 export const DEFAULT_TRACK_WIDTH = 6;
 export const MIN_TRACK_WIDTH = 2;
 export const MAX_TRACK_WIDTH = 30;
+export const DEFAULT_FADE_DOT_SPACING = 10;
 
 const DEFAULT_SERVICE_TRACK_WIDTH = 4;
 const DEFAULT_SERVICE_TRACK_GAP = 16;
+const FADE_DOT_GAP = 4;
 
 export function ceilCanvasDimensions(
   width: number,
@@ -48,6 +50,48 @@ export interface ConnectedMarkerLayout {
   positions: number[];
   /** Nominal extent from the first marker origin to the last marker end. */
   extent: number;
+}
+
+/** Keep fade dots visually separate even when they grow with a thick track. */
+export function getFadeDotSpacing(trackWidth: number): number {
+  const width = Number.isFinite(trackWidth)
+    ? Math.max(0, trackWidth)
+    : DEFAULT_TRACK_WIDTH;
+  return Math.max(DEFAULT_FADE_DOT_SPACING, width + FADE_DOT_GAP);
+}
+
+export interface SegmentedTrackEndCap {
+  x: number;
+  y: number;
+  color: string;
+  radius: number;
+}
+
+/**
+ * Add round caps only to the outside ends of a colour-segmented track.
+ * Segment joins remain square so adjacent route colours meet cleanly.
+ */
+export function getSegmentedTrackEndCaps(
+  stationPoints: Array<{ x: number; y: number }>,
+  colors: string[],
+  strokeWidth: number,
+): SegmentedTrackEndCap[] {
+  const firstPoint = stationPoints[0];
+  const lastPoint = stationPoints[stationPoints.length - 1];
+  if (
+    !firstPoint ||
+    !lastPoint ||
+    colors.length === 0 ||
+    colors.length !== stationPoints.length - 1
+  ) {
+    return [];
+  }
+
+  const radius = strokeWidth / 2;
+  return [
+    { ...firstPoint, color: colors[0], radius },
+    { ...lastPoint, color: colors[colors.length - 1], radius },
+  ];
 }
 
 /**

@@ -30,8 +30,10 @@ import { LINE_MAP_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import {
   ceilCanvasDimensions,
   DEFAULT_TRACK_WIDTH,
+  getFadeDotSpacing,
   getServiceTrackGap,
   getServiceTrackWidth,
+  getSegmentedTrackEndCaps,
   getTrackEdgeRadius,
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
@@ -270,7 +272,8 @@ export function getMapCanvasDimensions(
   const vSpacing = stationSpacing ?? V_SPACING;
   if (orientation === "horizontal") {
     const hFadeLen = Math.round(hSpacing / 3);
-    const hFadeExtra = hFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+    const fadeDotSpacing = getFadeDotSpacing(normalizeTrackWidth(trackWidth));
+    const hFadeExtra = hFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
     const extraL = hasMoreBefore ? hFadeExtra : 0;
     const extraR = hasMoreAfter ? hFadeExtra : 0;
     if (nameStyle === "above" || nameStyle === "below") {
@@ -319,7 +322,8 @@ export function getMapCanvasDimensions(
   }
   // vertical
   const vFadeLen = Math.round(vSpacing / 3);
-  const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+  const fadeDotSpacing = getFadeDotSpacing(normalizeTrackWidth(trackWidth));
+  const vFadeExtra = vFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
   const extraT = hasMoreBefore ? vFadeExtra : 0;
   const extraB = hasMoreAfter ? vFadeExtra : 0;
   const maxTransitWidth = Math.max(
@@ -433,6 +437,12 @@ function SegmentedTrack({
     );
   }
 
+  const endCaps = getSegmentedTrackEndCaps(
+    stationPoints,
+    colors,
+    strokeWidth,
+  );
+
   return (
     <Fragment>
       {colors.map((color, index) => {
@@ -453,6 +463,15 @@ function SegmentedTrack({
           />
         );
       })}
+      {endCaps.map((cap, index) => (
+        <Circle
+          key={`track-end-cap-${index}`}
+          x={cap.x}
+          y={cap.y}
+          radius={cap.radius}
+          fill={cap.color}
+        />
+      ))}
     </Fragment>
   );
 }
@@ -513,7 +532,6 @@ const C_LABEL_GAP = 4; // gap between tick end and text
 const C_DIAG = 0.35; // |cosA| threshold below which station is in top/bottom zone
 
 // Fade dots — shown at line ends when the map is a partial view of the full line
-const FADE_DOT_SPACING = 10; // spacing between dots beyond the cutoff
 const FADE_OPACITIES = [0.65, 0.35, 0.15] as const; // nearest → farthest
 
 // ── Helper: JR East station number badge dimensions ─────────────────────────
@@ -1374,6 +1392,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     const serviceTrackGap = getServiceTrackGap(effectiveTrackWidth);
     const fadeDotRadius = effectiveTrackWidth / 2;
     const serviceFadeDotRadius = serviceTrackWidth / 2;
+    const fadeDotSpacing = getFadeDotSpacing(effectiveTrackWidth);
+    const serviceFadeDotSpacing = getFadeDotSpacing(serviceTrackWidth);
     const lineExchangeEdgeRadius = getTrackEdgeRadius(
       XCHG_R,
       effectiveTrackWidth,
@@ -1624,7 +1644,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 const angle0 = -Math.PI / 2;
                 const angleN = (n - 1) * angleStep - Math.PI / 2;
                 const arcExt = (2 * Math.PI) / n / 3;
-                const arcDot = FADE_DOT_SPACING / C_RADIUS;
+                const arcDot = fadeDotSpacing / C_RADIUS;
                 const extAngle0 = angle0 - arcExt;
                 const extAngleN = angleN + arcExt;
                 return (
@@ -1965,7 +1985,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const rawCanvasH = nameSideExtent + bundleSpan + transitSideExtent;
 
       const vnFadeLen = Math.round(hSpacing / 3);
-      const vnFadeExtra = vnFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const vnFadeExtra =
+        vnFadeLen + serviceFadeDotSpacing * FADE_OPACITIES.length;
       const vnExtraL = hasMoreBefore ? vnFadeExtra : 0;
       const vnExtraR = hasMoreAfter ? vnFadeExtra : 0;
 
@@ -2087,7 +2108,11 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       {FADE_OPACITIES.map((opacity, idx) => (
                         <Circle
                           key={`fb-${si}-${idx}`}
-                          x={tL - vnFadeLen - FADE_DOT_SPACING * (idx + 1)}
+                          x={
+                            tL -
+                            vnFadeLen -
+                            serviceFadeDotSpacing * (idx + 1)
+                          }
                           y={ty}
                           radius={serviceFadeDotRadius}
                           fill={svc.color}
@@ -2116,7 +2141,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                             tL +
                             (n - 1) * hSpacing +
                             vnFadeLen +
-                            FADE_DOT_SPACING * (idx + 1)
+                            serviceFadeDotSpacing * (idx + 1)
                           }
                           y={ty}
                           radius={serviceFadeDotRadius}
@@ -2414,7 +2439,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         nameStyle === "above" ? stationSideExtent : transitSideExtent;
       const rawCanvasH = stationSideExtent + transitSideExtent;
       const vnFadeLen = Math.round(hSpacing / 3);
-      const vnFadeExtra = vnFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const vnFadeExtra = vnFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
       const vnExtraL = hasMoreBefore ? vnFadeExtra : 0;
       const vnExtraR = hasMoreAfter ? vnFadeExtra : 0;
       const rawCanvasW = Math.max(
@@ -2523,7 +2548,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       vnExtraL -
                       vnFadeLen +
                       horizontalFirstPosition -
-                      FADE_DOT_SPACING * (idx + 1)
+                      fadeDotSpacing * (idx + 1)
                     }
                     y={vnTrackY}
                     radius={fadeDotRadius}
@@ -2559,7 +2584,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       vnExtraL +
                       horizontalLastPosition +
                       vnFadeLen +
-                      FADE_DOT_SPACING * (idx + 1)
+                      fadeDotSpacing * (idx + 1)
                     }
                     y={vnTrackY}
                     radius={fadeDotRadius}
@@ -2884,7 +2909,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
     if (orientation === "horizontal") {
       const hFadeLen = Math.round(hSpacing / 3);
-      const hFadeExtra = hFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const hFadeExtra = hFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
       const hExtraL = hasMoreBefore ? hFadeExtra : 0;
       const hExtraR = hasMoreAfter ? hFadeExtra : 0;
       const rawCanvasW = Math.max(
@@ -2984,7 +3009,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       hExtraL -
                       hFadeLen +
                       horizontalFirstPosition -
-                      FADE_DOT_SPACING * (idx + 1)
+                      fadeDotSpacing * (idx + 1)
                     }
                     y={H_TRACK_Y}
                     radius={fadeDotRadius}
@@ -3020,7 +3045,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       hExtraL +
                       horizontalLastPosition +
                       hFadeLen +
-                      FADE_DOT_SPACING * (idx + 1)
+                      fadeDotSpacing * (idx + 1)
                     }
                     y={H_TRACK_Y}
                     radius={fadeDotRadius}
@@ -3290,7 +3315,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       );
 
       const vFadeLen = Math.round(vSpacing / 3);
-      const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const vFadeExtra =
+        vFadeLen + serviceFadeDotSpacing * FADE_OPACITIES.length;
       const vExtraT = hasMoreBefore ? vFadeExtra : 0;
       const vExtraB = hasMoreAfter ? vFadeExtra : 0;
       const rawCanvasH = Math.max(
@@ -3455,7 +3481,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                             PADDING +
                             vExtraT -
                             vFadeLen -
-                            FADE_DOT_SPACING * (idx + 1)
+                            serviceFadeDotSpacing * (idx + 1)
                           }
                           radius={serviceFadeDotRadius}
                           fill={svc.color}
@@ -3486,7 +3512,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                             vExtraT +
                             (n - 1) * vSpacing +
                             vFadeLen +
-                            FADE_DOT_SPACING * (idx + 1)
+                            serviceFadeDotSpacing * (idx + 1)
                           }
                           radius={serviceFadeDotRadius}
                           fill={svc.color}
@@ -3663,7 +3689,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         V_RIGHT_MARGIN,
     );
     const vFadeLen = Math.round(vSpacing / 3);
-    const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+    const vFadeExtra = vFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
     const vExtraT = hasMoreBefore ? vFadeExtra : 0;
     const vExtraB = hasMoreAfter ? vFadeExtra : 0;
     const rawCanvasH = Math.max(
@@ -3772,7 +3798,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     vExtraT +
                     verticalFirstPosition -
                     vFadeLen -
-                    FADE_DOT_SPACING * (idx + 1)
+                    fadeDotSpacing * (idx + 1)
                   }
                   radius={fadeDotRadius}
                   fill={firstTrackColor}
@@ -3808,7 +3834,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     vExtraT +
                     verticalLastPosition +
                     vFadeLen +
-                    FADE_DOT_SPACING * (idx + 1)
+                    fadeDotSpacing * (idx + 1)
                   }
                   radius={fadeDotRadius}
                   fill={lastTrackColor}
