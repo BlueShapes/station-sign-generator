@@ -40,6 +40,7 @@ input:
     reset-title: Alle Eingaben zurücksetzen
     reset-confirm: Alle Eingaben zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.
     base-color: Unternehmensfarbe
+    arrow-color: Pfeilfarbe (Unternehmensfarbe)
     line-color: Linienfarbe
     local-lines: Linien
     local-lines-prefix: Linienkürzel
@@ -269,6 +270,7 @@ route:
     adjacent-order: Außen → innen
     adjacent-swap-order: Außen-/Innenreihenfolge tauschen
     jreast: Stil von JR East
+    jreastbranch: JR-East-Stil (Verzweigung)
     jrwest: Stil von JR West
     jrwestlarge: Stil von JR West (groß)
     metrolong: Tokyo-Metro-Stil (klein / Japanisch)

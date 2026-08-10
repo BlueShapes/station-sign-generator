@@ -37,6 +37,7 @@ input:
     reset-title: Zresetuj wszystkie wejścia
     reset-confirm: Czy na pewno chcesz zresetować wszystkie wejścia? Tej akcji nie można cofnąć.
     base-color: Kolor firmowy
+    arrow-color: Kolor strzałki (kolor firmowy)
     line-color: Kolor linii
     local-lines: Linie
     local-lines-prefix: Skrócona nazwa linii
@@ -261,6 +262,7 @@ route:
     adjacent-order: Zewnętrzna → wewnętrzna
     adjacent-swap-order: Zamień kolejność zewnętrzną / wewnętrzną
     jreast: Styl JR Wschodni
+    jreastbranch: Styl JR East (rozgałęzienie)
     jrwest: Styl JR Westa
     jrwestlarge: Styl JR West (duży)
     metrolong: Styl metra tokijskiego (mały / japoński)

@@ -95,6 +95,10 @@ import JrEastSign, {
   height as JrEastSignHeight,
   scale as JrEastSignBaseScale,
 } from "@/components/signs/JrEastSign";
+import JrEastBranchSign, {
+  height as JrEastBranchSignHeight,
+  scale as JrEastBranchSignBaseScale,
+} from "@/components/signs/JrEastBranchSign";
 import JrWestSign, {
   height as JrWestSignHeight,
   scale as JrWestSignBaseScale,
@@ -142,6 +146,7 @@ import CanvasFontLoading from "@/components/CanvasFontLoading";
 
 type SignStyle =
   | "jreast"
+  | "jreastbranch"
   | "jrwest"
   | "jrwestlarge"
   | "metrolong"
@@ -182,6 +187,11 @@ const SIGN_STYLES: Record<
     Component: JrEastSign,
     height: JrEastSignHeight,
     scale: JrEastSignBaseScale,
+  },
+  jreastbranch: {
+    Component: JrEastBranchSign,
+    height: JrEastBranchSignHeight,
+    scale: JrEastBranchSignBaseScale,
   },
   jrwest: {
     Component: JrWestSign,
@@ -252,6 +262,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [centerSquareLineIds, setCenterSquareLineIds] = useState<string[]>([]);
   const [stationLines, setStationLines] = useState<Line[]>([]);
   const [signStyle, setSignStyle] = useState<SignStyle>("jreast");
+  const adjacentSelectionLimit =
+    SIGN_STYLE_FIELDS[signStyle]?.maxAdjacentCount ?? 2;
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<
     { label: string; value: number }[]
@@ -270,6 +282,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     useState(false);
   const [rightAdjacentDropdownOpened, setRightAdjacentDropdownOpened] =
     useState(false);
+
+  useEffect(() => {
+    setSelectedLeftAdjacentIds((ids) => ids.slice(0, adjacentSelectionLimit));
+    setSelectedRightAdjacentIds((ids) => ids.slice(0, adjacentSelectionLimit));
+  }, [adjacentSelectionLimit]);
 
   // ── Line map mode state ──────────────────────────────────────────────────
   const [tabMode, setTabMode] = useState<TabMode>("sign");
@@ -377,6 +394,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       left: [],
       right: [],
     };
+    const companyColorById = new Map(
+      getAllCompanies(db).map((company) => [company.id, company.company_color]),
+    );
 
     const stationContexts = [
       {
@@ -435,6 +455,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
             primaryName: station.primary_name,
             primaryNameFurigana: station.primary_name_furigana ?? "",
             secondaryName: station.secondary_name ?? "",
+            arrowColor: line.company_id
+              ? companyColorById.get(line.company_id)
+              : undefined,
             numberPrimaryPrefix: stationNumber?.prefix ?? "",
             numberPrimaryValue: stationNumber?.value ?? "",
           };
@@ -604,13 +627,13 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         adjacentOptions.left.find((candidate) => candidate.optionValue === optionValue),
       )
       .filter((candidate): candidate is AdjacentCandidate => !!candidate)
-      .slice(0, 2);
+      .slice(0, adjacentSelectionLimit);
     const selectedRightStations = orderedRightAdjacentIds
       .map((optionValue) =>
         adjacentOptions.right.find((candidate) => candidate.optionValue === optionValue),
       )
       .filter((candidate): candidate is AdjacentCandidate => !!candidate)
-      .slice(0, 2);
+      .slice(0, adjacentSelectionLimit);
 
     const data: DirectInputStationProps = {
       primaryName: currentStation.primary_name,
@@ -633,6 +656,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           primaryName: station.primaryName,
           primaryNameFurigana: station.primaryNameFurigana,
           secondaryName: station.secondaryName,
+          arrowColor: station.arrowColor,
           numberPrimaryPrefix: station.numberPrimaryPrefix,
           numberPrimaryValue: station.numberPrimaryValue,
         }),
@@ -643,6 +667,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           primaryName: station.primaryName,
           primaryNameFurigana: station.primaryNameFurigana,
           secondaryName: station.secondaryName,
+          arrowColor: station.arrowColor,
           numberPrimaryPrefix: station.numberPrimaryPrefix,
           numberPrimaryValue: station.numberPrimaryValue,
         }),
@@ -670,6 +695,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     flipped,
     centerSquareLineIds,
     adjacentOptions,
+    adjacentSelectionLimit,
     orderedLeftAdjacentIds,
     orderedRightAdjacentIds,
   ]);
@@ -1344,6 +1370,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   onChange={(v) => v && setSignStyle(v as SignStyle)}
                   data={[
                     { value: "jreast", label: t("route.sign.jreast") },
+                    {
+                      value: "jreastbranch",
+                      label: t("route.sign.jreastbranch"),
+                    },
                     { value: "jrwest", label: t("route.sign.jrwest") },
                     {
                       value: "jrwestlarge",
@@ -1449,9 +1479,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     label={t("route.sign.prev-station")}
                     value={selectedLeftAdjacentIds}
                     onChange={(value) => {
-                      setSelectedLeftAdjacentIds(value.slice(0, 2));
+                      setSelectedLeftAdjacentIds(
+                        value.slice(0, adjacentSelectionLimit),
+                      );
                       setLeftAdjacentOrderReversed(false);
-                      if (value.length >= 2) setLeftAdjacentDropdownOpened(false);
+                      if (value.length >= adjacentSelectionLimit)
+                        setLeftAdjacentDropdownOpened(false);
                     }}
                     dropdownOpened={leftAdjacentDropdownOpened}
                     onDropdownOpen={() => setLeftAdjacentDropdownOpened(true)}
@@ -1462,10 +1495,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     }))}
                     placeholder={t("route.sign.adjacent-select")}
                     disabled={!selectedStationId}
-                    maxValues={2}
+                    maxValues={adjacentSelectionLimit}
                     clearable
                   />
-                  {selectedLeftAdjacentIds.length === 2 && (
+                  {selectedLeftAdjacentIds.length >= 2 && (
                     <Stack gap={2}>
                       <Text size="xs" c="dimmed" ta="center">
                         {t("route.sign.adjacent-order")}: {orderedLeftAdjacentIds
@@ -1501,9 +1534,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     label={t("route.sign.next-station")}
                     value={selectedRightAdjacentIds}
                     onChange={(value) => {
-                      setSelectedRightAdjacentIds(value.slice(0, 2));
+                      setSelectedRightAdjacentIds(
+                        value.slice(0, adjacentSelectionLimit),
+                      );
                       setRightAdjacentOrderReversed(false);
-                      if (value.length >= 2) setRightAdjacentDropdownOpened(false);
+                      if (value.length >= adjacentSelectionLimit)
+                        setRightAdjacentDropdownOpened(false);
                     }}
                     dropdownOpened={rightAdjacentDropdownOpened}
                     onDropdownOpen={() => setRightAdjacentDropdownOpened(true)}
@@ -1514,10 +1550,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     }))}
                     placeholder={t("route.sign.adjacent-select")}
                     disabled={!selectedStationId}
-                    maxValues={2}
+                    maxValues={adjacentSelectionLimit}
                     clearable
                   />
-                  {selectedRightAdjacentIds.length === 2 && (
+                  {selectedRightAdjacentIds.length >= 2 && (
                     <Stack gap={2}>
                       <Text size="xs" c="dimmed" ta="center">
                         {t("route.sign.adjacent-order")}: {orderedRightAdjacentIds

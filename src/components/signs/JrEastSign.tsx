@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect, forwardRef } from "react";
 import type StationProps from "./DirectInputStationProps";
-import { Rect, Layer, Stage, Text, Line, Ellipse } from "react-konva";
+import { Rect, Layer, Stage, Text, Line, Ellipse, Group } from "react-konva";
 import Konva from "konva";
 import { v7 as uuidv7 } from "uuid";
 import { isMobile } from "react-device-detect";
@@ -8,6 +8,12 @@ import { getTokyoMetroStationNumberMetrics } from "@/components/signs/stationNum
 import { getStationSignFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
 import { getJrEastLineArrowPoints } from "./arrowGeometry";
+import JrEastBranchArrows from "./JrEastBranchArrows";
+import JrEastAdjacentNumberBadge from "./JrEastAdjacentNumberBadge";
+import {
+  hasActiveJrEastBranches,
+  JR_EAST_BRANCH_LAYOUT,
+} from "./jrEastBranchLayout";
 
 export const height = 140;
 export const scale = 3;
@@ -39,6 +45,8 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       localLines,
       direction,
       ratio,
+      branchMode = false,
+      branchLayoutRenderKey,
     } = props;
 
     // Three-letter code is only rendered as part of the JR East station number badge
@@ -115,6 +123,17 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     })();
     //const height = 140;
     const width = height * ratio;
+    const hasActiveBranches = hasActiveJrEastBranches(
+      branchMode,
+      left.length,
+      right.length,
+    );
+    const branchCenterBadgeYOffset = hasActiveBranches
+      ? JR_EAST_BRANCH_LAYOUT.centerBadgeYOffset
+      : 0;
+    const branchCenterTextYOffset = hasActiveBranches
+      ? JR_EAST_BRANCH_LAYOUT.centerTextYOffset
+      : 0;
     const yOffset = 6;
     const startingPoint = 40;
     const lineHeight = 24;
@@ -189,7 +208,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       } else {
         renderFunction();
       }
-    }, [props, stageKey]);
+    }, [props, stageKey, branchLayoutRenderKey]);
 
     return (
       <>
@@ -213,6 +232,19 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
           >
             <Layer>
               <Rect fill="white" x={0} y={0} width={width} height={height} />
+              {hasActiveBranches ? (
+                <JrEastBranchArrows
+                  width={width}
+                  centerY={linePosY + lineHeight / 2}
+                  left={left}
+                  right={right}
+                  baseColor={baseColor}
+                  direction={direction}
+                  stationNumberStyle={stationNumberStyle}
+                  getLineColor={getLineColor}
+                />
+              ) : (
+                <>
               <Rect
                 fill={baseColor}
                 x={startingPoint}
@@ -340,100 +372,24 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     align="left"
                   />
                   {leftNumberPrimaryValue && (
-                    <>
-                      {stationNumberStyle === "tokyometro" ? (
-                        <Ellipse
-                          x={44 + 7.5}
-                          y={yOffset + 97 + 7.5}
-                          radiusX={7.5}
-                          radiusY={7.5}
-                          stroke={getLineColor(leftNumberPrimaryPrefix)}
-                          strokeWidth={2}
-                        />
-                      ) : (
-                        <Rect
-                          stroke={getLineColor(leftNumberPrimaryPrefix)}
-                          strokeWidth={2}
-                          x={44}
-                          y={yOffset + 97}
-                          width={15}
-                          height={15}
-                          cornerRadius={2}
-                        />
-                      )}
-                      <Text
-                        text={leftNumberPrimaryPrefix}
-                        fill="black"
-                        x={41.5}
-                        fontSize={6}
-                        fontFamily={stationBadgeFontFamily}
-                        fontStyle="600"
-                        y={yOffset + 99}
-                        width={20}
-                        height={30}
-                        align="center"
-                      />
-                      <Text
-                        text={leftNumberPrimaryValue}
-                        fill="black"
-                        x={41.5}
-                        fontSize={stationNumberStyle === "tokyometro" ? 7 : 9}
-                        fontFamily={stationBadgeFontFamily}
-                        fontStyle="600"
-                        y={yOffset + 104}
-                        width={20}
-                        height={32}
-                        align="center"
-                      />
-                    </>
+                    <JrEastAdjacentNumberBadge
+                      x={44}
+                      y={yOffset + 97}
+                      prefix={leftNumberPrimaryPrefix}
+                      value={leftNumberPrimaryValue}
+                      color={getLineColor(leftNumberPrimaryPrefix)}
+                      stationNumberStyle={stationNumberStyle}
+                    />
                   )}
                   {leftNumberSecondaryValue && (
-                    <>
-                      {stationNumberStyle === "tokyometro" ? (
-                        <Ellipse
-                          x={24 + 7.5}
-                          y={yOffset + 97 + 7.5}
-                          radiusX={7.5}
-                          radiusY={7.5}
-                          stroke={getLineColor(leftNumberSecondaryPrefix)}
-                          strokeWidth={2}
-                        />
-                      ) : (
-                        <Rect
-                          stroke={getLineColor(leftNumberSecondaryPrefix)}
-                          strokeWidth={2}
-                          x={24}
-                          y={yOffset + 97}
-                          width={15}
-                          height={15}
-                          cornerRadius={2}
-                        />
-                      )}
-                      <Text
-                        text={leftNumberSecondaryPrefix}
-                        fill="black"
-                        x={21.5}
-                        fontSize={6}
-                        fontFamily={stationBadgeFontFamily}
-                        fontStyle="600"
-                        y={yOffset + 99}
-                        width={20}
-                        height={30}
-                        align="center"
-                      />
-                      <Text
-                        text={leftNumberSecondaryValue}
-                        fill="black"
-                        x={21.5}
-                        fontSize={stationNumberStyle === "tokyometro" ? 7 : 9}
-                        fontFamily={stationBadgeFontFamily}
-                        fontStyle="600"
-                        y={yOffset + 104}
-                        width={20}
-                        height={32}
-                        align="center"
-                      />
-                    </>
+                    <JrEastAdjacentNumberBadge
+                      x={24}
+                      y={yOffset + 97}
+                      prefix={leftNumberSecondaryPrefix}
+                      value={leftNumberSecondaryValue}
+                      color={getLineColor(leftNumberSecondaryPrefix)}
+                      stationNumberStyle={stationNumberStyle}
+                    />
                   )}
                 </>
               )}
@@ -461,101 +417,27 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     align="right"
                   />
                   {rightNumberPrimaryValue && (
-                    <>
-                      {stationNumberStyle === "tokyometro" ? (
-                        <Ellipse
-                          x={width - 60 + 7.5}
-                          y={yOffset + 97 + 7.5}
-                          radiusX={7.5}
-                          radiusY={7.5}
-                          stroke={getLineColor(rightNumberPrimaryPrefix)}
-                          strokeWidth={2}
-                        />
-                      ) : (
-                        <Rect
-                          stroke={getLineColor(rightNumberPrimaryPrefix)}
-                          strokeWidth={2}
-                          x={width - 60}
-                          y={yOffset + 97}
-                          width={15}
-                          height={15}
-                          cornerRadius={2}
-                        />
-                      )}
-                      <Text
-                        text={rightNumberPrimaryPrefix}
-                        fill="black"
-                        x={width - 62.5}
-                        fontSize={6}
-                        fontFamily={stationBadgeFontFamily}
-                        fontStyle="600"
-                        y={yOffset + 99}
-                        width={20}
-                        height={30}
-                        align="center"
-                      />
-                      <Text
-                        text={rightNumberPrimaryValue}
-                        fill="black"
-                        x={width - 62.5}
-                        fontSize={stationNumberStyle === "tokyometro" ? 7 : 9}
-                        fontFamily={stationBadgeFontFamily}
-                        fontStyle="600"
-                        y={yOffset + 104}
-                        width={20}
-                        height={32}
-                        align="center"
-                      />
-                    </>
+                    <JrEastAdjacentNumberBadge
+                      x={width - 60}
+                      y={yOffset + 97}
+                      prefix={rightNumberPrimaryPrefix}
+                      value={rightNumberPrimaryValue}
+                      color={getLineColor(rightNumberPrimaryPrefix)}
+                      stationNumberStyle={stationNumberStyle}
+                    />
                   )}
                   {rightNumberSecondaryValue && (
-                    <>
-                      {stationNumberStyle === "tokyometro" ? (
-                        <Ellipse
-                          x={width - 40 + 7.5}
-                          y={yOffset + 97 + 7.5}
-                          radiusX={7.5}
-                          radiusY={7.5}
-                          stroke={getLineColor(rightNumberSecondaryPrefix)}
-                          strokeWidth={2}
-                        />
-                      ) : (
-                        <Rect
-                          stroke={getLineColor(rightNumberSecondaryPrefix)}
-                          strokeWidth={2}
-                          x={width - 40}
-                          y={yOffset + 97}
-                          width={15}
-                          height={15}
-                          cornerRadius={2}
-                        />
-                      )}
-                      <Text
-                        text={rightNumberSecondaryPrefix}
-                        fill="black"
-                        x={width - 42.5}
-                        fontSize={6}
-                        fontFamily={stationBadgeFontFamily}
-                        fontStyle="600"
-                        y={yOffset + 99}
-                        width={20}
-                        height={30}
-                        align="center"
-                      />
-                      <Text
-                        text={rightNumberSecondaryValue}
-                        fill="black"
-                        x={width - 42.5}
-                        fontSize={stationNumberStyle === "tokyometro" ? 7 : 9}
-                        fontFamily={stationBadgeFontFamily}
-                        fontStyle="600"
-                        y={yOffset + 104}
-                        width={20}
-                        height={32}
-                        align="center"
-                      />
-                    </>
+                    <JrEastAdjacentNumberBadge
+                      x={width - 40}
+                      y={yOffset + 97}
+                      prefix={rightNumberSecondaryPrefix}
+                      value={rightNumberSecondaryValue}
+                      color={getLineColor(rightNumberSecondaryPrefix)}
+                      stationNumberStyle={stationNumberStyle}
+                    />
                   )}
+                </>
+              )}
                 </>
               )}
 
@@ -606,7 +488,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     text={spacedStationName}
                     width={width}
                     x={0}
-                    y={yOffset + 8}
+                    y={yOffset + 8 + branchCenterTextYOffset}
                     {...smallStationNameStyle}
                     fill="black"
                     align="center"
@@ -619,8 +501,12 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     text={primaryNameFurigana}
                     width={width}
                     x={0}
-                    y={yOffset + 52}
-                    fontSize={12}
+                    y={yOffset + 52 + branchCenterTextYOffset}
+                    fontSize={
+                      hasActiveBranches
+                        ? JR_EAST_BRANCH_LAYOUT.furiganaFontSize
+                        : 12
+                    }
                     fontStyle="800"
                     fontFamily="NotoSansJP"
                     fill="black"
@@ -630,7 +516,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     text={spacedStationName}
                     width={width}
                     x={0}
-                    y={yOffset + 16}
+                    y={yOffset + 16 + branchCenterTextYOffset}
                     {...stationNameStyle}
                     fill="black"
                     align="center"
@@ -639,8 +525,9 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               )}
 
               {/* If station number exists */}
-              {numberPrimaryPrefix &&
-                (threeLetterCode ? (
+              <Group y={branchCenterBadgeYOffset}>
+                {numberPrimaryPrefix &&
+                  (threeLetterCode ? (
                   <>
                     <Rect
                       stroke={getLineColor(numberPrimaryPrefix)}
@@ -1078,9 +965,11 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       </>
                     )}
                   </>
-                ))}
-              {note ? (
-                <>
+                  ))}
+              </Group>
+              <Group y={branchCenterTextYOffset}>
+                {note ? (
+                  <>
                   <Text
                     text={quaternaryName}
                     x={8 + (width + smallStationNameWidth) / 2}
@@ -1101,9 +990,9 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="black"
                     align="center"
                   />
-                </>
-              ) : (
-                <>
+                  </>
+                ) : (
+                  <>
                   <Text
                     text={quaternaryName}
                     x={8 + (width + stationNameWidth) / 2}
@@ -1124,8 +1013,9 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="black"
                     align="center"
                   />
-                </>
-              )}
+                  </>
+                )}
+              </Group>
               <Text
                 text={secondaryName}
                 width={width}

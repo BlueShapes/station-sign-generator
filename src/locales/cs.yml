@@ -37,6 +37,7 @@ input:
     reset-title: Resetujte všechny vstupy
     reset-confirm: Opravdu chcete resetovat všechny vstupy? Tuto akci nelze vrátit zpět.
     base-color: Barva společnosti
+    arrow-color: Barva šipky (barva společnosti)
     line-color: Barva čáry
     local-lines: Čáry
     local-lines-prefix: Zkratka názvu řádku
@@ -261,6 +262,7 @@ route:
     adjacent-order: Vnější → vnitřní
     adjacent-swap-order: Prohodit vnější / vnitřní pořadí
     jreast: JR východní styl
+    jreastbranch: Styl JR East (větvení)
     jrwest: JR West Style
     jrwestlarge: JR West Style (velký)
     metrolong: Styl Tokyo Metro (malý / japonsky)

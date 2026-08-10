@@ -49,6 +49,10 @@ import JrEastSign, {
   height as JrEastSignHeight,
   scale as JrEastSignBaseScale,
 } from "@/components/signs/JrEastSign";
+import JrEastBranchSign, {
+  height as JrEastBranchSignHeight,
+  scale as JrEastBranchSignBaseScale,
+} from "@/components/signs/JrEastBranchSign";
 import JrWestSign, {
   height as JrWestSignHeight,
   scale as JrWestSignBaseScale,
@@ -73,6 +77,7 @@ import CanvasFontLoading from "@/components/CanvasFontLoading";
 
 type SignStyle =
   | "jreast"
+  | "jreastbranch"
   | "jrwest"
   | "jrwestlarge"
   | "metrolong"
@@ -89,6 +94,11 @@ const SIGN_STYLES: Record<
     Component: JrEastSign,
     height: JrEastSignHeight,
     scale: JrEastSignBaseScale,
+  },
+  jreastbranch: {
+    Component: JrEastBranchSign,
+    height: JrEastBranchSignHeight,
+    scale: JrEastBranchSignBaseScale,
   },
   jrwest: {
     Component: JrWestSign,
@@ -269,7 +279,9 @@ export default function SimpleInputTab() {
 
   const signFontSpecs = getStationSignFontSpecs(
     currentStyle,
-    currentStyle === "jreast" ? "jreast" : undefined,
+    currentStyle === "jreast" || currentStyle === "jreastbranch"
+      ? "jreast"
+      : undefined,
   );
   const signFonts = useCanvasFonts(signFontSpecs);
 
@@ -406,6 +418,10 @@ export default function SimpleInputTab() {
           onChange={(v) => v && setCurrentStyle(v as SignStyle)}
           data={[
             { value: "jreast", label: t("route.sign.jreast") },
+            {
+              value: "jreastbranch",
+              label: t("route.sign.jreastbranch"),
+            },
             { value: "jrwest", label: t("route.sign.jrwest") },
             { value: "jrwestlarge", label: t("route.sign.jrwestlarge") },
             { value: "metrolong", label: t("route.sign.metrolong") },
@@ -435,7 +451,9 @@ export default function SimpleInputTab() {
         <SignComponent
           {...previewData}
           stationNumberStyle={
-            currentStyle === "jreast" ? "jreast" : undefined
+            currentStyle === "jreast" || currentStyle === "jreastbranch"
+              ? "jreast"
+              : undefined
           }
           ref={ref}
         />

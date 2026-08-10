@@ -323,6 +323,37 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
     ratio: "required",
     direction: "required",
   },
+  jreastbranch: {
+    primaryName: "required",
+    primaryNameFurigana: "optional",
+    secondaryName: "required",
+    tertiaryName: "optional",
+    quaternaryName: "optional",
+    note: "optional",
+    numberPrimary: "optional",
+    numberSecondary: "hidden",
+    threeLetterCode: "optional",
+    stationAreas: "hidden",
+    left: {
+      primaryName: "required",
+      primaryNameFurigana: "hidden",
+      secondaryName: "required",
+      numberPrimary: "optional",
+      numberSecondary: "hidden",
+    },
+    right: {
+      primaryName: "required",
+      primaryNameFurigana: "hidden",
+      secondaryName: "required",
+      numberPrimary: "optional",
+      numberSecondary: "hidden",
+    },
+    maxAdjacentCount: 3,
+    baseColor: "required",
+    centerSquareColors: "optional",
+    ratio: "required",
+    direction: "required",
+  },
 };
 
 export type { SignStyleFieldSpec, AdjacentFieldSpec };

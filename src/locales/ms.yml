@@ -37,6 +37,7 @@ input:
     reset-title: Tetapkan semula semua input
     reset-confirm: Adakah anda pasti mahu menetapkan semula semua input? Tindakan ini tidak boleh dibuat asal.
     base-color: Warna Syarikat
+    arrow-color: Warna anak panah (warna syarikat)
     line-color: Warna Garisan
     local-lines: Garisan
     local-lines-prefix: Nama Baris Shorthand
@@ -261,6 +262,7 @@ route:
     adjacent-order: Luar → dalam
     adjacent-swap-order: Tukar susunan luar / dalam
     jreast: Gaya JR Timur
+    jreastbranch: Gaya JR Timur (bercabang)
     jrwest: Gaya JR Barat
     jrwestlarge: Gaya JR West (Besar)
     metrolong: Gaya Metro Tokyo (kecil / Jepun)

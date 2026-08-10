@@ -57,6 +57,7 @@ export const CANVAS_FONT_SPECS = [
 
 export type CanvasSignStyle =
   | "jreast"
+  | "jreastbranch"
   | "jrwest"
   | "jrwestlarge"
   | "metrolong"

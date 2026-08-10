@@ -91,6 +91,7 @@ export function sanitizeDirectInputData(
     primaryName: truncateTextInput(station.primaryName),
     primaryNameFurigana: optional(station.primaryNameFurigana),
     secondaryName: truncateTextInput(station.secondaryName),
+    arrowColor: optional(station.arrowColor),
     numberPrimaryPrefix: optional(station.numberPrimaryPrefix),
     numberPrimaryValue: optional(station.numberPrimaryValue),
     numberSecondaryPrefix: optional(station.numberSecondaryPrefix),

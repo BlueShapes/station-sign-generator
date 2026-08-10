@@ -37,6 +37,7 @@ input:
     reset-title: 重置所有输入
     reset-confirm: 您确定要重置所有输入吗？此操作无法撤消。
     base-color: 公司颜色
+    arrow-color: 箭头颜色（公司颜色）
     line-color: 线条颜色
     local-lines: 线路
     local-lines-prefix: 线路名称简写
@@ -261,6 +262,7 @@ route:
     adjacent-order: 外侧 → 内侧
     adjacent-swap-order: 交换外侧/内侧顺序
     jreast: JR东日本风格
+    jreastbranch: JR东日本风格（支持分支）
     jrwest: JR西日本风格
     jrwestlarge: JR西日本风格（大）
     metrolong: 东京地铁风格（小・日文）

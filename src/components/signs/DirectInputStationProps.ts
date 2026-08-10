@@ -20,6 +20,8 @@ export type AdjacentStationProps = {
   id: string;
   primaryName: string;
   secondaryName: string;
+  /** Corporate color used for this branch arrow. */
+  arrowColor?: string;
   primaryNameFurigana?: string;
   numberPrimaryPrefix?: string;
   numberPrimaryValue?: string;
@@ -53,6 +55,10 @@ interface DirectInputStationProps {
   ratio: number;
   direction?: Direction;
   subTextMode?: MetroLongSubTextMode;
+  /** Render JR East arrows as independently branching company-colored paths. */
+  branchMode?: boolean;
+  /** Internal HMR key used to regenerate a branch preview after layout edits. */
+  branchLayoutRenderKey?: string;
   ref?: RefObject<Konva.Stage>;
 }
 
