@@ -93,7 +93,12 @@ describe("JR East branch sign layout", () => {
     expect(getJrEastBranchStationNameX("left", "secondary", true)).toBe(45);
     expect(getJrEastBranchStationNameX("right", "primary", true)).toBe(-45);
     expect(getJrEastBranchStationNameX("right", "secondary", true)).toBe(-45);
-    expect(getJrEastBranchStationNameX("left", "primary", false)).toBe(60);
+    expect(getJrEastBranchStationNameX("left", "primary", false)).toBe(50);
+    expect(getJrEastBranchStationNameX("right", "primary", false)).toBe(-50);
+    expect(getJrEastBranchStationNameX("left", "secondary", false)).toBe(50);
+    expect(getJrEastBranchStationNameX("right", "secondary", false)).toBe(
+      -50,
+    );
   });
 
   test("places travel badges outside the foreign name with fixed gaps", () => {

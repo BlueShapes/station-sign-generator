@@ -232,6 +232,11 @@ export default function JrEastBranchArrows({
             station?.arrowColor,
             baseColor,
           );
+          const primaryText = station
+            ? station.primaryName.length <= 2
+              ? station.primaryName.split("").join(" ")
+              : station.primaryName
+            : "";
           const badgeY = targetY + lineHeight / 2 + 3;
           const primaryBadgeX = getJrEastBranchStationBadgeX(
             side,
@@ -339,11 +344,7 @@ export default function JrEastBranchArrows({
               {station && (
                 <>
                   <Text
-                    text={
-                      station.primaryName.length <= 2
-                        ? station.primaryName.split("").join(" ")
-                        : station.primaryName
-                    }
+                    text={primaryText}
                     width={width}
                     x={primaryX}
                     y={targetY - primaryFontSize / 2}

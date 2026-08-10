@@ -23,6 +23,7 @@ export const JR_EAST_BRANCH_LAYOUT = {
   centerTextYOffset: -6,
   furiganaFontSize: 15,
   travelTextOutwardShift: 15,
+  nonTravelTextOutwardShift: 36,
   travelSecondaryCenterAdjustment: 3,
   travelTextBadgeGap: 5,
   adjacentBadgeSize: 15,
@@ -145,15 +146,13 @@ export function getJrEastBranchSecondaryFontSize(
 
 export function getJrEastBranchStationNameX(
   side: BranchSide,
-  nameKind: "primary" | "secondary",
+  _nameKind: "primary" | "secondary",
   isTravelDirection: boolean,
 ): number {
-  const baseInset = nameKind === "primary" || isTravelDirection
-    ? 60
-    : side === "left" ? 64 : 66;
-  const inset = isTravelDirection
-    ? baseInset - JR_EAST_BRANCH_LAYOUT.travelTextOutwardShift
-    : baseInset;
+  const outwardShift = isTravelDirection
+    ? JR_EAST_BRANCH_LAYOUT.travelTextOutwardShift
+    : JR_EAST_BRANCH_LAYOUT.nonTravelTextOutwardShift;
+  const inset = 60 - outwardShift;
 
   return side === "left" ? inset : -inset;
 }
