@@ -37,6 +37,7 @@ input:
     reset-title: सभी इनपुट रीसेट करें
     reset-confirm: क्या आप वाकई सभी इनपुट रीसेट करना चाहते हैं? इस एक्शन को वापस नहीं किया जा सकता।
     base-color: कंपनी का रंग
+    arrow-color: तीर का रंग (कंपनी का रंग)
     line-color: रेखा का रंग
     local-lines: पंक्तियाँ
     local-lines-prefix: पंक्ति नाम आशुलिपि
@@ -261,6 +262,7 @@ route:
     adjacent-order: बाहर → भीतर
     adjacent-swap-order: बाहरी / भीतरी क्रम बदलें
     jreast: जेआर ईस्ट स्टाइल
+    jreastbranch: जेआर ईस्ट शैली (शाखा)
     jrwest: जेआर वेस्ट स्टाइल
     jrwestlarge: जेआर वेस्ट स्टाइल (बड़ा)
     metrolong: टोक्यो मेट्रो शैली (छोटा / जापानी)

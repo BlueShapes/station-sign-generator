@@ -37,6 +37,7 @@ input:
     reset-title: Redefinir todas as entradas
     reset-confirm: Tem certeza de que deseja redefinir todas as entradas? Esta ação não pode ser desfeita.
     base-color: Cor da Empresa
+    arrow-color: Cor da seta (cor da empresa)
     line-color: Cor da linha
     local-lines: Linhas
     local-lines-prefix: Abreviação do nome da linha
@@ -261,6 +262,7 @@ route:
     adjacent-order: Exterior → interior
     adjacent-swap-order: Trocar ordem exterior / interior
     jreast: JR Estilo Leste
+    jreastbranch: Estilo JR Leste (ramificação)
     jrwest: Estilo JR Oeste
     jrwestlarge: Estilo JR West (grande)
     metrolong: Estilo Metro de Tóquio (pequeno / japonês)

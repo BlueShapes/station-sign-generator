@@ -40,6 +40,7 @@ input:
     reset-title: "入力内容のリセット"
     reset-confirm: "入力内容をすべてリセットしますか？この操作は元に戻せません。"
     base-color: "会社カラー"
+    arrow-color: "矢印の色（会社カラー）"
     line-color: "ラインカラー"
     local-lines: "路線"
     local-lines-prefix: "路線名略称"
@@ -269,6 +270,7 @@ route:
     adjacent-order: 外側 → 内側
     adjacent-swap-order: 外側／内側の順番を入れ替え
     jreast: JR東日本風
+    jreastbranch: JR東日本風（分岐対応）
     jrwest: JR西日本風
     jrwestlarge: JR西日本風（大）
     metrolong: 東京メトロ風（小・日）

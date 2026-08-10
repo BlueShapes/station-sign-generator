@@ -37,6 +37,7 @@ input:
     reset-title: 重置所有輸入
     reset-confirm: 您確定要重置所有輸入嗎？此操作無法撤銷。
     base-color: 公司顏色
+    arrow-color: 箭頭顏色（公司顏色）
     line-color: 線條顏色
     local-lines: 線路
     local-lines-prefix: 線路名稱簡寫
@@ -261,6 +262,7 @@ route:
     adjacent-order: 外側 → 內側
     adjacent-swap-order: 交換外側／內側順序
     jreast: JR東日本風格
+    jreastbranch: JR東日本風格（支援分支）
     jrwest: JR西日本風格
     jrwestlarge: JR西日本風（大）
     metrolong: 東京地鐵風格（小・日文）

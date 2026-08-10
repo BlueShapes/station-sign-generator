@@ -270,6 +270,24 @@ const DirectInput = memo(function DirectInput({
                       }
                     />
                   )}
+                  {signStyle === "jreastbranch" && (
+                    <ColorInput
+                      label={t("input.direct.arrow-color")}
+                      value={station.arrowColor ?? formData.baseColor}
+                      format="hex"
+                      swatches={[formData.baseColor]}
+                      onChange={(color) =>
+                        updateField(
+                          "left",
+                          formData.left.map((item, itemIndex) =>
+                            itemIndex === idx
+                              ? { ...item, arrowColor: color }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                  )}
                   {showLeft("numberPrimary") && (
                     <div>
                       <Text size="sm" fw={500} mb={4}>
@@ -367,7 +385,12 @@ const DirectInput = memo(function DirectInput({
                 onClick={() =>
                   updateField("left", [
                     ...formData.left,
-                    { id: uuidv7(), primaryName: "", secondaryName: "" },
+                    {
+                      id: uuidv7(),
+                      primaryName: "",
+                      secondaryName: "",
+                      arrowColor: formData.baseColor,
+                    },
                   ])
                 }
               >
@@ -712,6 +735,24 @@ const DirectInput = memo(function DirectInput({
                       }
                     />
                   )}
+                  {signStyle === "jreastbranch" && (
+                    <ColorInput
+                      label={t("input.direct.arrow-color")}
+                      value={station.arrowColor ?? formData.baseColor}
+                      format="hex"
+                      swatches={[formData.baseColor]}
+                      onChange={(color) =>
+                        updateField(
+                          "right",
+                          formData.right.map((item, itemIndex) =>
+                            itemIndex === idx
+                              ? { ...item, arrowColor: color }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                  )}
                   {showRight("numberPrimary") && (
                     <div>
                       <Text size="sm" fw={500} mb={4}>
@@ -809,7 +850,12 @@ const DirectInput = memo(function DirectInput({
                 onClick={() =>
                   updateField("right", [
                     ...formData.right,
-                    { id: uuidv7(), primaryName: "", secondaryName: "" },
+                    {
+                      id: uuidv7(),
+                      primaryName: "",
+                      secondaryName: "",
+                      arrowColor: formData.baseColor,
+                    },
                   ])
                 }
               >

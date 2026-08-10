@@ -37,6 +37,7 @@ input:
     reset-title: Resetați toate intrările
     reset-confirm: Sigur doriți să resetați toate intrările? Această acțiune nu poate fi anulată.
     base-color: Culoare companie
+    arrow-color: Culoarea săgeții (culoarea companiei)
     line-color: Culoarea liniei
     local-lines: Linii
     local-lines-prefix: Stenografia numelui liniei
@@ -261,6 +262,7 @@ route:
     adjacent-order: Exterior → interior
     adjacent-swap-order: Schimbă ordinea exterioară / interioară
     jreast: JR East Style
+    jreastbranch: Stil JR East (ramificație)
     jrwest: JR West Style
     jrwestlarge: JR West Style (mare)
     metrolong: Stil metrou Tokyo (mic / japoneză)

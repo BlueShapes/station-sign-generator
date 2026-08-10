@@ -37,6 +37,7 @@ input:
     reset-title: Сбросить все входы
     reset-confirm: Вы уверены, что хотите сбросить все входы? Это действие невозможно отменить.
     base-color: Цвет компании
+    arrow-color: Цвет стрелки (цвет компании)
     line-color: Цвет линии
     local-lines: Линии
     local-lines-prefix: Сокращение имени линии
@@ -261,6 +262,7 @@ route:
     adjacent-order: Снаружи → внутрь
     adjacent-swap-order: Поменять местами внешнюю / внутреннюю
     jreast: JR Восточный стиль
+    jreastbranch: Стиль JR East (разветвление)
     jrwest: JR Вест Стиль
     jrwestlarge: JR West Style (большой)
     metrolong: Стиль Токийского метро (малый / японский)

@@ -25,13 +25,20 @@ describe("text input safety", () => {
     const sanitized = sanitizeDirectInputData({
       ...DEFAULT_DATA,
       primaryName: oversized,
-      left: [{ ...DEFAULT_DATA.left[0], secondaryName: oversized }],
+      left: [
+        {
+          ...DEFAULT_DATA.left[0],
+          secondaryName: oversized,
+          arrowColor: oversized,
+        },
+      ],
       stationAreas: [{ id: "area", name: oversized }],
       localLines: [{ id: "line", prefix: oversized, color: "#ffffff" }],
     });
 
     expect(sanitized.primaryName).toHaveLength(TEXT_INPUT_MAX_LENGTH);
     expect(sanitized.left[0].secondaryName).toHaveLength(TEXT_INPUT_MAX_LENGTH);
+    expect(sanitized.left[0].arrowColor).toHaveLength(TEXT_INPUT_MAX_LENGTH);
     expect(sanitized.stationAreas?.[0].name).toHaveLength(
       TEXT_INPUT_MAX_LENGTH,
     );
