@@ -16,6 +16,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import type { Database } from "sql.js";
 import {
   Alert,
+  ActionIcon,
   Button,
   Divider,
   Grid,
@@ -38,6 +39,8 @@ import {
   IconEye,
   IconArrowLeft,
   IconArrowRight,
+  IconArrowUp,
+  IconArrowDown,
   IconArrowsHorizontal,
   IconArrowsLeftRight,
   IconRuler,
@@ -89,7 +92,7 @@ import type {
   Direction,
 } from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
-import { orderAdjacentStationIds } from "./adjacentStationOrder";
+import { moveAdjacentStationId } from "./adjacentStationOrder";
 
 import JrEastSign, {
   height as JrEastSignHeight,
@@ -178,6 +181,66 @@ type AdjacentCandidate = AdjacentStationProps & {
   lineName: string;
   side: AdjacentSide;
 };
+
+type AdjacentOrderControlsProps = {
+  candidates: AdjacentCandidate[];
+  orderedIds: string[];
+  onMove: (fromIndex: number, toIndex: number) => void;
+  t: (key: string) => string;
+};
+
+function AdjacentOrderControls({
+  candidates,
+  orderedIds,
+  onMove,
+  t,
+}: AdjacentOrderControlsProps) {
+  return (
+    <Stack gap={2}>
+      <Text size="xs" c="dimmed" ta="center">
+        {t("route.sign.adjacent-order")}
+      </Text>
+      {orderedIds.map((optionValue, index) => {
+        const stationName =
+          candidates.find((candidate) => candidate.optionValue === optionValue)
+            ?.primaryName ?? optionValue;
+        const moveUpLabel = `${t("route.sign.adjacent-move-up")}: ${stationName}`;
+        const moveDownLabel =
+          `${t("route.sign.adjacent-move-down")}: ${stationName}`;
+
+        return (
+          <Group key={optionValue} gap={4} wrap="nowrap">
+            <Text size="xs" style={{ flex: 1 }} truncate>
+              {index + 1}. {stationName}
+            </Text>
+            <Tooltip label={moveUpLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveUpLabel}
+                disabled={index === 0}
+                onClick={() => onMove(index, index - 1)}
+              >
+                <IconArrowUp size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={moveDownLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveDownLabel}
+                disabled={index === orderedIds.length - 1}
+                onClick={() => onMove(index, index + 1)}
+              >
+                <IconArrowDown size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        );
+      })}
+    </Stack>
+  );
+}
 
 const SIGN_STYLES: Record<
   SignStyle,
@@ -274,10 +337,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [selectedRightAdjacentIds, setSelectedRightAdjacentIds] = useState<
     string[]
   >([]);
-  const [leftAdjacentOrderReversed, setLeftAdjacentOrderReversed] =
-    useState(false);
-  const [rightAdjacentOrderReversed, setRightAdjacentOrderReversed] =
-    useState(false);
   const [leftAdjacentDropdownOpened, setLeftAdjacentDropdownOpened] =
     useState(false);
   const [rightAdjacentDropdownOpened, setRightAdjacentDropdownOpened] =
@@ -514,28 +573,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
     setSelectedLeftAdjacentIds(defaultLeft ? [defaultLeft] : []);
     setSelectedRightAdjacentIds(defaultRight ? [defaultRight] : []);
-    setLeftAdjacentOrderReversed(false);
-    setRightAdjacentOrderReversed(false);
     setLeftAdjacentDropdownOpened(false);
     setRightAdjacentDropdownOpened(false);
   }, [adjacentOptions, selectedLineId, selectedStationId]);
 
-  const orderedLeftAdjacentIds = useMemo(
-    () =>
-      orderAdjacentStationIds(
-        selectedLeftAdjacentIds,
-        leftAdjacentOrderReversed,
-      ),
-    [selectedLeftAdjacentIds, leftAdjacentOrderReversed],
-  );
-  const orderedRightAdjacentIds = useMemo(
-    () =>
-      orderAdjacentStationIds(
-        selectedRightAdjacentIds,
-        rightAdjacentOrderReversed,
-      ),
-    [selectedRightAdjacentIds, rightAdjacentOrderReversed],
-  );
+  const orderedLeftAdjacentIds = selectedLeftAdjacentIds;
+  const orderedRightAdjacentIds = selectedRightAdjacentIds;
 
   // Enforce constraints when services have passed stations
   useEffect(() => {
@@ -1482,7 +1525,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       setSelectedLeftAdjacentIds(
                         value.slice(0, adjacentSelectionLimit),
                       );
-                      setLeftAdjacentOrderReversed(false);
                       if (value.length >= adjacentSelectionLimit)
                         setLeftAdjacentDropdownOpened(false);
                     }}
@@ -1493,38 +1535,24 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       value: candidate.optionValue,
                       label: `${candidate.primaryName}（${candidate.lineName}）`,
                     }))}
-                    placeholder={t("route.sign.adjacent-select")}
+                    placeholder={t("route.sign.adjacent-select", {
+                      count: String(adjacentSelectionLimit),
+                    })}
                     disabled={!selectedStationId}
                     maxValues={adjacentSelectionLimit}
                     clearable
                   />
                   {selectedLeftAdjacentIds.length >= 2 && (
-                    <Stack gap={2}>
-                      <Text size="xs" c="dimmed" ta="center">
-                        {t("route.sign.adjacent-order")}: {orderedLeftAdjacentIds
-                          .map(
-                            (optionValue) =>
-                              adjacentOptions.left.find(
-                                (candidate) =>
-                                  candidate.optionValue === optionValue,
-                              )?.primaryName,
-                          )
-                          .filter(Boolean)
-                          .join(" → ")}
-                      </Text>
-                      <Button
-                        variant="subtle"
-                        size="compact-xs"
-                        leftSection={<IconArrowsLeftRight size={14} />}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setLeftAdjacentOrderReversed((reversed) => !reversed)
-                        }}
-                      >
-                        {t("route.sign.adjacent-swap-order")}
-                      </Button>
-                    </Stack>
+                    <AdjacentOrderControls
+                      candidates={adjacentOptions.left}
+                      orderedIds={orderedLeftAdjacentIds}
+                      onMove={(fromIndex, toIndex) =>
+                        setSelectedLeftAdjacentIds((ids) =>
+                          moveAdjacentStationId(ids, fromIndex, toIndex)
+                        )
+                      }
+                      t={t}
+                    />
                   )}
                 </Stack>
               </Grid.Col>
@@ -1537,7 +1565,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       setSelectedRightAdjacentIds(
                         value.slice(0, adjacentSelectionLimit),
                       );
-                      setRightAdjacentOrderReversed(false);
                       if (value.length >= adjacentSelectionLimit)
                         setRightAdjacentDropdownOpened(false);
                     }}
@@ -1548,38 +1575,24 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       value: candidate.optionValue,
                       label: `${candidate.primaryName}（${candidate.lineName}）`,
                     }))}
-                    placeholder={t("route.sign.adjacent-select")}
+                    placeholder={t("route.sign.adjacent-select", {
+                      count: String(adjacentSelectionLimit),
+                    })}
                     disabled={!selectedStationId}
                     maxValues={adjacentSelectionLimit}
                     clearable
                   />
                   {selectedRightAdjacentIds.length >= 2 && (
-                    <Stack gap={2}>
-                      <Text size="xs" c="dimmed" ta="center">
-                        {t("route.sign.adjacent-order")}: {orderedRightAdjacentIds
-                          .map(
-                            (optionValue) =>
-                              adjacentOptions.right.find(
-                                (candidate) =>
-                                  candidate.optionValue === optionValue,
-                              )?.primaryName,
-                          )
-                          .filter(Boolean)
-                          .join(" → ")}
-                      </Text>
-                      <Button
-                        variant="subtle"
-                        size="compact-xs"
-                        leftSection={<IconArrowsLeftRight size={14} />}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setRightAdjacentOrderReversed((reversed) => !reversed)
-                        }}
-                      >
-                        {t("route.sign.adjacent-swap-order")}
-                      </Button>
-                    </Stack>
+                    <AdjacentOrderControls
+                      candidates={adjacentOptions.right}
+                      orderedIds={orderedRightAdjacentIds}
+                      onMove={(fromIndex, toIndex) =>
+                        setSelectedRightAdjacentIds((ids) =>
+                          moveAdjacentStationId(ids, fromIndex, toIndex)
+                        )
+                      }
+                      t={t}
+                    />
                   )}
                 </Stack>
               </Grid.Col>

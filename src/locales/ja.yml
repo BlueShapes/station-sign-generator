@@ -266,9 +266,11 @@ route:
     flip: 方向を反転
     prev-station: 前の駅
     next-station: 次の駅
-    adjacent-select: 駅を選択してください（最大2件）
-    adjacent-order: 外側 → 内側
-    adjacent-swap-order: 外側／内側の順番を入れ替え
+    adjacent-select: 駅を選択してください（最大{count}件）
+    adjacent-order: 現在の順番
+    adjacent-move-up: 上へ移動
+    adjacent-move-down: 下へ移動
+    adjacent-swap-order: 順番を反転
     jreast: JR東日本風
     jreastbranch: JR東日本風（分岐対応）
     jrwest: JR西日本風

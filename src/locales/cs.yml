@@ -258,9 +258,11 @@ route:
     flip: Směr převrácení
     prev-station: Předchozí stanice
     next-station: Další stanice
-    adjacent-select: Vyberte až 2 stanice
-    adjacent-order: Vnější → vnitřní
-    adjacent-swap-order: Prohodit vnější / vnitřní pořadí
+    adjacent-select: Vyberte až {count} stanice
+    adjacent-order: Aktuální pořadí
+    adjacent-move-up: Posunout nahoru
+    adjacent-move-down: Posunout dolů
+    adjacent-swap-order: Obrátit pořadí
     jreast: JR východní styl
     jreastbranch: Styl JR East (větvení)
     jrwest: JR West Style

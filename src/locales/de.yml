@@ -266,9 +266,11 @@ route:
     flip: Richtung umkehren
     prev-station: Vorherige Station
     next-station: Nächste Station
-    adjacent-select: Bis zu 2 Stationen auswählen
-    adjacent-order: Außen → innen
-    adjacent-swap-order: Außen-/Innenreihenfolge tauschen
+    adjacent-select: Bis zu {count} Stationen auswählen
+    adjacent-order: Aktuelle Reihenfolge
+    adjacent-move-up: Nach oben verschieben
+    adjacent-move-down: Nach unten verschieben
+    adjacent-swap-order: Reihenfolge umkehren
     jreast: Stil von JR East
     jreastbranch: JR-East-Stil (Verzweigung)
     jrwest: Stil von JR West

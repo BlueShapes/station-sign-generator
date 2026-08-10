@@ -258,9 +258,11 @@ route:
     flip: Balik arah
     prev-station: Stesen sebelumnya
     next-station: Stesen seterusnya
-    adjacent-select: Pilih sehingga 2 stesen
-    adjacent-order: Luar → dalam
-    adjacent-swap-order: Tukar susunan luar / dalam
+    adjacent-select: Pilih sehingga {count} stesen
+    adjacent-order: Susunan semasa
+    adjacent-move-up: Alih ke atas
+    adjacent-move-down: Alih ke bawah
+    adjacent-swap-order: Songsangkan susunan
     jreast: Gaya JR Timur
     jreastbranch: Gaya JR Timur (bercabang)
     jrwest: Gaya JR Barat

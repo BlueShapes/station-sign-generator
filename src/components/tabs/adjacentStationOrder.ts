@@ -1,9 +1,20 @@
-export function orderAdjacentStationIds(
+export function moveAdjacentStationId(
   values: readonly string[],
-  reversed: boolean,
+  fromIndex: number,
+  toIndex: number,
 ): string[] {
-  const orderedValues = values.slice(0, 2);
-  return reversed && orderedValues.length === 2
-    ? orderedValues.reverse()
-    : orderedValues;
+  const orderedValues = [...values];
+  if (
+    fromIndex < 0 ||
+    fromIndex >= orderedValues.length ||
+    toIndex < 0 ||
+    toIndex >= orderedValues.length ||
+    fromIndex === toIndex
+  ) {
+    return orderedValues;
+  }
+
+  const [movedValue] = orderedValues.splice(fromIndex, 1);
+  orderedValues.splice(toIndex, 0, movedValue);
+  return orderedValues;
 }

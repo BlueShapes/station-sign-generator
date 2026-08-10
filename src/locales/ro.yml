@@ -258,9 +258,11 @@ route:
     flip: Întoarceți direcția
     prev-station: Stația anterioară
     next-station: Următoarea stație
-    adjacent-select: Selectați până la 2 posturi
-    adjacent-order: Exterior → interior
-    adjacent-swap-order: Schimbă ordinea exterioară / interioară
+    adjacent-select: Selectați până la {count} stații
+    adjacent-order: Ordinea curentă
+    adjacent-move-up: Mută în sus
+    adjacent-move-down: Mută în jos
+    adjacent-swap-order: Inversează ordinea
     jreast: JR East Style
     jreastbranch: Stil JR East (ramificație)
     jrwest: JR West Style

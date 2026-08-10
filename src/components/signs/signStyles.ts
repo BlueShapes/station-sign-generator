@@ -318,6 +318,7 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
       numberSecondary: "optional",
     },
     // Sign config
+    maxAdjacentCount: 2,
     baseColor: "required",
     centerSquareColors: "optional",
     ratio: "required",

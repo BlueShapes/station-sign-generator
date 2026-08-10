@@ -258,9 +258,11 @@ route:
     flip: Изменить направление
     prev-station: Предыдущая станция
     next-station: Следующая станция
-    adjacent-select: Выберите до 2 станций
-    adjacent-order: Снаружи → внутрь
-    adjacent-swap-order: Поменять местами внешнюю / внутреннюю
+    adjacent-select: Выберите до {count} станций
+    adjacent-order: Текущий порядок
+    adjacent-move-up: Переместить вверх
+    adjacent-move-down: Переместить вниз
+    adjacent-swap-order: Обратить порядок
     jreast: JR Восточный стиль
     jreastbranch: Стиль JR East (разветвление)
     jrwest: JR Вест Стиль

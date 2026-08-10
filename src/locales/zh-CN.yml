@@ -258,9 +258,11 @@ route:
     flip: 翻转方向
     prev-station: 上一站
     next-station: 下一站
-    adjacent-select: 最多选择 2 个电台
-    adjacent-order: 外侧 → 内侧
-    adjacent-swap-order: 交换外侧/内侧顺序
+    adjacent-select: 最多选择 {count} 个车站
+    adjacent-order: 当前顺序
+    adjacent-move-up: 上移
+    adjacent-move-down: 下移
+    adjacent-swap-order: 反转顺序
     jreast: JR东日本风格
     jreastbranch: JR东日本风格（支持分支）
     jrwest: JR西日本风格
