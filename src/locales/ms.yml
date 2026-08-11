@@ -192,6 +192,8 @@ route:
     all: Semua Syarikat
     unassigned-company: Syarikat belum ditetapkan
     delete-confirm: Padamkan baris ini?
+    delete-all: Padam Semua Laluan
+    delete-all-confirm: Padam semua laluan? Penetapan stesen, nombor stesen, perkhidmatan dan segmen laluan terus yang berkaitan juga akan dipadamkan. Tindakan ini tidak boleh dibuat asal.
     prefix-preview: Pratonton lencana penunjuk baris
     station-number-preview: Pratonton nombor stesen (01)
   through-route:

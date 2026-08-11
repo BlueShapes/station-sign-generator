@@ -57,7 +57,12 @@ import {
   upsertCompany,
   deleteCompany,
 } from "@/db/repositories/companies";
-import { getAllLines, upsertLine, deleteLine } from "@/db/repositories/lines";
+import {
+  getAllLines,
+  upsertLine,
+  deleteLine,
+  deleteAllLines,
+} from "@/db/repositories/lines";
 import {
   deleteThroughRoute,
   getAllThroughRoutes,
@@ -2050,10 +2055,21 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     useDisclosure(false);
   const [confirmPending, setConfirmPending] = useState<{
     message: string;
+    affectedLineNames: string[];
     onConfirm: () => void;
   } | null>(null);
-  const openConfirmModal = (message: string, onConfirm: () => void) => {
-    setConfirmPending({ message, onConfirm });
+  const openConfirmModal = (
+    message: string,
+    onConfirm: () => void,
+    affectedLines: Line[] = [],
+  ) => {
+    setConfirmPending({
+      message,
+      affectedLineNames: affectedLines.map((line) =>
+        line.prefix ? `[${line.prefix}] ${line.name}` : line.name,
+      ),
+      onConfirm,
+    });
     openConfirm();
   };
   const handleConfirmOk = () => {
@@ -2136,17 +2152,48 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   };
 
   const handleDeleteCompany = (id: string) => {
-    openConfirmModal(t("route.company.delete-confirm"), () => {
-      deleteCompany(db, id);
-      refresh();
-    });
+    const affectedLines = allLines.filter((line) => line.company_id === id);
+    openConfirmModal(
+      t("route.company.delete-confirm"),
+      () => {
+        deleteCompany(db, id);
+        if (affectedLines.some((line) => line.id === selectedLineId)) {
+          setSelectedLineId(null);
+          setNewServiceName("");
+        }
+        refresh();
+      },
+      affectedLines,
+    );
   };
 
   const handleDeleteLine = (id: string) => {
-    openConfirmModal(t("route.line.delete-confirm"), () => {
-      deleteLine(db, id);
-      refresh();
-    });
+    const affectedLines = allLines.filter((line) => line.id === id);
+    openConfirmModal(
+      t("route.line.delete-confirm"),
+      () => {
+        deleteLine(db, id);
+        if (selectedLineId === id) {
+          setSelectedLineId(null);
+          setNewServiceName("");
+        }
+        refresh();
+      },
+      affectedLines,
+    );
+  };
+
+  const handleDeleteAllLines = () => {
+    openConfirmModal(
+      t("route.line.delete-all-confirm"),
+      () => {
+        deleteAllLines(db);
+        setSelectedLineId(null);
+        setNewServiceName("");
+        refresh();
+      },
+      allLines,
+    );
   };
 
   const handleDeleteThroughRoute = (id: string) => {
@@ -2456,16 +2503,28 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         <Box>
           <Group justify="space-between" mb="md">
             <Title order={3}>{t("route.line.title")}</Title>
-            <Button
-              size="sm"
-              leftSection={<IconPlus size={16} />}
-              onClick={() => {
-                setEditingLine(undefined);
-                openLineModal();
-              }}
-            >
-              {t("route.line.add")}
-            </Button>
+            <Group gap="xs">
+              <Button
+                size="sm"
+                variant="light"
+                color="red"
+                leftSection={<IconTrash size={16} />}
+                disabled={allLines.length === 0}
+                onClick={handleDeleteAllLines}
+              >
+                {t("route.line.delete-all")}
+              </Button>
+              <Button
+                size="sm"
+                leftSection={<IconPlus size={16} />}
+                onClick={() => {
+                  setEditingLine(undefined);
+                  openLineModal();
+                }}
+              >
+                {t("route.line.add")}
+              </Button>
+            </Group>
           </Group>
 
           <Select
@@ -3269,6 +3328,22 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
       >
         <Stack gap="md">
           <Text size="sm">{confirmPending?.message}</Text>
+          {confirmPending && confirmPending.affectedLineNames.length > 0 && (
+            <Box>
+              <Text size="sm" fw={600} mb={4}>
+                {t("route.line.delete-targets")}
+              </Text>
+              <ScrollArea.Autosize mah={180}>
+                <Box component="ul" my={0} pl="xl">
+                  {confirmPending.affectedLineNames.map((name) => (
+                    <Text component="li" size="sm" key={name}>
+                      {name}
+                    </Text>
+                  ))}
+                </Box>
+              </ScrollArea.Autosize>
+            </Box>
+          )}
           <Group justify="flex-end">
             <Button variant="default" onClick={closeConfirm}>
               {t("common.cancel")}

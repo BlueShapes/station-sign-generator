@@ -192,6 +192,8 @@ route:
     all: Todas as empresas
     unassigned-company: Empresa não atribuída
     delete-confirm: Excluir esta linha?
+    delete-all: Excluir todas as linhas
+    delete-all-confirm: Excluir todas as linhas? As associações de estações, os números de estação, os serviços e os trechos de rotas diretas relacionados também serão excluídos. Esta ação não pode ser desfeita.
     prefix-preview: Visualização do selo do indicador de linha
     station-number-preview: Visualização do número da estação (01)
   through-route:

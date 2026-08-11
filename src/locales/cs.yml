@@ -192,6 +192,8 @@ route:
     all: Všechny společnosti
     unassigned-company: Bez přiřazené společnosti
     delete-confirm: Smazat tento řádek?
+    delete-all: Smazat všechny linky
+    delete-all-confirm: Smazat všechny linky? Budou odstraněna také přiřazení stanic, čísla stanic, spoje a úseky průjezdných tras. Tuto akci nelze vrátit zpět.
     prefix-preview: Náhled odznaku indikátoru čáry
     station-number-preview: Náhled čísla stanice (01)
   through-route:

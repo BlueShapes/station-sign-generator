@@ -200,6 +200,8 @@ route:
     all: すべての会社
     unassigned-company: 会社未設定
     delete-confirm: この路線を削除しますか？
+    delete-all: すべての路線を削除
+    delete-all-confirm: すべての路線を削除しますか？各路線に関連する駅の所属、駅番号、種別、直通経路の区間も削除され、元に戻せません。
     prefix-preview: 路線インジケータバッジのプレビュー
     station-number-preview: 駅番号のプレビュー（01）
   through-route:

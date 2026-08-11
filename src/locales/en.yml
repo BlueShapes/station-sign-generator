@@ -200,6 +200,8 @@ route:
     all: All Companies
     unassigned-company: Unassigned company
     delete-confirm: Delete this line?
+    delete-all: Delete All Lines
+    delete-all-confirm: Delete all lines? Station assignments, station numbers, services, and through-route sections associated with them will also be deleted. This cannot be undone.
     prefix-preview: Line indicator badge preview
     station-number-preview: Station number preview (01)
   through-route:

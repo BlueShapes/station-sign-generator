@@ -192,6 +192,8 @@ route:
     all: 所有公司
     unassigned-company: 未指定公司
     delete-confirm: 删除这一行吗？
+    delete-all: 删除所有线路
+    delete-all-confirm: 删除所有线路吗？相关的车站归属、车站编号、服务类型和直通路径区间也会被删除，且无法撤销。
     prefix-preview: 线路指示器徽章预览
     station-number-preview: 车站编号预览（01）
   through-route:

@@ -192,6 +192,8 @@ route:
     all: Toate Companiile
     unassigned-company: Companie neatribuită
     delete-confirm: Ștergeți această linie?
+    delete-all: Ștergeți toate liniile
+    delete-all-confirm: Ștergeți toate liniile? Vor fi șterse și asocierile stațiilor, numerele stațiilor, serviciile și segmentele rutelor directe aferente. Această acțiune nu poate fi anulată.
     prefix-preview: Previzualizarea insignei cu indicator de linie
     station-number-preview: Previzualizarea numărului stației (01)
   through-route:

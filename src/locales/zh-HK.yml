@@ -192,6 +192,8 @@ route:
     all: 所有公司
     unassigned-company: 未指定公司
     delete-confirm: 刪除這一行嗎？
+    delete-all: 刪除所有路線
+    delete-all-confirm: 刪除所有路線嗎？相關的車站所屬、車站編號、服務類型及直通路徑區間亦會被刪除，而且無法復原。
     prefix-preview: 線路指示器徽章預覽
     station-number-preview: 車站編號預覽（01）
   through-route:
