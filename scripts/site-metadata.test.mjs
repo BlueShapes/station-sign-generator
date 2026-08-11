@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   getLocaleFromPathname,
   getManifestPath,
+  getOpenGraphLocale,
 } from "../src/i18n/locales";
 import { getLocalizedSiteMetadata } from "../src/i18n/siteMetadata";
 
@@ -32,6 +33,13 @@ describe("localized site metadata", () => {
   test("uses a locale-specific manifest path", () => {
     expect(getManifestPath("ja")).toBe("/manifests/ja.webmanifest");
     expect(getManifestPath("hi")).toBe("/manifests/hi.webmanifest");
+  });
+
+  test("uses Open Graph language_territory locale values", () => {
+    expect(getOpenGraphLocale("ja")).toBe("ja_JP");
+    expect(getOpenGraphLocale("en")).toBe("en_GB");
+    expect(getOpenGraphLocale("zh-HK")).toBe("zh_HK");
+    expect(getOpenGraphLocale("pt-BR")).toBe("pt_BR");
   });
 
   test("resolves the locale from SPA history paths", () => {

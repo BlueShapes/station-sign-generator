@@ -30,6 +30,14 @@ export function getManifestPath(locale: string): string {
   return `/manifests/${locale}.webmanifest`;
 }
 
+export function getOpenGraphLocale(locale: string): string {
+  const language = SUPPORTED_LOCALES.find(({ code }) => code === locale);
+  if (!language) return "ja_JP";
+
+  const [languageCode] = language.code.split("-");
+  return `${languageCode}_${language.flag}`;
+}
+
 export function getLocaleFromPathname(pathname: string): string {
   const locale = pathname.split("/").filter(Boolean)[0];
   return SUPPORTED_LOCALE_CODES.includes(

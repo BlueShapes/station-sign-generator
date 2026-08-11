@@ -69,6 +69,13 @@ export const JR_CENTRAL_LAYOUT = {
     englishMinFontSize: 7,
     englishFontStyle: "400",
   },
+  note: {
+    widthRatio: 0.42,
+    y: 98,
+    scaleX: 1.1,
+    maxFontSize: 10.5,
+    minFontSize: 7.5,
+  },
 } as const;
 
 export function formatJrCentralJapaneseName(name: string): string {

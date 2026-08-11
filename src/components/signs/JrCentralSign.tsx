@@ -379,15 +379,21 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
               {renderAdjacentStation(rightLabels, "right")}
               <Text
                 text={note ?? ""}
-                x={width * 0.29}
-                y={98}
-                width={width * 0.42}
+                x={width / 2}
+                y={JR_CENTRAL_LAYOUT.note.y}
+                width={width * JR_CENTRAL_LAYOUT.note.widthRatio}
+                offsetX={
+                  (width * JR_CENTRAL_LAYOUT.note.widthRatio) / 2
+                }
                 align="center"
+                scaleX={JR_CENTRAL_LAYOUT.note.scaleX}
                 fontSize={fittedFontSize({
                   text: note ?? "",
-                  maxWidth: width * 0.42,
-                  maxFontSize: 10.5,
-                  minFontSize: 7.5,
+                  maxWidth:
+                    (width * JR_CENTRAL_LAYOUT.note.widthRatio) /
+                    JR_CENTRAL_LAYOUT.note.scaleX,
+                  maxFontSize: JR_CENTRAL_LAYOUT.note.maxFontSize,
+                  minFontSize: JR_CENTRAL_LAYOUT.note.minFontSize,
                   fontFamily: JR_CENTRAL_STATION_NAME_FONT_FAMILY,
                   fontStyle: "700",
                 })}
