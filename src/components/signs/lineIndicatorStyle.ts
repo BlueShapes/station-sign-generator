@@ -43,3 +43,7 @@ export function getLineIndicatorVisualStyle(
 export function getLineIndicatorShape(style?: string): LineIndicatorShape {
   return getLineIndicatorVisualStyle(style).shape;
 }
+
+export function shouldShowLineIndicatorBadge(prefix?: string | null): boolean {
+  return Boolean(prefix?.trim());
+}

@@ -33,6 +33,7 @@ import {
   type StationNumberMap,
   type StationNumberMode,
 } from "@/components/signs/LineMapRenderer";
+import { shouldShowLineIndicatorBadge } from "@/components/signs/lineIndicatorStyle";
 import { layoutHorizontalStationDetails } from "@/components/signs/transitLineLayout";
 import {
   getTrackEdgeRadius,
@@ -216,7 +217,7 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
 
     const titleItems = routes.map((route) => {
       const style = route.companyStyle ?? "jreast";
-      const showBadge = route.companyStyle === "jreast" && !!route.line.prefix;
+      const showBadge = shouldShowLineIndicatorBadge(route.line.prefix);
       const width =
         (showBadge ? LI_SIZE + LI_GAP : 0) +
         measureTextWidth(route.line.name, LINE_TITLE_FONT, "bold");

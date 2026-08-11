@@ -25,7 +25,10 @@ import {
   oppositeVerticalDirection,
   shouldRotateVerticalGlyph,
 } from "@/components/signs/transitLineLayout";
-import { getLineIndicatorVisualStyle } from "@/components/signs/lineIndicatorStyle";
+import {
+  getLineIndicatorVisualStyle,
+  shouldShowLineIndicatorBadge,
+} from "@/components/signs/lineIndicatorStyle";
 import { LINE_MAP_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import {
   ceilCanvasDimensions,
@@ -123,7 +126,7 @@ export interface LineMapRendererProps {
   secondaryLangField?: StationNameField;
   /** When false, the secondary name row is hidden entirely. Defaults to true. */
   showSecondaryLang?: boolean;
-  /** The company's station_number_style — used to decide whether to show a line indicator badge. */
+  /** The company's station_number_style — used to choose the line indicator badge design. */
   companyStyle?: string;
   /**
    * Vertical layout name side (ignored for horizontal/loop):
@@ -1586,8 +1589,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     const verticalFirstPosition = verticalPositions[0] ?? 0;
     const verticalLastPosition = verticalPositions[n - 1] ?? 0;
 
-    // Whether to show a line indicator badge next to / above the line title
-    const showLineBadge = companyStyle === "jreast" && !!line.prefix;
+    // Show the line indicator whenever the line has an abbreviation. The company
+    // style controls its shape and typography, not whether it is rendered.
+    const showLineBadge = shouldShowLineIndicatorBadge(line.prefix);
 
     // ── Circular layout ───────────────────────────────────────────────────
 
