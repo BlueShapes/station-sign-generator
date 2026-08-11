@@ -36,6 +36,11 @@ describe("JR Central sign layout", () => {
       englishMinFontSize: 7,
       englishFontStyle: "400",
     });
+    expect(JR_CENTRAL_LAYOUT.note).toMatchObject({
+      widthRatio: 0.42,
+      y: 98,
+      scaleX: 1.1,
+    });
     expect(JR_CENTRAL_LAYOUT.bandY).toBeLessThan(
       JR_CENTRAL_LAYOUT.adjacent.japaneseY,
     );
