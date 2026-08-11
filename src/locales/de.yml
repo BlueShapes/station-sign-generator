@@ -51,6 +51,7 @@ input:
     len: Alternativer Name der linken Station
     lnum: Nummer der linken Station (primär)
     lnum2: Nummer der linken Station (sekundär)
+    lnum3: Nummer der linken Station (tertiär)
     station: Stationsname
     read: Stationsuntertext
     en: Stationsname in der zweiten Sprache (Englisch)
@@ -58,6 +59,7 @@ input:
     kp: Stationsname in der vierten Sprache (Koreanisch)
     num: Stationsnummer (primär)
     num2: Stationsnummer (sekundär)
+    num3: Stationsnummer (tertiär)
     trc: Stationscode
     note: Stationshinweis (größerer Text unter dem Stationsnamen)
     rstation: Name der rechten Station
@@ -65,6 +67,7 @@ input:
     ren: Alternativer Name der rechten Station
     rnum: Nummer der rechten Station (primär)
     rnum2: Nummer der rechten Station (sekundär)
+    rnum3: Nummer der rechten Station (tertiär)
     input-left: Informationen zur linken Station
     input-current: Informationen zur aktuellen Station
     input-right: Informationen zur rechten Station

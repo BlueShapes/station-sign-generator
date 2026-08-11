@@ -770,6 +770,28 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     );
     setStationLines(allStationLines);
 
+    const currentNumbers = signStyle === "jreastbranch"
+      ? [
+          selectedLineId,
+          ...allStationLines
+            .map((stationLine) => stationLine.id)
+            .filter((lineId) => lineId !== selectedLineId),
+        ]
+          .map((lineId) =>
+            getResolvedStationNumber(db, currentStation.id, lineId),
+          )
+          .filter((number): number is NonNullable<typeof number> => !!number)
+          .filter(
+            (number, index, numbers) =>
+              numbers.findIndex(
+                (candidate) => candidate.line_id === number.line_id,
+              ) === index,
+          )
+          .slice(0, 3)
+      : currentNum
+        ? [currentNum]
+        : [];
+
     // Center square colors — map selected line IDs to their colors
     const centerColors =
       centerSquareLineIds.length > 0
@@ -801,8 +823,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       quaternaryName: currentStation.quaternary_name ?? undefined,
       note: currentStation.note ?? "",
       threeLetterCode: currentStation.three_letter_code ?? undefined,
-      numberPrimaryPrefix: currentNum?.prefix ?? "",
-      numberPrimaryValue: currentNum?.value ?? "",
+      numberPrimaryPrefix: currentNumbers[0]?.prefix ?? "",
+      numberPrimaryValue: currentNumbers[0]?.value ?? "",
+      numberSecondaryPrefix: currentNumbers[1]?.prefix ?? "",
+      numberSecondaryValue: currentNumbers[1]?.value ?? "",
+      numberTertiaryPrefix: currentNumbers[2]?.prefix ?? "",
+      numberTertiaryValue: currentNumbers[2]?.value ?? "",
       stationAreas: areas.map((a) => ({
         id: a.id,
         name: a.zone_abbreviation,
@@ -856,6 +882,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     adjacentSelectionLimit,
     orderedLeftAdjacentIds,
     orderedRightAdjacentIds,
+    signStyle,
   ]);
 
   // Update canvas size list

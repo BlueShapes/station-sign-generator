@@ -41,6 +41,8 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       numberPrimaryValue,
       numberSecondaryPrefix,
       numberSecondaryValue,
+      numberTertiaryPrefix,
+      numberTertiaryValue,
       threeLetterCode: threeLetterCodeRaw,
       stationNumberStyle,
       baseColor,
@@ -148,6 +150,11 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     const branchCenterTextYOffset = hasActiveBranches
       ? JR_EAST_BRANCH_LAYOUT.centerTextYOffset
       : 0;
+    const numberTertiaryPrefixForRender =
+      branchMode && numberSecondaryPrefix ? numberTertiaryPrefix : undefined;
+    const numberTertiaryValueForRender = numberTertiaryPrefixForRender
+      ? numberTertiaryValue
+      : undefined;
     const yOffset = 6;
     const startingPoint = 40;
     const lineHeight = 24;
@@ -745,19 +752,67 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           height={45}
                           cornerRadius={4}
                         />
+                        {numberTertiaryPrefixForRender && (
+                          <>
+                            <Rect
+                              stroke={getLineColor(
+                                numberTertiaryPrefixForRender,
+                              )}
+                              strokeWidth={3}
+                              x={
+                                xOffsetWithNote -
+                                72 +
+                                (width - stationNameWidth) / 2
+                              }
+                              y={yOffset + yOffsetWithNote + 29}
+                              width={30}
+                              height={30}
+                              cornerRadius={2}
+                            />
+                            {[26, 24, 22, 20, 18, 17].map((outlineY) => (
+                              <Rect
+                                key={outlineY}
+                                stroke="black"
+                                strokeWidth={3}
+                                x={
+                                  xOffsetWithNote -
+                                  75 +
+                                  (width - stationNameWidth) / 2
+                                }
+                                y={yOffset + yOffsetWithNote + outlineY}
+                                width={36}
+                                height={62 - outlineY}
+                                cornerRadius={outlineY === 26 ? 5 : 4}
+                              />
+                            ))}
+                            <Rect
+                              stroke="black"
+                              strokeWidth={3}
+                              x={
+                                xOffsetWithNote -
+                                75 +
+                                (width - stationNameWidth) / 2
+                              }
+                              y={yOffset + yOffsetWithNote + 17}
+                              width={108}
+                              height={45}
+                              cornerRadius={4}
+                            />
+                          </>
+                        )}
                         <Text
                           text={threeLetterCode}
                           fill="white"
                           x={
                             xOffsetWithNote -
-                            36 +
+                            (numberTertiaryPrefixForRender ? 72 : 36) +
                             (width - stationNameWidth) / 2
                           }
                           fontSize={12.2}
                           fontFamily={stationBadgeFontFamily}
                           fontStyle="800"
                           y={yOffset + yOffsetWithNote + 18}
-                          width={66}
+                          width={numberTertiaryPrefixForRender ? 102 : 66}
                           height={30}
                           align="center"
                         />
@@ -793,6 +848,42 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           height={32}
                           align="center"
                         />
+                        {numberTertiaryPrefixForRender && (
+                          <>
+                            <Text
+                              text={numberTertiaryPrefixForRender}
+                              fill="black"
+                              x={
+                                xOffsetWithNote -
+                                72 +
+                                (width - stationNameWidth) / 2
+                              }
+                              fontSize={11}
+                              fontFamily={stationBadgeFontFamily}
+                              fontStyle="600"
+                              y={yOffset + yOffsetWithNote + 33}
+                              width={30}
+                              height={30}
+                              align="center"
+                            />
+                            <Text
+                              text={numberTertiaryValueForRender}
+                              fill="black"
+                              x={
+                                xOffsetWithNote -
+                                72 +
+                                (width - stationNameWidth) / 2
+                              }
+                              fontSize={17}
+                              fontFamily={stationBadgeFontFamily}
+                              fontStyle="600"
+                              y={yOffset + yOffsetWithNote + 43}
+                              width={30}
+                              height={32}
+                              align="center"
+                            />
+                          </>
+                        )}
                       </>
                     ) : (
                       <>
@@ -978,6 +1069,103 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           x={
                             xOffsetWithNote -
                             37 +
+                            (width - stationNameWidth) / 2
+                          }
+                          fontSize={
+                            stationNumberStyle === "tokyometro"
+                              ? metroStandardBadgeMetrics.valueFontSize + 1
+                              : 17
+                          }
+                          fontFamily={stationBadgeFontFamily}
+                          fontStyle={
+                            stationNumberStyle === "tokyometro"
+                              ? metroStandardBadgeMetrics.valueFontWeight
+                              : "600"
+                          }
+                          y={
+                            yOffset +
+                            yOffsetWithNote +
+                            (stationNumberStyle === "tokyometro"
+                              ? 18 + metroStandardBadgeMetrics.valueYOffset
+                              : 32)
+                          }
+                          width={30}
+                          height={32}
+                          align="center"
+                        />
+                      </>
+                    )}
+                    {numberTertiaryPrefixForRender && (
+                      <>
+                        {stationNumberStyle === "tokyometro" ? (
+                          <Ellipse
+                            x={
+                              xOffsetWithNote -
+                              74 +
+                              (width - stationNameWidth) / 2 +
+                              15
+                            }
+                            y={yOffset + yOffsetWithNote + 33}
+                            radiusX={14.5}
+                            radiusY={14.5}
+                            stroke={getLineColor(
+                              numberTertiaryPrefixForRender,
+                            )}
+                            strokeWidth={metroLargeStrokeWidth}
+                          />
+                        ) : (
+                          <Rect
+                            stroke={getLineColor(
+                              numberTertiaryPrefixForRender,
+                            )}
+                            strokeWidth={3}
+                            x={
+                              xOffsetWithNote -
+                              74 +
+                              (width - stationNameWidth) / 2
+                            }
+                            y={yOffset + yOffsetWithNote + 18}
+                            width={30}
+                            height={30}
+                            cornerRadius={2}
+                          />
+                        )}
+                        <Text
+                          text={numberTertiaryPrefixForRender}
+                          fill="black"
+                          x={
+                            xOffsetWithNote -
+                            74 +
+                            (width - stationNameWidth) / 2
+                          }
+                          fontSize={
+                            stationNumberStyle === "tokyometro"
+                              ? metroStandardBadgeMetrics.prefixFontSize + 1
+                              : 11
+                          }
+                          fontFamily={stationBadgeFontFamily}
+                          fontStyle={
+                            stationNumberStyle === "tokyometro"
+                              ? metroStandardBadgeMetrics.prefixFontWeight
+                              : "600"
+                          }
+                          y={
+                            yOffset +
+                            yOffsetWithNote +
+                            (stationNumberStyle === "tokyometro"
+                              ? 17 + metroStandardBadgeMetrics.prefixYOffset
+                              : 22)
+                          }
+                          width={30}
+                          height={30}
+                          align="center"
+                        />
+                        <Text
+                          text={numberTertiaryValueForRender}
+                          fill="black"
+                          x={
+                            xOffsetWithNote -
+                            74 +
                             (width - stationNameWidth) / 2
                           }
                           fontSize={

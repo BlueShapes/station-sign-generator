@@ -48,6 +48,7 @@ input:
     len: Levý alternativní název stanice
     lnum: Číslo levé stanice (primární)
     lnum2: Číslo levé stanice (sekundární)
+    lnum3: Číslo levé stanice (terciární)
     station: Název stanice
     read: Subtext stanice
     en: Druhý jazyk názvu stanice (angličtina)
@@ -55,6 +56,7 @@ input:
     kp: Název stanice čtvrtý jazyk (korejština)
     num: Číslo stanice (primární)
     num2: Číslo stanice (sekundární)
+    num3: Číslo stanice (terciární)
     trc: Kód stanice
     note: Poznámka ke stanici (větší text pod názvem stanice)
     rstation: Pravý název stanice
@@ -62,6 +64,7 @@ input:
     ren: Subtext pravé stanice
     rnum: Správné číslo stanice (primární)
     rnum2: Pravé číslo stanice (sekundární)
+    rnum3: Pravé číslo stanice (terciární)
     input-left: Informace o levé stanici
     input-current: Aktuální informace o stanici
     input-right: Informace o pravé stanici

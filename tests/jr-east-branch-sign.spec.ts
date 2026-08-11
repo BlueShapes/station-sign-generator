@@ -85,6 +85,19 @@ const THREE_AND_TWO_CHOICE_SIGN_DATA = {
   ],
 };
 
+const THREE_NUMBER_BADGE_DATA = {
+  ...TWO_CHOICE_SIGN_DATA,
+  numberSecondaryPrefix: "JS",
+  numberSecondaryValue: "08",
+  numberTertiaryPrefix: "JT",
+  numberTertiaryValue: "08",
+  localLines: [
+    ...TWO_CHOICE_SIGN_DATA.localLines,
+    { id: "secondary-line", prefix: "JS", color: "#0066ff" },
+    { id: "tertiary-line", prefix: "JT", color: "#ff00ff" },
+  ],
+};
+
 async function setSignStyle(
   page: import("@playwright/test").Page,
   style: "jreast" | "jreastbranch",
@@ -122,6 +135,49 @@ test("two-choice branch signs keep the standard JR East image ratio", async ({
 
   expect(branchSize).toEqual(standardSize);
   expect(branchSize.width / branchSize.height).toBeCloseTo(3.5);
+});
+
+test("only the branch style renders a third current-station number badge", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const countTertiaryBadgePixels = async () => {
+    const preview = page.locator('img[src^="data:image/png"]').first();
+    await preview.waitFor({ state: "visible" });
+    return preview.evaluate((element) => {
+      const image = element as HTMLImageElement;
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas context is unavailable");
+      context.drawImage(image, 0, 0);
+      const pixels = context.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      ).data;
+      let matches = 0;
+      for (let index = 0; index < pixels.length; index += 4) {
+        if (
+          pixels[index] === 255 &&
+          pixels[index + 1] === 0 &&
+          pixels[index + 2] === 255
+        ) {
+          matches += 1;
+        }
+      }
+      return matches;
+    });
+  };
+
+  await setSignStyle(page, "jreastbranch", THREE_NUMBER_BADGE_DATA);
+  await expect.poll(countTertiaryBadgePixels).toBeGreaterThan(0);
+
+  await setSignStyle(page, "jreast", THREE_NUMBER_BADGE_DATA);
+  await expect.poll(countTertiaryBadgePixels).toBe(0);
 });
 
 test("three-choice branch signs add vertical room without changing width", async ({

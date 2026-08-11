@@ -13,6 +13,7 @@ type AdjacentFieldSpec = {
   secondaryName: FieldRequirement;
   numberPrimary: FieldRequirement;
   numberSecondary: FieldRequirement;
+  numberTertiary?: FieldRequirement;
 };
 
 interface SignStyleFieldSpec {
@@ -25,6 +26,7 @@ interface SignStyleFieldSpec {
   note: FieldRequirement;
   numberPrimary: FieldRequirement;
   numberSecondary: FieldRequirement;
+  numberTertiary?: FieldRequirement;
   threeLetterCode: FieldRequirement;
   stationAreas: FieldRequirement;
   // Adjacent stations
@@ -332,7 +334,8 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
     quaternaryName: "optional",
     note: "optional",
     numberPrimary: "optional",
-    numberSecondary: "hidden",
+    numberSecondary: "optional",
+    numberTertiary: "optional",
     threeLetterCode: "optional",
     stationAreas: "hidden",
     left: {
@@ -340,14 +343,16 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
       primaryNameFurigana: "hidden",
       secondaryName: "required",
       numberPrimary: "optional",
-      numberSecondary: "hidden",
+      numberSecondary: "optional",
+      numberTertiary: "optional",
     },
     right: {
       primaryName: "required",
       primaryNameFurigana: "hidden",
       secondaryName: "required",
       numberPrimary: "optional",
-      numberSecondary: "hidden",
+      numberSecondary: "optional",
+      numberTertiary: "optional",
     },
     maxAdjacentCount: 3,
     baseColor: "required",

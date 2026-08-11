@@ -77,6 +77,7 @@ export default function JrEastBranchArrows({
         : isTravelDirection ? -66 : -30;
       const primaryBadgeX = side === "left" ? 44 : width - 60;
       const secondaryBadgeX = side === "left" ? 24 : width - 40;
+      const tertiaryBadgeX = side === "left" ? 4 : width - 20;
       const primaryFontSize = hasThreeBranchLayout
         ? getJrEastBranchPrimaryFontSize(
           branchCount,
@@ -174,6 +175,14 @@ export default function JrEastBranchArrows({
                     stationNumberStyle={stationNumberStyle}
                   />
                   <JrEastAdjacentNumberBadge
+                    x={tertiaryBadgeX}
+                    y={badgeY}
+                    prefix={station.numberTertiaryPrefix}
+                    value={station.numberTertiaryValue}
+                    color={getLineColor(station.numberTertiaryPrefix)}
+                    stationNumberStyle={stationNumberStyle}
+                  />
+                  <JrEastAdjacentNumberBadge
                     x={secondaryBadgeX}
                     y={badgeY}
                     prefix={station.numberSecondaryPrefix}
@@ -238,17 +247,31 @@ export default function JrEastBranchArrows({
               : station.primaryName
             : "";
           const badgeY = targetY + lineHeight / 2 + 3;
+          const badgeCount = station?.numberTertiaryValue
+            ? 3
+            : station?.numberSecondaryValue
+              ? 2
+              : 1;
           const primaryBadgeX = getJrEastBranchStationBadgeX(
             side,
             width,
             "primary",
             isTravelDirection,
+            badgeCount,
           );
           const secondaryBadgeX = getJrEastBranchStationBadgeX(
             side,
             width,
             "secondary",
             isTravelDirection,
+            badgeCount,
+          );
+          const tertiaryBadgeX = getJrEastBranchStationBadgeX(
+            side,
+            width,
+            "tertiary",
+            isTravelDirection,
+            badgeCount,
           );
           const usesThickClippedDiagonal =
             hasThreeBranchLayout && offsets[index] !== 0;
@@ -376,6 +399,14 @@ export default function JrEastBranchArrows({
                         prefix={station.numberPrimaryPrefix}
                         value={station.numberPrimaryValue}
                         color={getLineColor(station.numberPrimaryPrefix)}
+                        stationNumberStyle={stationNumberStyle}
+                      />
+                      <JrEastAdjacentNumberBadge
+                        x={tertiaryBadgeX}
+                        y={badgeY}
+                        prefix={station.numberTertiaryPrefix}
+                        value={station.numberTertiaryValue}
+                        color={getLineColor(station.numberTertiaryPrefix)}
                         stationNumberStyle={stationNumberStyle}
                       />
                       <JrEastAdjacentNumberBadge
