@@ -5,6 +5,13 @@ export type SubwayStationNumberAppearance = {
   style: string;
 };
 
+export function getStationNumberBadgeThreeLetterCode(
+  style: string | undefined,
+  threeLetterCode: string | undefined,
+): string | undefined {
+  return !style || style === "jreast" ? threeLetterCode : undefined;
+}
+
 /**
  * Resolve a badge from the line that owns the displayed station number.
  *

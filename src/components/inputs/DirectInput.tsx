@@ -118,6 +118,13 @@ const DirectInput = memo(function DirectInput({
     signStyle === "metromedium" ||
     signStyle === "toeimedium" ||
     signStyle === "toeilarge";
+  const supportsStationNumberBadges =
+    signStyle !== "jrwest" && signStyle !== "jrwestlarge";
+  const defaultStationNumberStyle = isSubwayStyle
+    ? "tokyometro"
+    : signStyle === "jrcentral"
+      ? "jrcentral"
+      : "jreast";
 
   return (
     <>
@@ -1043,11 +1050,13 @@ const DirectInput = memo(function DirectInput({
                           </ActionIcon>
                         )}
                     </Group>
-                    {isSubwayStyle && (
+                    {supportsStationNumberBadges && (
                       <Select
                         size="xs"
                         label={t("route.company.station-number-style")}
-                        value={line.stationNumberStyle ?? "tokyometro"}
+                        value={
+                          line.stationNumberStyle ?? defaultStationNumberStyle
+                        }
                         data={[
                           {
                             value: "tokyometro",
@@ -1076,7 +1085,7 @@ const DirectInput = memo(function DirectInput({
                                 ? {
                                     ...l,
                                     stationNumberStyle:
-                                      style ?? "tokyometro",
+                                      style ?? defaultStationNumberStyle,
                                   }
                                 : l,
                             ),
@@ -1100,8 +1109,8 @@ const DirectInput = memo(function DirectInput({
                           id: uuidv7(),
                           prefix: "",
                           color: "#8cc800",
-                          stationNumberStyle: isSubwayStyle
-                            ? "tokyometro"
+                          stationNumberStyle: supportsStationNumberBadges
+                            ? defaultStationNumberStyle
                             : undefined,
                         },
                       ])

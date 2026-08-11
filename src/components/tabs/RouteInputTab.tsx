@@ -845,8 +845,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       numberPrimaryStyle: currentNumbers[0]?.station_number_style,
       numberSecondaryPrefix: currentNumbers[1]?.prefix ?? "",
       numberSecondaryValue: currentNumbers[1]?.value ?? "",
+      numberSecondaryColor: currentNumbers[1]?.line_color,
+      numberSecondaryStyle: currentNumbers[1]?.station_number_style,
       numberTertiaryPrefix: currentNumbers[2]?.prefix ?? "",
       numberTertiaryValue: currentNumbers[2]?.value ?? "",
+      numberTertiaryColor: currentNumbers[2]?.line_color,
+      numberTertiaryStyle: currentNumbers[2]?.station_number_style,
       stationAreas: areas.map((a) => ({
         id: a.id,
         name: a.zone_abbreviation,

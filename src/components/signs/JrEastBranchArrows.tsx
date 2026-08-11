@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { Line, Rect, Text } from "react-konva";
 import type StationProps from "./DirectInputStationProps";
 import JrEastAdjacentNumberBadge from "./JrEastAdjacentNumberBadge";
+import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
 import { getJrEastLineArrowPoints } from "./arrowGeometry";
 import {
   getJrEastBranchArrowColor,
@@ -30,6 +31,7 @@ type JrEastBranchArrowsProps = Pick<
   | "baseColor"
   | "direction"
   | "stationNumberStyle"
+  | "localLines"
 > & {
   width: number;
   centerY: number;
@@ -44,10 +46,25 @@ export default function JrEastBranchArrows({
   baseColor,
   direction = "both",
   stationNumberStyle,
+  localLines,
   getLineColor,
 }: JrEastBranchArrowsProps) {
   const centerX = width / 2;
   const hasThreeBranchLayout = left.length >= 3 || right.length >= 3;
+  const getNumberAppearance = (
+    station: StationProps["left"][number],
+    position: "Primary" | "Secondary" | "Tertiary",
+  ) => {
+    const prefix = station[`number${position}Prefix`];
+    return resolveSubwayStationNumberAppearance({
+      prefix,
+      color: station[`number${position}Color`],
+      style: station[`number${position}Style`],
+      localLines,
+      fallbackColor: getLineColor(prefix),
+      fallbackStyle: stationNumberStyle ?? "jreast",
+    });
+  };
 
   const renderSide = (side: BranchSide, stations: StationProps["left"]) => {
     const shownStations = stations.slice(0, 3);
@@ -171,24 +188,24 @@ export default function JrEastBranchArrows({
                     y={badgeY}
                     prefix={station.numberPrimaryPrefix}
                     value={station.numberPrimaryValue}
-                    color={getLineColor(station.numberPrimaryPrefix)}
-                    stationNumberStyle={stationNumberStyle}
+                    color={getNumberAppearance(station, "Primary").color}
+                    stationNumberStyle={getNumberAppearance(station, "Primary").style}
                   />
                   <JrEastAdjacentNumberBadge
                     x={tertiaryBadgeX}
                     y={badgeY}
                     prefix={station.numberTertiaryPrefix}
                     value={station.numberTertiaryValue}
-                    color={getLineColor(station.numberTertiaryPrefix)}
-                    stationNumberStyle={stationNumberStyle}
+                    color={getNumberAppearance(station, "Tertiary").color}
+                    stationNumberStyle={getNumberAppearance(station, "Tertiary").style}
                   />
                   <JrEastAdjacentNumberBadge
                     x={secondaryBadgeX}
                     y={badgeY}
                     prefix={station.numberSecondaryPrefix}
                     value={station.numberSecondaryValue}
-                    color={getLineColor(station.numberSecondaryPrefix)}
-                    stationNumberStyle={stationNumberStyle}
+                    color={getNumberAppearance(station, "Secondary").color}
+                    stationNumberStyle={getNumberAppearance(station, "Secondary").style}
                   />
                 </>
               )}
@@ -398,24 +415,24 @@ export default function JrEastBranchArrows({
                         y={badgeY}
                         prefix={station.numberPrimaryPrefix}
                         value={station.numberPrimaryValue}
-                        color={getLineColor(station.numberPrimaryPrefix)}
-                        stationNumberStyle={stationNumberStyle}
+                        color={getNumberAppearance(station, "Primary").color}
+                        stationNumberStyle={getNumberAppearance(station, "Primary").style}
                       />
                       <JrEastAdjacentNumberBadge
                         x={tertiaryBadgeX}
                         y={badgeY}
                         prefix={station.numberTertiaryPrefix}
                         value={station.numberTertiaryValue}
-                        color={getLineColor(station.numberTertiaryPrefix)}
-                        stationNumberStyle={stationNumberStyle}
+                        color={getNumberAppearance(station, "Tertiary").color}
+                        stationNumberStyle={getNumberAppearance(station, "Tertiary").style}
                       />
                       <JrEastAdjacentNumberBadge
                         x={secondaryBadgeX}
                         y={badgeY}
                         prefix={station.numberSecondaryPrefix}
                         value={station.numberSecondaryValue}
-                        color={getLineColor(station.numberSecondaryPrefix)}
-                        stationNumberStyle={stationNumberStyle}
+                        color={getNumberAppearance(station, "Secondary").color}
+                        stationNumberStyle={getNumberAppearance(station, "Secondary").style}
                       />
                     </>
                   )}

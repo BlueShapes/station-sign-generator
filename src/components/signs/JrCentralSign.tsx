@@ -9,7 +9,8 @@ import {
   waitForCanvasFonts,
 } from "@/lib/fonts";
 import type StationProps from "./DirectInputStationProps";
-import JrCentralStationNumberBadge from "./JrCentralStationNumberBadge";
+import StationNumberBadge from "./StationNumberBadge";
+import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
 import {
   formatJrCentralJapaneseName,
   getJrCentralAdjacentLabels,
@@ -87,6 +88,8 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
       note,
       numberPrimaryPrefix,
       numberPrimaryValue,
+      numberPrimaryColor,
+      numberPrimaryStyle,
       stationAreas,
       left,
       right,
@@ -98,13 +101,21 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
     const line =
       localLines?.find((candidate) => candidate.prefix === numberPrimaryPrefix) ??
       localLines?.[0];
-    const { bandColor, badgeColor } = resolveJrCentralColors({
+    const { bandColor, badgeColor: fallbackBadgeColor } = resolveJrCentralColors({
       companyColor: baseColor,
       numberPrefix: numberPrimaryPrefix,
       lines: localLines,
     });
     const badgePrefix = numberPrimaryPrefix?.trim() || line?.prefix?.trim() || "";
     const badgeValue = numberPrimaryValue?.trim() || "";
+    const badgeAppearance = resolveSubwayStationNumberAppearance({
+      prefix: badgePrefix,
+      color: numberPrimaryColor,
+      style: numberPrimaryStyle,
+      localLines,
+      fallbackColor: fallbackBadgeColor,
+      fallbackStyle: "jrcentral",
+    });
     const showBadge = Boolean(badgePrefix || badgeValue);
     const badgeX = width - JR_CENTRAL_LAYOUT.badge.right - JR_CENTRAL_LAYOUT.badge.width;
 
@@ -310,11 +321,12 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
               />
 
               {showBadge && (
-                <JrCentralStationNumberBadge
+                <StationNumberBadge
                   x={badgeX}
                   y={JR_CENTRAL_LAYOUT.badge.y}
                   size={JR_CENTRAL_LAYOUT.badge.width}
-                  color={badgeColor}
+                  color={badgeAppearance.color}
+                  style={badgeAppearance.style}
                   prefix={badgePrefix}
                   value={badgeValue}
                 />

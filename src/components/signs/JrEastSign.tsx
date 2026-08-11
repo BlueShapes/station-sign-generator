@@ -11,6 +11,8 @@ import styled from "styled-components";
 import { getJrEastLineArrowPoints } from "./arrowGeometry";
 import JrEastBranchArrows from "./JrEastBranchArrows";
 import JrEastAdjacentNumberBadge from "./JrEastAdjacentNumberBadge";
+import StationNumberBadge from "./StationNumberBadge";
+import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
 import {
   getJrEastBranchCanvasHeight,
   getJrEastBranchCenterSquareSize,
@@ -39,10 +41,16 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       right,
       numberPrimaryPrefix,
       numberPrimaryValue,
+      numberPrimaryColor,
+      numberPrimaryStyle,
       numberSecondaryPrefix,
       numberSecondaryValue,
+      numberSecondaryColor,
+      numberSecondaryStyle,
       numberTertiaryPrefix,
       numberTertiaryValue,
+      numberTertiaryColor,
+      numberTertiaryStyle,
       threeLetterCode: threeLetterCodeRaw,
       stationNumberStyle,
       baseColor,
@@ -54,17 +62,43 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       branchLayoutRenderKey,
     } = props;
 
-    // Three-letter code is only rendered as part of the JR East station number badge
-    const threeLetterCode =
-      !stationNumberStyle || stationNumberStyle === "jreast"
-        ? threeLetterCodeRaw
-        : undefined;
     const fontSpecs = getStationSignFontSpecs("jreast", stationNumberStyle);
 
     const getLineColor = (prefix?: string): string => {
       if (!prefix) return "#000000";
       return localLines?.find((l) => l.prefix === prefix)?.color ?? "#000000";
     };
+    const resolveNumberAppearance = (
+      prefix?: string,
+      color?: string,
+      style?: string,
+    ) => resolveSubwayStationNumberAppearance({
+      prefix,
+      color,
+      style,
+      localLines,
+      fallbackColor: getLineColor(prefix),
+      fallbackStyle: stationNumberStyle ?? "jreast",
+    });
+    const primaryNumberAppearance = resolveNumberAppearance(
+      numberPrimaryPrefix,
+      numberPrimaryColor,
+      numberPrimaryStyle,
+    );
+    const secondaryNumberAppearance = resolveNumberAppearance(
+      numberSecondaryPrefix,
+      numberSecondaryColor,
+      numberSecondaryStyle,
+    );
+    const tertiaryNumberAppearance = resolveNumberAppearance(
+      numberTertiaryPrefix,
+      numberTertiaryColor,
+      numberTertiaryStyle,
+    );
+    // Three-letter code belongs only to the JR East badge decoration.
+    const threeLetterCode = primaryNumberAppearance.style === "jreast"
+      ? threeLetterCodeRaw
+      : undefined;
     const stationBadgeFontFamily =
       stationNumberStyle === "tokyometro"
         ? "JostTrispaceHybrid"
@@ -78,8 +112,12 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
           secondaryName: "",
           numberPrimaryPrefix: undefined,
           numberPrimaryValue: undefined,
+          numberPrimaryColor: undefined,
+          numberPrimaryStyle: undefined,
           numberSecondaryPrefix: undefined,
           numberSecondaryValue: undefined,
+          numberSecondaryColor: undefined,
+          numberSecondaryStyle: undefined,
         };
       }
       if (stations.length === 1) {
@@ -88,8 +126,12 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
           secondaryName: stations[0].secondaryName,
           numberPrimaryPrefix: stations[0].numberPrimaryPrefix,
           numberPrimaryValue: stations[0].numberPrimaryValue,
+          numberPrimaryColor: stations[0].numberPrimaryColor,
+          numberPrimaryStyle: stations[0].numberPrimaryStyle,
           numberSecondaryPrefix: stations[0].numberSecondaryPrefix,
           numberSecondaryValue: stations[0].numberSecondaryValue,
+          numberSecondaryColor: stations[0].numberSecondaryColor,
+          numberSecondaryStyle: stations[0].numberSecondaryStyle,
         };
       }
       return {
@@ -97,8 +139,12 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
         secondaryName: `${stations[0].secondaryName}／${stations[1].secondaryName}`,
         numberPrimaryPrefix: stations[0].numberPrimaryPrefix,
         numberPrimaryValue: stations[0].numberPrimaryValue,
+        numberPrimaryColor: stations[0].numberPrimaryColor,
+        numberPrimaryStyle: stations[0].numberPrimaryStyle,
         numberSecondaryPrefix: stations[1].numberPrimaryPrefix,
         numberSecondaryValue: stations[1].numberPrimaryValue,
+        numberSecondaryColor: stations[1].numberPrimaryColor,
+        numberSecondaryStyle: stations[1].numberPrimaryStyle,
       };
     };
     const leftMerged = mergeAdjacentStations(left);
@@ -107,14 +153,34 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     const leftSecondaryName = leftMerged.secondaryName;
     const leftNumberPrimaryPrefix = leftMerged.numberPrimaryPrefix;
     const leftNumberPrimaryValue = leftMerged.numberPrimaryValue;
+    const leftNumberPrimaryAppearance = resolveNumberAppearance(
+      leftMerged.numberPrimaryPrefix,
+      leftMerged.numberPrimaryColor,
+      leftMerged.numberPrimaryStyle,
+    );
     const leftNumberSecondaryPrefix = leftMerged.numberSecondaryPrefix;
     const leftNumberSecondaryValue = leftMerged.numberSecondaryValue;
+    const leftNumberSecondaryAppearance = resolveNumberAppearance(
+      leftMerged.numberSecondaryPrefix,
+      leftMerged.numberSecondaryColor,
+      leftMerged.numberSecondaryStyle,
+    );
     const rightPrimaryName = rightMerged.primaryName;
     const rightSecondaryName = rightMerged.secondaryName;
     const rightNumberPrimaryPrefix = rightMerged.numberPrimaryPrefix;
     const rightNumberPrimaryValue = rightMerged.numberPrimaryValue;
+    const rightNumberPrimaryAppearance = resolveNumberAppearance(
+      rightMerged.numberPrimaryPrefix,
+      rightMerged.numberPrimaryColor,
+      rightMerged.numberPrimaryStyle,
+    );
     const rightNumberSecondaryPrefix = rightMerged.numberSecondaryPrefix;
     const rightNumberSecondaryValue = rightMerged.numberSecondaryValue;
+    const rightNumberSecondaryAppearance = resolveNumberAppearance(
+      rightMerged.numberSecondaryPrefix,
+      rightMerged.numberSecondaryColor,
+      rightMerged.numberSecondaryStyle,
+    );
     const spacedStationName = (() => {
       const str = primaryName;
       switch (str.length) {
@@ -288,6 +354,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   baseColor={baseColor}
                   direction={direction}
                   stationNumberStyle={stationNumberStyle}
+                  localLines={localLines}
                   getLineColor={getLineColor}
                 />
               ) : (
@@ -424,8 +491,8 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       y={yOffset + 97}
                       prefix={leftNumberPrimaryPrefix}
                       value={leftNumberPrimaryValue}
-                      color={getLineColor(leftNumberPrimaryPrefix)}
-                      stationNumberStyle={stationNumberStyle}
+                      color={leftNumberPrimaryAppearance.color}
+                      stationNumberStyle={leftNumberPrimaryAppearance.style}
                     />
                   )}
                   {leftNumberSecondaryValue && (
@@ -434,8 +501,8 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       y={yOffset + 97}
                       prefix={leftNumberSecondaryPrefix}
                       value={leftNumberSecondaryValue}
-                      color={getLineColor(leftNumberSecondaryPrefix)}
-                      stationNumberStyle={stationNumberStyle}
+                      color={leftNumberSecondaryAppearance.color}
+                      stationNumberStyle={leftNumberSecondaryAppearance.style}
                     />
                   )}
                 </>
@@ -469,8 +536,8 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       y={yOffset + 97}
                       prefix={rightNumberPrimaryPrefix}
                       value={rightNumberPrimaryValue}
-                      color={getLineColor(rightNumberPrimaryPrefix)}
-                      stationNumberStyle={stationNumberStyle}
+                      color={rightNumberPrimaryAppearance.color}
+                      stationNumberStyle={rightNumberPrimaryAppearance.style}
                     />
                   )}
                   {rightNumberSecondaryValue && (
@@ -479,8 +546,8 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       y={yOffset + 97}
                       prefix={rightNumberSecondaryPrefix}
                       value={rightNumberSecondaryValue}
-                      color={getLineColor(rightNumberSecondaryPrefix)}
-                      stationNumberStyle={stationNumberStyle}
+                      color={rightNumberSecondaryAppearance.color}
+                      stationNumberStyle={rightNumberSecondaryAppearance.style}
                     />
                   )}
                 </>
@@ -572,7 +639,8 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               )}
 
               {/* If station number exists */}
-              <Group y={branchCenterBadgeYOffset}>
+              {/* Legacy renderer retained temporarily for layout parity checks. */}
+              <Group y={branchCenterBadgeYOffset} visible={false}>
                 {numberPrimaryPrefix &&
                   (threeLetterCode ? (
                   <>
@@ -1194,6 +1262,42 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     )}
                   </>
                   ))}
+              </Group>
+              <Group y={branchCenterBadgeYOffset}>
+                {numberPrimaryPrefix && (
+                  <StationNumberBadge
+                    x={xOffsetWithNote + (width - stationNameWidth) / 2}
+                    y={yOffset + yOffsetWithNote + 18}
+                    size={30}
+                    prefix={numberPrimaryPrefix}
+                    value={numberPrimaryValue}
+                    color={primaryNumberAppearance.color}
+                    style={primaryNumberAppearance.style}
+                    threeLetterCode={threeLetterCode}
+                  />
+                )}
+                {numberSecondaryPrefix && (
+                  <StationNumberBadge
+                    x={xOffsetWithNote - 37 + (width - stationNameWidth) / 2}
+                    y={yOffset + yOffsetWithNote + 18}
+                    size={30}
+                    prefix={numberSecondaryPrefix}
+                    value={numberSecondaryValue}
+                    color={secondaryNumberAppearance.color}
+                    style={secondaryNumberAppearance.style}
+                  />
+                )}
+                {numberTertiaryPrefixForRender && (
+                  <StationNumberBadge
+                    x={xOffsetWithNote - 74 + (width - stationNameWidth) / 2}
+                    y={yOffset + yOffsetWithNote + 18}
+                    size={30}
+                    prefix={numberTertiaryPrefixForRender}
+                    value={numberTertiaryValueForRender}
+                    color={tertiaryNumberAppearance.color}
+                    style={tertiaryNumberAppearance.style}
+                  />
+                )}
               </Group>
               <Group y={branchCenterTextYOffset}>
                 {note ? (

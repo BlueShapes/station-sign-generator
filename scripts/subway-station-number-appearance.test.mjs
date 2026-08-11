@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { resolveSubwayStationNumberAppearance } from "../src/components/signs/subwayStationNumberAppearance.ts";
+import {
+  getStationNumberBadgeThreeLetterCode,
+  resolveSubwayStationNumberAppearance,
+} from "../src/components/signs/subwayStationNumberAppearance.ts";
 
-describe("subway station-number appearance", () => {
+describe("station-number appearance", () => {
   const localLines = [
     {
       id: "line-selected",
@@ -46,5 +49,24 @@ describe("subway station-number appearance", () => {
         fallbackColor: "#f39700",
       }),
     ).toEqual({ color: "#f39700", style: "tokyometro" });
+  });
+
+  test("uses a style-specific fallback for non-subway signs", () => {
+    expect(
+      resolveSubwayStationNumberAppearance({
+        prefix: "CA",
+        fallbackColor: "#f77321",
+        fallbackStyle: "jrcentral",
+      }),
+    ).toEqual({ color: "#f77321", style: "jrcentral" });
+  });
+
+  test("decorates three-letter codes only on JR East badges", () => {
+    expect(getStationNumberBadgeThreeLetterCode("jreast", "TYO")).toBe("TYO");
+    expect(getStationNumberBadgeThreeLetterCode(undefined, "TYO")).toBe("TYO");
+    expect(getStationNumberBadgeThreeLetterCode("tokyometro", "TYO"))
+      .toBeUndefined();
+    expect(getStationNumberBadgeThreeLetterCode("jrcentral", "TYO"))
+      .toBeUndefined();
   });
 });

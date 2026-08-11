@@ -98,8 +98,12 @@ export function sanitizeDirectInputData(
     numberPrimaryStyle: optional(station.numberPrimaryStyle),
     numberSecondaryPrefix: optional(station.numberSecondaryPrefix),
     numberSecondaryValue: optional(station.numberSecondaryValue),
+    numberSecondaryColor: optional(station.numberSecondaryColor),
+    numberSecondaryStyle: optional(station.numberSecondaryStyle),
     numberTertiaryPrefix: optional(station.numberTertiaryPrefix),
     numberTertiaryValue: optional(station.numberTertiaryValue),
+    numberTertiaryColor: optional(station.numberTertiaryColor),
+    numberTertiaryStyle: optional(station.numberTertiaryStyle),
   });
 
   return {
@@ -116,8 +120,12 @@ export function sanitizeDirectInputData(
     numberPrimaryStyle: optional(data.numberPrimaryStyle),
     numberSecondaryPrefix: optional(data.numberSecondaryPrefix),
     numberSecondaryValue: optional(data.numberSecondaryValue),
+    numberSecondaryColor: optional(data.numberSecondaryColor),
+    numberSecondaryStyle: optional(data.numberSecondaryStyle),
     numberTertiaryPrefix: optional(data.numberTertiaryPrefix),
     numberTertiaryValue: optional(data.numberTertiaryValue),
+    numberTertiaryColor: optional(data.numberTertiaryColor),
+    numberTertiaryStyle: optional(data.numberTertiaryStyle),
     threeLetterCode: optional(data.threeLetterCode),
     stationNumberStyle: optional(data.stationNumberStyle),
     baseColor: truncateTextInput(data.baseColor),

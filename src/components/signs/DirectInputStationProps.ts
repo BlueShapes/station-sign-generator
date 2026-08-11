@@ -32,8 +32,12 @@ export type AdjacentStationProps = {
   numberPrimaryStyle?: string;
   numberSecondaryPrefix?: string;
   numberSecondaryValue?: string;
+  numberSecondaryColor?: string;
+  numberSecondaryStyle?: string;
   numberTertiaryPrefix?: string;
   numberTertiaryValue?: string;
+  numberTertiaryColor?: string;
+  numberTertiaryStyle?: string;
 };
 
 interface DirectInputStationProps {
@@ -51,8 +55,14 @@ interface DirectInputStationProps {
   numberPrimaryStyle?: string;
   numberSecondaryPrefix?: string;
   numberSecondaryValue?: string;
+  /** Resolved appearance of the secondary station number's source line. */
+  numberSecondaryColor?: string;
+  numberSecondaryStyle?: string;
   numberTertiaryPrefix?: string;
   numberTertiaryValue?: string;
+  /** Resolved appearance of the tertiary station number's source line. */
+  numberTertiaryColor?: string;
+  numberTertiaryStyle?: string;
   threeLetterCode?: string;
   stationAreas?: StationArea[];
   //adjacent
