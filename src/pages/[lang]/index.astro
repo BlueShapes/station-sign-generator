@@ -18,10 +18,7 @@ export function getStaticPaths() {
 }
 
 const { lang } = Astro.params;
-const allMessages = Object.fromEntries(
-  SUPPORTED_LOCALE_CODES.map((locale) => [locale, loadTranslations(locale)]),
-);
-const messages = allMessages[lang ?? DEFAULT_LOCALE];
+const messages = loadTranslations(lang ?? DEFAULT_LOCALE);
 const metadata = getLocalizedSiteMetadata(messages);
 
 const siteOrigin =
@@ -52,5 +49,5 @@ const alternates = [
       alternates={alternates}
     />
   </Fragment>
-  <StationSignApp client:only="react" locale={lang} allMessages={allMessages} />
+  <StationSignApp client:only="react" locale={lang} />
 </BaseLayout>

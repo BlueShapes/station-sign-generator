@@ -34,6 +34,7 @@ import EditRoutesTab from "@/components/tabs/EditRoutesTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
 import { getLocaleFromPathname, getLocalePath } from "@/i18n/locales";
 import { syncDocumentMetadata } from "@/i18n/syncDocumentMetadata";
+import { loadTranslations } from "@/i18n/translations";
 import {
   installTextInputSafety,
   TEXT_INPUT_MAX_LENGTH,
@@ -52,7 +53,6 @@ const colorSchemeManager = localStorageColorSchemeManager({
 
 interface StationSignAppProps {
   locale: string;
-  allMessages: Record<string, Record<string, unknown>>;
 }
 
 function AppContent({
@@ -139,7 +139,6 @@ function AppContent({
 
 export default function StationSignApp({
   locale,
-  allMessages,
 }: StationSignAppProps) {
   const [currentLocale, setCurrentLocale] = useState(locale);
 
@@ -150,7 +149,7 @@ export default function StationSignApp({
     history.pushState({}, "", getLocalePath(newLocale));
   };
 
-  const messages = allMessages[currentLocale] ?? allMessages[locale] ?? {};
+  const messages = loadTranslations(currentLocale);
 
   useEffect(() => {
     const handlePopState = () => {

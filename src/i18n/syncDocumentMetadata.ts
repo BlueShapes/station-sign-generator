@@ -1,4 +1,8 @@
-import { getLocalePath, getManifestPath } from "./locales";
+import {
+  getLocalePath,
+  getManifestPath,
+  getOpenGraphLocale,
+} from "./locales";
 import { getLocalizedSiteMetadata } from "./siteMetadata";
 
 type Messages = Record<string, unknown>;
@@ -24,9 +28,14 @@ export function syncDocumentMetadata(locale: string, messages: Messages): void {
   setMetaContent('meta[property="og:description"]', metadata.description);
   setMetaContent('meta[property="og:url"]', canonicalUrl);
   setMetaContent('meta[property="og:image"]', ogImageUrl);
+  setMetaContent('meta[property="og:image:secure_url"]', ogImageUrl);
   setMetaContent('meta[property="og:image:alt"]', metadata.ogImageAlt);
-  setMetaContent('meta[property="og:locale"]', locale);
+  setMetaContent('meta[property="og:locale"]', getOpenGraphLocale(locale));
   setMetaContent('meta[property="og:site_name"]', metadata.siteName);
+  setMetaContent('meta[name="twitter:title"]', metadata.title);
+  setMetaContent('meta[name="twitter:description"]', metadata.description);
+  setMetaContent('meta[name="twitter:image"]', ogImageUrl);
+  setMetaContent('meta[name="twitter:image:alt"]', metadata.ogImageAlt);
 
   setLinkHref('link[rel="canonical"]', canonicalUrl);
   setLinkHref('link[rel="manifest"]', getManifestPath(locale));

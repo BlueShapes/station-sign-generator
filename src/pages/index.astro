@@ -12,10 +12,7 @@ import { getLocalizedSiteMetadata } from "../i18n/siteMetadata";
 import { loadTranslations } from "../i18n/translations";
 
 const lang = DEFAULT_LOCALE;
-const allMessages = Object.fromEntries(
-  SUPPORTED_LOCALE_CODES.map((locale) => [locale, loadTranslations(locale)]),
-);
-const messages = allMessages[lang];
+const messages = loadTranslations(lang);
 const metadata = getLocalizedSiteMetadata(messages);
 
 const siteOrigin =
@@ -46,5 +43,5 @@ const alternates = [
       alternates={alternates}
     />
   </Fragment>
-  <StationSignApp client:only="react" locale={lang} allMessages={allMessages} />
+  <StationSignApp client:only="react" locale={lang} />
 </BaseLayout>
