@@ -7,6 +7,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "list",
+  // PDF export is intentionally opt-in because font embedding is expensive.
+  // Use playwright.pdf.config.ts (bun run test:e2e:pdf) to run these tests.
+  grepInvert: /@pdf/,
   timeout: 60000,
   webServer: {
     command: "bun run dev",

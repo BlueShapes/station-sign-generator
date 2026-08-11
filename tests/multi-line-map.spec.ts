@@ -152,10 +152,7 @@ test("Yamanote loop and Keihin-Tohoku shared section render together", async ({
     .toBeGreaterThan(3000);
 });
 
-test("multiple-line maps download as vector SVG, vector PDF, and streamed PNG", async ({
-  page,
-}) => {
-  test.setTimeout(120000);
+async function prepareMultipleLineMapExport(page: Page) {
   await page.goto("/en/");
   await page.waitForSelector('[role="tab"]', { timeout: 30000 });
   await page.waitForTimeout(3000);
@@ -180,6 +177,15 @@ test("multiple-line maps download as vector SVG, vector PDF, and streamed PNG", 
     exact: true,
   });
 
+  return { formatSelect, saveButton };
+}
+
+test("multiple-line maps download as vector SVG and streamed PNG", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  const { formatSelect, saveButton } = await prepareMultipleLineMapExport(page);
+
   await formatSelect.click();
   await page.getByRole("option", { name: "SVG (Vector)" }).click();
   const svgDownloadPromise = page.waitForEvent("download");
@@ -193,24 +199,6 @@ test("multiple-line maps download as vector SVG, vector PDF, and streamed PNG", 
   expect(svg).toContain("<text");
   expect(svg).toContain("@font-face");
   expect(svg).not.toContain("<image");
-
-  await formatSelect.click();
-  await page.getByRole("option", { name: "PDF (Vector)" }).click();
-  const pdfDownloadPromise = page.waitForEvent("download");
-  await saveButton.click();
-  const pdfDownload = await pdfDownloadPromise;
-  expect(pdfDownload.suggestedFilename()).toMatch(/\.pdf$/);
-  const pdfPath = await pdfDownload.path();
-  expect(pdfPath).not.toBeNull();
-  const pdf = await readFile(pdfPath!);
-  expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
-  const pdfSource = pdf.toString("latin1");
-  expect(pdfSource).toContain("/Font");
-  expect(pdfSource).toContain("NotoSansJP");
-  expect(pdfSource).toContain("HindSemiBold");
-  expect(pdfSource).toContain("Identity-H");
-  expect(pdfSource).not.toContain("/Subtype /Image");
-  expect(pdf.byteLength).toBeGreaterThan(200000);
 
   await formatSelect.click();
   await page.getByRole("option", { name: "PNG" }).click();
@@ -231,4 +219,27 @@ test("multiple-line maps download as vector SVG, vector PDF, and streamed PNG", 
   expect(png.byteLength).toBeLessThan(5_000_000);
   expect(png.readUInt32BE(16)).toBeGreaterThan(15000);
   expect(png.readUInt32BE(20)).toBeGreaterThan(5000);
+});
+
+test("multiple-line maps download as vector PDF @pdf", async ({ page }) => {
+  test.setTimeout(120000);
+  const { formatSelect, saveButton } = await prepareMultipleLineMapExport(page);
+
+  await formatSelect.click();
+  await page.getByRole("option", { name: "PDF (Vector)" }).click();
+  const pdfDownloadPromise = page.waitForEvent("download");
+  await saveButton.click();
+  const pdfDownload = await pdfDownloadPromise;
+  expect(pdfDownload.suggestedFilename()).toMatch(/\.pdf$/);
+  const pdfPath = await pdfDownload.path();
+  expect(pdfPath).not.toBeNull();
+  const pdf = await readFile(pdfPath!);
+  expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+  const pdfSource = pdf.toString("latin1");
+  expect(pdfSource).toContain("/Font");
+  expect(pdfSource).toContain("NotoSansJP");
+  expect(pdfSource).toContain("HindSemiBold");
+  expect(pdfSource).toContain("Identity-H");
+  expect(pdfSource).not.toContain("/Subtype /Image");
+  expect(pdf.byteLength).toBeGreaterThan(200000);
 });
