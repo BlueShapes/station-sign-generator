@@ -285,6 +285,12 @@ route:
     section-layout: Reka letak
     section-content: Kandungan paparan
     filename-suffix: Peta Laluan
+    export-format: Format eksport
+    format-png: PNG (imej)
+    format-svg: SVG (vektor)
+    format-pdf: PDF (vektor)
+    vector-size-note: Format vektor tidak memerlukan saiz imej
+    export-error: Eksport gagal. Cuba format atau saiz imej yang lain.
     orientation: Orientasi
     horizontal: Mendatar
     vertical: Menegak

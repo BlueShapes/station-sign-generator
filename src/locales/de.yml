@@ -293,6 +293,12 @@ route:
     section-layout: Layout
     section-content: Anzeigeinhalt
     filename-suffix: Linienplan
+    export-format: Exportformat
+    format-png: PNG (Bild)
+    format-svg: SVG (Vektor)
+    format-pdf: PDF (Vektor)
+    vector-size-note: Vektorformate benötigen keine Bildgröße
+    export-error: Export fehlgeschlagen. Versuchen Sie ein anderes Format oder eine andere Bildgröße.
     orientation: Ausrichtung
     horizontal: Horizontal
     vertical: Vertikal

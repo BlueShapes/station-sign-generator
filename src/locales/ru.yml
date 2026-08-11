@@ -285,6 +285,12 @@ route:
     section-layout: Макет
     section-content: Отображение
     filename-suffix: Схема линии
+    export-format: Формат экспорта
+    format-png: PNG (изображение)
+    format-svg: SVG (вектор)
+    format-pdf: PDF (вектор)
+    vector-size-note: Для векторных форматов размер изображения не требуется
+    export-error: Не удалось экспортировать. Выберите другой формат или размер.
     orientation: Ориентация
     horizontal: Горизонтальный
     vertical: Вертикальный

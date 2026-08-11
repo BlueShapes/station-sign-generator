@@ -285,6 +285,12 @@ route:
     section-layout: लेआउट
     section-content: प्रदर्शन सामग्री
     filename-suffix: मार्ग मानचित्र
+    export-format: निर्यात प्रारूप
+    format-png: PNG (छवि)
+    format-svg: SVG (वेक्टर)
+    format-pdf: PDF (वेक्टर)
+    vector-size-note: वेक्टर प्रारूपों में छवि आकार की आवश्यकता नहीं है
+    export-error: निर्यात विफल रहा। कोई अन्य प्रारूप या छवि आकार आज़माएँ।
     orientation: अभिमुखीकरण
     horizontal: क्षैतिज
     vertical: लंबवत

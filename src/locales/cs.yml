@@ -285,6 +285,12 @@ route:
     section-layout: Rozvržení
     section-content: Zobrazený obsah
     filename-suffix: Mapa linky
+    export-format: Formát exportu
+    format-png: PNG (obrázek)
+    format-svg: SVG (vektor)
+    format-pdf: PDF (vektor)
+    vector-size-note: Vektorové formáty nevyžadují velikost obrázku
+    export-error: Export se nezdařil. Zkuste jiný formát nebo velikost obrázku.
     orientation: Orientace
     horizontal: Horizontální
     vertical: Vertikální

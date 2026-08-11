@@ -285,6 +285,12 @@ route:
     section-layout: Układ
     section-content: Wyświetlana zawartość
     filename-suffix: Schemat linii
+    export-format: Format eksportu
+    format-png: PNG (obraz)
+    format-svg: SVG (wektor)
+    format-pdf: PDF (wektor)
+    vector-size-note: Formaty wektorowe nie wymagają rozmiaru obrazu
+    export-error: Eksport nie powiódł się. Spróbuj innego formatu lub rozmiaru obrazu.
     orientation: Orientacja
     horizontal: Poziomy
     vertical: Pionowe

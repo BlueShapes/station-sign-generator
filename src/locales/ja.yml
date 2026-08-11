@@ -293,6 +293,12 @@ route:
     section-layout: レイアウト
     section-content: 表示内容
     filename-suffix: 路線図
+    export-format: 保存形式
+    format-png: PNG（画像）
+    format-svg: SVG（ベクター）
+    format-pdf: PDF（ベクター）
+    vector-size-note: ベクター形式ではサイズ指定は不要です
+    export-error: 保存に失敗しました。形式またはサイズを変更して再試行してください。
     orientation: 向き
     horizontal: 横
     vertical: 縦

@@ -293,6 +293,12 @@ route:
     section-layout: Layout
     section-content: Display Content
     filename-suffix: Line Map
+    export-format: Export Format
+    format-png: PNG (Image)
+    format-svg: SVG (Vector)
+    format-pdf: PDF (Vector)
+    vector-size-note: Vector formats do not require an image size
+    export-error: Export failed. Try another format or image size.
     orientation: Orientation
     horizontal: Horizontal
     vertical: Vertical

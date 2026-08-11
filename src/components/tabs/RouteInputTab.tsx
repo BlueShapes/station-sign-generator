@@ -66,6 +66,12 @@ import {
 import { useCanvasFonts } from "@/lib/useCanvasFonts";
 import { getLocalizedRailwayName } from "@/lib/localizedRailwayName";
 import {
+  createLineMapExportBlob,
+  downloadBlob,
+  type LineMapExportFormat,
+} from "@/lib/lineMapExport";
+import { getLineMapPngSizeOptions } from "@/lib/streamingPngExport";
+import {
   getCompanyLanguages,
   getRailwayLanguageLabel,
 } from "@/lib/railwayLanguages";
@@ -459,6 +465,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapShowTransitNames, setMapShowTransitNames] = useState(true);
   const [mapFontSize, setMapFontSize] = useState(CIRCULAR_FONT_DEFAULT);
   const [mapSaveSize, setMapSaveSize] = useState(LineMapScale);
+  const [mapExportFormat, setMapExportFormat] =
+    useState<LineMapExportFormat>("png");
+  const [mapExporting, setMapExporting] = useState(false);
+  const [mapExportError, setMapExportError] = useState<string | null>(null);
   const [mapStationNumberMode, setMapStationNumberMode] =
     useState<StationNumberMode>("none");
   const [mapStationNumbers, setMapStationNumbers] =
@@ -1196,10 +1206,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           layoutInputs,
           laneGap,
         );
-    return [1, 2, 3, 4].map((multiplier) => ({
-      label: `${dimensions.width * multiplier} × ${dimensions.height * multiplier} (${["SS", "M", "L", "XL"][multiplier - 1]})`,
-      value: multiLineMapScale * multiplier,
-    }));
+    return getLineMapPngSizeOptions(dimensions.width, dimensions.height);
   }, [multiLineRoutes, multiRootLine, mapStationSpacing, mapTrackWidth]);
 
   const lineById = useMemo(
@@ -1450,10 +1457,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapTrackWidth,
       mapStationNumberExtraExtent,
     );
-    return [1, 2, 3, 4].map((mult) => ({
-      label: `${w * mult} × ${h * mult} (${["SS", "M", "L", "XL"][mult - 1]})`,
-      value: LineMapScale * mult,
-    }));
+    return getLineMapPngSizeOptions(w, h);
   }, [
     mapStations.length,
     effectiveIsLoop,
@@ -1509,6 +1513,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ),
     );
   const mapDownloadTextTooSmall =
+    mapExportFormat === "png" &&
     hasVisibleTransitSecondaryNames &&
     isTransitSecondaryNameExportTooSmall(mapSaveSize);
   const mapDownloadWarningText = mapDownloadTextTooSmall
@@ -1545,13 +1550,31 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
   };
 
+  const saveLineMapStage = async (
+    stage: Konva.Stage,
+    filename: string,
+    baseScale: number,
+  ) => {
+    setMapExporting(true);
+    setMapExportError(null);
+    try {
+      await waitForCanvasFonts(LINE_MAP_FONT_SPECS).catch(() => undefined);
+      const blob = await createLineMapExportBlob({
+        stage,
+        format: mapExportFormat,
+        pixelRatio: mapSaveSize / baseScale,
+      });
+      downloadBlob(blob, `${filename}.${mapExportFormat}`);
+    } catch (error) {
+      console.error("Line-map export failed", error);
+      setMapExportError(t("route.linemap.export-error"));
+    } finally {
+      setMapExporting(false);
+    }
+  };
+
   const handleSaveMap = async () => {
     if (!mapRef.current || !selectedLine) return;
-    await waitForCanvasFonts(LINE_MAP_FONT_SPECS).catch(() => undefined);
-    const uri = mapRef.current.toDataURL({
-      pixelRatio: mapSaveSize / LineMapScale,
-    });
-    const link = document.createElement("a");
     const filename = getLocalizedRailwayName(
       locale,
       getCompanyLanguages(mapCompany),
@@ -1563,20 +1586,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ],
       "line",
     );
-    link.download = `${filename}_${t("route.linemap.filename-suffix")}.png`;
-    link.href = uri;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    await saveLineMapStage(
+      mapRef.current,
+      `${filename}_${t("route.linemap.filename-suffix")}`,
+      LineMapScale,
+    );
   };
 
   const handleSaveMultiLineMap = async () => {
     if (!multiLineMapRef.current || !multiRootLine) return;
-    await waitForCanvasFonts(LINE_MAP_FONT_SPECS).catch(() => undefined);
-    const uri = multiLineMapRef.current.toDataURL({
-      pixelRatio: mapSaveSize / multiLineMapScale,
-    });
-    const link = document.createElement("a");
     const filename = getLocalizedRailwayName(
       locale,
       getCompanyLanguages(multiCompany),
@@ -1588,11 +1606,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ],
       "line",
     );
-    link.download = `${filename}_${t("route.linemap.filename-suffix")}.png`;
-    link.href = uri;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    await saveLineMapStage(
+      multiLineMapRef.current,
+      `${filename}_${t("route.linemap.filename-suffix")}`,
+      multiLineMapScale,
+    );
   };
 
   if (loading) {
@@ -2650,11 +2668,33 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
                 {/* Download controls */}
                 <Grid gutter="md" className={styles.downloadControls}>
-                  <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
+                  <Grid.Col span={{ base: 12, sm: 4 }}>
+                    <Select
+                      label={t("route.linemap.export-format")}
+                      value={mapExportFormat}
+                      onChange={(value) => {
+                        if (!value) return;
+                        setMapExportFormat(value as LineMapExportFormat);
+                        setMapExportError(null);
+                      }}
+                      data={[
+                        { value: "png", label: t("route.linemap.format-png") },
+                        { value: "svg", label: t("route.linemap.format-svg") },
+                        { value: "pdf", label: t("route.linemap.format-pdf") },
+                      ]}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 4 }}>
                     <Select
                       label={t("input.image-size")}
                       value={String(mapSaveSize)}
                       onChange={(v) => v && setMapSaveSize(Number(v))}
+                      disabled={mapExportFormat !== "png"}
+                      description={
+                        mapExportFormat === "png"
+                          ? undefined
+                          : t("route.linemap.vector-size-note")
+                      }
                       data={mapSaveSizeList.map((e) => ({
                         value: String(e.value),
                         label: e.label,
@@ -2662,7 +2702,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     />
                   </Grid.Col>
                   <Grid.Col
-                    span={{ base: 12, sm: 5, lg: 3 }}
+                    span={{ base: 12, sm: 4 }}
                     className={styles.downloadButtonColumn}
                   >
                     <Tooltip
@@ -2677,7 +2717,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         size="lg"
                         variant="filled"
                         onClick={handleSaveMap}
-                        disabled={!mapFonts.ready}
+                        disabled={!mapFonts.ready || mapExporting}
+                        loading={mapExporting}
                         fullWidth
                         style={{ fontWeight: 700, minWidth: 0 }}
                         leftSection={
@@ -2699,6 +2740,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Tooltip>
                   </Grid.Col>
                 </Grid>
+                {mapExportError && (
+                  <Alert mt="sm" color="red" icon={<IconAlertTriangle size={16} />}>
+                    {mapExportError}
+                  </Alert>
+                )}
               </Paper>
             )}
           </Stack>
@@ -2940,11 +2986,33 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 )}
 
                 <Grid gutter="md" className={styles.downloadControls}>
-                  <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
+                  <Grid.Col span={{ base: 12, sm: 4 }}>
+                    <Select
+                      label={t("route.linemap.export-format")}
+                      value={mapExportFormat}
+                      onChange={(value) => {
+                        if (!value) return;
+                        setMapExportFormat(value as LineMapExportFormat);
+                        setMapExportError(null);
+                      }}
+                      data={[
+                        { value: "png", label: t("route.linemap.format-png") },
+                        { value: "svg", label: t("route.linemap.format-svg") },
+                        { value: "pdf", label: t("route.linemap.format-pdf") },
+                      ]}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 4 }}>
                     <Select
                       label={t("input.image-size")}
                       value={String(mapSaveSize)}
                       onChange={(value) => value && setMapSaveSize(Number(value))}
+                      disabled={mapExportFormat !== "png"}
+                      description={
+                        mapExportFormat === "png"
+                          ? undefined
+                          : t("route.linemap.vector-size-note")
+                      }
                       data={multiMapSaveSizeList.map((size) => ({
                         value: String(size.value),
                         label: size.label,
@@ -2952,7 +3020,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     />
                   </Grid.Col>
                   <Grid.Col
-                    span={{ base: 12, sm: 5, lg: 3 }}
+                    span={{ base: 12, sm: 4 }}
                     className={styles.downloadButtonColumn}
                   >
                     <Button
@@ -2960,7 +3028,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       size="lg"
                       variant="filled"
                       onClick={handleSaveMultiLineMap}
-                      disabled={!mapFonts.ready}
+                      disabled={!mapFonts.ready || mapExporting}
+                      loading={mapExporting}
                       fullWidth
                       style={{ fontWeight: 700, minWidth: 0 }}
                       leftSection={<IconDownload />}
@@ -2969,6 +3038,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Button>
                   </Grid.Col>
                 </Grid>
+                {mapExportError && (
+                  <Alert mt="sm" color="red" icon={<IconAlertTriangle size={16} />}>
+                    {mapExportError}
+                  </Alert>
+                )}
               </Paper>
             )}
           </Stack>

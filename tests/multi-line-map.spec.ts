@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 
 async function loadSampleDatabase(page: Page) {
   await page.getByRole("tab", { name: "Edit Routes" }).click();
@@ -149,4 +150,85 @@ test("Yamanote loop and Keihin-Tohoku shared section render together", async ({
   await expect
     .poll(() => mapCanvas.evaluate((canvas: HTMLCanvasElement) => canvas.width))
     .toBeGreaterThan(3000);
+});
+
+test("multiple-line maps download as vector SVG, vector PDF, and streamed PNG", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  await page.goto("/en/");
+  await page.waitForSelector('[role="tab"]', { timeout: 30000 });
+  await page.waitForTimeout(3000);
+  await loadSampleDatabase(page);
+
+  await page.getByRole("tab", { name: "From Route" }).click();
+  await page.getByText("Line Map (Multiple Lines)", { exact: true }).click();
+  const lineSelect = page.getByRole("textbox", { name: "Lines", exact: true });
+  await lineSelect.click();
+  await page.getByRole("option", { name: /^\[JY\]/ }).click();
+  await lineSelect.click();
+  await page.getByRole("option", { name: /^\[JK\]/ }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".map-preview canvas")).toHaveCount(1);
+
+  const formatSelect = page.getByRole("textbox", {
+    name: "Export Format",
+    exact: true,
+  });
+  const saveButton = page.getByRole("button", {
+    name: "Save as Image",
+    exact: true,
+  });
+
+  await formatSelect.click();
+  await page.getByRole("option", { name: "SVG (Vector)" }).click();
+  const svgDownloadPromise = page.waitForEvent("download");
+  await saveButton.click();
+  const svgDownload = await svgDownloadPromise;
+  expect(svgDownload.suggestedFilename()).toMatch(/\.svg$/);
+  const svgPath = await svgDownload.path();
+  expect(svgPath).not.toBeNull();
+  const svg = await readFile(svgPath!, "utf8");
+  expect(svg).toContain("<svg");
+  expect(svg).toContain("<text");
+  expect(svg).toContain("@font-face");
+  expect(svg).not.toContain("<image");
+
+  await formatSelect.click();
+  await page.getByRole("option", { name: "PDF (Vector)" }).click();
+  const pdfDownloadPromise = page.waitForEvent("download");
+  await saveButton.click();
+  const pdfDownload = await pdfDownloadPromise;
+  expect(pdfDownload.suggestedFilename()).toMatch(/\.pdf$/);
+  const pdfPath = await pdfDownload.path();
+  expect(pdfPath).not.toBeNull();
+  const pdf = await readFile(pdfPath!);
+  expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+  const pdfSource = pdf.toString("latin1");
+  expect(pdfSource).toContain("/Font");
+  expect(pdfSource).toContain("NotoSansJP");
+  expect(pdfSource).toContain("HindSemiBold");
+  expect(pdfSource).toContain("Identity-H");
+  expect(pdfSource).not.toContain("/Subtype /Image");
+  expect(pdf.byteLength).toBeGreaterThan(200000);
+
+  await formatSelect.click();
+  await page.getByRole("option", { name: "PNG" }).click();
+  const sizeSelect = page.getByRole("textbox", { name: "Image Size", exact: true });
+  await sizeSelect.click();
+  await page.getByRole("option", { name: /\(XXL\)$/ }).click();
+  const pngDownloadPromise = page.waitForEvent("download");
+  await saveButton.click();
+  const pngDownload = await pngDownloadPromise;
+  expect(pngDownload.suggestedFilename()).toMatch(/\.png$/);
+  const pngPath = await pngDownload.path();
+  expect(pngPath).not.toBeNull();
+  const png = await readFile(pngPath!);
+  expect(Array.from(png.subarray(0, 8))).toEqual([
+    137, 80, 78, 71, 13, 10, 26, 10,
+  ]);
+  expect(png[25]).toBe(2);
+  expect(png.byteLength).toBeLessThan(5_000_000);
+  expect(png.readUInt32BE(16)).toBeGreaterThan(15000);
+  expect(png.readUInt32BE(20)).toBeGreaterThan(5000);
 });

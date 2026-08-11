@@ -285,6 +285,12 @@ route:
     section-layout: 布局
     section-content: 显示内容
     filename-suffix: 线路图
+    export-format: 导出格式
+    format-png: PNG（图像）
+    format-svg: SVG（矢量）
+    format-pdf: PDF（矢量）
+    vector-size-note: 矢量格式无需设置图像尺寸
+    export-error: 导出失败，请尝试其他格式或图像尺寸。
     orientation: 方向
     horizontal: 卧式
     vertical: 垂直

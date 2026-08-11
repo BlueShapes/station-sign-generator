@@ -285,6 +285,12 @@ route:
     section-layout: Layout
     section-content: Conteúdo exibido
     filename-suffix: Mapa da Linha
+    export-format: Formato de exportação
+    format-png: PNG (imagem)
+    format-svg: SVG (vetor)
+    format-pdf: PDF (vetor)
+    vector-size-note: Formatos vetoriais não precisam de tamanho de imagem
+    export-error: Falha ao exportar. Tente outro formato ou tamanho de imagem.
     orientation: Orientação
     horizontal: Horizontais
     vertical: Verticais

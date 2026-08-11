@@ -285,6 +285,12 @@ route:
     section-layout: 版面配置
     section-content: 顯示內容
     filename-suffix: 路線圖
+    export-format: 匯出格式
+    format-png: PNG（影像）
+    format-svg: SVG（向量）
+    format-pdf: PDF（向量）
+    vector-size-note: 向量格式不需要設定影像尺寸
+    export-error: 匯出失敗，請嘗試其他格式或影像尺寸。
     orientation: 方向
     horizontal: 水平
     vertical: 垂直
