@@ -53,6 +53,10 @@ import JrEastBranchSign, {
   height as JrEastBranchSignHeight,
   scale as JrEastBranchSignBaseScale,
 } from "@/components/signs/JrEastBranchSign";
+import JrCentralSign, {
+  height as JrCentralSignHeight,
+  scale as JrCentralSignBaseScale,
+} from "@/components/signs/JrCentralSign";
 import JrWestSign, {
   height as JrWestSignHeight,
   scale as JrWestSignBaseScale,
@@ -78,6 +82,7 @@ import CanvasFontLoading from "@/components/CanvasFontLoading";
 type SignStyle =
   | "jreast"
   | "jreastbranch"
+  | "jrcentral"
   | "jrwest"
   | "jrwestlarge"
   | "metrolong"
@@ -93,19 +98,22 @@ type HeldPreview = {
 };
 
 function getHeldPreviewStyle(style: SignStyle): React.CSSProperties {
-  const isJrStyle =
-    style === "jreast" ||
-    style === "jreastbranch" ||
-    style === "jrwest" ||
-    style === "jrwestlarge";
+  const isSubwayStyle =
+    style === "metrolong" ||
+    style === "metroforeign" ||
+    style === "metromedium" ||
+    style === "toeimedium" ||
+    style === "toeilarge";
 
   return {
     display: "block",
     width: "100%",
-    ...(isJrStyle
+    maxHeight: "20vh",
+    objectFit: "contain",
+    ...(isSubwayStyle
       ? {
-          maxHeight: "20vh",
-          objectFit: "contain",
+          maxWidth: "60rem",
+          marginInline: "auto",
         }
       : undefined),
   };
@@ -124,6 +132,11 @@ const SIGN_STYLES: Record<
     Component: JrEastBranchSign,
     height: JrEastBranchSignHeight,
     scale: JrEastBranchSignBaseScale,
+  },
+  jrcentral: {
+    Component: JrCentralSign,
+    height: JrCentralSignHeight,
+    scale: JrCentralSignBaseScale,
   },
   jrwest: {
     Component: JrWestSign,
@@ -480,6 +493,7 @@ export default function SimpleInputTab() {
               value: "jreastbranch",
               label: t("route.sign.jreastbranch"),
             },
+            { value: "jrcentral", label: t("route.sign.jrcentral") },
             { value: "jrwest", label: t("route.sign.jrwest") },
             { value: "jrwestlarge", label: t("route.sign.jrwestlarge") },
             { value: "metrolong", label: t("route.sign.metrolong") },

@@ -48,6 +48,7 @@ input:
     len: Nume alternativ al stației din stânga
     lnum: Numărul stației din stânga (primar)
     lnum2: Numărul stației din stânga (secundar)
+    lnum3: Numărul stației din stânga (terțiar)
     station: Numele stației
     read: Subtext al stației
     en: Numele stației a doua limbă (engleză)
@@ -55,6 +56,7 @@ input:
     kp: Numele postului A patra limbă (coreeană)
     num: Numărul stației (principal)
     num2: Numărul stației (secundar)
+    num3: Numărul stației (terțiar)
     trc: Codul stației
     note: Notă stație (text mai mare sub numele stației)
     rstation: Numele stației din dreapta
@@ -62,6 +64,7 @@ input:
     ren: Subtextul stației din dreapta
     rnum: Numărul stației din dreapta (primar)
     rnum2: Numărul stației din dreapta (secundar)
+    rnum3: Numărul stației din dreapta (terțiar)
     input-left: Informații stație din stânga
     input-current: Informații despre stația curentă
     input-right: Informații stația din dreapta
@@ -160,6 +163,7 @@ route:
     color: Culoare companie
     station-number-style: Stil de număr de stație
     station-number-style-jreast: Stil JR East
+    station-number-style-jrcentral: Stil JR Central
     station-number-style-tokyometro: Stilul Metrou Tokyo / Metrou Toei
     station-number-style-preview: Exemplu de insignă (folosind culoarea companiei ca culoare de linie)
     empty: Nu există companii încă
@@ -265,6 +269,7 @@ route:
     adjacent-swap-order: Inversează ordinea
     jreast: JR East Style
     jreastbranch: Stil JR East (ramificație)
+    jrcentral: Stil JR Central
     jrwest: JR West Style
     jrwestlarge: JR West Style (mare)
     metrolong: Stil metrou Tokyo (mic / japoneză)

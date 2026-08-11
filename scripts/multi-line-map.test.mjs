@@ -110,6 +110,10 @@ describe("multiple-line route map layout", () => {
     );
 
     expect(renderer).toContain("<LineIndicatorBadge");
+    expect(renderer).toContain(
+      "shouldShowLineIndicatorBadge(route.line.prefix)",
+    );
+    expect(renderer).not.toContain('route.companyStyle === "jreast"');
     expect(renderer).toContain("<StationNumberBadgeGroup");
     expect(renderer).toContain("<HorizontalTransitLines");
     expect(renderer).toContain("normalizeTrackWidth(trackWidth)");

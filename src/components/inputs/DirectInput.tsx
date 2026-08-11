@@ -61,10 +61,11 @@ const DirectInput = memo(function DirectInput({
   const fields: SignStyleFieldSpec =
     SIGN_STYLE_FIELDS[signStyle ?? "jreast"] ?? SIGN_STYLE_FIELDS["jreast"];
   const show = (f: keyof Omit<SignStyleFieldSpec, "left" | "right">) =>
-    fields[f] !== "hidden";
-  const showLeft = (f: keyof AdjacentFieldSpec) => fields.left[f] !== "hidden";
+    fields[f] !== undefined && fields[f] !== "hidden";
+  const showLeft = (f: keyof AdjacentFieldSpec) =>
+    fields.left[f] !== undefined && fields.left[f] !== "hidden";
   const showRight = (f: keyof AdjacentFieldSpec) =>
-    fields.right[f] !== "hidden";
+    fields.right[f] !== undefined && fields.right[f] !== "hidden";
 
   const [formData, setFormData] =
     useState<DirectInputStationProps>(() => sanitizeDirectInputData(initialData));
@@ -373,6 +374,50 @@ const DirectInput = memo(function DirectInput({
                       </Group>
                     </div>
                   )}
+                  {showLeft("numberTertiary") && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("input.direct.lnum3")}
+                      </Text>
+                      <Group gap="xs">
+                        <Select
+                          placeholder="JT"
+                          style={{ width: "90px" }}
+                          value={station.numberTertiaryPrefix ?? null}
+                          data={lineSelectData}
+                          clearable
+                          onChange={(v) =>
+                            updateField(
+                              "left",
+                              formData.left.map((s, i) =>
+                                i === idx
+                                  ? { ...s, numberTertiaryPrefix: v ?? "" }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                        <TextInput
+                          placeholder="25"
+                          style={{ flex: 1 }}
+                          value={station.numberTertiaryValue ?? ""}
+                          onChange={(e) =>
+                            updateField(
+                              "left",
+                              formData.left.map((s, i) =>
+                                i === idx
+                                  ? {
+                                    ...s,
+                                    numberTertiaryValue: e.target.value,
+                                  }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                      </Group>
+                    </div>
+                  )}
                 </Stack>
               ))}
               <Button
@@ -494,6 +539,33 @@ const DirectInput = memo(function DirectInput({
                       value={formData.numberSecondaryValue ?? ""}
                       onChange={(e) =>
                         updateField("numberSecondaryValue", e.target.value)
+                      }
+                    />
+                  </Group>
+                </div>
+              )}
+              {show("numberTertiary") && (
+                <div>
+                  <Text size="sm" fw={500} mb={4}>
+                    {t("input.direct.num3")}
+                  </Text>
+                  <Group gap="xs">
+                    <Select
+                      placeholder="JT"
+                      style={{ width: "90px" }}
+                      value={formData.numberTertiaryPrefix ?? null}
+                      data={lineSelectData}
+                      clearable
+                      onChange={(v) =>
+                        updateField("numberTertiaryPrefix", v ?? "")
+                      }
+                    />
+                    <TextInput
+                      placeholder="26"
+                      style={{ flex: 1 }}
+                      value={formData.numberTertiaryValue ?? ""}
+                      onChange={(e) =>
+                        updateField("numberTertiaryValue", e.target.value)
                       }
                     />
                   </Group>
@@ -829,6 +901,50 @@ const DirectInput = memo(function DirectInput({
                                   ? {
                                     ...s,
                                     numberSecondaryValue: e.target.value,
+                                  }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                      </Group>
+                    </div>
+                  )}
+                  {showRight("numberTertiary") && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("input.direct.rnum3")}
+                      </Text>
+                      <Group gap="xs">
+                        <Select
+                          placeholder="JT"
+                          style={{ width: "90px" }}
+                          value={station.numberTertiaryPrefix ?? null}
+                          data={lineSelectData}
+                          clearable
+                          onChange={(v) =>
+                            updateField(
+                              "right",
+                              formData.right.map((s, i) =>
+                                i === idx
+                                  ? { ...s, numberTertiaryPrefix: v ?? "" }
+                                  : s,
+                              ),
+                            )
+                          }
+                        />
+                        <TextInput
+                          placeholder="27"
+                          style={{ flex: 1 }}
+                          value={station.numberTertiaryValue ?? ""}
+                          onChange={(e) =>
+                            updateField(
+                              "right",
+                              formData.right.map((s, i) =>
+                                i === idx
+                                  ? {
+                                    ...s,
+                                    numberTertiaryValue: e.target.value,
                                   }
                                   : s,
                               ),

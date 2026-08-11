@@ -96,6 +96,8 @@ export function sanitizeDirectInputData(
     numberPrimaryValue: optional(station.numberPrimaryValue),
     numberSecondaryPrefix: optional(station.numberSecondaryPrefix),
     numberSecondaryValue: optional(station.numberSecondaryValue),
+    numberTertiaryPrefix: optional(station.numberTertiaryPrefix),
+    numberTertiaryValue: optional(station.numberTertiaryValue),
   });
 
   return {
@@ -110,6 +112,8 @@ export function sanitizeDirectInputData(
     numberPrimaryValue: optional(data.numberPrimaryValue),
     numberSecondaryPrefix: optional(data.numberSecondaryPrefix),
     numberSecondaryValue: optional(data.numberSecondaryValue),
+    numberTertiaryPrefix: optional(data.numberTertiaryPrefix),
+    numberTertiaryValue: optional(data.numberTertiaryValue),
     threeLetterCode: optional(data.threeLetterCode),
     stationNumberStyle: optional(data.stationNumberStyle),
     baseColor: truncateTextInput(data.baseColor),

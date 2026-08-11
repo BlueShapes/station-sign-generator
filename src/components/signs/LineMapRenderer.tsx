@@ -11,6 +11,9 @@ import {
 import Konva from "konva";
 import type { Station, Line } from "@/db/types";
 import { getTokyoMetroStationNumberMetrics } from "@/components/signs/stationNumberBadgeMetrics";
+import JrCentralStationNumberBadge, {
+  getJrCentralStationNumberBadgeMetrics,
+} from "@/components/signs/JrCentralStationNumberBadge";
 import {
   TRANSIT_ICON_NAME_GAP,
   TRANSIT_ICON_SIZE,
@@ -25,8 +28,11 @@ import {
   oppositeVerticalDirection,
   shouldRotateVerticalGlyph,
 } from "@/components/signs/transitLineLayout";
-import { getLineIndicatorVisualStyle } from "@/components/signs/lineIndicatorStyle";
-import { LINE_MAP_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
+import {
+  getLineIndicatorVisualStyle,
+  shouldShowLineIndicatorBadge,
+} from "@/components/signs/lineIndicatorStyle";
+import { getLineMapFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import {
   ceilCanvasDimensions,
   DEFAULT_TRACK_WIDTH,
@@ -123,7 +129,7 @@ export interface LineMapRendererProps {
   secondaryLangField?: StationNameField;
   /** When false, the secondary name row is hidden entirely. Defaults to true. */
   showSecondaryLang?: boolean;
-  /** The company's station_number_style — used to decide whether to show a line indicator badge. */
+  /** The company's station_number_style — used to choose the line indicator badge design. */
   companyStyle?: string;
   /**
    * Vertical layout name side (ignored for horizontal/loop):
@@ -190,8 +196,12 @@ function computeCircularBounds(
     const snNum = stationNumbers?.[station.id];
     const dotModeActive = stationNumberMode === "dot" && !!snNum?.value;
     const effectiveR = dotModeActive
-      ? (Math.abs(cosA) * snBadgeDims(!!snNum!.threeLetterCode).w) / 2 +
-        (Math.abs(sinA) * snBadgeDims(!!snNum!.threeLetterCode).h) / 2
+      ? (Math.abs(cosA) *
+          snBadgeDims(!!snNum!.threeLetterCode, snNum!.style).w) /
+          2 +
+        (Math.abs(sinA) *
+          snBadgeDims(!!snNum!.threeLetterCode, snNum!.style).h) /
+          2
       : getTrackEdgeRadius(r, trackWidth);
     const stagger = i % 2 === 0 ? 0 : C_STAGGER;
     const labelR = C_RADIUS + effectiveR + C_TICK_LEN + stagger;
@@ -552,7 +562,14 @@ const _snPrefixFont = 11 * SN_S;
 const _snPrefixY = 4 * SN_S;
 const _snValueFont = 17 * SN_S;
 const _snValueY = 14 * SN_S;
-export function snBadgeDims(hasTrc: boolean): { w: number; h: number } {
+export function snBadgeDims(
+  hasTrc: boolean,
+  style: string = _snBadgeStyle,
+): { w: number; h: number } {
+  if (style === "jrcentral") {
+    const metrics = getJrCentralStationNumberBadgeMetrics(SN_INNER);
+    return { w: metrics.width, h: metrics.height };
+  }
   if (hasTrc) {
     return {
       w: SN_INNER + _snOuterPadX * 2, // 36 ref units
@@ -592,6 +609,18 @@ function SnBadge({
 }) {
   const s = scale;
   const badgeStyle = style ?? _snBadgeStyle;
+  if (badgeStyle === "jrcentral") {
+    return (
+      <JrCentralStationNumberBadge
+        x={x}
+        y={y}
+        size={SN_INNER * s}
+        color={color}
+        prefix={prefix}
+        value={value}
+      />
+    );
+  }
   const hasTrc = !!trc;
   const outerW = (SN_INNER + _snOuterPadX * 2) * s;
   const outerH = (_snTrcH + SN_INNER + _snOuterPadBot) * s;
@@ -781,6 +810,12 @@ function stationNumberBadgeVisualOutset(
       : (_snStroke * badgeScale) / 2;
   }
   const badgeStyle = number.style ?? _snBadgeStyle;
+  if (badgeStyle === "jrcentral") {
+    return (
+      getJrCentralStationNumberBadgeMetrics(SN_INNER * badgeScale)
+        .strokeWidth / 2
+    );
+  }
   if (badgeStyle === "tokyometro") {
     const metrics = getTokyoMetroStationNumberMetrics(SN_INNER * badgeScale);
     return (metrics.strokeWidth + strokeWidthAdjust) / 2;
@@ -799,12 +834,16 @@ function stationNumberGroupLayout(
   const hasSharedThreeLetterCode =
     orientation === "vertical" &&
     numbers.length > 1 &&
-    !!sharedThreeLetterCode;
+    !!sharedThreeLetterCode &&
+    numbers.every((number) => (number.style ?? _snBadgeStyle) !== "jrcentral");
   const layoutNumbers = hasSharedThreeLetterCode
     ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
     : numbers;
   const dimensions = layoutNumbers.map((number) => {
-    const dims = snBadgeDims(!!number.threeLetterCode);
+    const dims = snBadgeDims(
+      !!number.threeLetterCode,
+      number.style ?? _snBadgeStyle,
+    );
     return { w: dims.w * badgeScale, h: dims.h * badgeScale };
   });
   if (dimensions.length === 0) return { w: 0, h: 0, positions: [] };
@@ -901,7 +940,10 @@ export function getStationNumberGroupExtraExtent(
     );
     const largestSingle = Math.max(
       ...numbers.map((number) => {
-        const dims = snBadgeDims(!!number.threeLetterCode);
+        const dims = snBadgeDims(
+          !!number.threeLetterCode,
+          number.style ?? _snBadgeStyle,
+        );
         return orientation === "horizontal" ? dims.w : dims.h;
       }),
     );
@@ -934,7 +976,8 @@ export function StationNumberBadgeGroup({
   const hasSharedThreeLetterCode =
     orientation === "vertical" &&
     numbers.length > 1 &&
-    !!sharedThreeLetterCode;
+    !!sharedThreeLetterCode &&
+    numbers.every((number) => (number.style ?? _snBadgeStyle) !== "jrcentral");
   const displayNumbers = hasSharedThreeLetterCode
     ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
     : numbers;
@@ -977,7 +1020,10 @@ export function StationNumberBadgeGroup({
         </Fragment>
       )}
       {displayNumbers.map((number, index) => {
-        const baseDims = snBadgeDims(!!number.threeLetterCode);
+        const baseDims = snBadgeDims(
+          !!number.threeLetterCode,
+          number.style ?? _snBadgeStyle,
+        );
         const dims = {
           w: baseDims.w * badgeScale,
           h: baseDims.h * badgeScale,
@@ -1463,6 +1509,13 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
   ) => {
     // Expose the company style to SnBadge via the module-level variable
     _snBadgeStyle = companyStyle ?? "jreast";
+    const lineMapFontSpecs = getLineMapFontSpecs([
+      companyStyle,
+      ...Object.values(stationNumbers).map((number) => number.style),
+      ...Object.values(stationNumberGroups)
+        .flat()
+        .map((number) => number.style),
+    ]);
 
     const multiService = (services?.length ?? 0) >= 2;
     const hSpacing = stationSpacing ?? H_SPACING;
@@ -1492,7 +1545,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     // Re-render once fonts are ready (same pattern as JrEastSign)
     useEffect(() => {
       let cancelled = false;
-      waitForCanvasFonts(LINE_MAP_FONT_SPECS)
+      waitForCanvasFonts(lineMapFontSpecs)
         .catch(() => undefined)
         .then(() => {
           if (!cancelled) setStageKey((k) => k + 1);
@@ -1500,7 +1553,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       return () => {
         cancelled = true;
       };
-    }, []);
+    }, [lineMapFontSpecs]);
 
     // Also re-key when data changes so Konva re-renders correctly
     useEffect(() => {
@@ -1552,7 +1605,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         1,
       );
       const largestSingle = Math.max(
-        ...numbers.map((number) => snBadgeDims(!!number.threeLetterCode).w),
+        ...numbers.map(
+          (number) =>
+            snBadgeDims(!!number.threeLetterCode, number.style).w,
+        ),
       );
       return Math.max(0, group.w - largestSingle);
     });
@@ -1567,7 +1623,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         1,
       );
       const largestSingle = Math.max(
-        ...numbers.map((number) => snBadgeDims(!!number.threeLetterCode).h),
+        ...numbers.map(
+          (number) =>
+            snBadgeDims(!!number.threeLetterCode, number.style).h,
+        ),
       );
       return Math.max(0, group.h - largestSingle);
     });
@@ -1586,8 +1645,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     const verticalFirstPosition = verticalPositions[0] ?? 0;
     const verticalLastPosition = verticalPositions[n - 1] ?? 0;
 
-    // Whether to show a line indicator badge next to / above the line title
-    const showLineBadge = companyStyle === "jreast" && !!line.prefix;
+    // Show the line indicator whenever the line has an abbreviation. The company
+    // style controls its shape and typography, not whether it is rendered.
+    const showLineBadge = shouldShowLineIndicatorBadge(line.prefix);
 
     // ── Circular layout ───────────────────────────────────────────────────
 
@@ -1616,7 +1676,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         const snNum = stationNumbers[station.id];
         const dotModeActive = stationNumberMode === "dot" && !!snNum?.value;
         const _snDims = dotModeActive
-          ? snBadgeDims(!!snNum!.threeLetterCode)
+          ? snBadgeDims(!!snNum!.threeLetterCode, snNum!.style)
           : null;
         // Radial extent of the (upright) badge in the outward direction.
         // For a rectangle this equals |cosA|×w/2 + |sinA|×h/2 — largest at
@@ -1788,7 +1848,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const snNum = stationNumbers[stations[i].id];
               const showSnDot = stationNumberMode === "dot" && !!snNum?.value;
               const snDotDims = showSnDot
-                ? snBadgeDims(!!snNum!.threeLetterCode)
+                ? snBadgeDims(!!snNum!.threeLetterCode, snNum!.style)
                 : null;
               return showSnDot && snDotDims ? (
                 <SnBadge
@@ -1829,7 +1889,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const showSnBadge =
                 stationNumberMode === "badge" && !!snNum?.value;
               const snDims = snNum
-                ? snBadgeDims(!!snNum.threeLetterCode)
+                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style)
                 : snBadgeDims(false);
 
               const primaryName = stationName(station, primaryLangField);
@@ -2045,7 +2105,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         ? Math.max(
             ...stations.map((s) => {
               const snNum = stationNumbers[s.id];
-              return snNum ? snBadgeDims(!!snNum.threeLetterCode).h : 0;
+              return snNum
+                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style).h
+                : 0;
             }),
           )
         : 0;
@@ -2254,7 +2316,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const showSnBadge =
                 stationNumberMode === "badge" && !!snNum?.value;
               const snDims = snNum
-                ? snBadgeDims(!!snNum.threeLetterCode)
+                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style)
                 : snBadgeDims(false);
 
               // Walk outward from the bundle's outer edge
@@ -2501,7 +2563,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         ? Math.max(
             ...stations.map((s) => {
               const snNum = stationNumbers[s.id];
-              return snNum ? snBadgeDims(!!snNum.threeLetterCode).h : 0;
+              return snNum
+                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style).h
+                : 0;
             }),
           )
         : 0;
@@ -3623,7 +3687,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const showSnBadge =
                 stationNumberMode === "badge" && !!snNum?.value;
               const snDims = snNum
-                ? snBadgeDims(!!snNum.threeLetterCode)
+                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style)
                 : snBadgeDims(false);
 
               const jpNameY = y - JP_FONT / 2;

@@ -18,6 +18,7 @@ import {
 import {
   getLineIndicatorShape,
   getLineIndicatorVisualStyle,
+  shouldShowLineIndicatorBadge,
 } from "../src/components/signs/lineIndicatorStyle";
 import {
   ceilCanvasDimensions,
@@ -127,6 +128,14 @@ describe("transit line layout", () => {
       "rounded-square",
     );
     expect(getLineIndicatorVisualStyle("tokyometro").strokeScale).toBe(1.5);
+  });
+
+  test("shows a line-title badge for every company style when a prefix exists", () => {
+    expect(shouldShowLineIndicatorBadge("JY")).toBe(true);
+    expect(shouldShowLineIndicatorBadge("M")).toBe(true);
+    expect(shouldShowLineIndicatorBadge("  A  ")).toBe(true);
+    expect(shouldShowLineIndicatorBadge("   ")).toBe(false);
+    expect(shouldShowLineIndicatorBadge(null)).toBe(false);
   });
 
   test("rotates Japanese and ASCII parentheses in vertical text", () => {

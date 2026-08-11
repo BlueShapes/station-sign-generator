@@ -9,6 +9,10 @@ export interface BuiltinFontDef {
   family: string;
   spec: string;
   sizeApprox: number;
+  license?: {
+    name: string;
+    url: string;
+  };
 }
 
 export interface UserFontEntry {
@@ -23,6 +27,17 @@ export const BUILTIN_FONTS: BuiltinFontDef[] = [
   { id: 'noto-sans-jp', name: 'Noto Sans JP', family: 'NotoSansJP', spec: '900 1em NotoSansJP', sizeApprox: 9_600_000 },
   { id: 'noto-sans-tc', name: 'Noto Sans TC', family: 'NotoSansTC', spec: '1em NotoSansTC', sizeApprox: 11_900_000 },
   { id: 'noto-sans-kr', name: 'Noto Sans KR', family: 'NotoSansKR', spec: '1em NotoSansKR', sizeApprox: 10_400_000 },
+  {
+    id: 'zen-maru-gothic',
+    name: 'Zen Maru Gothic',
+    family: 'ZenMaruGothic',
+    spec: '700 1em ZenMaruGothic',
+    sizeApprox: 3_779_008,
+    license: {
+      name: 'SIL Open Font License 1.1',
+      url: new URL('../fonts/ZenMaruGothic-OFL.txt', import.meta.url).href,
+    },
+  },
   { id: 'overused-grotesk', name: 'Overused Grotesk', family: 'OverusedGrotesk', spec: '1em OverusedGrotesk', sizeApprox: 217_000 },
   { id: 'hind-semibold', name: 'Hind SemiBold', family: 'HindSemiBold', spec: '600 1em HindSemiBold', sizeApprox: 274_000 },
   { id: 'jost-trispace-hybrid', name: 'Jost Trispace Hybrid', family: 'JostTrispaceHybrid', spec: '600 1em JostTrispaceHybrid', sizeApprox: 8_124 },

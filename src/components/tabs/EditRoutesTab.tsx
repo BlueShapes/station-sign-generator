@@ -39,6 +39,7 @@ import {
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
 import { getStationNumberFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
+import { getJrCentralStationNumberBadgeMetrics } from "@/components/signs/jrCentralStationNumberBadgeMetrics";
 import {
   DEFAULT_COMPANY_LANGUAGES,
   getCompanyLanguages,
@@ -256,7 +257,10 @@ function StationNumberBadgePreview({
     const trcH = 12 * scale;
     const outerPadX = 3 * scale;
     const outerPadBot = 3 * scale;
-    const trcExtension = threeLetterCode ? Math.ceil(trcH + outerPadBot) : 0;
+    const trcExtension =
+      threeLetterCode && style === "jreast"
+        ? Math.ceil(trcH + outerPadBot)
+        : 0;
     const cssW = isMetroCompact ? 94 : compact ? 75 : 120;
     const cssH = (isMetroCompact ? 68 : compact ? 57 : 75) + trcExtension;
     canvas.width = cssW * dpr;
@@ -273,6 +277,8 @@ function StationNumberBadgePreview({
       const badgeFont =
         style === "tokyometro"
           ? '"JostTrispaceHybrid", Arial, sans-serif'
+          : style === "jrcentral"
+            ? '"PublicSans", Arial, sans-serif'
           : '"HindSemiBold", Arial, sans-serif';
 
       if (style === "tokyometro") {
@@ -308,6 +314,28 @@ function StationNumberBadgePreview({
           // Number text below prefix
           ctx.font = `700 ${metroValueTextSize}px ${badgeFont}`;
           ctx.fillText(value, cx, cy - radius + 14 * scale + metroTextOffsetY);
+      } else if (style === "jrcentral") {
+        const metrics = getJrCentralStationNumberBadgeMetrics(badgeSize);
+        const bx = (cssW - metrics.width) / 2;
+        const by = (cssH - metrics.height) / 2;
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(bx, by, metrics.width, metrics.height);
+        ctx.fillStyle = color;
+        ctx.fillRect(bx, by, metrics.width, metrics.headerHeight);
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `700 ${metrics.prefixFontSize}px ${badgeFont}`;
+        ctx.fillText(prefix, bx + badgeSize / 2, by + metrics.prefixY);
+        ctx.fillStyle = "#111923";
+        ctx.font = `700 ${metrics.valueFontSize}px ${badgeFont}`;
+        ctx.fillText(value, bx + badgeSize / 2, by + metrics.valueY);
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = metrics.strokeWidth;
+        ctx.strokeRect(bx, by, metrics.width, metrics.height);
       } else if (style === "jreast") {
         if (threeLetterCode) {
           // Outer frame: 36×45 sign units → (badgeSize + 2*outerPadX) × (trcH + badgeSize + outerPadBot)
@@ -630,6 +658,10 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
           {
             value: "jreast",
             label: t("route.company.station-number-style-jreast"),
+          },
+          {
+            value: "jrcentral",
+            label: t("route.company.station-number-style-jrcentral"),
           },
           {
             value: "tokyometro",

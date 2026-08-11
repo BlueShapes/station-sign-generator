@@ -3,6 +3,7 @@ import {
   Stack,
   Title,
   Text,
+  Anchor,
   Group,
   Badge,
   Button,
@@ -169,6 +170,16 @@ export default function SettingsTab() {
                 <Text size="sm" fw={500}>{font.name}</Text>
                 <Text size="xs" c="dimmed" ff="monospace">{font.family}</Text>
                 <Text size="xs" c="dimmed">{formatBytes(font.sizeApprox)}</Text>
+                {font.license && (
+                  <Anchor
+                    size="xs"
+                    href={font.license.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {font.license.name}
+                  </Anchor>
+                )}
               </Stack>
               <Group gap="xs" wrap="nowrap">
                 <StatusBadge status={builtinStatus[font.id] ?? 'idle'} t={t} />

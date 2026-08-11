@@ -22,8 +22,23 @@ import {
   hasThreeJrEastBranches,
   JR_EAST_BRANCH_LAYOUT,
 } from "../src/components/signs/jrEastBranchLayout.ts";
+import { SIGN_STYLE_FIELDS } from "../src/components/signs/signStyles.ts";
 
 describe("JR East branch sign layout", () => {
+  test("allows up to three station numbers only in the branch style", () => {
+    const fields = SIGN_STYLE_FIELDS.jreastbranch;
+
+    expect(fields.numberSecondary).toBe("optional");
+    expect(fields.numberTertiary).toBe("optional");
+    expect(fields.left.numberSecondary).toBe("optional");
+    expect(fields.left.numberTertiary).toBe("optional");
+    expect(fields.right.numberSecondary).toBe("optional");
+    expect(fields.right.numberTertiary).toBe("optional");
+    expect(SIGN_STYLE_FIELDS.jreast.numberTertiary).toBeUndefined();
+    expect(SIGN_STYLE_FIELDS.jreast.left.numberTertiary).toBeUndefined();
+    expect(SIGN_STYLE_FIELDS.jreast.right.numberTertiary).toBeUndefined();
+  });
+
   test("places one, two, and three branches symmetrically", () => {
     expect(getJrEastBranchOffsets(1)).toEqual([0]);
     expect(getJrEastBranchOffsets(2)).toEqual([-20, 20]);
@@ -123,6 +138,25 @@ describe("JR East branch sign layout", () => {
     );
     expect(
       getJrEastBranchStationBadgeX("right", width, "secondary", true),
+    ).toBe(width - 20);
+
+    expect(
+      getJrEastBranchStationBadgeX("left", width, "primary", true, 3),
+    ).toBe(45);
+    expect(
+      getJrEastBranchStationBadgeX("left", width, "secondary", true, 3),
+    ).toBe(25);
+    expect(
+      getJrEastBranchStationBadgeX("left", width, "tertiary", true, 3),
+    ).toBe(5);
+    expect(
+      getJrEastBranchStationBadgeX("right", width, "primary", true, 3),
+    ).toBe(width - 60);
+    expect(
+      getJrEastBranchStationBadgeX("right", width, "secondary", true, 3),
+    ).toBe(width - 40);
+    expect(
+      getJrEastBranchStationBadgeX("right", width, "tertiary", true, 3),
     ).toBe(width - 20);
   });
 

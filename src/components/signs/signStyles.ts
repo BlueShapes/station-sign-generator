@@ -4,6 +4,7 @@
  */
 
 import { METRO_MEDIUM_DIMENSIONS } from "./subwaySignGeometry";
+import { JR_CENTRAL_SIGN_RATIO } from "./jrCentralSignLayout";
 
 type FieldRequirement = "required" | "optional" | "hidden";
 
@@ -13,6 +14,7 @@ type AdjacentFieldSpec = {
   secondaryName: FieldRequirement;
   numberPrimary: FieldRequirement;
   numberSecondary: FieldRequirement;
+  numberTertiary?: FieldRequirement;
 };
 
 interface SignStyleFieldSpec {
@@ -25,6 +27,7 @@ interface SignStyleFieldSpec {
   note: FieldRequirement;
   numberPrimary: FieldRequirement;
   numberSecondary: FieldRequirement;
+  numberTertiary?: FieldRequirement;
   threeLetterCode: FieldRequirement;
   stationAreas: FieldRequirement;
   // Adjacent stations
@@ -46,6 +49,40 @@ interface SignStyleFieldSpec {
 }
 
 export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
+  jrcentral: {
+    primaryName: "required",
+    primaryNameFurigana: "required",
+    secondaryName: "required",
+    tertiaryName: "hidden",
+    quaternaryName: "hidden",
+    note: "optional",
+    numberPrimary: "optional",
+    numberSecondary: "hidden",
+    threeLetterCode: "hidden",
+    stationAreas: "optional",
+    left: {
+      primaryName: "hidden",
+      primaryNameFurigana: "required",
+      secondaryName: "required",
+      numberPrimary: "hidden",
+      numberSecondary: "hidden",
+    },
+    right: {
+      primaryName: "hidden",
+      primaryNameFurigana: "required",
+      secondaryName: "required",
+      numberPrimary: "hidden",
+      numberSecondary: "hidden",
+    },
+    maxAdjacentCount: 2,
+    baseColor: "required",
+    centerSquareColors: "hidden",
+    ratio: "hidden",
+    fixedRatio: JR_CENTRAL_SIGN_RATIO,
+    direction: "hidden",
+    localLinesMax: 1,
+    localLinesMin: 1,
+  },
   metrolong: {
     primaryName: "required",
     primaryNameFurigana: "required",
@@ -332,7 +369,8 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
     quaternaryName: "optional",
     note: "optional",
     numberPrimary: "optional",
-    numberSecondary: "hidden",
+    numberSecondary: "optional",
+    numberTertiary: "optional",
     threeLetterCode: "optional",
     stationAreas: "hidden",
     left: {
@@ -340,14 +378,16 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
       primaryNameFurigana: "hidden",
       secondaryName: "required",
       numberPrimary: "optional",
-      numberSecondary: "hidden",
+      numberSecondary: "optional",
+      numberTertiary: "optional",
     },
     right: {
       primaryName: "required",
       primaryNameFurigana: "hidden",
       secondaryName: "required",
       numberPrimary: "optional",
-      numberSecondary: "hidden",
+      numberSecondary: "optional",
+      numberTertiary: "optional",
     },
     maxAdjacentCount: 3,
     baseColor: "required",

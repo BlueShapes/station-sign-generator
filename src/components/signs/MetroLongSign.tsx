@@ -493,6 +493,11 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
 );
 
 const CanvasImage = styled.img`
+  width: 100%;
+  max-width: 60rem;
+  max-height: 20vh;
+  margin-inline: auto;
+  object-fit: contain;
   display: block;
   user-select: none;
   -webkit-user-drag: none;

@@ -48,6 +48,7 @@ input:
     len: Nama Alternatif Stesen Kiri
     lnum: Nombor Stesen Kiri (Utama)
     lnum2: Nombor Stesen Kiri (Menengah)
+    lnum3: Nombor Stesen Kiri (Tertier)
     station: Nama Stesen
     read: Subteks Stesen
     en: Nama Stesen Bahasa Kedua (Bahasa Inggeris)
@@ -55,6 +56,7 @@ input:
     kp: Nama Stesen Bahasa Keempat (Bahasa Korea)
     num: Nombor Stesen (Utama)
     num2: Nombor Stesen (Menengah)
+    num3: Nombor Stesen (Tertier)
     trc: Kod Stesen
     note: Nota Stesen (Teks Lebih Besar Di Bawah Nama Stesen)
     rstation: Nama Stesen Kanan
@@ -62,6 +64,7 @@ input:
     ren: Subteks Stesen Kanan
     rnum: Nombor Stesen Kanan (Utama)
     rnum2: Nombor Stesen Kanan (Menengah)
+    rnum3: Nombor Stesen Kanan (Tertier)
     input-left: Maklumat Stesen Kiri
     input-current: Maklumat Stesen Semasa
     input-right: Maklumat Stesen Kanan
@@ -160,6 +163,7 @@ route:
     color: Warna Syarikat
     station-number-style: Gaya Nombor Stesen
     station-number-style-jreast: Gaya JR East
+    station-number-style-jrcentral: Gaya JR Central
     station-number-style-tokyometro: Gaya Tokyo Metro / Toei Subway
     station-number-style-preview: Contoh lencana (menggunakan warna syarikat sebagai warna garis)
     empty: Tiada syarikat lagi
@@ -265,6 +269,7 @@ route:
     adjacent-swap-order: Songsangkan susunan
     jreast: Gaya JR Timur
     jreastbranch: Gaya JR Timur (bercabang)
+    jrcentral: Gaya JR Central
     jrwest: Gaya JR Barat
     jrwestlarge: Gaya JR West (Besar)
     metrolong: Gaya Metro Tokyo (kecil / Jepun)

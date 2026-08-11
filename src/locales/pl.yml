@@ -48,6 +48,7 @@ input:
     len: Lewa alternatywna nazwa stacji
     lnum: Numer lewej stacji (główny)
     lnum2: Numer lewej stacji (drugi)
+    lnum3: Numer lewej stacji (trzeci)
     station: Nazwa stacji
     read: Podtekst stacji
     en: Nazwa stacji Drugi język (angielski)
@@ -55,6 +56,7 @@ input:
     kp: Nazwa stacji Czwarty język (koreański)
     num: Numer stacji (główny)
     num2: Numer stacji (dodatkowy)
+    num3: Numer stacji (trzeci)
     trc: Kod stacji
     note: Uwaga stacji (większy tekst pod nazwą stacji)
     rstation: Prawa nazwa stacji
@@ -62,6 +64,7 @@ input:
     ren: Podtekst prawej stacji
     rnum: Numer prawej stacji (główny)
     rnum2: Numer prawej stacji (drugi)
+    rnum3: Numer prawej stacji (trzeci)
     input-left: Informacje o lewej stacji
     input-current: Aktualne informacje o stacji
     input-right: Informacje o prawej stacji
@@ -160,6 +163,7 @@ route:
     color: Kolor firmowy
     station-number-style: Styl numeru stacji
     station-number-style-jreast: Styl JR Wschodni
+    station-number-style-jrcentral: Styl JR Central
     station-number-style-tokyometro: Styl metra w Tokio / metra Toei
     station-number-style-preview: Przykładowa plakietka (przy użyciu koloru firmy jako koloru linii)
     empty: Nie ma jeszcze żadnych firm
@@ -265,6 +269,7 @@ route:
     adjacent-swap-order: Odwróć kolejność
     jreast: Styl JR Wschodni
     jreastbranch: Styl JR East (rozgałęzienie)
+    jrcentral: Styl JR Central
     jrwest: Styl JR Westa
     jrwestlarge: Styl JR West (duży)
     metrolong: Styl metra tokijskiego (mały / japoński)

@@ -48,6 +48,7 @@ input:
     len: 左站别名
     lnum: 左站号码（主要）
     lnum2: 左站号码（中学）
+    lnum3: 左侧车站编号（第三）
     station: 车站名称
     read: 车站潜台词
     en: 站名 第二语言（英语）
@@ -55,6 +56,7 @@ input:
     kp: 站名第四语言（韩语）
     num: 站号（主要）
     num2: 站号（次要）
+    num3: 车站编号（第三）
     trc: 车站代码
     note: 车站注释（车站名称下方较大文字）
     rstation: 正确的站名
@@ -62,6 +64,7 @@ input:
     ren: 右站潜台词
     rnum: 右站号（主要）
     rnum2: 右站号（次要）
+    rnum3: 右侧车站编号（第三）
     input-left: 左站信息
     input-current: 当前车站信息
     input-right: 正确的车站信息
@@ -160,6 +163,7 @@ route:
     color: 公司颜色
     station-number-style: 站号样式
     station-number-style-jreast: JR东日本风格
+    station-number-style-jrcentral: JR东海风格
     station-number-style-tokyometro: 东京地铁/都营地铁风格
     station-number-style-preview: 徽章示例（使用公司颜色作为线条颜色）
     empty: 还没有公司
@@ -265,6 +269,7 @@ route:
     adjacent-swap-order: 反转顺序
     jreast: JR东日本风格
     jreastbranch: JR东日本风格（支持分支）
+    jrcentral: JR东海风格
     jrwest: JR西日本风格
     jrwestlarge: JR西日本风格（大）
     metrolong: 东京地铁风格（小・日文）

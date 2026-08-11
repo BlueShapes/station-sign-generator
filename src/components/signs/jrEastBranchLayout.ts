@@ -162,32 +162,41 @@ export function getJrEastBranchStationNameX(
 export function getJrEastBranchStationBadgeX(
   side: BranchSide,
   width: number,
-  badgeKind: "primary" | "secondary",
+  badgeKind: "primary" | "secondary" | "tertiary",
   isTravelDirection: boolean,
+  badgeCount = 2,
 ): number {
+  const badgeIndex =
+    badgeKind === "primary" ? 0 : badgeKind === "secondary" ? 1 : 2;
+  const badgeStep =
+    JR_EAST_BRANCH_LAYOUT.adjacentBadgeSize +
+    JR_EAST_BRANCH_LAYOUT.adjacentBadgeGap;
+
   if (!isTravelDirection) {
-    if (side === "left") return badgeKind === "primary" ? 44 : 24;
-    return badgeKind === "primary" ? width - 60 : width - 40;
+    if (side === "left") return 44 - badgeIndex * badgeStep;
+    return width - 60 + badgeIndex * badgeStep;
   }
 
   const textInset = Math.abs(
     getJrEastBranchStationNameX(side, "secondary", true),
   );
-  const badgeStep =
-    JR_EAST_BRANCH_LAYOUT.adjacentBadgeSize +
-    JR_EAST_BRANCH_LAYOUT.adjacentBadgeGap;
+  const threeBadgeInset = badgeCount >= 3 ? badgeStep : 0;
 
   if (side === "left") {
     const primaryX =
       textInset -
       JR_EAST_BRANCH_LAYOUT.travelTextBadgeGap -
-      JR_EAST_BRANCH_LAYOUT.adjacentBadgeSize;
-    return badgeKind === "primary" ? primaryX : primaryX - badgeStep;
+      JR_EAST_BRANCH_LAYOUT.adjacentBadgeSize +
+      threeBadgeInset;
+    return primaryX - badgeIndex * badgeStep;
   }
 
   const primaryX =
-    width - textInset + JR_EAST_BRANCH_LAYOUT.travelTextBadgeGap;
-  return badgeKind === "primary" ? primaryX : primaryX + badgeStep;
+    width -
+    textInset +
+    JR_EAST_BRANCH_LAYOUT.travelTextBadgeGap -
+    threeBadgeInset;
+  return primaryX + badgeIndex * badgeStep;
 }
 
 export function getJrEastBranchSecondaryNameY(

@@ -27,6 +27,8 @@ export type AdjacentStationProps = {
   numberPrimaryValue?: string;
   numberSecondaryPrefix?: string;
   numberSecondaryValue?: string;
+  numberTertiaryPrefix?: string;
+  numberTertiaryValue?: string;
 };
 
 interface DirectInputStationProps {
@@ -41,6 +43,8 @@ interface DirectInputStationProps {
   numberPrimaryValue?: string;
   numberSecondaryPrefix?: string;
   numberSecondaryValue?: string;
+  numberTertiaryPrefix?: string;
+  numberTertiaryValue?: string;
   threeLetterCode?: string;
   stationAreas?: StationArea[];
   //adjacent
