@@ -171,6 +171,45 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--mantine-color-text) 14%, transparent);
 }
 
+.multiLineSwatch {
+  width: 24px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 99px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mantine-color-text) 14%, transparent);
+}
+
+.multiLineOrder {
+  max-width: 720px;
+}
+
+.multiLineOrderRow {
+  min-height: 38px;
+  padding: 5px 8px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: color-mix(in srgb, var(--mantine-color-body) 84%, var(--mantine-color-default));
+}
+
+.multiLineOrderRow[data-root="true"] {
+  border-left: 4px solid var(--route-accent);
+  padding-left: 5px;
+}
+
+.multiLineOrderIndex {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--mantine-color-dimmed);
+  background: var(--mantine-color-default);
+  font-size: var(--mantine-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
 .downloadControls {
   margin-top: 12px;
   padding-top: 14px;

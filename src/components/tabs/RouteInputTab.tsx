@@ -99,6 +99,7 @@ import type {
 } from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 import { moveAdjacentStationId } from "./adjacentStationOrder";
+import { moveOrderedId } from "./orderedIds";
 
 import JrEastSign, {
   height as JrEastSignHeight,
@@ -143,10 +144,20 @@ import LineMapRenderer, {
   type ServiceInfo,
   type ServiceStopMap,
 } from "@/components/signs/LineMapRenderer";
+import MultiLineMapRenderer, {
+  multiLineMapScale,
+  type MultiLineRouteData,
+} from "@/components/signs/MultiLineMapRenderer";
+import {
+  applyParallelRouteLanes,
+  layoutCircularMultiLineMap,
+  layoutMultiLineMap,
+} from "@/components/signs/multiLineMapLayout";
 import {
   DEFAULT_TRACK_WIDTH,
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
+  normalizeTrackWidth,
 } from "@/components/signs/lineMapGeometry";
 import {
   isTransitSecondaryNameExportTooSmall,
@@ -249,6 +260,86 @@ function AdjacentOrderControls({
   );
 }
 
+type MultiLineOrderControlsProps = {
+  lines: Line[];
+  onMove: (fromIndex: number, toIndex: number) => void;
+  t: (key: string) => string;
+};
+
+function MultiLineOrderControls({
+  lines,
+  onMove,
+  t,
+}: MultiLineOrderControlsProps) {
+  return (
+    <Stack
+      gap={6}
+      mt="md"
+      className={styles.multiLineOrder}
+      data-testid="multi-line-order"
+    >
+      <Text size="xs" c="dimmed" fw={600}>
+        {t("route.sign.adjacent-order")}
+      </Text>
+      {lines.map((line, index) => {
+        const moveUpLabel = `${t("route.sign.adjacent-move-up")}: ${line.name}`;
+        const moveDownLabel =
+          `${t("route.sign.adjacent-move-down")}: ${line.name}`;
+        return (
+          <Group
+            key={line.id}
+            gap="xs"
+            wrap="nowrap"
+            className={styles.multiLineOrderRow}
+            data-line-id={line.id}
+            data-root={index === 0 ? "true" : undefined}
+          >
+            <Text className={styles.multiLineOrderIndex} aria-hidden="true">
+              {index + 1}
+            </Text>
+            <Box
+              className={styles.multiLineSwatch}
+              style={{ backgroundColor: line.line_color }}
+              aria-hidden="true"
+            />
+            <Text
+              size="sm"
+              fw={index === 0 ? 700 : 500}
+              truncate
+              style={{ flex: 1 }}
+            >
+              {line.prefix ? `[${line.prefix}] ` : ""}
+              {line.name}
+            </Text>
+            <Tooltip label={moveUpLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveUpLabel}
+                disabled={index === 0}
+                onClick={() => onMove(index, index - 1)}
+              >
+                <IconArrowUp size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={moveDownLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveDownLabel}
+                disabled={index === lines.length - 1}
+                onClick={() => onMove(index, index + 1)}
+              >
+                <IconArrowDown size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        );
+      })}
+    </Stack>
+  );
+}
+
 const SIGN_STYLES: Record<
   SignStyle,
   { Component: typeof JrEastSign; height: number; scale: number }
@@ -310,6 +401,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const locale = useLocale();
   const signRef = useRef<Konva.Stage>(null);
   const mapRef = useRef<Konva.Stage>(null);
+  const multiLineMapRef = useRef<Konva.Stage>(null);
 
   const [lines, setLines] = useState<Line[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
@@ -397,6 +489,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapServiceNameStyle, setMapServiceNameStyle] = useState<
     "paren" | "badge"
   >("paren");
+  const [multiSelectedLineIds, setMultiSelectedLineIds] = useState<string[]>(
+    [],
+  );
+  const [multiStationNumberMode, setMultiStationNumberMode] =
+    useState<StationNumberMode>("dot");
+  const [multiTransitFilter, setMultiTransitFilter] = useState<string[]>([]);
 
   // Load lines when db becomes available
   useEffect(() => {
@@ -953,7 +1051,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const signFonts = useCanvasFonts(signFontSpecs, tabMode === "sign");
   const mapFonts = useCanvasFonts(
     LINE_MAP_FONT_SPECS,
-    tabMode === "linemap",
+    tabMode === "linemap" || tabMode === "multiline-linemap",
   );
   const mapLanguageOptions = getCompanyLanguages(mapCompany).map(
     (language, index) => ({
@@ -977,6 +1075,132 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ]),
     );
   }, [lines, routeCompanies]);
+
+  const multiSelectedLines = useMemo(
+    () =>
+      multiSelectedLineIds
+        .map((lineId) => lines.find((line) => line.id === lineId))
+        .filter((line): line is Line => !!line),
+    [multiSelectedLineIds, lines],
+  );
+  // Inclusion and order are manual. The first selected line is the visual
+  // spine and owns the filename/company-language context.
+  const multiRootLine = multiSelectedLines[0] ?? null;
+  const multiCompany = routeCompanies.find(
+    (company) => company.id === multiRootLine?.company_id,
+  );
+  const multiLanguageOptions = getCompanyLanguages(multiCompany).map(
+    (language, index) => ({
+      value: STATION_NAME_FIELDS[index],
+      label: `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
+    }),
+  );
+  const multiLineRoutes = useMemo((): MultiLineRouteData[] => {
+    if (!db || !multiRootLine) return [];
+    const selectedIds = new Set(multiSelectedLineIds);
+    const orderedLines = multiSelectedLines;
+
+    return orderedLines.map((line) => {
+      const routeStations = getStationsByLine(db, line.id);
+      const stationNumbers: StationNumberMap = {};
+      const transits: Record<string, Line[]> = {};
+      for (const station of routeStations) {
+        const number = getResolvedStationNumber(db, station.id, line.id);
+        if (number) {
+          stationNumbers[station.id] = {
+            prefix: number.prefix,
+            value: number.value,
+            threeLetterCode: station.three_letter_code,
+            color: number.line_color,
+            style: mapLineIndicatorStyles[line.id] ?? "jreast",
+          };
+        }
+        const transferIds = new Set(getTransferLineIds(db, station.id));
+        const stationLineIds = new Set(
+          getStationLines(db, station.id).map((stationLine) => stationLine.line_id),
+        );
+        const stationTransits = lines.filter(
+          (candidate) =>
+            !selectedIds.has(candidate.id) &&
+            (stationLineIds.has(candidate.id) || transferIds.has(candidate.id)),
+        );
+        if (stationTransits.length > 0) transits[station.id] = stationTransits;
+      }
+      const companyStyle = routeCompanies.find(
+        (company) => company.id === line.company_id,
+      )?.station_number_style;
+      return {
+        line,
+        stations: routeStations,
+        stationNumbers,
+        transits,
+        companyStyle,
+      };
+    });
+  }, [
+    db,
+    multiRootLine,
+    multiSelectedLineIds,
+    multiSelectedLines,
+    mapLineIndicatorStyles,
+    lines,
+    routeCompanies,
+  ]);
+  const multiTransitLines = useMemo(() => {
+    const seen = new Set<string>();
+    const result: Line[] = [];
+    for (const route of multiLineRoutes) {
+      for (const stationTransits of Object.values(route.transits)) {
+        for (const transit of stationTransits) {
+          if (seen.has(transit.id)) continue;
+          seen.add(transit.id);
+          result.push(transit);
+        }
+      }
+    }
+    return result;
+  }, [multiLineRoutes]);
+  const filteredMultiLineRoutes = useMemo(
+    () =>
+      multiLineRoutes.map((route) => ({
+        ...route,
+        transits: Object.fromEntries(
+          Object.entries(route.transits).map(([stationId, stationTransits]) => [
+            stationId,
+            stationTransits.filter((line) => multiTransitFilter.includes(line.id)),
+          ]),
+        ),
+      })),
+    [multiLineRoutes, multiTransitFilter],
+  );
+  const multiMapSaveSizeList = useMemo(() => {
+    if (!multiRootLine) return [];
+    const layoutInputs = multiLineRoutes.map(({ line, stations: routeStations }) => ({
+        lineId: line.id,
+        parentLineId: line.parent_line_id,
+        stationIds: routeStations.map((station) => station.id),
+        isLoop: !!line.is_loop,
+      }));
+    const loopRoot = multiLineRoutes.find((route) => !!route.line.is_loop)?.line;
+    const layoutRootId = loopRoot?.id ?? multiRootLine.id;
+    const laneGap = Math.max(16, normalizeTrackWidth(mapTrackWidth) + 4);
+    const dimensions = loopRoot
+      ? layoutCircularMultiLineMap(
+          layoutInputs,
+          layoutRootId,
+          mapStationSpacing,
+          laneGap,
+        )
+      : applyParallelRouteLanes(
+          layoutMultiLineMap(layoutInputs, layoutRootId, mapStationSpacing),
+          layoutInputs,
+          laneGap,
+        );
+    return [1, 2, 3, 4].map((multiplier) => ({
+      label: `${dimensions.width * multiplier} × ${dimensions.height * multiplier} (${["SS", "M", "L", "XL"][multiplier - 1]})`,
+      value: multiLineMapScale * multiplier,
+    }));
+  }, [multiLineRoutes, multiRootLine, mapStationSpacing, mapTrackWidth]);
 
   const lineById = useMemo(
     () => new Map(lines.map((routeLine) => [routeLine.id, routeLine])),
@@ -1346,6 +1570,31 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     document.body.removeChild(link);
   };
 
+  const handleSaveMultiLineMap = async () => {
+    if (!multiLineMapRef.current || !multiRootLine) return;
+    await waitForCanvasFonts(LINE_MAP_FONT_SPECS).catch(() => undefined);
+    const uri = multiLineMapRef.current.toDataURL({
+      pixelRatio: mapSaveSize / multiLineMapScale,
+    });
+    const link = document.createElement("a");
+    const filename = getLocalizedRailwayName(
+      locale,
+      getCompanyLanguages(multiCompany),
+      [
+        multiRootLine.name,
+        multiRootLine.secondary_name,
+        multiRootLine.tertiary_name,
+        multiRootLine.quaternary_name,
+      ],
+      "line",
+    );
+    link.download = `${filename}_${t("route.linemap.filename-suffix")}.png`;
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <Center style={{ height: "300px" }}>
@@ -1377,7 +1626,19 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           <SegmentedControl
             className={styles.modeControl}
             value={tabMode}
-            onChange={(v) => setTabMode(v as TabMode)}
+            onChange={(value) => {
+              const nextMode = value as TabMode;
+              setTabMode(nextMode);
+              if (
+                nextMode === "multiline-linemap" &&
+                multiSelectedLineIds.length === 0 &&
+                selectedLineId
+              ) {
+                // Carry over only the currently selected line. Additional
+                // lines remain an explicit user choice.
+                setMultiSelectedLineIds([selectedLineId]);
+              }
+            }}
             data={[
               {
                 value: "sign",
@@ -2436,6 +2697,276 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         {t("input.save")}
                       </Button>
                     </Tooltip>
+                  </Grid.Col>
+                </Grid>
+              </Paper>
+            )}
+          </Stack>
+        )}
+
+        {/* ── Multiple-line map controls ──────────────────────────────── */}
+        {tabMode === "multiline-linemap" && (
+          <Stack
+            gap="lg"
+            className={styles.linemapWorkspace}
+            style={
+              {
+                "--route-accent": multiRootLine?.line_color ?? "#228be6",
+              } as CSSProperties
+            }
+          >
+            <Paper withBorder radius="lg" className={styles.mapSourcePanel}>
+              <Group className={styles.mapSectionHeader} gap="sm">
+                <Box className={styles.mapSectionIcon} aria-hidden="true">
+                  <IconMap size={18} />
+                </Box>
+                <Title order={2}>{t("route.mode.multiline-linemap")}</Title>
+              </Group>
+              <MultiSelect
+                label={t("route.line.title")}
+                value={multiSelectedLineIds}
+                onChange={(lineIds) => {
+                  setMultiSelectedLineIds(lineIds);
+                  setMultiTransitFilter([]);
+                }}
+                data={lines.map((line) => ({
+                  value: line.id,
+                  label: line.prefix ? `[${line.prefix}] ${line.name}` : line.name,
+                }))}
+                placeholder={t("route.line.select")}
+                searchable
+                clearable
+              />
+              {multiSelectedLines.length > 0 && (
+                <MultiLineOrderControls
+                  lines={multiSelectedLines}
+                  onMove={(fromIndex, toIndex) =>
+                    setMultiSelectedLineIds((lineIds) =>
+                      moveOrderedId(lineIds, fromIndex, toIndex)
+                    )
+                  }
+                  t={t}
+                />
+              )}
+            </Paper>
+
+            {multiRootLine && (
+              <Box className={styles.mapSettingsGrid}>
+                <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                  <Group className={styles.mapSectionHeader} gap="sm">
+                    <Box className={styles.mapSectionIndex} aria-hidden="true">
+                      <IconRuler size={17} />
+                    </Box>
+                    <Title order={2}>{t("route.linemap.section-layout")}</Title>
+                  </Group>
+                  <Stack gap="xl">
+                    <Box>
+                      <Text size="sm" fw={500} mb={8}>
+                        {t("route.linemap.station-spacing")}
+                      </Text>
+                      <Group gap="md" wrap="nowrap">
+                        <IconRuler size={20} />
+                        <Slider
+                          value={mapStationSpacing}
+                          label={(value) => `${value}`}
+                          labelAlwaysOn
+                          step={1}
+                          min={45}
+                          max={150}
+                          style={{ width: "100%" }}
+                          onChange={setMapStationSpacing}
+                          marks={[
+                            { value: 60, label: "60" },
+                            { value: 90, label: "90" },
+                          ]}
+                        />
+                      </Group>
+                    </Box>
+                    <Box>
+                      <Text size="sm" fw={500} mb={8}>
+                        {t("route.linemap.line-width")}
+                      </Text>
+                      <Group gap="md" wrap="nowrap">
+                        <IconRuler size={20} />
+                        <Slider
+                          value={mapTrackWidth}
+                          label={(value) => `${value}`}
+                          labelAlwaysOn
+                          step={1}
+                          min={MIN_TRACK_WIDTH}
+                          max={MAX_TRACK_WIDTH}
+                          style={{ width: "100%" }}
+                          onChange={setMapTrackWidth}
+                          marks={[
+                            { value: DEFAULT_TRACK_WIDTH, label: "6" },
+                            { value: 18, label: "18" },
+                            { value: MAX_TRACK_WIDTH, label: "30" },
+                          ]}
+                        />
+                      </Group>
+                    </Box>
+                  </Stack>
+                </Paper>
+
+                <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                  <Group className={styles.mapSectionHeader} gap="sm">
+                    <Box className={styles.mapSectionIndex} aria-hidden="true">
+                      <IconEye size={17} />
+                    </Box>
+                    <Title order={2}>{t("route.linemap.section-content")}</Title>
+                  </Group>
+                  <Grid gutter="md">
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <Select
+                        label={t("route.linemap.primary-lang")}
+                        value={mapPrimaryLang}
+                        onChange={(value) =>
+                          value && setMapPrimaryLang(value as StationNameField)
+                        }
+                        data={multiLanguageOptions}
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <Select
+                        label={t("route.linemap.secondary-lang")}
+                        value={mapSecondaryLang}
+                        onChange={(value) =>
+                          value && setMapSecondaryLang(value as StationNameField)
+                        }
+                        disabled={!mapShowSecondaryLang}
+                        data={multiLanguageOptions}
+                      />
+                      <Switch
+                        mt={6}
+                        label={t("route.linemap.show-secondary-lang")}
+                        checked={mapShowSecondaryLang}
+                        onChange={(event) =>
+                          setMapShowSecondaryLang(event.currentTarget.checked)
+                        }
+                        size="xs"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12 }}>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("route.linemap.station-number-mode")}
+                      </Text>
+                      <SegmentedControl
+                        value={multiStationNumberMode}
+                        onChange={(value) =>
+                          setMultiStationNumberMode(value as StationNumberMode)
+                        }
+                        data={[
+                          {
+                            value: "none",
+                            label: t("route.linemap.station-number-none"),
+                          },
+                          {
+                            value: "badge",
+                            label: t("route.linemap.station-number-badge"),
+                          },
+                          {
+                            value: "dot",
+                            label: t("route.linemap.station-number-dot"),
+                          },
+                        ]}
+                      />
+                    </Grid.Col>
+                    {multiTransitLines.length > 0 && (
+                      <Grid.Col span={{ base: 12 }}>
+                        <MultiSelect
+                          label={t("route.linemap.transit-filter")}
+                          value={multiTransitFilter}
+                          onChange={setMultiTransitFilter}
+                          data={multiTransitLines.map((line) => ({
+                            value: line.id,
+                            label: line.prefix
+                              ? `[${line.prefix}] ${line.name}`
+                              : line.name,
+                          }))}
+                        />
+                        <Switch
+                          mt="xs"
+                          label={t("route.linemap.transit-show-names")}
+                          checked={mapShowTransitNames}
+                          onChange={(event) =>
+                            setMapShowTransitNames(event.currentTarget.checked)
+                          }
+                          disabled={multiTransitFilter.length === 0}
+                          size="xs"
+                        />
+                      </Grid.Col>
+                    )}
+                  </Grid>
+                </Paper>
+              </Box>
+            )}
+
+            {multiRootLine && filteredMultiLineRoutes.length > 0 && (
+              <Paper withBorder radius="xl" className={styles.mapPreviewPanel}>
+                <Group justify="space-between" align="center" mb="md">
+                  <Title order={2} className={styles.previewTitle}>
+                    <IconEye size="1.6em" />
+                    {t("common.preview")}
+                  </Title>
+                  <Group gap={4} aria-hidden="true">
+                    {multiSelectedLines.map((line) => (
+                      <Box
+                        key={line.id}
+                        className={styles.previewLineSwatch}
+                        style={{ backgroundColor: line.line_color, width: 38 }}
+                      />
+                    ))}
+                  </Group>
+                </Group>
+
+                {mapFonts.ready ? (
+                  <Box className={`map-preview ${styles.mapPreviewViewport}`}>
+                    <MultiLineMapRenderer
+                      ref={multiLineMapRef}
+                      routes={filteredMultiLineRoutes}
+                      rootLineId={multiRootLine.id}
+                      stationSpacing={mapStationSpacing}
+                      trackWidth={mapTrackWidth}
+                      stationNumberMode={multiStationNumberMode}
+                      primaryLangField={mapPrimaryLang}
+                      secondaryLangField={mapSecondaryLang}
+                      showSecondaryLang={mapShowSecondaryLang}
+                      showTransitNames={mapShowTransitNames}
+                      lineStyles={mapLineIndicatorStyles}
+                    />
+                  </Box>
+                ) : (
+                  <CanvasFontLoading show={mapFonts.showLoader} />
+                )}
+
+                <Grid gutter="md" className={styles.downloadControls}>
+                  <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
+                    <Select
+                      label={t("input.image-size")}
+                      value={String(mapSaveSize)}
+                      onChange={(value) => value && setMapSaveSize(Number(value))}
+                      data={multiMapSaveSizeList.map((size) => ({
+                        value: String(size.value),
+                        label: size.label,
+                      }))}
+                    />
+                  </Grid.Col>
+                  <Grid.Col
+                    span={{ base: 12, sm: 5, lg: 3 }}
+                    className={styles.downloadButtonColumn}
+                  >
+                    <Button
+                      color="green"
+                      size="lg"
+                      variant="filled"
+                      onClick={handleSaveMultiLineMap}
+                      disabled={!mapFonts.ready}
+                      fullWidth
+                      style={{ fontWeight: 700, minWidth: 0 }}
+                      leftSection={<IconDownload />}
+                    >
+                      {t("input.save")}
+                    </Button>
                   </Grid.Col>
                 </Grid>
               </Paper>

@@ -403,12 +403,12 @@ export function detectCircularOverlaps(
 
 // ── Layout constants ────────────────────────────────────────────────────────
 
-const DOT_R = 7;
-const XCHG_R = 10;
+export const DOT_R = 7;
+export const XCHG_R = 10;
 const PADDING = 50;
 export const JP_FONT = 9;
-const EN_FONT = 6;
-const LINE_TITLE_FONT = 12;
+export const EN_FONT = 6;
+export const LINE_TITLE_FONT = 12;
 
 interface SegmentedTrackProps {
   stationPoints: Array<{ x: number; y: number }>;
@@ -519,17 +519,17 @@ let _snBadgeStyle = "jreast";
 
 const SN_INNER = 20; // inner badge size in Konva units (= 30 ref × SN_S)
 const SN_S = SN_INNER / 30; // scale factor from 30-unit reference
-const SN_BADGE_GAP = 4; // gap between badge and station name (Konva units)
+export const SN_BADGE_GAP = 4; // gap between badge and station name (Konva units)
 
 // Circular
 const C_SIZE = 760;
 const C_CX = C_SIZE / 2; // 380
 const C_CY = C_SIZE / 2; // 380
 const C_RADIUS = 250;
-const C_TICK_LEN = 3; // gap between dot edge and label anchor
-const C_STAGGER = 0; // no stagger — labels sit close to their dot
-const C_LABEL_GAP = 4; // gap between tick end and text
-const C_DIAG = 0.35; // |cosA| threshold below which station is in top/bottom zone
+export const C_TICK_LEN = 3; // gap between dot edge and label anchor
+export const C_STAGGER = 0; // no stagger — labels sit close to their dot
+export const C_LABEL_GAP = 4; // gap between tick end and text
+export const C_DIAG = 0.35; // |cosA| threshold below which station is in top/bottom zone
 
 // Fade dots — shown at line ends when the map is a partial view of the full line
 const FADE_OPACITIES = [0.65, 0.35, 0.15] as const; // nearest → farthest
@@ -552,7 +552,7 @@ const _snPrefixFont = 11 * SN_S;
 const _snPrefixY = 4 * SN_S;
 const _snValueFont = 17 * SN_S;
 const _snValueY = 14 * SN_S;
-function snBadgeDims(hasTrc: boolean): { w: number; h: number } {
+export function snBadgeDims(hasTrc: boolean): { w: number; h: number } {
   if (hasTrc) {
     return {
       w: SN_INNER + _snOuterPadX * 2, // 36 ref units
@@ -794,8 +794,16 @@ function stationNumberGroupLayout(
   badgeScale = 1,
   forceFullRender = false,
   strokeWidthAdjust = 0,
+  sharedThreeLetterCode?: string | null,
 ): { w: number; h: number; positions: number[] } {
-  const dimensions = numbers.map((number) => {
+  const hasSharedThreeLetterCode =
+    orientation === "vertical" &&
+    numbers.length > 1 &&
+    !!sharedThreeLetterCode;
+  const layoutNumbers = hasSharedThreeLetterCode
+    ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
+    : numbers;
+  const dimensions = layoutNumbers.map((number) => {
     const dims = snBadgeDims(!!number.threeLetterCode);
     return { w: dims.w * badgeScale, h: dims.h * badgeScale };
   });
@@ -803,7 +811,7 @@ function stationNumberGroupLayout(
   const axisExtents = dimensions.map((dims) =>
     orientation === "horizontal" ? dims.w : dims.h,
   );
-  const visualOutsets = numbers.map((number) =>
+  const visualOutsets = layoutNumbers.map((number) =>
     stationNumberBadgeVisualOutset(
       number,
       badgeScale,
@@ -812,25 +820,59 @@ function stationNumberGroupLayout(
     ),
   );
   const connected = layoutConnectedMarkers(axisExtents, visualOutsets);
+  const sharedHeaderHeight = hasSharedThreeLetterCode
+    ? (snBadgeDims(true).h - snBadgeDims(false).h) * badgeScale
+    : 0;
+  const sharedHeaderWidth = hasSharedThreeLetterCode
+    ? snBadgeDims(true).w * badgeScale
+    : 0;
+  if (hasSharedThreeLetterCode) {
+    // JR East connected badges sit on one black plate. Keep one stroke-width
+    // visible around and between the rounded route frames.
+    const sharedDivider = _snStroke * badgeScale;
+    const positions: number[] = [];
+    let position = sharedHeaderHeight;
+    dimensions.forEach((dims, index) => {
+      positions.push(position);
+      if (index < dimensions.length - 1) {
+        position += dims.h + sharedDivider * 2;
+      }
+    });
+    const lastIndex = dimensions.length - 1;
+    return {
+      w: Math.max(
+        sharedHeaderWidth + sharedDivider,
+        ...dimensions.map((dims) => dims.w + sharedDivider),
+      ),
+      h:
+        positions[lastIndex] +
+        dimensions[lastIndex].h +
+        sharedDivider * 1.5,
+      positions,
+    };
+  }
   return {
     w:
       orientation === "horizontal"
         ? connected.extent
-        : Math.max(...dimensions.map((dims) => dims.w)),
+        : Math.max(sharedHeaderWidth, ...dimensions.map((dims) => dims.w)),
     h:
       orientation === "horizontal"
         ? Math.max(...dimensions.map((dims) => dims.h))
-        : connected.extent,
-    positions: connected.positions,
+        : sharedHeaderHeight + connected.extent,
+    positions: connected.positions.map((position) =>
+      position + sharedHeaderHeight
+    ),
   };
 }
 
-function stationNumberGroupDimensions(
+export function stationNumberGroupDimensions(
   numbers: StationNumberInfo[],
   orientation: StationNumberGroupOrientation,
   badgeScale = 1,
   forceFullRender = false,
   strokeWidthAdjust = 0,
+  sharedThreeLetterCode?: string | null,
 ): { w: number; h: number } {
   const { w, h } = stationNumberGroupLayout(
     numbers,
@@ -838,6 +880,7 @@ function stationNumberGroupDimensions(
     badgeScale,
     forceFullRender,
     strokeWidthAdjust,
+    sharedThreeLetterCode,
   );
   return { w, h };
 }
@@ -867,7 +910,7 @@ export function getStationNumberGroupExtraExtent(
   }, 0);
 }
 
-function StationNumberBadgeGroup({
+export function StationNumberBadgeGroup({
   x,
   y,
   numbers,
@@ -876,6 +919,7 @@ function StationNumberBadgeGroup({
   badgeScale = 1,
   forceFullRender = false,
   strokeWidthAdjust = 0,
+  sharedThreeLetterCode,
 }: {
   x: number;
   y: number;
@@ -885,18 +929,54 @@ function StationNumberBadgeGroup({
   badgeScale?: number;
   forceFullRender?: boolean;
   strokeWidthAdjust?: number;
+  sharedThreeLetterCode?: string | null;
 }) {
+  const hasSharedThreeLetterCode =
+    orientation === "vertical" &&
+    numbers.length > 1 &&
+    !!sharedThreeLetterCode;
+  const displayNumbers = hasSharedThreeLetterCode
+    ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
+    : numbers;
   const group = stationNumberGroupLayout(
-    numbers,
+    displayNumbers,
     orientation,
     badgeScale,
     forceFullRender,
     strokeWidthAdjust,
+    sharedThreeLetterCode,
   );
-
+  const sharedCodeYOffset = hasSharedThreeLetterCode
+    ? (_snStroke * badgeScale) / 2
+    : 0;
   return (
     <Fragment>
-      {numbers.map((number, index) => {
+      {hasSharedThreeLetterCode && (
+        <Rect
+          x={x}
+          y={y}
+          width={group.w}
+          height={group.h}
+          fill="black"
+          cornerRadius={_snCornerOuter * badgeScale}
+        />
+      )}
+      {hasSharedThreeLetterCode && (
+        <Fragment>
+          <Text
+            x={x + (group.w - SN_INNER * badgeScale) / 2}
+            y={y + sharedCodeYOffset + _snTrcY * badgeScale}
+            width={SN_INNER * badgeScale}
+            text={sharedThreeLetterCode!}
+            fontSize={_snTrcFont * badgeScale}
+            fontFamily='"HindSemiBold", Arial, sans-serif'
+            fontStyle="bold"
+            fill="white"
+            align="center"
+          />
+        </Fragment>
+      )}
+      {displayNumbers.map((number, index) => {
         const baseDims = snBadgeDims(!!number.threeLetterCode);
         const dims = {
           w: baseDims.w * badgeScale,
@@ -933,12 +1013,12 @@ function StationNumberBadgeGroup({
 // ── Line indicator badge (JR East style) ────────────────────────────────────
 
 // Badge side length — same as SN_INNER so line and station badges share proportions.
-const LI_SIZE = SN_INNER - 3; // 20 Konva units
+export const LI_SIZE = SN_INNER - 3; // 20 Konva units
 const LI_STROKE = 2;
 // Font/badge ratio 19:30 — identical to the canvas LineIndicatorBadgePreview.
 const LI_FONT = Math.round((LI_SIZE * 20) / 28); // 13
 const LI_CORNER = 1.5;
-const LI_GAP = 5; // gap between badge and line name text
+export const LI_GAP = 5; // gap between badge and line name text
 
 const EMPTY_LINE_STYLES: Record<string, string> = {};
 const EMPTY_STATION_COLORS: Record<string, string> = {};
@@ -981,7 +1061,7 @@ function liTextY(
   return size / 2 - glyphH / 2 - emTopToGlyphTop;
 }
 
-function LineIndicatorBadge({
+export function LineIndicatorBadge({
   x,
   y,
   color,
@@ -1097,7 +1177,7 @@ function TransitLineIcon({
   );
 }
 
-function getHorizontalTransitLayout(
+export function getHorizontalTransitLayout(
   lines: Line[],
   showNames: boolean,
   side: "left" | "right",
@@ -1146,7 +1226,7 @@ function getDiagonalTransitLayout(
   );
 }
 
-function HorizontalTransitLines({
+export function HorizontalTransitLines({
   x,
   y,
   lines,
