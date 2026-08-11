@@ -5,6 +5,8 @@ export type LocalLine = {
   id: string;
   prefix: string;
   color: string;
+  /** Badge style used by the company that owns this line. */
+  stationNumberStyle?: string;
 };
 
 type StationArea = {
@@ -25,6 +27,9 @@ export type AdjacentStationProps = {
   primaryNameFurigana?: string;
   numberPrimaryPrefix?: string;
   numberPrimaryValue?: string;
+  /** Resolved appearance of this station number's source line. */
+  numberPrimaryColor?: string;
+  numberPrimaryStyle?: string;
   numberSecondaryPrefix?: string;
   numberSecondaryValue?: string;
   numberTertiaryPrefix?: string;
@@ -41,6 +46,9 @@ interface DirectInputStationProps {
   quaternaryName?: string;
   numberPrimaryPrefix?: string;
   numberPrimaryValue?: string;
+  /** Resolved appearance of the primary station number's source line. */
+  numberPrimaryColor?: string;
+  numberPrimaryStyle?: string;
   numberSecondaryPrefix?: string;
   numberSecondaryValue?: string;
   numberTertiaryPrefix?: string;

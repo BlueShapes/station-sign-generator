@@ -2936,9 +2936,10 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                         "#000000"
                                       }
                                       style={
-                                        companies.find(
-                                          (c) =>
-                                            c.id === selectedLine?.company_id,
+                                        getResolvedStationNumber(
+                                          db,
+                                          station.id,
+                                          selectedLineId!,
                                         )?.station_number_style ?? "jreast"
                                       }
                                       prefix={

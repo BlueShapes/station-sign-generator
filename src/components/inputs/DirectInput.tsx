@@ -112,6 +112,12 @@ const DirectInput = memo(function DirectInput({
   const lineSelectData = localLines
     .filter((l) => l.prefix !== "")
     .map((l) => ({ value: l.prefix, label: l.prefix }));
+  const isSubwayStyle =
+    signStyle === "metrolong" ||
+    signStyle === "metroforeign" ||
+    signStyle === "metromedium" ||
+    signStyle === "toeimedium" ||
+    signStyle === "toeilarge";
 
   return (
     <>
@@ -985,57 +991,100 @@ const DirectInput = memo(function DirectInput({
               </Text>
               <Stack gap="xs">
                 {localLines.map((line) => (
-                  <Group key={line.id} gap="xs" wrap="nowrap">
-                    <ColorSwatch
-                      color={line.color}
-                      size={20}
-                      style={{ flexShrink: 0 }}
-                    />
-                    <ColorInput
-                      value={line.color}
-                      style={{ width: "110px" }}
-                      format="hex"
-                      onChange={(color) =>
-                        updateField(
-                          "localLines",
-                          localLines.map((l) =>
-                            l.id === line.id ? { ...l, color } : l,
-                          ),
-                        )
-                      }
-                    />
-                    <TextInput
-                      placeholder={t("input.direct.local-lines-prefix")}
-                      style={{ flex: 1 }}
-                      value={line.prefix}
-                      onChange={(e) =>
-                        updateField(
-                          "localLines",
-                          localLines.map((l) =>
-                            l.id === line.id
-                              ? { ...l, prefix: e.target.value }
-                              : l,
-                          ),
-                        )
-                      }
-                    />
-                    {(fields.localLinesMin === undefined ||
-                      localLines.length > fields.localLinesMin) && (
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          aria-label="delete"
-                          onClick={() =>
-                            updateField(
-                              "localLines",
-                              localLines.filter((l) => l.id !== line.id),
-                            )
-                          }
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      )}
-                  </Group>
+                  <Stack key={line.id} gap={4}>
+                    <Group gap="xs" wrap="nowrap">
+                      <ColorSwatch
+                        color={line.color}
+                        size={20}
+                        style={{ flexShrink: 0 }}
+                      />
+                      <ColorInput
+                        value={line.color}
+                        style={{ width: "110px" }}
+                        format="hex"
+                        onChange={(color) =>
+                          updateField(
+                            "localLines",
+                            localLines.map((l) =>
+                              l.id === line.id ? { ...l, color } : l,
+                            ),
+                          )
+                        }
+                      />
+                      <TextInput
+                        placeholder={t("input.direct.local-lines-prefix")}
+                        style={{ flex: 1 }}
+                        value={line.prefix}
+                        onChange={(e) =>
+                          updateField(
+                            "localLines",
+                            localLines.map((l) =>
+                              l.id === line.id
+                                ? { ...l, prefix: e.target.value }
+                                : l,
+                            ),
+                          )
+                        }
+                      />
+                      {(fields.localLinesMin === undefined ||
+                        localLines.length > fields.localLinesMin) && (
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            aria-label="delete"
+                            onClick={() =>
+                              updateField(
+                                "localLines",
+                                localLines.filter((l) => l.id !== line.id),
+                              )
+                            }
+                          >
+                            <IconTrash size={16} />
+                          </ActionIcon>
+                        )}
+                    </Group>
+                    {isSubwayStyle && (
+                      <Select
+                        size="xs"
+                        label={t("route.company.station-number-style")}
+                        value={line.stationNumberStyle ?? "tokyometro"}
+                        data={[
+                          {
+                            value: "tokyometro",
+                            label: t(
+                              "route.company.station-number-style-tokyometro",
+                            ),
+                          },
+                          {
+                            value: "jreast",
+                            label: t(
+                              "route.company.station-number-style-jreast",
+                            ),
+                          },
+                          {
+                            value: "jrcentral",
+                            label: t(
+                              "route.company.station-number-style-jrcentral",
+                            ),
+                          },
+                        ]}
+                        onChange={(style) =>
+                          updateField(
+                            "localLines",
+                            localLines.map((l) =>
+                              l.id === line.id
+                                ? {
+                                    ...l,
+                                    stationNumberStyle:
+                                      style ?? "tokyometro",
+                                  }
+                                : l,
+                            ),
+                          )
+                        }
+                      />
+                    )}
+                  </Stack>
                 ))}
               </Stack>
               {(fields.localLinesMax === undefined ||
@@ -1047,7 +1096,14 @@ const DirectInput = memo(function DirectInput({
                     onClick={() =>
                       updateField("localLines", [
                         ...localLines,
-                        { id: uuidv7(), prefix: "", color: "#8cc800" },
+                        {
+                          id: uuidv7(),
+                          prefix: "",
+                          color: "#8cc800",
+                          stationNumberStyle: isSubwayStyle
+                            ? "tokyometro"
+                            : undefined,
+                        },
                       ])
                     }
                   >

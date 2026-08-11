@@ -94,6 +94,8 @@ export function sanitizeDirectInputData(
     arrowColor: optional(station.arrowColor),
     numberPrimaryPrefix: optional(station.numberPrimaryPrefix),
     numberPrimaryValue: optional(station.numberPrimaryValue),
+    numberPrimaryColor: optional(station.numberPrimaryColor),
+    numberPrimaryStyle: optional(station.numberPrimaryStyle),
     numberSecondaryPrefix: optional(station.numberSecondaryPrefix),
     numberSecondaryValue: optional(station.numberSecondaryValue),
     numberTertiaryPrefix: optional(station.numberTertiaryPrefix),
@@ -110,6 +112,8 @@ export function sanitizeDirectInputData(
     note: optional(data.note),
     numberPrimaryPrefix: optional(data.numberPrimaryPrefix),
     numberPrimaryValue: optional(data.numberPrimaryValue),
+    numberPrimaryColor: optional(data.numberPrimaryColor),
+    numberPrimaryStyle: optional(data.numberPrimaryStyle),
     numberSecondaryPrefix: optional(data.numberSecondaryPrefix),
     numberSecondaryValue: optional(data.numberSecondaryValue),
     numberTertiaryPrefix: optional(data.numberTertiaryPrefix),
@@ -130,6 +134,7 @@ export function sanitizeDirectInputData(
       id: truncateTextInput(line.id),
       prefix: truncateTextInput(line.prefix),
       color: truncateTextInput(line.color),
+      stationNumberStyle: optional(line.stationNumberStyle),
     })),
   };
 }

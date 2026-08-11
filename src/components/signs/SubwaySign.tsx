@@ -33,6 +33,8 @@ import {
   type SubwayBadgeKind,
 } from "./subwaySignGeometry";
 import { getSubwayMediumArrowPoints } from "./arrowGeometry";
+import JrCentralStationNumberBadge from "./JrCentralStationNumberBadge";
+import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
 
 export type SubwaySignVariant = "metroMedium" | "toeiMedium" | "toeiLarge";
 
@@ -63,6 +65,9 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       right,
       numberPrimaryPrefix,
       numberPrimaryValue,
+      numberPrimaryColor,
+      numberPrimaryStyle,
+      stationNumberStyle,
       baseColor,
       localLines,
       direction = "both",
@@ -147,6 +152,8 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       emphasizedNumberKind,
       valueFontSizeDelta = 0,
       valueStrokeWidth = 0,
+      color,
+      style,
     }: {
       cx: number;
       cy: number;
@@ -157,8 +164,19 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
       emphasizedNumberKind?: SubwayBadgeKind;
       valueFontSizeDelta?: number;
       valueStrokeWidth?: number;
+      color?: string;
+      style?: string;
     }) => {
       if (!prefix || !value) return null;
+      const appearance = resolveSubwayStationNumberAppearance({
+        prefix,
+        color,
+        style,
+        localLines,
+        fallbackColor: lineColor,
+        fallbackStyle: stationNumberStyle ?? "tokyometro",
+      });
+      const isTokyoMetroBadge = appearance.style === "tokyometro";
       const metrics = getTokyoMetroStationNumberMetrics(diameter);
       const textAdjustments = emphasizedNumberKind
         ? getSubwayBadgeTextAdjustments(diameter, emphasizedNumberKind)
@@ -173,6 +191,78 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
         };
       const strokeWidth = Math.max(2.4, metrics.strokeWidth * 0.72);
       const radius = diameter / 2 + strokeWidth / 2;
+      if (appearance.style === "jrcentral") {
+        return (
+          <Group>
+            {whiteOutline && (
+              <Rect
+                x={cx - diameter / 2 - 2}
+                y={cy - diameter / 2 - 2}
+                width={diameter + 4}
+                height={diameter + 4}
+                fill="white"
+              />
+            )}
+            <JrCentralStationNumberBadge
+              x={cx - diameter / 2}
+              y={cy - diameter / 2}
+              size={diameter}
+              color={appearance.color}
+              prefix={prefix}
+              value={value}
+            />
+          </Group>
+        );
+      }
+      if (!isTokyoMetroBadge) {
+        const top = cy - diameter / 2;
+        return (
+          <Group>
+            {whiteOutline && (
+              <Rect
+                x={cx - diameter / 2 - 2}
+                y={top - 2}
+                width={diameter + 4}
+                height={diameter + 4}
+                fill="white"
+                cornerRadius={diameter * 0.1}
+              />
+            )}
+            <Rect
+              x={cx - diameter / 2}
+              y={top}
+              width={diameter}
+              height={diameter}
+              fill="white"
+              stroke={appearance.color}
+              strokeWidth={Math.max(1.5, diameter * 0.1)}
+              cornerRadius={diameter / 15}
+            />
+            <Text
+              text={prefix}
+              x={cx - diameter / 2}
+              y={top + (diameter * 4) / 30}
+              width={diameter}
+              fontSize={(diameter * 11) / 30}
+              fontFamily="HindSemiBold"
+              fontStyle="600"
+              align="center"
+              fill="#202126"
+            />
+            <Text
+              text={value}
+              x={cx - diameter / 2}
+              y={top + (diameter * 14) / 30}
+              width={diameter}
+              fontSize={(diameter * 17) / 30}
+              fontFamily="HindSemiBold"
+              fontStyle="600"
+              align="center"
+              fill="#202126"
+            />
+          </Group>
+        );
+      }
       return (
         <Group>
           {whiteOutline && (
@@ -190,7 +280,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             y={cy}
             radius={radius}
             fill="white"
-            stroke={lineColor}
+            stroke={appearance.color}
             strokeWidth={strokeWidth}
           />
           <Text
@@ -375,6 +465,8 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
                   whiteOutline: true,
                   emphasizedNumberKind: "side",
                   valueStrokeWidth: TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
+                  color: station.numberPrimaryColor,
+                  style: station.numberPrimaryStyle,
                 })}
               </Group>
             ))}
@@ -466,6 +558,8 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             emphasizedNumberKind: "main",
             valueFontSizeDelta: SUBWAY_MAIN_BADGE_NUMBER_FONT_SIZE_DELTA,
             valueStrokeWidth: TOKYO_METRO_BADGE_NUMBER_STROKE_WIDTH,
+            color: numberPrimaryColor,
+            style: numberPrimaryStyle,
           })}
         </>
       );
@@ -554,6 +648,8 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
                   diameter: sideBadgeDiameter,
                   emphasizedNumberKind: "side",
                   valueStrokeWidth: TOEI_BADGE_NUMBER_STROKE_WIDTH,
+                  color: station.numberPrimaryColor,
+                  style: station.numberPrimaryStyle,
                 })}
               </Group>
             ))}
@@ -675,6 +771,8 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               emphasizedNumberKind: "main",
               valueFontSizeDelta: SUBWAY_MAIN_BADGE_NUMBER_FONT_SIZE_DELTA,
               valueStrokeWidth: TOEI_BADGE_NUMBER_STROKE_WIDTH,
+              color: numberPrimaryColor,
+              style: numberPrimaryStyle,
             })}
             <Text
               text={displayName}

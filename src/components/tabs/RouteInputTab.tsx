@@ -644,6 +644,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               : undefined,
             numberPrimaryPrefix: stationNumber?.prefix ?? "",
             numberPrimaryValue: stationNumber?.value ?? "",
+            numberPrimaryColor: stationNumber?.line_color,
+            numberPrimaryStyle: stationNumber?.station_number_style,
           };
         };
 
@@ -756,11 +758,13 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     // Get station areas with zone details
     const areas = getStationAreasWithZones(db, currentStation.id);
 
-    // Get company color and station number style
+    // Get company color. Station-number appearance comes from the resolved
+    // source line, which may differ from the selected line (for example a
+    // branch inheriting its parent line's number).
     let baseColor = "#3a9200";
     let stationNumberStyle: string | undefined;
+    const companies = getAllCompanies(db);
     if (line?.company_id) {
-      const companies = getAllCompanies(db);
       const company = companies.find((c) => c.id === line.company_id);
       if (company) {
         baseColor = company.company_color;
@@ -801,6 +805,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       : currentNum
         ? [currentNum]
         : [];
+    stationNumberStyle =
+      currentNumbers[0]?.station_number_style ?? stationNumberStyle;
 
     // Center square colors — map selected line IDs to their colors
     const centerColors =
@@ -835,6 +841,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       threeLetterCode: currentStation.three_letter_code ?? undefined,
       numberPrimaryPrefix: currentNumbers[0]?.prefix ?? "",
       numberPrimaryValue: currentNumbers[0]?.value ?? "",
+      numberPrimaryColor: currentNumbers[0]?.line_color,
+      numberPrimaryStyle: currentNumbers[0]?.station_number_style,
       numberSecondaryPrefix: currentNumbers[1]?.prefix ?? "",
       numberSecondaryValue: currentNumbers[1]?.value ?? "",
       numberTertiaryPrefix: currentNumbers[2]?.prefix ?? "",
@@ -853,6 +861,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           arrowColor: station.arrowColor,
           numberPrimaryPrefix: station.numberPrimaryPrefix,
           numberPrimaryValue: station.numberPrimaryValue,
+          numberPrimaryColor: station.numberPrimaryColor,
+          numberPrimaryStyle: station.numberPrimaryStyle,
         }),
       ),
       right: (flipped ? selectedLeftStations : selectedRightStations).map(
@@ -864,6 +874,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           arrowColor: station.arrowColor,
           numberPrimaryPrefix: station.numberPrimaryPrefix,
           numberPrimaryValue: station.numberPrimaryValue,
+          numberPrimaryColor: station.numberPrimaryColor,
+          numberPrimaryStyle: station.numberPrimaryStyle,
         }),
       ),
       baseColor,
@@ -872,7 +884,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       localLines: [
         ...allStationLines.filter((l) => l.id === selectedLineId),
         ...allStationLines.filter((l) => l.id !== selectedLineId),
-      ].map((l) => ({ id: l.id, prefix: l.prefix, color: l.line_color })),
+      ].map((l) => ({
+        id: l.id,
+        prefix: l.prefix,
+        color: l.line_color,
+        stationNumberStyle:
+          companies.find((company) => company.id === l.company_id)
+            ?.station_number_style ?? "jreast",
+      })),
       ratio,
       direction,
     };
@@ -1166,7 +1185,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
             value: number.value,
             threeLetterCode: station.three_letter_code,
             color: number.line_color,
-            style: mapLineIndicatorStyles[line.id] ?? "jreast",
+            style: number.station_number_style,
           };
         }
         const transferIds = new Set(getTransferLineIds(db, station.id));
@@ -1364,7 +1383,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         value: number.value,
         threeLetterCode: station.three_letter_code,
         color: number.line_color,
-        style: mapLineIndicatorStyles[lineId] ?? "jreast",
+        style: number.station_number_style,
       };
     };
 
@@ -1407,14 +1426,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           value: incomingResolved.value,
           threeLetterCode: station.three_letter_code,
           color: incomingResolved.line_color,
-          style: mapLineIndicatorStyles[incomingLineId] ?? "jreast",
+          style: incomingResolved.station_number_style,
         },
         {
           prefix: outgoingResolved.prefix,
           value: outgoingResolved.value,
           threeLetterCode: station.three_letter_code,
           color: outgoingResolved.line_color,
-          style: mapLineIndicatorStyles[outgoingLineId] ?? "jreast",
+          style: outgoingResolved.station_number_style,
         },
       ];
     }
