@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: Gaya Tokyo Metro / Toei Subway
     station-number-style-preview: Contoh lencana (menggunakan warna syarikat sebagai warna garis)
     empty: Tiada syarikat lagi
-    delete-confirm: Padamkan syarikat ini? Baris yang berkaitan juga akan dipadamkan.
+    delete-confirm: Padamkan syarikat ini? Laluan miliknya dan semua laluan terus yang mengandunginya juga akan dipadamkan.
   special-zone:
     title: Zon Khas
     add: Tambah Zon
@@ -191,9 +191,10 @@ route:
     select: Pilih satu baris
     all: Semua Syarikat
     unassigned-company: Syarikat belum ditetapkan
-    delete-confirm: Padamkan baris ini?
+    delete-confirm: Padamkan laluan ini? Semua laluan terus yang mengandunginya juga akan dipadamkan.
     delete-all: Padam Semua Laluan
-    delete-all-confirm: Padam semua laluan? Penetapan stesen, nombor stesen, perkhidmatan dan segmen laluan terus yang berkaitan juga akan dipadamkan. Tindakan ini tidak boleh dibuat asal.
+    delete-all-confirm: Padam semua laluan? Penetapan stesen, nombor stesen, perkhidmatan dan semua laluan terus yang berkaitan juga akan dipadamkan. Tindakan ini tidak boleh dibuat asal.
+    delete-targets: Laluan yang akan dipadamkan
     prefix-preview: Pratonton lencana penunjuk baris
     station-number-preview: Pratonton nombor stesen (01)
   through-route:

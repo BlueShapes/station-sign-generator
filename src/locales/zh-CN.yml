@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: 东京地铁/都营地铁风格
     station-number-style-preview: 徽章示例（使用公司颜色作为线条颜色）
     empty: 还没有公司
-    delete-confirm: 删除这家公司？相关行也将被删除。
+    delete-confirm: 删除这家公司吗？其所属线路以及包含这些线路的所有直通路径也会被删除。
   special-zone:
     title: 特区
     add: 添加区域
@@ -191,9 +191,10 @@ route:
     select: 选择一行
     all: 所有公司
     unassigned-company: 未指定公司
-    delete-confirm: 删除这一行吗？
+    delete-confirm: 删除这条线路吗？包含该线路的所有直通路径也会被删除。
     delete-all: 删除所有线路
-    delete-all-confirm: 删除所有线路吗？相关的车站归属、车站编号、服务类型和直通路径区间也会被删除，且无法撤销。
+    delete-all-confirm: 删除所有线路吗？相关的车站归属、车站编号、服务类型和所有直通路径也会被删除，且无法撤销。
+    delete-targets: 将被删除的线路
     prefix-preview: 线路指示器徽章预览
     station-number-preview: 车站编号预览（01）
   through-route:

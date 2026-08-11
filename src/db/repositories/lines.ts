@@ -185,7 +185,12 @@ export function deleteLines(db: Database, ids: string[]): void {
 }
 
 export function deleteAllLines(db: Database): void {
-  const ids = getAllLines(db).map((line) => line.id);
+  const statement = db.prepare(`SELECT id FROM lines`);
+  const ids: string[] = [];
+  while (statement.step()) {
+    ids.push(statement.getAsObject().id as string);
+  }
+  statement.free();
 
   db.run("SAVEPOINT delete_all_lines");
   try {

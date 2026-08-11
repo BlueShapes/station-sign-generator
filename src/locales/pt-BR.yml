@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: Estilo Metrô de Tóquio / Metrô Toei
     station-number-style-preview: Exemplo de emblema (usando a cor da empresa como cor da linha)
     empty: Nenhuma empresa ainda
-    delete-confirm: Excluir esta empresa? As linhas associadas também serão excluídas.
+    delete-confirm: Excluir esta empresa? Suas linhas e todas as rotas diretas que as contenham também serão excluídas.
   special-zone:
     title: Zonas Especiais
     add: Adicionar zona
@@ -191,9 +191,10 @@ route:
     select: Selecione uma linha
     all: Todas as empresas
     unassigned-company: Empresa não atribuída
-    delete-confirm: Excluir esta linha?
+    delete-confirm: Excluir esta linha? Todas as rotas diretas que a contenham também serão excluídas.
     delete-all: Excluir todas as linhas
-    delete-all-confirm: Excluir todas as linhas? As associações de estações, os números de estação, os serviços e os trechos de rotas diretas relacionados também serão excluídos. Esta ação não pode ser desfeita.
+    delete-all-confirm: Excluir todas as linhas? As associações de estações, os números de estação, os serviços e todas as rotas diretas também serão excluídos. Esta ação não pode ser desfeita.
+    delete-targets: Linhas que serão excluídas
     prefix-preview: Visualização do selo do indicador de linha
     station-number-preview: Visualização do número da estação (01)
   through-route:

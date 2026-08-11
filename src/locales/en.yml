@@ -175,7 +175,7 @@ route:
     station-number-style-tokyometro: Tokyo Metro / Toei Subway style
     station-number-style-preview: Sample badge (using company color as line color)
     empty: No companies yet
-    delete-confirm: Delete this company? Associated lines will also be deleted.
+    delete-confirm: Delete this company? Its lines and any through routes containing them will also be deleted.
   special-zone:
     title: Special Zones
     add: Add Zone
@@ -199,9 +199,10 @@ route:
     select: Select a line
     all: All Companies
     unassigned-company: Unassigned company
-    delete-confirm: Delete this line?
+    delete-confirm: Delete this line? Any through routes containing it will also be deleted.
     delete-all: Delete All Lines
-    delete-all-confirm: Delete all lines? Station assignments, station numbers, services, and through-route sections associated with them will also be deleted. This cannot be undone.
+    delete-all-confirm: Delete all lines? Associated station assignments, station numbers, services, and all through routes will also be deleted. This cannot be undone.
+    delete-targets: Lines to be deleted
     prefix-preview: Line indicator badge preview
     station-number-preview: Station number preview (01)
   through-route:

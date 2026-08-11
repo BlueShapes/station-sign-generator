@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: Styl tokijského metra / metra Toei
     station-number-style-preview: Ukázka odznaku (jako barva čáry se používá barva společnosti)
     empty: Zatím žádné společnosti
-    delete-confirm: Smazat tuto společnost? Přidružené řádky budou také smazány.
+    delete-confirm: Smazat tuto společnost? Budou odstraněny také její linky a všechny průjezdné trasy, které je obsahují.
   special-zone:
     title: Speciální zóny
     add: Přidat zónu
@@ -191,9 +191,10 @@ route:
     select: Vyberte řádek
     all: Všechny společnosti
     unassigned-company: Bez přiřazené společnosti
-    delete-confirm: Smazat tento řádek?
+    delete-confirm: Smazat tuto linku? Budou odstraněny také všechny průjezdné trasy, které ji obsahují.
     delete-all: Smazat všechny linky
-    delete-all-confirm: Smazat všechny linky? Budou odstraněna také přiřazení stanic, čísla stanic, spoje a úseky průjezdných tras. Tuto akci nelze vrátit zpět.
+    delete-all-confirm: Smazat všechny linky? Budou odstraněna také přiřazení stanic, čísla stanic, spoje a všechny průjezdné trasy. Tuto akci nelze vrátit zpět.
+    delete-targets: Linky, které budou smazány
     prefix-preview: Náhled odznaku indikátoru čáry
     station-number-preview: Náhled čísla stanice (01)
   through-route:

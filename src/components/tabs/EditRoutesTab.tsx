@@ -3335,8 +3335,8 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
               </Text>
               <ScrollArea.Autosize mah={180}>
                 <Box component="ul" my={0} pl="xl">
-                  {confirmPending.affectedLineNames.map((name) => (
-                    <Text component="li" size="sm" key={name}>
+                  {confirmPending.affectedLineNames.map((name, index) => (
+                    <Text component="li" size="sm" key={`${index}:${name}`}>
                       {name}
                     </Text>
                   ))}

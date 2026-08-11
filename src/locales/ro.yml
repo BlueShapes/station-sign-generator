@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: Stilul Metrou Tokyo / Metrou Toei
     station-number-style-preview: Exemplu de insignă (folosind culoarea companiei ca culoare de linie)
     empty: Nu există companii încă
-    delete-confirm: Ștergeți această companie? Liniile asociate vor fi, de asemenea, șterse.
+    delete-confirm: Ștergeți această companie? Liniile sale și toate rutele directe care le conțin vor fi, de asemenea, șterse.
   special-zone:
     title: Zone speciale
     add: Adăugați o zonă
@@ -191,9 +191,10 @@ route:
     select: Selectați o linie
     all: Toate Companiile
     unassigned-company: Companie neatribuită
-    delete-confirm: Ștergeți această linie?
+    delete-confirm: Ștergeți această linie? Toate rutele directe care o conțin vor fi, de asemenea, șterse.
     delete-all: Ștergeți toate liniile
-    delete-all-confirm: Ștergeți toate liniile? Vor fi șterse și asocierile stațiilor, numerele stațiilor, serviciile și segmentele rutelor directe aferente. Această acțiune nu poate fi anulată.
+    delete-all-confirm: Ștergeți toate liniile? Vor fi șterse și asocierile stațiilor, numerele stațiilor, serviciile și toate rutele directe. Această acțiune nu poate fi anulată.
+    delete-targets: Linii care vor fi șterse
     prefix-preview: Previzualizarea insignei cu indicator de linie
     station-number-preview: Previzualizarea numărului stației (01)
   through-route:

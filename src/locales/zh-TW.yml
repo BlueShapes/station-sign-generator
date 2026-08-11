@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: 東京地鐵/都營地鐵風格
     station-number-style-preview: 徽章範例（使用公司顏色作為線條顏色）
     empty: 還沒有公司
-    delete-confirm: 刪除這家公司？相關行也將刪除。
+    delete-confirm: 刪除這家公司嗎？其所屬路線及包含這些路線的所有直通路徑也會被刪除。
   special-zone:
     title: 特區
     add: 新增區域
@@ -191,9 +191,10 @@ route:
     select: 選取一行
     all: 所有公司
     unassigned-company: 未指定公司
-    delete-confirm: 刪除這一行嗎？
+    delete-confirm: 刪除這條路線嗎？包含此路線的所有直通路徑也會被刪除。
     delete-all: 刪除所有路線
-    delete-all-confirm: 刪除所有路線嗎？相關的車站所屬、車站編號、服務類型及直通路徑區間也會被刪除，且無法復原。
+    delete-all-confirm: 刪除所有路線嗎？相關的車站所屬、車站編號、服務類型及所有直通路徑也會被刪除，且無法復原。
+    delete-targets: 將被刪除的路線
     prefix-preview: 線路指示器徽章預覽
     station-number-preview: 車站編號預覽（01）
   through-route:

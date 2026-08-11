@@ -175,7 +175,7 @@ route:
     station-number-style-tokyometro: 東京メトロ・都営地下鉄風
     station-number-style-preview: サンプルバッジ（会社カラーを路線カラーとして使用）
     empty: 会社がありません
-    delete-confirm: この会社を削除しますか？関連する路線も削除されます。
+    delete-confirm: この会社を削除しますか？所属する路線と、それらを含む直通系統も削除されます。
   special-zone:
     title: 特定都区市内
     add: 区域を追加
@@ -199,9 +199,10 @@ route:
     select: 路線を選択してください
     all: すべての会社
     unassigned-company: 会社未設定
-    delete-confirm: この路線を削除しますか？
+    delete-confirm: この路線を削除しますか？この路線を含む直通系統も削除されます。
     delete-all: すべての路線を削除
-    delete-all-confirm: すべての路線を削除しますか？各路線に関連する駅の所属、駅番号、種別、直通経路の区間も削除され、元に戻せません。
+    delete-all-confirm: すべての路線を削除しますか？各路線に関連する駅の所属、駅番号、種別、直通系統もすべて削除され、元に戻せません。
+    delete-targets: 削除される路線
     prefix-preview: 路線インジケータバッジのプレビュー
     station-number-preview: 駅番号のプレビュー（01）
   through-route:

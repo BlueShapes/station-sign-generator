@@ -175,7 +175,7 @@ route:
     station-number-style-tokyometro: Stil von Tokyo Metro / Toei Subway
     station-number-style-preview: Beispielplakette (Unternehmensfarbe als Linienfarbe)
     empty: Noch keine Unternehmen vorhanden
-    delete-confirm: Dieses Unternehmen löschen? Zugehörige Linien werden ebenfalls gelöscht.
+    delete-confirm: Dieses Unternehmen löschen? Seine Linien und alle durchgehenden Routen, die sie enthalten, werden ebenfalls gelöscht.
   special-zone:
     title: Sonderzonen
     add: Zone hinzufügen
@@ -199,9 +199,10 @@ route:
     select: Linie auswählen
     all: Alle Unternehmen
     unassigned-company: Kein Unternehmen zugewiesen
-    delete-confirm: Diese Linie löschen?
+    delete-confirm: Diese Linie löschen? Alle durchgehenden Routen, die sie enthalten, werden ebenfalls gelöscht.
     delete-all: Alle Linien löschen
-    delete-all-confirm: Alle Linien löschen? Zugehörige Stationszuordnungen, Stationsnummern, Zugarten und Abschnitte durchgehender Routen werden ebenfalls gelöscht. Dies kann nicht rückgängig gemacht werden.
+    delete-all-confirm: Alle Linien löschen? Zugehörige Stationszuordnungen, Stationsnummern, Zugarten und alle durchgehenden Routen werden ebenfalls gelöscht. Dies kann nicht rückgängig gemacht werden.
+    delete-targets: Zu löschende Linien
     prefix-preview: Vorschau der Linienplakette
     station-number-preview: Vorschau der Stationsnummer (01)
   through-route:
