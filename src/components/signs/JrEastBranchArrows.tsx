@@ -250,9 +250,9 @@ export default function JrEastBranchArrows({
             "secondary",
             isTravelDirection,
           );
-          const isOuterThreeBranch =
-            branchCount >= 3 && offsets[index] !== 0;
-          const threeBranchDiagonal = isOuterThreeBranch
+          const usesThickClippedDiagonal =
+            hasThreeBranchLayout && offsets[index] !== 0;
+          const thickBranchDiagonal = usesThickClippedDiagonal
             ? getJrEastThreeBranchDiagonalGeometry({
               side,
               width,
@@ -285,11 +285,11 @@ export default function JrEastBranchArrows({
                   strokeWidth={1}
                 />
               )}
-              {threeBranchDiagonal ? (
+              {thickBranchDiagonal ? (
                 <>
                   <Line
                     closed
-                    points={threeBranchDiagonal.points}
+                    points={thickBranchDiagonal.points}
                     fill={arrowColor}
                     stroke={arrowColor}
                     strokeWidth={1}
@@ -300,7 +300,7 @@ export default function JrEastBranchArrows({
                     points={getJrEastHorizontalBranchArrowPoints({
                       side,
                       width,
-                      startX: threeBranchDiagonal.horizontalStartX,
+                      startX: thickBranchDiagonal.horizontalStartX,
                       targetY,
                       lineHeight,
                       showArrowhead: isTravelDirection,

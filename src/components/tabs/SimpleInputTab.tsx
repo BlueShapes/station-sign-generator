@@ -86,6 +86,31 @@ type SignStyle =
   | "toeimedium"
   | "toeilarge";
 
+type HeldPreview = {
+  src: string;
+  sourceStyle: SignStyle;
+  targetStyle: SignStyle;
+};
+
+function getHeldPreviewStyle(style: SignStyle): React.CSSProperties {
+  const isJrStyle =
+    style === "jreast" ||
+    style === "jreastbranch" ||
+    style === "jrwest" ||
+    style === "jrwestlarge";
+
+  return {
+    display: "block",
+    width: "100%",
+    ...(isJrStyle
+      ? {
+          maxHeight: "20vh",
+          objectFit: "contain",
+        }
+      : undefined),
+  };
+}
+
 const SIGN_STYLES: Record<
   SignStyle,
   { Component: typeof JrEastSign; height: number; scale: number }
@@ -272,6 +297,39 @@ export default function SimpleInputTab() {
   const [currentStyle, setCurrentStyle] = useState<SignStyle>(
     () => (sessionStorage.getItem("sign-style-v1") as SignStyle) ?? "jreast",
   );
+  const [heldPreview, setHeldPreview] = useState<HeldPreview | null>(null);
+  const heldPreviewRef = useRef<HeldPreview | null>(null);
+
+  const handleStyleChange = useCallback(
+    (value: string | null) => {
+      if (!value || value === currentStyle) return;
+
+      const nextStyle = value as SignStyle;
+      let preview = heldPreviewRef.current;
+      if (!preview && ref.current) {
+        preview = {
+          src: ref.current.toDataURL(),
+          sourceStyle: currentStyle,
+          targetStyle: nextStyle,
+        };
+      } else if (preview) {
+        preview = { ...preview, targetStyle: nextStyle };
+      }
+
+      heldPreviewRef.current = preview;
+      setHeldPreview(preview);
+      setCurrentStyle(nextStyle);
+    },
+    [currentStyle],
+  );
+
+  const handlePreviewReady = useCallback(() => {
+    setHeldPreview((preview) => {
+      if (!preview || preview.targetStyle !== currentStyle) return preview;
+      heldPreviewRef.current = null;
+      return null;
+    });
+  }, [currentStyle]);
 
   useEffect(() => {
     sessionStorage.setItem("sign-style-v1", currentStyle);
@@ -415,7 +473,7 @@ export default function SimpleInputTab() {
         <Select
           label={t("route.sign.style")}
           value={currentStyle}
-          onChange={(v) => v && setCurrentStyle(v as SignStyle)}
+          onChange={handleStyleChange}
           data={[
             { value: "jreast", label: t("route.sign.jreast") },
             {
@@ -447,19 +505,48 @@ export default function SimpleInputTab() {
         <IconEye size="1.6em" />
         {t("common.preview")}
       </Title>
-      {signFonts.ready ? (
-        <SignComponent
-          {...previewData}
-          stationNumberStyle={
-            currentStyle === "jreast" || currentStyle === "jreastbranch"
-              ? "jreast"
+      <Box pos="relative">
+        {heldPreview && (
+          <img
+            src={heldPreview.src}
+            alt=""
+            aria-hidden="true"
+            style={getHeldPreviewStyle(heldPreview.sourceStyle)}
+          />
+        )}
+        <Box
+          onLoadCapture={heldPreview ? handlePreviewReady : undefined}
+          style={
+            heldPreview
+              ? {
+                  position: "absolute",
+                  inset: 0,
+                  visibility: "hidden",
+                  pointerEvents: "none",
+                }
               : undefined
           }
-          ref={ref}
-        />
-      ) : (
-        <CanvasFontLoading show={signFonts.showLoader} />
-      )}
+        >
+          {signFonts.ready ? (
+            <SignComponent
+              {...previewData}
+              stationNumberStyle={
+                currentStyle === "jreast" || currentStyle === "jreastbranch"
+                  ? "jreast"
+                  : undefined
+              }
+              ref={ref}
+            />
+          ) : (
+            <CanvasFontLoading show={!heldPreview && signFonts.showLoader} />
+          )}
+        </Box>
+        {heldPreview && !signFonts.ready && (
+          <Box pos="absolute" inset={0}>
+            <CanvasFontLoading show={signFonts.showLoader} />
+          </Box>
+        )}
+      </Box>
       <Box style={{ width: "100%", padding: "25px" }}>
         <Grid gutter="md" style={{ padding: "10px", overflow: "hidden" }}>
           <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>

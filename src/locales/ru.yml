@@ -258,9 +258,11 @@ route:
     flip: Изменить направление
     prev-station: Предыдущая станция
     next-station: Следующая станция
-    adjacent-select: Выберите до 2 станций
-    adjacent-order: Снаружи → внутрь
-    adjacent-swap-order: Поменять местами внешнюю / внутреннюю
+    adjacent-select: Выберите до {count} станций
+    adjacent-order: Текущий порядок
+    adjacent-move-up: Переместить вверх
+    adjacent-move-down: Переместить вниз
+    adjacent-swap-order: Обратить порядок
     jreast: JR Восточный стиль
     jreastbranch: Стиль JR East (разветвление)
     jrwest: JR Вест Стиль
@@ -279,7 +281,16 @@ route:
     linemap: Схема линии (одна/сквозная)
     multiline-linemap: Схема линий (несколько)
   linemap:
+    section-route: Маршрут и диапазон
+    section-layout: Макет
+    section-content: Отображение
     filename-suffix: Схема линии
+    export-format: Формат экспорта
+    format-png: PNG (изображение)
+    format-svg: SVG (вектор)
+    format-pdf: PDF (вектор)
+    vector-size-note: Для векторных форматов размер изображения не требуется
+    export-error: Не удалось экспортировать. Выберите другой формат или размер.
     orientation: Ориентация
     horizontal: Горизонтальный
     vertical: Вертикальный

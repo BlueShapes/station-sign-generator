@@ -48,7 +48,7 @@ describe("JR East branch sign layout", () => {
     expect(getJrEastBranchCenterSquareSize(true, 2, 2)).toBe(25);
   });
 
-  test("thickens only three-branch diagonals", () => {
+  test("matches two-branch diagonals to three-branch thickness in a mixed layout", () => {
     expect(getJrEastBranchDiagonalLineHeight(2)).toBe(
       JR_EAST_BRANCH_LAYOUT.branchDiagonalLineHeight,
     );
@@ -62,7 +62,7 @@ describe("JR East branch sign layout", () => {
       JR_EAST_BRANCH_LAYOUT.branchLineHeight,
     );
     expect(getJrEastBranchDiagonalLineHeight(2, false, true)).toBe(
-      JR_EAST_BRANCH_LAYOUT.branchLineHeight,
+      JR_EAST_BRANCH_LAYOUT.threeBranchDiagonalLineHeight,
     );
     expect(getJrEastBranchTrunkLineHeight(3)).toBe(
       JR_EAST_BRANCH_LAYOUT.branchLineHeight,
@@ -93,11 +93,19 @@ describe("JR East branch sign layout", () => {
     expect(getJrEastBranchStationNameX("left", "secondary", true)).toBe(45);
     expect(getJrEastBranchStationNameX("right", "primary", true)).toBe(-45);
     expect(getJrEastBranchStationNameX("right", "secondary", true)).toBe(-45);
-    expect(getJrEastBranchStationNameX("left", "primary", false)).toBe(50);
-    expect(getJrEastBranchStationNameX("right", "primary", false)).toBe(-50);
-    expect(getJrEastBranchStationNameX("left", "secondary", false)).toBe(50);
+    const nonTravelInset =
+      60 - JR_EAST_BRANCH_LAYOUT.nonTravelTextOutwardShift;
+    expect(getJrEastBranchStationNameX("left", "primary", false)).toBe(
+      nonTravelInset,
+    );
+    expect(getJrEastBranchStationNameX("right", "primary", false)).toBe(
+      -nonTravelInset,
+    );
+    expect(getJrEastBranchStationNameX("left", "secondary", false)).toBe(
+      nonTravelInset,
+    );
     expect(getJrEastBranchStationNameX("right", "secondary", false)).toBe(
-      -50,
+      -nonTravelInset,
     );
   });
 
@@ -287,6 +295,40 @@ describe("JR East branch sign layout", () => {
     }
   });
 
+  test("extends diagonal roots inward from the trunk boundaries", () => {
+    const centerY = 88;
+    const trunkLineHeight = 18;
+    const options = {
+      side: "right",
+      width: 760,
+      centerX: 380,
+      centerY,
+      trunkLineHeight,
+      branchLineHeight: 18,
+      diagonalLineHeight: 27,
+      branchStartDistance: 80,
+      branchDiagonalDistance: 26,
+    };
+    const upper = getJrEastThreeBranchDiagonalGeometry({
+      ...options,
+      targetY: 68,
+    });
+    const lower = getJrEastThreeBranchDiagonalGeometry({
+      ...options,
+      targetY: 108,
+    });
+    const upperRootY =
+      centerY -
+      trunkLineHeight / 2 +
+      JR_EAST_BRANCH_LAYOUT.branchDiagonalRootInwardExtension;
+    const lowerRootY = centerY * 2 - upperRootY;
+
+    expect(upper.points[1]).toBe(upperRootY);
+    expect(upper.points[7]).toBe(upperRootY);
+    expect(lower.points[1]).toBe(lowerRootY);
+    expect(lower.points[7]).toBe(lowerRootY);
+  });
+
   test("joins a clipped diagonal to a horizontal branch without a gap", () => {
     const geometry = getJrEastThreeBranchDiagonalGeometry({
       side: "right",
@@ -308,8 +350,17 @@ describe("JR East branch sign layout", () => {
       lineHeight: 18,
       showArrowhead: true,
     });
+    const nonTravelHorizontalPoints = getJrEastHorizontalBranchArrowPoints({
+      side: "right",
+      width: 760,
+      startX: geometry.horizontalStartX,
+      targetY: 50,
+      lineHeight: 18,
+      showArrowhead: false,
+    });
 
     expect(horizontalPoints[0]).toBeGreaterThan(geometry.horizontalStartX);
+    expect(nonTravelHorizontalPoints[0]).toBe(horizontalPoints[0]);
     expect(horizontalPoints[0]).toBeLessThanOrEqual(
       Math.max(geometry.points[2], geometry.points[4]),
     );

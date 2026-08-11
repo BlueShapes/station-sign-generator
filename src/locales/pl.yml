@@ -258,9 +258,11 @@ route:
     flip: Odwróć kierunek
     prev-station: Poprzednia stacja
     next-station: Następna stacja
-    adjacent-select: Wybierz maksymalnie 2 stacje
-    adjacent-order: Zewnętrzna → wewnętrzna
-    adjacent-swap-order: Zamień kolejność zewnętrzną / wewnętrzną
+    adjacent-select: Wybierz maksymalnie {count} stacje
+    adjacent-order: Bieżąca kolejność
+    adjacent-move-up: Przenieś w górę
+    adjacent-move-down: Przenieś w dół
+    adjacent-swap-order: Odwróć kolejność
     jreast: Styl JR Wschodni
     jreastbranch: Styl JR East (rozgałęzienie)
     jrwest: Styl JR Westa
@@ -279,7 +281,16 @@ route:
     linemap: Mapa linii (pojedyncza/bezpośrednia)
     multiline-linemap: Mapa linii (wiele linii)
   linemap:
+    section-route: Trasa i zakres
+    section-layout: Układ
+    section-content: Wyświetlana zawartość
     filename-suffix: Schemat linii
+    export-format: Format eksportu
+    format-png: PNG (obraz)
+    format-svg: SVG (wektor)
+    format-pdf: PDF (wektor)
+    vector-size-note: Formaty wektorowe nie wymagają rozmiaru obrazu
+    export-error: Eksport nie powiódł się. Spróbuj innego formatu lub rozmiaru obrazu.
     orientation: Orientacja
     horizontal: Poziomy
     vertical: Pionowe

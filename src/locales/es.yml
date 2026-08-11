@@ -258,9 +258,11 @@ route:
     flip: Voltear dirección
     prev-station: Estación anterior
     next-station: Próxima estación
-    adjacent-select: Seleccione hasta 2 estaciones
-    adjacent-order: Exterior → interior
-    adjacent-swap-order: Cambiar orden exterior / interior
+    adjacent-select: Seleccione hasta {count} estaciones
+    adjacent-order: Orden actual
+    adjacent-move-up: Mover hacia arriba
+    adjacent-move-down: Mover hacia abajo
+    adjacent-swap-order: Invertir orden
     jreast: Estilo JR Este
     jreastbranch: Estilo JR Este (ramificación)
     jrwest: Estilo JR Oeste
@@ -279,7 +281,16 @@ route:
     linemap: Mapa de líneas (línea única/directa)
     multiline-linemap: Mapa de líneas (varias líneas)
   linemap:
+    section-route: Ruta e intervalo
+    section-layout: Diseño
+    section-content: Contenido visible
     filename-suffix: Mapa de la Línea
+    export-format: Formato de exportación
+    format-png: PNG (imagen)
+    format-svg: SVG (vectorial)
+    format-pdf: PDF (vectorial)
+    vector-size-note: Los formatos vectoriales no requieren tamaño de imagen
+    export-error: Error al exportar. Prueba otro formato o tamaño de imagen.
     orientation: Orientación
     horizontal: Horizontales
     vertical: verticales

@@ -11,6 +11,8 @@ export const JR_EAST_BRANCH_LAYOUT = {
   branchLineHeight: 18,
   branchDiagonalLineHeight: 23,
   threeBranchDiagonalLineHeight: 27,
+  branchDiagonalRootInwardExtension: 15,
+  threeBranchHorizontalStartInset: 25,
   threeBranchCenterArrowOverlap: 2,
   threeBranchHeightIncrease: 20,
   centerSquareSize: 25,
@@ -107,7 +109,7 @@ export function getJrEastBranchDiagonalLineHeight(
     return JR_EAST_BRANCH_LAYOUT.branchLineHeight;
   }
   if (branchCount === 2 && hasThreeBranchLayout) {
-    return JR_EAST_BRANCH_LAYOUT.branchLineHeight;
+    return JR_EAST_BRANCH_LAYOUT.threeBranchDiagonalLineHeight;
   }
   return branchCount >= 3
     ? JR_EAST_BRANCH_LAYOUT.threeBranchDiagonalLineHeight
@@ -355,12 +357,16 @@ export function getJrEastThreeBranchDiagonalGeometry({
   }
 
   const junctionX = centerX + branchStartDistance;
-  const elbowX = junctionX + branchDiagonalDistance;
   const deltaY = targetY - centerY;
   const slope = deltaY / branchDiagonalDistance;
   const direction = Math.sign(deltaY);
   const diagonalHalfHeight = diagonalLineHeight / 2;
-  const trunkBoundaryY = centerY + direction * trunkLineHeight / 2;
+  const trunkBoundaryY =
+    centerY +
+    direction * (
+      trunkLineHeight / 2 -
+      JR_EAST_BRANCH_LAYOUT.branchDiagonalRootInwardExtension
+    );
   const branchBoundaryY = targetY - direction * branchLineHeight / 2;
   const xAtBoundary = (boundaryY: number, verticalOffset: number) =>
     junctionX + (boundaryY - centerY - verticalOffset) / slope;
@@ -412,9 +418,11 @@ export function getJrEastHorizontalBranchArrowPoints({
   const halfHeight = lineHeight / 2;
   const bodyEndX = width - edgeInset - 20;
   const tipX = width - edgeInset;
+  const horizontalStartX =
+    startX + JR_EAST_BRANCH_LAYOUT.threeBranchHorizontalStartInset;
   const rightPoints = showArrowhead
     ? [
-      startX + 25,
+      horizontalStartX,
       targetY - halfHeight,
       bodyEndX,
       targetY - halfHeight,
@@ -422,17 +430,17 @@ export function getJrEastHorizontalBranchArrowPoints({
       targetY,
       bodyEndX,
       targetY + halfHeight,
-      startX + 25,
+      horizontalStartX,
       targetY + halfHeight,
     ]
     : [
-      startX,
+      horizontalStartX,
       targetY - halfHeight,
       width,
       targetY - halfHeight,
       width,
       targetY + halfHeight,
-      startX,
+      horizontalStartX,
       targetY + halfHeight,
     ];
 

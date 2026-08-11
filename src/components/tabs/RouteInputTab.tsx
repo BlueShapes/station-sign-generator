@@ -12,17 +12,24 @@
  * Display: ratio (from user), direction (from user)
  */
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  type CSSProperties,
+} from "react";
 import type { Database } from "sql.js";
 import {
   Alert,
+  ActionIcon,
   Button,
-  Divider,
   Grid,
   Group,
   Box,
   Select,
   MultiSelect,
+  Paper,
   Title,
   Loader,
   Center,
@@ -38,6 +45,8 @@ import {
   IconEye,
   IconArrowLeft,
   IconArrowRight,
+  IconArrowUp,
+  IconArrowDown,
   IconArrowsHorizontal,
   IconArrowsLeftRight,
   IconRuler,
@@ -56,6 +65,12 @@ import {
 } from "@/lib/fonts";
 import { useCanvasFonts } from "@/lib/useCanvasFonts";
 import { getLocalizedRailwayName } from "@/lib/localizedRailwayName";
+import {
+  createLineMapExportBlob,
+  downloadBlob,
+  type LineMapExportFormat,
+} from "@/lib/lineMapExport";
+import { getLineMapPngSizeOptions } from "@/lib/streamingPngExport";
 import {
   getCompanyLanguages,
   getRailwayLanguageLabel,
@@ -89,7 +104,8 @@ import type {
   Direction,
 } from "@/components/signs/DirectInputStationProps";
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
-import { orderAdjacentStationIds } from "./adjacentStationOrder";
+import { moveAdjacentStationId } from "./adjacentStationOrder";
+import { moveOrderedId } from "./orderedIds";
 
 import JrEastSign, {
   height as JrEastSignHeight,
@@ -134,15 +150,26 @@ import LineMapRenderer, {
   type ServiceInfo,
   type ServiceStopMap,
 } from "@/components/signs/LineMapRenderer";
+import MultiLineMapRenderer, {
+  multiLineMapScale,
+  type MultiLineRouteData,
+} from "@/components/signs/MultiLineMapRenderer";
+import {
+  applyParallelRouteLanes,
+  layoutCircularMultiLineMap,
+  layoutMultiLineMap,
+} from "@/components/signs/multiLineMapLayout";
 import {
   DEFAULT_TRACK_WIDTH,
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
+  normalizeTrackWidth,
 } from "@/components/signs/lineMapGeometry";
 import {
   isTransitSecondaryNameExportTooSmall,
 } from "@/components/signs/transitLineLayout";
 import CanvasFontLoading from "@/components/CanvasFontLoading";
+import styles from "./RouteInputTab.module.css";
 
 type SignStyle =
   | "jreast"
@@ -178,6 +205,146 @@ type AdjacentCandidate = AdjacentStationProps & {
   lineName: string;
   side: AdjacentSide;
 };
+
+type AdjacentOrderControlsProps = {
+  candidates: AdjacentCandidate[];
+  orderedIds: string[];
+  onMove: (fromIndex: number, toIndex: number) => void;
+  t: (key: string) => string;
+};
+
+function AdjacentOrderControls({
+  candidates,
+  orderedIds,
+  onMove,
+  t,
+}: AdjacentOrderControlsProps) {
+  return (
+    <Stack gap={2}>
+      <Text size="xs" c="dimmed" ta="center">
+        {t("route.sign.adjacent-order")}
+      </Text>
+      {orderedIds.map((optionValue, index) => {
+        const stationName =
+          candidates.find((candidate) => candidate.optionValue === optionValue)
+            ?.primaryName ?? optionValue;
+        const moveUpLabel = `${t("route.sign.adjacent-move-up")}: ${stationName}`;
+        const moveDownLabel =
+          `${t("route.sign.adjacent-move-down")}: ${stationName}`;
+
+        return (
+          <Group key={optionValue} gap={4} wrap="nowrap">
+            <Text size="xs" style={{ flex: 1 }} truncate>
+              {index + 1}. {stationName}
+            </Text>
+            <Tooltip label={moveUpLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveUpLabel}
+                disabled={index === 0}
+                onClick={() => onMove(index, index - 1)}
+              >
+                <IconArrowUp size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={moveDownLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveDownLabel}
+                disabled={index === orderedIds.length - 1}
+                onClick={() => onMove(index, index + 1)}
+              >
+                <IconArrowDown size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        );
+      })}
+    </Stack>
+  );
+}
+
+type MultiLineOrderControlsProps = {
+  lines: Line[];
+  onMove: (fromIndex: number, toIndex: number) => void;
+  t: (key: string) => string;
+};
+
+function MultiLineOrderControls({
+  lines,
+  onMove,
+  t,
+}: MultiLineOrderControlsProps) {
+  return (
+    <Stack
+      gap={6}
+      mt="md"
+      className={styles.multiLineOrder}
+      data-testid="multi-line-order"
+    >
+      <Text size="xs" c="dimmed" fw={600}>
+        {t("route.sign.adjacent-order")}
+      </Text>
+      {lines.map((line, index) => {
+        const moveUpLabel = `${t("route.sign.adjacent-move-up")}: ${line.name}`;
+        const moveDownLabel =
+          `${t("route.sign.adjacent-move-down")}: ${line.name}`;
+        return (
+          <Group
+            key={line.id}
+            gap="xs"
+            wrap="nowrap"
+            className={styles.multiLineOrderRow}
+            data-line-id={line.id}
+            data-root={index === 0 ? "true" : undefined}
+          >
+            <Text className={styles.multiLineOrderIndex} aria-hidden="true">
+              {index + 1}
+            </Text>
+            <Box
+              className={styles.multiLineSwatch}
+              style={{ backgroundColor: line.line_color }}
+              aria-hidden="true"
+            />
+            <Text
+              size="sm"
+              fw={index === 0 ? 700 : 500}
+              truncate
+              style={{ flex: 1 }}
+            >
+              {line.prefix ? `[${line.prefix}] ` : ""}
+              {line.name}
+            </Text>
+            <Tooltip label={moveUpLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveUpLabel}
+                disabled={index === 0}
+                onClick={() => onMove(index, index - 1)}
+              >
+                <IconArrowUp size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={moveDownLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveDownLabel}
+                disabled={index === lines.length - 1}
+                onClick={() => onMove(index, index + 1)}
+              >
+                <IconArrowDown size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        );
+      })}
+    </Stack>
+  );
+}
 
 const SIGN_STYLES: Record<
   SignStyle,
@@ -240,6 +407,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const locale = useLocale();
   const signRef = useRef<Konva.Stage>(null);
   const mapRef = useRef<Konva.Stage>(null);
+  const multiLineMapRef = useRef<Konva.Stage>(null);
 
   const [lines, setLines] = useState<Line[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
@@ -274,10 +442,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [selectedRightAdjacentIds, setSelectedRightAdjacentIds] = useState<
     string[]
   >([]);
-  const [leftAdjacentOrderReversed, setLeftAdjacentOrderReversed] =
-    useState(false);
-  const [rightAdjacentOrderReversed, setRightAdjacentOrderReversed] =
-    useState(false);
   const [leftAdjacentDropdownOpened, setLeftAdjacentDropdownOpened] =
     useState(false);
   const [rightAdjacentDropdownOpened, setRightAdjacentDropdownOpened] =
@@ -301,6 +465,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapShowTransitNames, setMapShowTransitNames] = useState(true);
   const [mapFontSize, setMapFontSize] = useState(CIRCULAR_FONT_DEFAULT);
   const [mapSaveSize, setMapSaveSize] = useState(LineMapScale);
+  const [mapExportFormat, setMapExportFormat] =
+    useState<LineMapExportFormat>("png");
+  const [mapExporting, setMapExporting] = useState(false);
+  const [mapExportError, setMapExportError] = useState<string | null>(null);
   const [mapStationNumberMode, setMapStationNumberMode] =
     useState<StationNumberMode>("none");
   const [mapStationNumbers, setMapStationNumbers] =
@@ -331,6 +499,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [mapServiceNameStyle, setMapServiceNameStyle] = useState<
     "paren" | "badge"
   >("paren");
+  const [multiSelectedLineIds, setMultiSelectedLineIds] = useState<string[]>(
+    [],
+  );
+  const [multiStationNumberMode, setMultiStationNumberMode] =
+    useState<StationNumberMode>("dot");
+  const [multiTransitFilter, setMultiTransitFilter] = useState<string[]>([]);
 
   // Load lines when db becomes available
   useEffect(() => {
@@ -514,28 +688,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
     setSelectedLeftAdjacentIds(defaultLeft ? [defaultLeft] : []);
     setSelectedRightAdjacentIds(defaultRight ? [defaultRight] : []);
-    setLeftAdjacentOrderReversed(false);
-    setRightAdjacentOrderReversed(false);
     setLeftAdjacentDropdownOpened(false);
     setRightAdjacentDropdownOpened(false);
   }, [adjacentOptions, selectedLineId, selectedStationId]);
 
-  const orderedLeftAdjacentIds = useMemo(
-    () =>
-      orderAdjacentStationIds(
-        selectedLeftAdjacentIds,
-        leftAdjacentOrderReversed,
-      ),
-    [selectedLeftAdjacentIds, leftAdjacentOrderReversed],
-  );
-  const orderedRightAdjacentIds = useMemo(
-    () =>
-      orderAdjacentStationIds(
-        selectedRightAdjacentIds,
-        rightAdjacentOrderReversed,
-      ),
-    [selectedRightAdjacentIds, rightAdjacentOrderReversed],
-  );
+  const orderedLeftAdjacentIds = selectedLeftAdjacentIds;
+  const orderedRightAdjacentIds = selectedRightAdjacentIds;
 
   // Enforce constraints when services have passed stations
   useEffect(() => {
@@ -903,7 +1061,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const signFonts = useCanvasFonts(signFontSpecs, tabMode === "sign");
   const mapFonts = useCanvasFonts(
     LINE_MAP_FONT_SPECS,
-    tabMode === "linemap",
+    tabMode === "linemap" || tabMode === "multiline-linemap",
   );
   const mapLanguageOptions = getCompanyLanguages(mapCompany).map(
     (language, index) => ({
@@ -927,6 +1085,129 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ]),
     );
   }, [lines, routeCompanies]);
+
+  const multiSelectedLines = useMemo(
+    () =>
+      multiSelectedLineIds
+        .map((lineId) => lines.find((line) => line.id === lineId))
+        .filter((line): line is Line => !!line),
+    [multiSelectedLineIds, lines],
+  );
+  // Inclusion and order are manual. The first selected line is the visual
+  // spine and owns the filename/company-language context.
+  const multiRootLine = multiSelectedLines[0] ?? null;
+  const multiCompany = routeCompanies.find(
+    (company) => company.id === multiRootLine?.company_id,
+  );
+  const multiLanguageOptions = getCompanyLanguages(multiCompany).map(
+    (language, index) => ({
+      value: STATION_NAME_FIELDS[index],
+      label: `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
+    }),
+  );
+  const multiLineRoutes = useMemo((): MultiLineRouteData[] => {
+    if (!db || !multiRootLine) return [];
+    const selectedIds = new Set(multiSelectedLineIds);
+    const orderedLines = multiSelectedLines;
+
+    return orderedLines.map((line) => {
+      const routeStations = getStationsByLine(db, line.id);
+      const stationNumbers: StationNumberMap = {};
+      const transits: Record<string, Line[]> = {};
+      for (const station of routeStations) {
+        const number = getResolvedStationNumber(db, station.id, line.id);
+        if (number) {
+          stationNumbers[station.id] = {
+            prefix: number.prefix,
+            value: number.value,
+            threeLetterCode: station.three_letter_code,
+            color: number.line_color,
+            style: mapLineIndicatorStyles[line.id] ?? "jreast",
+          };
+        }
+        const transferIds = new Set(getTransferLineIds(db, station.id));
+        const stationLineIds = new Set(
+          getStationLines(db, station.id).map((stationLine) => stationLine.line_id),
+        );
+        const stationTransits = lines.filter(
+          (candidate) =>
+            !selectedIds.has(candidate.id) &&
+            (stationLineIds.has(candidate.id) || transferIds.has(candidate.id)),
+        );
+        if (stationTransits.length > 0) transits[station.id] = stationTransits;
+      }
+      const companyStyle = routeCompanies.find(
+        (company) => company.id === line.company_id,
+      )?.station_number_style;
+      return {
+        line,
+        stations: routeStations,
+        stationNumbers,
+        transits,
+        companyStyle,
+      };
+    });
+  }, [
+    db,
+    multiRootLine,
+    multiSelectedLineIds,
+    multiSelectedLines,
+    mapLineIndicatorStyles,
+    lines,
+    routeCompanies,
+  ]);
+  const multiTransitLines = useMemo(() => {
+    const seen = new Set<string>();
+    const result: Line[] = [];
+    for (const route of multiLineRoutes) {
+      for (const stationTransits of Object.values(route.transits)) {
+        for (const transit of stationTransits) {
+          if (seen.has(transit.id)) continue;
+          seen.add(transit.id);
+          result.push(transit);
+        }
+      }
+    }
+    return result;
+  }, [multiLineRoutes]);
+  const filteredMultiLineRoutes = useMemo(
+    () =>
+      multiLineRoutes.map((route) => ({
+        ...route,
+        transits: Object.fromEntries(
+          Object.entries(route.transits).map(([stationId, stationTransits]) => [
+            stationId,
+            stationTransits.filter((line) => multiTransitFilter.includes(line.id)),
+          ]),
+        ),
+      })),
+    [multiLineRoutes, multiTransitFilter],
+  );
+  const multiMapSaveSizeList = useMemo(() => {
+    if (!multiRootLine) return [];
+    const layoutInputs = multiLineRoutes.map(({ line, stations: routeStations }) => ({
+        lineId: line.id,
+        parentLineId: line.parent_line_id,
+        stationIds: routeStations.map((station) => station.id),
+        isLoop: !!line.is_loop,
+      }));
+    const loopRoot = multiLineRoutes.find((route) => !!route.line.is_loop)?.line;
+    const layoutRootId = loopRoot?.id ?? multiRootLine.id;
+    const laneGap = Math.max(16, normalizeTrackWidth(mapTrackWidth) + 4);
+    const dimensions = loopRoot
+      ? layoutCircularMultiLineMap(
+          layoutInputs,
+          layoutRootId,
+          mapStationSpacing,
+          laneGap,
+        )
+      : applyParallelRouteLanes(
+          layoutMultiLineMap(layoutInputs, layoutRootId, mapStationSpacing),
+          layoutInputs,
+          laneGap,
+        );
+    return getLineMapPngSizeOptions(dimensions.width, dimensions.height);
+  }, [multiLineRoutes, multiRootLine, mapStationSpacing, mapTrackWidth]);
 
   const lineById = useMemo(
     () => new Map(lines.map((routeLine) => [routeLine.id, routeLine])),
@@ -1176,10 +1457,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       mapTrackWidth,
       mapStationNumberExtraExtent,
     );
-    return [1, 2, 3, 4].map((mult) => ({
-      label: `${w * mult} × ${h * mult} (${["SS", "M", "L", "XL"][mult - 1]})`,
-      value: LineMapScale * mult,
-    }));
+    return getLineMapPngSizeOptions(w, h);
   }, [
     mapStations.length,
     effectiveIsLoop,
@@ -1235,6 +1513,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ),
     );
   const mapDownloadTextTooSmall =
+    mapExportFormat === "png" &&
     hasVisibleTransitSecondaryNames &&
     isTransitSecondaryNameExportTooSmall(mapSaveSize);
   const mapDownloadWarningText = mapDownloadTextTooSmall
@@ -1271,13 +1550,31 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
   };
 
+  const saveLineMapStage = async (
+    stage: Konva.Stage,
+    filename: string,
+    baseScale: number,
+  ) => {
+    setMapExporting(true);
+    setMapExportError(null);
+    try {
+      await waitForCanvasFonts(LINE_MAP_FONT_SPECS).catch(() => undefined);
+      const blob = await createLineMapExportBlob({
+        stage,
+        format: mapExportFormat,
+        pixelRatio: mapSaveSize / baseScale,
+      });
+      downloadBlob(blob, `${filename}.${mapExportFormat}`);
+    } catch (error) {
+      console.error("Line-map export failed", error);
+      setMapExportError(t("route.linemap.export-error"));
+    } finally {
+      setMapExporting(false);
+    }
+  };
+
   const handleSaveMap = async () => {
     if (!mapRef.current || !selectedLine) return;
-    await waitForCanvasFonts(LINE_MAP_FONT_SPECS).catch(() => undefined);
-    const uri = mapRef.current.toDataURL({
-      pixelRatio: mapSaveSize / LineMapScale,
-    });
-    const link = document.createElement("a");
     const filename = getLocalizedRailwayName(
       locale,
       getCompanyLanguages(mapCompany),
@@ -1289,11 +1586,31 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ],
       "line",
     );
-    link.download = `${filename}_${t("route.linemap.filename-suffix")}.png`;
-    link.href = uri;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    await saveLineMapStage(
+      mapRef.current,
+      `${filename}_${t("route.linemap.filename-suffix")}`,
+      LineMapScale,
+    );
+  };
+
+  const handleSaveMultiLineMap = async () => {
+    if (!multiLineMapRef.current || !multiRootLine) return;
+    const filename = getLocalizedRailwayName(
+      locale,
+      getCompanyLanguages(multiCompany),
+      [
+        multiRootLine.name,
+        multiRootLine.secondary_name,
+        multiRootLine.tertiary_name,
+        multiRootLine.quaternary_name,
+      ],
+      "line",
+    );
+    await saveLineMapStage(
+      multiLineMapRef.current,
+      `${filename}_${t("route.linemap.filename-suffix")}`,
+      multiLineMapScale,
+    );
   };
 
   if (loading) {
@@ -1320,13 +1637,26 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   }
 
   return (
-    <Box style={{ padding: "16px" }}>
+    <Box className={styles.routeInputShell}>
       <Stack gap="md">
         {/* Mode toggle */}
-        <Group>
+        <Group className={styles.modeBar}>
           <SegmentedControl
+            className={styles.modeControl}
             value={tabMode}
-            onChange={(v) => setTabMode(v as TabMode)}
+            onChange={(value) => {
+              const nextMode = value as TabMode;
+              setTabMode(nextMode);
+              if (
+                nextMode === "multiline-linemap" &&
+                multiSelectedLineIds.length === 0 &&
+                selectedLineId
+              ) {
+                // Carry over only the currently selected line. Additional
+                // lines remain an explicit user choice.
+                setMultiSelectedLineIds([selectedLineId]);
+              }
+            }}
             data={[
               {
                 value: "sign",
@@ -1361,88 +1691,47 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
         {/* ── Sign mode controls ────────────────────────────────────────── */}
         {tabMode === "sign" && (
-          <>
-            <Grid gutter="md">
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Select
-                  label={t("route.sign.style")}
-                  value={signStyle}
-                  onChange={(v) => v && setSignStyle(v as SignStyle)}
-                  data={[
-                    { value: "jreast", label: t("route.sign.jreast") },
-                    {
-                      value: "jreastbranch",
-                      label: t("route.sign.jreastbranch"),
-                    },
-                    { value: "jrwest", label: t("route.sign.jrwest") },
-                    {
-                      value: "jrwestlarge",
-                      label: t("route.sign.jrwestlarge"),
-                    },
-                    {
-                      value: "metrolong",
-                      label: t("route.sign.metrolong"),
-                    },
-                    {
-                      value: "metroforeign",
-                      label: t("route.sign.metroforeign"),
-                    },
-                    {
-                      value: "metromedium",
-                      label: t("route.sign.metromedium"),
-                    },
-                    {
-                      value: "toeimedium",
-                      label: t("route.sign.toeimedium"),
-                    },
-                    {
-                      value: "toeilarge",
-                      label: t("route.sign.toeilarge"),
-                    },
-                  ]}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Select
-                  label={t("route.line.title")}
-                  value={selectedLineId}
-                  onChange={(value) => {
-                    setSelectedLineId(value);
-                    if (value) setSelectedThroughRouteId(null);
-                  }}
-                  data={lines.map((l) => ({
-                    value: l.id,
-                    label: `[${l.prefix}] ${l.name}`,
-                  }))}
-                  placeholder={t("route.line.select")}
-                  clearable
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Select
-                  label={t("route.station.title")}
-                  value={selectedStationId}
-                  onChange={setSelectedStationId}
-                  data={stations.map((s) => ({
-                    value: s.id,
-                    label: stationLabelMap[s.id] ?? s.primary_name,
-                  }))}
-                  placeholder={
-                    selectedLineId
-                      ? t("route.station.select")
-                      : t("route.station.empty")
-                  }
-                  disabled={!selectedLineId}
-                  clearable
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Stack gap="lg" className={styles.signWorkspace}>
+            <Paper withBorder radius="lg" className={styles.formatBar}>
+              <Select
+                className={styles.formatControl}
+                label={t("route.sign.style")}
+                value={signStyle}
+                onChange={(value) => value && setSignStyle(value as SignStyle)}
+                data={[
+                  { value: "jreast", label: t("route.sign.jreast") },
+                  {
+                    value: "jreastbranch",
+                    label: t("route.sign.jreastbranch"),
+                  },
+                  { value: "jrwest", label: t("route.sign.jrwest") },
+                  {
+                    value: "jrwestlarge",
+                    label: t("route.sign.jrwestlarge"),
+                  },
+                  { value: "metrolong", label: t("route.sign.metrolong") },
+                  {
+                    value: "metroforeign",
+                    label: t("route.sign.metroforeign"),
+                  },
+                  {
+                    value: "metromedium",
+                    label: t("route.sign.metromedium"),
+                  },
+                  {
+                    value: "toeimedium",
+                    label: t("route.sign.toeimedium"),
+                  },
+                  { value: "toeilarge", label: t("route.sign.toeilarge") },
+                ]}
+              />
+              <Box className={styles.directionControl}>
                 <Text size="sm" fw={500} mb={4}>
                   {t("route.sign.direction")}
                 </Text>
                 <SegmentedControl
                   value={direction}
-                  onChange={(v) => setDirection(v as Direction)}
+                  onChange={(value) => setDirection(value as Direction)}
                   data={[
                     { value: "left", label: <IconArrowLeft size={16} /> },
                     {
@@ -1452,28 +1741,28 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     { value: "right", label: <IconArrowRight size={16} /> },
                   ]}
                 />
-              </Grid.Col>
-              {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
-                "hidden" && (
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <MultiSelect
-                    label={t("route.sign.center-colors")}
-                    value={centerSquareLineIds}
-                    onChange={(v) =>
-                      setCenterSquareLineIds(
-                        v.length > 0 ? v.slice(0, 4) : centerSquareLineIds,
-                      )
-                    }
-                    data={stationLines.map((l) => ({
-                      value: l.id,
-                      label: `[${l.prefix}] ${l.name}`,
-                    }))}
-                    disabled={!selectedStationId}
-                    maxValues={4}
-                  />
-                </Grid.Col>
-              )}
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              </Box>
+            </Paper>
+
+            <Box
+              className={styles.signComposer}
+              style={
+                {
+                  "--route-accent": selectedBaseLine?.line_color ?? "#228be6",
+                } as CSSProperties
+              }
+            >
+              <Paper
+                withBorder
+                radius="lg"
+                className={`${styles.stationCard} ${styles.leftStationCard}`}
+              >
+                <Group className={styles.stationCardHeader} gap="sm" wrap="nowrap">
+                  <Box className={styles.stationNode} aria-hidden="true">
+                    <IconArrowLeft size={16} />
+                  </Box>
+                  <Text fw={700}>{t("input.direct.input-left")}</Text>
+                </Group>
                 <Stack gap={4}>
                   <MultiSelect
                     label={t("route.sign.prev-station")}
@@ -1482,9 +1771,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       setSelectedLeftAdjacentIds(
                         value.slice(0, adjacentSelectionLimit),
                       );
-                      setLeftAdjacentOrderReversed(false);
-                      if (value.length >= adjacentSelectionLimit)
+                      if (value.length >= adjacentSelectionLimit) {
                         setLeftAdjacentDropdownOpened(false);
+                      }
                     }}
                     dropdownOpened={leftAdjacentDropdownOpened}
                     onDropdownOpen={() => setLeftAdjacentDropdownOpened(true)}
@@ -1493,42 +1782,104 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       value: candidate.optionValue,
                       label: `${candidate.primaryName}（${candidate.lineName}）`,
                     }))}
-                    placeholder={t("route.sign.adjacent-select")}
+                    placeholder={t("route.sign.adjacent-select", {
+                      count: String(adjacentSelectionLimit),
+                    })}
                     disabled={!selectedStationId}
                     maxValues={adjacentSelectionLimit}
                     clearable
                   />
                   {selectedLeftAdjacentIds.length >= 2 && (
-                    <Stack gap={2}>
-                      <Text size="xs" c="dimmed" ta="center">
-                        {t("route.sign.adjacent-order")}: {orderedLeftAdjacentIds
-                          .map(
-                            (optionValue) =>
-                              adjacentOptions.left.find(
-                                (candidate) =>
-                                  candidate.optionValue === optionValue,
-                              )?.primaryName,
-                          )
-                          .filter(Boolean)
-                          .join(" → ")}
-                      </Text>
-                      <Button
-                        variant="subtle"
-                        size="compact-xs"
-                        leftSection={<IconArrowsLeftRight size={14} />}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setLeftAdjacentOrderReversed((reversed) => !reversed)
-                        }}
-                      >
-                        {t("route.sign.adjacent-swap-order")}
-                      </Button>
-                    </Stack>
+                    <AdjacentOrderControls
+                      candidates={adjacentOptions.left}
+                      orderedIds={orderedLeftAdjacentIds}
+                      onMove={(fromIndex, toIndex) =>
+                        setSelectedLeftAdjacentIds((ids) =>
+                          moveAdjacentStationId(ids, fromIndex, toIndex)
+                        )
+                      }
+                      t={t}
+                    />
                   )}
                 </Stack>
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              </Paper>
+
+              <Paper
+                withBorder
+                radius="lg"
+                className={`${styles.stationCard} ${styles.currentStationCard}`}
+              >
+                <Group className={styles.stationCardHeader} gap="sm" wrap="nowrap">
+                  <Box className={styles.stationNode} aria-hidden="true">
+                    <IconSignRight size={17} />
+                  </Box>
+                  <Text fw={700}>{t("input.direct.input-current")}</Text>
+                </Group>
+                <Stack gap="sm">
+                  <Select
+                    label={t("route.line.title")}
+                    value={selectedLineId}
+                    onChange={(value) => {
+                      setSelectedLineId(value);
+                      if (value) setSelectedThroughRouteId(null);
+                    }}
+                    data={lines.map((line) => ({
+                      value: line.id,
+                      label: `[${line.prefix}] ${line.name}`,
+                    }))}
+                    placeholder={t("route.line.select")}
+                    clearable
+                  />
+                  <Select
+                    label={t("route.station.title")}
+                    value={selectedStationId}
+                    onChange={setSelectedStationId}
+                    data={stations.map((station) => ({
+                      value: station.id,
+                      label: stationLabelMap[station.id] ?? station.primary_name,
+                    }))}
+                    placeholder={
+                      selectedLineId
+                        ? t("route.station.select")
+                        : t("route.station.empty")
+                    }
+                    disabled={!selectedLineId}
+                    clearable
+                  />
+                  {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
+                    "hidden" && (
+                    <MultiSelect
+                      label={t("route.sign.center-colors")}
+                      value={centerSquareLineIds}
+                      onChange={(value) =>
+                        setCenterSquareLineIds(
+                          value.length > 0
+                            ? value.slice(0, 4)
+                            : centerSquareLineIds,
+                        )
+                      }
+                      data={stationLines.map((line) => ({
+                        value: line.id,
+                        label: `[${line.prefix}] ${line.name}`,
+                      }))}
+                      disabled={!selectedStationId}
+                      maxValues={4}
+                    />
+                  )}
+                </Stack>
+              </Paper>
+
+              <Paper
+                withBorder
+                radius="lg"
+                className={`${styles.stationCard} ${styles.rightStationCard}`}
+              >
+                <Group className={styles.stationCardHeader} gap="sm" wrap="nowrap">
+                  <Box className={styles.stationNode} aria-hidden="true">
+                    <IconArrowRight size={16} />
+                  </Box>
+                  <Text fw={700}>{t("input.direct.input-right")}</Text>
+                </Group>
                 <Stack gap={4}>
                   <MultiSelect
                     label={t("route.sign.next-station")}
@@ -1537,9 +1888,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       setSelectedRightAdjacentIds(
                         value.slice(0, adjacentSelectionLimit),
                       );
-                      setRightAdjacentOrderReversed(false);
-                      if (value.length >= adjacentSelectionLimit)
+                      if (value.length >= adjacentSelectionLimit) {
                         setRightAdjacentDropdownOpened(false);
+                      }
                     }}
                     dropdownOpened={rightAdjacentDropdownOpened}
                     onDropdownOpen={() => setRightAdjacentDropdownOpened(true)}
@@ -1548,45 +1899,32 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       value: candidate.optionValue,
                       label: `${candidate.primaryName}（${candidate.lineName}）`,
                     }))}
-                    placeholder={t("route.sign.adjacent-select")}
+                    placeholder={t("route.sign.adjacent-select", {
+                      count: String(adjacentSelectionLimit),
+                    })}
                     disabled={!selectedStationId}
                     maxValues={adjacentSelectionLimit}
                     clearable
                   />
                   {selectedRightAdjacentIds.length >= 2 && (
-                    <Stack gap={2}>
-                      <Text size="xs" c="dimmed" ta="center">
-                        {t("route.sign.adjacent-order")}: {orderedRightAdjacentIds
-                          .map(
-                            (optionValue) =>
-                              adjacentOptions.right.find(
-                                (candidate) =>
-                                  candidate.optionValue === optionValue,
-                              )?.primaryName,
-                          )
-                          .filter(Boolean)
-                          .join(" → ")}
-                      </Text>
-                      <Button
-                        variant="subtle"
-                        size="compact-xs"
-                        leftSection={<IconArrowsLeftRight size={14} />}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setRightAdjacentOrderReversed((reversed) => !reversed)
-                        }}
-                      >
-                        {t("route.sign.adjacent-swap-order")}
-                      </Button>
-                    </Stack>
+                    <AdjacentOrderControls
+                      candidates={adjacentOptions.right}
+                      orderedIds={orderedRightAdjacentIds}
+                      onMove={(fromIndex, toIndex) =>
+                        setSelectedRightAdjacentIds((ids) =>
+                          moveAdjacentStationId(ids, fromIndex, toIndex)
+                        )
+                      }
+                      t={t}
+                    />
                   )}
                 </Stack>
-              </Grid.Col>
-            </Grid>
+              </Paper>
+            </Box>
 
             {/* Station navigation + flip */}
-            <Group gap="sm">
+            <Paper withBorder radius="lg" className={styles.adjustmentBar}>
+              <Group gap="sm" className={styles.stationNavigation}>
               <Button
                 variant="outline"
                 size="sm"
@@ -1633,44 +1971,43 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               >
                 {t("route.sign.flip")}
               </Button>
-            </Group>
+              </Group>
 
-            {/* Ratio slider — hidden for fixed-ratio styles */}
-            {SIGN_STYLE_FIELDS[signStyle]?.fixedRatio === undefined && (
-              <Box
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}
-              >
-                <IconRuler size={20} style={{ flexShrink: 0 }} />
-                <Slider
-                  value={ratio}
-                  label={(v) => v}
-                  labelAlwaysOn
-                  step={0.5}
-                  min={2.5}
-                  max={8}
-                  style={{ width: "100%" }}
-                  onChange={setRatio}
-                />
-              </Box>
-            )}
+              {/* Ratio slider — hidden for fixed-ratio styles */}
+              {SIGN_STYLE_FIELDS[signStyle]?.fixedRatio === undefined && (
+                <Box className={styles.ratioControl}>
+                  <IconRuler size={20} className={styles.ratioIcon} />
+                  <Slider
+                    value={ratio}
+                    label={(value) => value}
+                    labelAlwaysOn
+                    step={0.5}
+                    min={2.5}
+                    max={8}
+                    className={styles.ratioSlider}
+                    onChange={setRatio}
+                  />
+                </Box>
+              )}
+            </Paper>
 
             {/* Sign preview */}
-            {signData && (
-              <>
-                <Title
-                  order={2}
-                  style={{
-                    fontSize: "1.2em",
-                    padding: "10px 0 5px 5px",
-                    fontWeight: "bold",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
+            <Paper withBorder radius="xl" className={styles.previewPanel}>
+              <Group justify="space-between" align="center" mb="md">
+                <Title order={2} className={styles.previewTitle}>
                   <IconEye size="1.6em" />
                   {t("common.preview")}
                 </Title>
+                {selectedBaseLine && (
+                  <Box
+                    className={styles.previewLineSwatch}
+                    style={{ backgroundColor: selectedBaseLine.line_color }}
+                    aria-hidden="true"
+                  />
+                )}
+              </Group>
+              {signData ? (
+                <>
                 {signFonts.ready ? (
                   (() => {
                     const { Component: SignComponent } = SIGN_STYLES[signStyle];
@@ -1687,7 +2024,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 )}
 
                 {/* Download controls */}
-                <Grid gutter="md" style={{ padding: "10px" }}>
+                <Grid gutter="md" className={styles.downloadControls}>
                   <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
                     <Select
                       label={t("input.image-size")}
@@ -1701,7 +2038,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   </Grid.Col>
                   <Grid.Col
                     span={{ base: 12, sm: 5, lg: 3 }}
-                    style={{ display: "flex", justifyContent: "center" }}
+                    className={styles.downloadButtonColumn}
                   >
                     <Button
                       color="green"
@@ -1709,6 +2046,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       variant="filled"
                       onClick={handleSaveSign}
                       disabled={!signFonts.ready}
+                      fullWidth
                       style={{ fontWeight: 700 }}
                       leftSection={<IconDownload />}
                     >
@@ -1716,17 +2054,39 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Button>
                   </Grid.Col>
                 </Grid>
-              </>
-            )}
-          </>
+                </>
+              ) : (
+                <Box className={styles.emptyPreview}>
+                  <Text>{t("input.direct.input-left")}</Text>
+                  <Text fw={700}>{t("input.direct.input-current")}</Text>
+                  <Text>{t("input.direct.input-right")}</Text>
+                </Box>
+              )}
+            </Paper>
+          </Stack>
         )}
 
         {/* ── Line map mode controls ────────────────────────────────────── */}
         {tabMode === "linemap" && (
-          <>
+          <Stack
+            gap="lg"
+            className={styles.linemapWorkspace}
+            style={
+              {
+                "--route-accent": selectedLine?.line_color ?? "#228be6",
+              } as CSSProperties
+            }
+          >
             {/* ── Route ── */}
-            <Grid gutter="md">
-              <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+            <Paper withBorder radius="lg" className={styles.mapSourcePanel}>
+              <Group className={styles.mapSectionHeader} gap="sm">
+                <Box className={styles.mapSectionIcon} aria-hidden="true">
+                  <IconMap size={18} />
+                </Box>
+                <Title order={2}>{t("route.linemap.section-route")}</Title>
+              </Group>
+              <Grid gutter="md">
+              <Grid.Col span={{ base: 12, sm: 12, md: 4 }}>
                 <Select
                   label={t("route.line.title")}
                   value={mapRouteSelectValue}
@@ -1747,7 +2107,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   clearable
                 />
               </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              <Grid.Col span={{ base: 12, sm: 5, md: 4 }}>
                 <Select
                   label={t("route.linemap.range-start")}
                   value={mapStartId}
@@ -1765,7 +2125,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 />
               </Grid.Col>
               <Grid.Col
-                span={{ base: 12, sm: 6, md: 1 }}
+                span={{ base: 12, sm: 2, md: 1 }}
                 style={{ display: "flex", alignItems: "flex-end" }}
               >
                 <Button
@@ -1782,7 +2142,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   <IconArrowsLeftRight size={16} />
                 </Button>
               </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              <Grid.Col span={{ base: 12, sm: 5, md: 3 }}>
                 <Select
                   label={t("route.linemap.range-end")}
                   value={mapEndId}
@@ -1799,15 +2159,18 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   disabled={!selectedLine}
                 />
               </Grid.Col>
-            </Grid>
+              </Grid>
+            </Paper>
 
             {/* ── Services ── */}
             {mapServices.length >= 2 && (
-              <>
-                <Divider
-                  label={t("route.linemap.services")}
-                  labelPosition="left"
-                />
+              <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                <Group className={styles.mapSectionHeader} gap="sm">
+                  <Box className={styles.mapSectionIndex} aria-hidden="true">
+                    <IconArrowsHorizontal size={17} />
+                  </Box>
+                  <Title order={2}>{t("route.linemap.services")}</Title>
+                </Group>
                 <Grid gutter="md">
                   <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                     <MultiSelect
@@ -1851,7 +2214,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Grid.Col>
                   )}
                   {mapSelectedServiceIds.length === 1 && (
-                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                       <Text size="sm" fw={500} mb={4}>
                         {t("route.linemap.service-name-style")}
                       </Text>
@@ -1875,19 +2238,22 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Grid.Col>
                   )}
                 </Grid>
-              </>
+              </Paper>
             )}
 
             {/* ── Layout ── */}
             {selectedLine && (
-              <>
-                <Divider
-                  label={t("route.linemap.orientation")}
-                  labelPosition="left"
-                />
+              <Box className={styles.mapSettingsGrid}>
+                <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                <Group className={styles.mapSectionHeader} gap="sm">
+                  <Box className={styles.mapSectionIndex} aria-hidden="true">
+                    <IconRuler size={17} />
+                  </Box>
+                  <Title order={2}>{t("route.linemap.section-layout")}</Title>
+                </Group>
                 <Grid gutter="md">
                   {isLoopLine && (
-                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                       <Text size="sm" fw={500} mb={4}>
                         {t("route.linemap.loop-render-mode")}
                       </Text>
@@ -1933,7 +2299,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   )}
                   {(!isLoopLine || mapForceLinear) &&
                     mapOrientation === "horizontal" && (
-                      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                         <Text size="sm" fw={500} mb={4}>
                           {t("route.linemap.name-style")}
                         </Text>
@@ -1962,7 +2328,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     )}
                   {(!isLoopLine || mapForceLinear) &&
                     mapOrientation === "vertical" && (
-                      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                         <Text size="sm" fw={500} mb={4}>
                           {t("route.linemap.name-side")}
                         </Text>
@@ -1995,7 +2361,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Grid.Col>
                     )}
                   {effectiveIsLoop && (
-                    <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                       <Text size="sm" fw={500} mb={8}>
                         {t("route.linemap.font-size")}
                       </Text>
@@ -2021,7 +2387,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Grid.Col>
                   )}
                   {!effectiveIsLoop && (
-                    <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                       <Text size="sm" fw={500} mb={8}>
                         {t("route.linemap.station-spacing")}
                       </Text>
@@ -2050,7 +2416,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Box>
                     </Grid.Col>
                   )}
-                  <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                     <Text size="sm" fw={500} mb={8}>
                       {t("route.linemap.line-width")}
                     </Text>
@@ -2080,18 +2446,18 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Box>
                   </Grid.Col>
                 </Grid>
-              </>
-            )}
+                </Paper>
 
-            {/* ── Display ── */}
-            {selectedLine && (
-              <>
-                <Divider
-                  label={t("route.linemap.station-number-mode")}
-                  labelPosition="left"
-                />
+                {/* ── Display ── */}
+                <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                <Group className={styles.mapSectionHeader} gap="sm">
+                  <Box className={styles.mapSectionIndex} aria-hidden="true">
+                    <IconEye size={17} />
+                  </Box>
+                  <Title order={2}>{t("route.linemap.section-content")}</Title>
+                </Group>
                 <Grid gutter="md">
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                     <Select
                       label={t("route.linemap.primary-lang")}
                       value={mapPrimaryLang}
@@ -2109,7 +2475,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Text>
                     )}
                   </Grid.Col>
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                     <Select
                       label={t("route.linemap.secondary-lang")}
                       value={mapSecondaryLang}
@@ -2138,7 +2504,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       </Text>
                     )}
                   </Grid.Col>
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
                     <Text size="sm" fw={500} mb={4}>
                       {t("route.linemap.station-number-mode")}
                     </Text>
@@ -2217,7 +2583,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Grid.Col>
                   )}
                 </Grid>
-              </>
+                </Paper>
+              </Box>
             )}
 
             {/* Overlap warning */}
@@ -2233,24 +2600,21 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
             {/* Map preview */}
             {selectedLine && mapStations.length > 0 && (
-              <>
-                <Title
-                  order={2}
-                  style={{
-                    fontSize: "1.2em",
-                    padding: "10px 0 5px 5px",
-                    fontWeight: "bold",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
+              <Paper withBorder radius="xl" className={styles.mapPreviewPanel}>
+                <Group justify="space-between" align="center" mb="md">
+                  <Title order={2} className={styles.previewTitle}>
                   <IconEye size="1.6em" />
                   {t("common.preview")}
-                </Title>
+                  </Title>
+                  <Box
+                    className={styles.previewLineSwatch}
+                    style={{ backgroundColor: selectedLine.line_color }}
+                    aria-hidden="true"
+                  />
+                </Group>
 
                 {mapFonts.ready ? (
-                  <Box className="map-preview" style={{ overflowX: "auto" }}>
+                  <Box className={`map-preview ${styles.mapPreviewViewport}`}>
                     <LineMapRenderer
                       ref={mapRef}
                       stations={mapDisplayStations}
@@ -2303,12 +2667,34 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 )}
 
                 {/* Download controls */}
-                <Grid gutter="md" style={{ padding: "10px" }}>
-                  <Grid.Col span={{ base: 12, sm: 7, lg: 9 }}>
+                <Grid gutter="md" className={styles.downloadControls}>
+                  <Grid.Col span={{ base: 12, sm: 4 }}>
+                    <Select
+                      label={t("route.linemap.export-format")}
+                      value={mapExportFormat}
+                      onChange={(value) => {
+                        if (!value) return;
+                        setMapExportFormat(value as LineMapExportFormat);
+                        setMapExportError(null);
+                      }}
+                      data={[
+                        { value: "png", label: t("route.linemap.format-png") },
+                        { value: "svg", label: t("route.linemap.format-svg") },
+                        { value: "pdf", label: t("route.linemap.format-pdf") },
+                      ]}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 4 }}>
                     <Select
                       label={t("input.image-size")}
                       value={String(mapSaveSize)}
                       onChange={(v) => v && setMapSaveSize(Number(v))}
+                      disabled={mapExportFormat !== "png"}
+                      description={
+                        mapExportFormat === "png"
+                          ? undefined
+                          : t("route.linemap.vector-size-note")
+                      }
                       data={mapSaveSizeList.map((e) => ({
                         value: String(e.value),
                         label: e.label,
@@ -2316,12 +2702,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     />
                   </Grid.Col>
                   <Grid.Col
-                    span={{ base: 12, sm: 5, lg: 3 }}
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-end",
-                      minWidth: 0,
-                    }}
+                    span={{ base: 12, sm: 4 }}
+                    className={styles.downloadButtonColumn}
                   >
                     <Tooltip
                       label={mapDownloadWarningText ?? ""}
@@ -2335,7 +2717,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         size="lg"
                         variant="filled"
                         onClick={handleSaveMap}
-                        disabled={!mapFonts.ready}
+                        disabled={!mapFonts.ready || mapExporting}
+                        loading={mapExporting}
                         fullWidth
                         style={{ fontWeight: 700, minWidth: 0 }}
                         leftSection={
@@ -2357,9 +2740,312 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     </Tooltip>
                   </Grid.Col>
                 </Grid>
-              </>
+                {mapExportError && (
+                  <Alert mt="sm" color="red" icon={<IconAlertTriangle size={16} />}>
+                    {mapExportError}
+                  </Alert>
+                )}
+              </Paper>
             )}
-          </>
+          </Stack>
+        )}
+
+        {/* ── Multiple-line map controls ──────────────────────────────── */}
+        {tabMode === "multiline-linemap" && (
+          <Stack
+            gap="lg"
+            className={styles.linemapWorkspace}
+            style={
+              {
+                "--route-accent": multiRootLine?.line_color ?? "#228be6",
+              } as CSSProperties
+            }
+          >
+            <Paper withBorder radius="lg" className={styles.mapSourcePanel}>
+              <Group className={styles.mapSectionHeader} gap="sm">
+                <Box className={styles.mapSectionIcon} aria-hidden="true">
+                  <IconMap size={18} />
+                </Box>
+                <Title order={2}>{t("route.mode.multiline-linemap")}</Title>
+              </Group>
+              <MultiSelect
+                label={t("route.line.title")}
+                value={multiSelectedLineIds}
+                onChange={(lineIds) => {
+                  setMultiSelectedLineIds(lineIds);
+                  setMultiTransitFilter([]);
+                }}
+                data={lines.map((line) => ({
+                  value: line.id,
+                  label: line.prefix ? `[${line.prefix}] ${line.name}` : line.name,
+                }))}
+                placeholder={t("route.line.select")}
+                searchable
+                clearable
+              />
+              {multiSelectedLines.length > 0 && (
+                <MultiLineOrderControls
+                  lines={multiSelectedLines}
+                  onMove={(fromIndex, toIndex) =>
+                    setMultiSelectedLineIds((lineIds) =>
+                      moveOrderedId(lineIds, fromIndex, toIndex)
+                    )
+                  }
+                  t={t}
+                />
+              )}
+            </Paper>
+
+            {multiRootLine && (
+              <Box className={styles.mapSettingsGrid}>
+                <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                  <Group className={styles.mapSectionHeader} gap="sm">
+                    <Box className={styles.mapSectionIndex} aria-hidden="true">
+                      <IconRuler size={17} />
+                    </Box>
+                    <Title order={2}>{t("route.linemap.section-layout")}</Title>
+                  </Group>
+                  <Stack gap="xl">
+                    <Box>
+                      <Text size="sm" fw={500} mb={8}>
+                        {t("route.linemap.station-spacing")}
+                      </Text>
+                      <Group gap="md" wrap="nowrap">
+                        <IconRuler size={20} />
+                        <Slider
+                          value={mapStationSpacing}
+                          label={(value) => `${value}`}
+                          labelAlwaysOn
+                          step={1}
+                          min={45}
+                          max={150}
+                          style={{ width: "100%" }}
+                          onChange={setMapStationSpacing}
+                          marks={[
+                            { value: 60, label: "60" },
+                            { value: 90, label: "90" },
+                          ]}
+                        />
+                      </Group>
+                    </Box>
+                    <Box>
+                      <Text size="sm" fw={500} mb={8}>
+                        {t("route.linemap.line-width")}
+                      </Text>
+                      <Group gap="md" wrap="nowrap">
+                        <IconRuler size={20} />
+                        <Slider
+                          value={mapTrackWidth}
+                          label={(value) => `${value}`}
+                          labelAlwaysOn
+                          step={1}
+                          min={MIN_TRACK_WIDTH}
+                          max={MAX_TRACK_WIDTH}
+                          style={{ width: "100%" }}
+                          onChange={setMapTrackWidth}
+                          marks={[
+                            { value: DEFAULT_TRACK_WIDTH, label: "6" },
+                            { value: 18, label: "18" },
+                            { value: MAX_TRACK_WIDTH, label: "30" },
+                          ]}
+                        />
+                      </Group>
+                    </Box>
+                  </Stack>
+                </Paper>
+
+                <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
+                  <Group className={styles.mapSectionHeader} gap="sm">
+                    <Box className={styles.mapSectionIndex} aria-hidden="true">
+                      <IconEye size={17} />
+                    </Box>
+                    <Title order={2}>{t("route.linemap.section-content")}</Title>
+                  </Group>
+                  <Grid gutter="md">
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <Select
+                        label={t("route.linemap.primary-lang")}
+                        value={mapPrimaryLang}
+                        onChange={(value) =>
+                          value && setMapPrimaryLang(value as StationNameField)
+                        }
+                        data={multiLanguageOptions}
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <Select
+                        label={t("route.linemap.secondary-lang")}
+                        value={mapSecondaryLang}
+                        onChange={(value) =>
+                          value && setMapSecondaryLang(value as StationNameField)
+                        }
+                        disabled={!mapShowSecondaryLang}
+                        data={multiLanguageOptions}
+                      />
+                      <Switch
+                        mt={6}
+                        label={t("route.linemap.show-secondary-lang")}
+                        checked={mapShowSecondaryLang}
+                        onChange={(event) =>
+                          setMapShowSecondaryLang(event.currentTarget.checked)
+                        }
+                        size="xs"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12 }}>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("route.linemap.station-number-mode")}
+                      </Text>
+                      <SegmentedControl
+                        value={multiStationNumberMode}
+                        onChange={(value) =>
+                          setMultiStationNumberMode(value as StationNumberMode)
+                        }
+                        data={[
+                          {
+                            value: "none",
+                            label: t("route.linemap.station-number-none"),
+                          },
+                          {
+                            value: "badge",
+                            label: t("route.linemap.station-number-badge"),
+                          },
+                          {
+                            value: "dot",
+                            label: t("route.linemap.station-number-dot"),
+                          },
+                        ]}
+                      />
+                    </Grid.Col>
+                    {multiTransitLines.length > 0 && (
+                      <Grid.Col span={{ base: 12 }}>
+                        <MultiSelect
+                          label={t("route.linemap.transit-filter")}
+                          value={multiTransitFilter}
+                          onChange={setMultiTransitFilter}
+                          data={multiTransitLines.map((line) => ({
+                            value: line.id,
+                            label: line.prefix
+                              ? `[${line.prefix}] ${line.name}`
+                              : line.name,
+                          }))}
+                        />
+                        <Switch
+                          mt="xs"
+                          label={t("route.linemap.transit-show-names")}
+                          checked={mapShowTransitNames}
+                          onChange={(event) =>
+                            setMapShowTransitNames(event.currentTarget.checked)
+                          }
+                          disabled={multiTransitFilter.length === 0}
+                          size="xs"
+                        />
+                      </Grid.Col>
+                    )}
+                  </Grid>
+                </Paper>
+              </Box>
+            )}
+
+            {multiRootLine && filteredMultiLineRoutes.length > 0 && (
+              <Paper withBorder radius="xl" className={styles.mapPreviewPanel}>
+                <Group justify="space-between" align="center" mb="md">
+                  <Title order={2} className={styles.previewTitle}>
+                    <IconEye size="1.6em" />
+                    {t("common.preview")}
+                  </Title>
+                  <Group gap={4} aria-hidden="true">
+                    {multiSelectedLines.map((line) => (
+                      <Box
+                        key={line.id}
+                        className={styles.previewLineSwatch}
+                        style={{ backgroundColor: line.line_color, width: 38 }}
+                      />
+                    ))}
+                  </Group>
+                </Group>
+
+                {mapFonts.ready ? (
+                  <Box className={`map-preview ${styles.mapPreviewViewport}`}>
+                    <MultiLineMapRenderer
+                      ref={multiLineMapRef}
+                      routes={filteredMultiLineRoutes}
+                      rootLineId={multiRootLine.id}
+                      stationSpacing={mapStationSpacing}
+                      trackWidth={mapTrackWidth}
+                      stationNumberMode={multiStationNumberMode}
+                      primaryLangField={mapPrimaryLang}
+                      secondaryLangField={mapSecondaryLang}
+                      showSecondaryLang={mapShowSecondaryLang}
+                      showTransitNames={mapShowTransitNames}
+                      lineStyles={mapLineIndicatorStyles}
+                    />
+                  </Box>
+                ) : (
+                  <CanvasFontLoading show={mapFonts.showLoader} />
+                )}
+
+                <Grid gutter="md" className={styles.downloadControls}>
+                  <Grid.Col span={{ base: 12, sm: 4 }}>
+                    <Select
+                      label={t("route.linemap.export-format")}
+                      value={mapExportFormat}
+                      onChange={(value) => {
+                        if (!value) return;
+                        setMapExportFormat(value as LineMapExportFormat);
+                        setMapExportError(null);
+                      }}
+                      data={[
+                        { value: "png", label: t("route.linemap.format-png") },
+                        { value: "svg", label: t("route.linemap.format-svg") },
+                        { value: "pdf", label: t("route.linemap.format-pdf") },
+                      ]}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 4 }}>
+                    <Select
+                      label={t("input.image-size")}
+                      value={String(mapSaveSize)}
+                      onChange={(value) => value && setMapSaveSize(Number(value))}
+                      disabled={mapExportFormat !== "png"}
+                      description={
+                        mapExportFormat === "png"
+                          ? undefined
+                          : t("route.linemap.vector-size-note")
+                      }
+                      data={multiMapSaveSizeList.map((size) => ({
+                        value: String(size.value),
+                        label: size.label,
+                      }))}
+                    />
+                  </Grid.Col>
+                  <Grid.Col
+                    span={{ base: 12, sm: 4 }}
+                    className={styles.downloadButtonColumn}
+                  >
+                    <Button
+                      color="green"
+                      size="lg"
+                      variant="filled"
+                      onClick={handleSaveMultiLineMap}
+                      disabled={!mapFonts.ready || mapExporting}
+                      loading={mapExporting}
+                      fullWidth
+                      style={{ fontWeight: 700, minWidth: 0 }}
+                      leftSection={<IconDownload />}
+                    >
+                      {t("input.save")}
+                    </Button>
+                  </Grid.Col>
+                </Grid>
+                {mapExportError && (
+                  <Alert mt="sm" color="red" icon={<IconAlertTriangle size={16} />}>
+                    {mapExportError}
+                  </Alert>
+                )}
+              </Paper>
+            )}
+          </Stack>
         )}
       </Stack>
     </Box>

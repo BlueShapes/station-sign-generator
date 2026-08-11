@@ -1,4 +1,5 @@
 import { Fragment, useState, useEffect, forwardRef } from "react";
+import type { UpdatePayload } from "vite";
 import type StationProps from "./DirectInputStationProps";
 import { Rect, Layer, Stage, Text, Line, Ellipse, Group } from "react-konva";
 import Konva from "konva";
@@ -153,6 +154,26 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     const linePosY = 70 + yOffset;
     // const [isFontLoaded, setIsFontLoaded] = useState(false)
     const [stageKey, setStageKey] = useState(0);
+    useEffect(() => {
+      const hot = import.meta.hot;
+      if (!hot || !branchMode) return;
+
+      const handleHmrUpdate = (payload: UpdatePayload) => {
+        const hasBranchArrowUpdate = payload.updates.some((update) =>
+          [update.path, update.acceptedPath].some((path) =>
+            path
+              .split("?", 1)[0]
+              .endsWith("/src/components/signs/JrEastBranchArrows.tsx"),
+          )
+        );
+        if (hasBranchArrowUpdate) {
+          setStageKey((key) => key + 1);
+        }
+      };
+
+      hot.on("vite:afterUpdate", handleHmrUpdate);
+      return () => hot.off("vite:afterUpdate", handleHmrUpdate);
+    }, [branchMode]);
     const reversedStationArea = stationAreas
       ? [...stationAreas].reverse()
       : undefined;

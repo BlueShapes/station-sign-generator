@@ -258,9 +258,11 @@ route:
     flip: Balik arah
     prev-station: Stesen sebelumnya
     next-station: Stesen seterusnya
-    adjacent-select: Pilih sehingga 2 stesen
-    adjacent-order: Luar → dalam
-    adjacent-swap-order: Tukar susunan luar / dalam
+    adjacent-select: Pilih sehingga {count} stesen
+    adjacent-order: Susunan semasa
+    adjacent-move-up: Alih ke atas
+    adjacent-move-down: Alih ke bawah
+    adjacent-swap-order: Songsangkan susunan
     jreast: Gaya JR Timur
     jreastbranch: Gaya JR Timur (bercabang)
     jrwest: Gaya JR Barat
@@ -279,7 +281,16 @@ route:
     linemap: Peta Garisan (Tunggal/Terus)
     multiline-linemap: Peta Garisan (Berbilang)
   linemap:
+    section-route: Laluan dan julat
+    section-layout: Reka letak
+    section-content: Kandungan paparan
     filename-suffix: Peta Laluan
+    export-format: Format eksport
+    format-png: PNG (imej)
+    format-svg: SVG (vektor)
+    format-pdf: PDF (vektor)
+    vector-size-note: Format vektor tidak memerlukan saiz imej
+    export-error: Eksport gagal. Cuba format atau saiz imej yang lain.
     orientation: Orientasi
     horizontal: Mendatar
     vertical: Menegak

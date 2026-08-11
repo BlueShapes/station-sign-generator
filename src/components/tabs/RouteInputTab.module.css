@@ -1,0 +1,479 @@
+.routeInputShell {
+  width: min(100%, 1500px);
+  margin-inline: auto;
+  padding: clamp(12px, 2.2vw, 28px);
+}
+
+.modeBar {
+  position: sticky;
+  top: 64px;
+  z-index: 20;
+  padding-block: 6px;
+  background: color-mix(in srgb, var(--mantine-color-body) 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.modeControl {
+  max-width: 100%;
+}
+
+.signWorkspace {
+  --route-accent: var(--mantine-color-blue-6);
+}
+
+.formatBar {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(16px, 3vw, 36px);
+  padding: 18px 20px;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--mantine-color-blue-light) 35%, transparent),
+      transparent 52%
+    ),
+    var(--mantine-color-body);
+}
+
+.formatControl {
+  flex: 1 1 360px;
+  max-width: 520px;
+}
+
+.directionControl {
+  flex: 0 0 auto;
+}
+
+.signComposer {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 1.18fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(12px, 2vw, 24px);
+  padding-top: 8px;
+}
+
+.signComposer::before {
+  position: absolute;
+  top: 42px;
+  left: 12%;
+  right: 12%;
+  z-index: 0;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--route-accent);
+  content: "";
+  opacity: 0.82;
+}
+
+.stationCard {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 190px;
+  padding: 18px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--mantine-color-default) 75%, transparent),
+      var(--mantine-color-body) 70%
+    );
+}
+
+.currentStationCard {
+  min-height: 242px;
+  border: 2px solid var(--route-accent);
+  box-shadow:
+    0 14px 30px color-mix(in srgb, var(--route-accent) 14%, transparent),
+    0 2px 7px rgba(0, 0, 0, 0.08);
+  transform: translateY(-8px);
+}
+
+.stationCardHeader {
+  min-height: 42px;
+  margin: -4px 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.stationNode {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 3px solid var(--route-accent);
+  border-radius: 50%;
+  color: var(--mantine-color-text);
+  background: var(--mantine-color-body);
+  box-shadow: 0 0 0 5px var(--mantine-color-body);
+}
+
+.currentStationCard .stationNode {
+  background: var(--route-accent);
+  color: #111827;
+}
+
+.adjustmentBar {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 4vw, 52px);
+  padding: 10px 16px;
+}
+
+.stationNavigation {
+  flex: 0 0 auto;
+}
+
+.ratioControl {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 14px;
+  min-width: 220px;
+  min-height: 36px;
+  padding-inline: 4px 8px;
+}
+
+.ratioIcon {
+  flex: 0 0 auto;
+  color: var(--mantine-color-dimmed);
+}
+
+.ratioSlider {
+  width: 100%;
+}
+
+.previewPanel {
+  overflow: hidden;
+  padding: clamp(18px, 3vw, 32px);
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      color-mix(in srgb, var(--route-accent) 9%, transparent),
+      transparent 36%
+    ),
+    var(--mantine-color-body);
+}
+
+.previewTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+
+.previewLineSwatch {
+  width: 72px;
+  height: 7px;
+  border-radius: 99px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mantine-color-text) 14%, transparent);
+}
+
+.multiLineSwatch {
+  width: 24px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 99px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mantine-color-text) 14%, transparent);
+}
+
+.multiLineOrder {
+  max-width: 720px;
+}
+
+.multiLineOrderRow {
+  min-height: 38px;
+  padding: 5px 8px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: color-mix(in srgb, var(--mantine-color-body) 84%, var(--mantine-color-default));
+}
+
+.multiLineOrderRow[data-root="true"] {
+  border-left: 4px solid var(--route-accent);
+  padding-left: 5px;
+}
+
+.multiLineOrderIndex {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--mantine-color-dimmed);
+  background: var(--mantine-color-default);
+  font-size: var(--mantine-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.downloadControls {
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.downloadButtonColumn {
+  display: flex;
+  align-items: flex-end;
+}
+
+.emptyPreview {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1.35fr 1fr;
+  min-height: clamp(120px, 16vw, 210px);
+  overflow: hidden;
+  border: 1px dashed var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: color-mix(in srgb, var(--mantine-color-default) 48%, transparent);
+}
+
+.emptyPreview::after {
+  position: absolute;
+  right: 0;
+  bottom: 22%;
+  left: 0;
+  height: 7px;
+  background: var(--mantine-color-blue-6);
+  content: "";
+  opacity: 0.5;
+}
+
+.emptyPreview > * {
+  display: grid;
+  z-index: 1;
+  place-items: center;
+  padding: 16px;
+  text-align: center;
+}
+
+.emptyPreview > * + * {
+  border-left: 1px dashed var(--mantine-color-default-border);
+}
+
+.linemapWorkspace {
+  --route-accent: var(--mantine-color-blue-6);
+}
+
+.mapSourcePanel,
+.mapSettingsPanel,
+.mapPreviewPanel {
+  position: relative;
+  min-width: 0;
+  padding: clamp(16px, 2.2vw, 24px);
+}
+
+.mapSourcePanel {
+  overflow: hidden;
+  border-top: 4px solid var(--route-accent);
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--route-accent) 8%, transparent),
+      transparent 48%
+    ),
+    var(--mantine-color-body);
+}
+
+.mapSectionHeader {
+  min-height: 34px;
+  margin-bottom: 18px;
+}
+
+.mapSectionHeader h2 {
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+}
+
+.mapSectionIcon,
+.mapSectionIndex {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--route-accent);
+  color: #111827;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mapSectionIndex {
+  border: 2px solid var(--route-accent);
+  background: var(--mantine-color-body);
+  color: var(--mantine-color-text);
+}
+
+.mapSettingsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: start;
+  gap: clamp(14px, 2vw, 24px);
+}
+
+.mapSettingsPanel {
+  height: 100%;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--mantine-color-default) 66%, transparent),
+      var(--mantine-color-body) 54%
+    );
+}
+
+.mapSettingsPanel :global(.mantine-Slider-root) {
+  margin-bottom: 8px;
+}
+
+.mapPreviewPanel {
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      color-mix(in srgb, var(--route-accent) 9%, transparent),
+      transparent 38%
+    ),
+    var(--mantine-color-body);
+}
+
+.mapPreviewViewport {
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--mantine-color-default) 40%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--mantine-color-default) 40%, transparent) 1px, transparent 1px),
+    color-mix(in srgb, var(--mantine-color-body) 92%, var(--mantine-color-default));
+  background-size: 24px 24px;
+}
+
+.downloadButtonColumn > * {
+  width: 100%;
+}
+
+@media (max-width: 75em) {
+  .signComposer {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 1.1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .stationCard {
+    padding: 14px;
+  }
+
+  .mapSettingsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 48em) {
+  .routeInputShell {
+    padding: 10px 10px 74px;
+  }
+
+  .modeBar {
+    position: static;
+    overflow-x: auto;
+    padding: 2px 0;
+  }
+
+  .modeControl {
+    min-width: max-content;
+  }
+
+  .formatBar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .formatControl {
+    flex-basis: auto;
+    max-width: none;
+  }
+
+  .signComposer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 0;
+  }
+
+  .signComposer::before {
+    display: none;
+  }
+
+  .currentStationCard {
+    order: 1;
+    width: 100%;
+    min-height: 0;
+    transform: none;
+  }
+
+  .leftStationCard {
+    order: 2;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .rightStationCard {
+    order: 3;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .adjustmentBar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px 14px;
+  }
+
+  .stationNavigation {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .stationNavigation > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .ratioControl {
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 8px 8px 2px;
+  }
+
+  .previewPanel {
+    padding: 14px;
+  }
+
+  .mapSourcePanel,
+  .mapSettingsPanel,
+  .mapPreviewPanel {
+    padding: 14px;
+  }
+
+  .mapSectionHeader {
+    margin-bottom: 14px;
+  }
+
+  .mapPreviewViewport {
+    padding: 10px;
+  }
+
+  .emptyPreview {
+    min-height: 112px;
+    font-size: var(--mantine-font-size-xs);
+  }
+}

@@ -30,8 +30,10 @@ import { LINE_MAP_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import {
   ceilCanvasDimensions,
   DEFAULT_TRACK_WIDTH,
+  getFadeDotSpacing,
   getServiceTrackGap,
   getServiceTrackWidth,
+  getSegmentedTrackEndCaps,
   getTrackEdgeRadius,
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
@@ -270,7 +272,8 @@ export function getMapCanvasDimensions(
   const vSpacing = stationSpacing ?? V_SPACING;
   if (orientation === "horizontal") {
     const hFadeLen = Math.round(hSpacing / 3);
-    const hFadeExtra = hFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+    const fadeDotSpacing = getFadeDotSpacing(normalizeTrackWidth(trackWidth));
+    const hFadeExtra = hFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
     const extraL = hasMoreBefore ? hFadeExtra : 0;
     const extraR = hasMoreAfter ? hFadeExtra : 0;
     if (nameStyle === "above" || nameStyle === "below") {
@@ -319,7 +322,8 @@ export function getMapCanvasDimensions(
   }
   // vertical
   const vFadeLen = Math.round(vSpacing / 3);
-  const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+  const fadeDotSpacing = getFadeDotSpacing(normalizeTrackWidth(trackWidth));
+  const vFadeExtra = vFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
   const extraT = hasMoreBefore ? vFadeExtra : 0;
   const extraB = hasMoreAfter ? vFadeExtra : 0;
   const maxTransitWidth = Math.max(
@@ -399,12 +403,12 @@ export function detectCircularOverlaps(
 
 // ── Layout constants ────────────────────────────────────────────────────────
 
-const DOT_R = 7;
-const XCHG_R = 10;
+export const DOT_R = 7;
+export const XCHG_R = 10;
 const PADDING = 50;
 export const JP_FONT = 9;
-const EN_FONT = 6;
-const LINE_TITLE_FONT = 12;
+export const EN_FONT = 6;
+export const LINE_TITLE_FONT = 12;
 
 interface SegmentedTrackProps {
   stationPoints: Array<{ x: number; y: number }>;
@@ -433,6 +437,12 @@ function SegmentedTrack({
     );
   }
 
+  const endCaps = getSegmentedTrackEndCaps(
+    stationPoints,
+    colors,
+    strokeWidth,
+  );
+
   return (
     <Fragment>
       {colors.map((color, index) => {
@@ -453,6 +463,15 @@ function SegmentedTrack({
           />
         );
       })}
+      {endCaps.map((cap, index) => (
+        <Circle
+          key={`track-end-cap-${index}`}
+          x={cap.x}
+          y={cap.y}
+          radius={cap.radius}
+          fill={cap.color}
+        />
+      ))}
     </Fragment>
   );
 }
@@ -500,20 +519,19 @@ let _snBadgeStyle = "jreast";
 
 const SN_INNER = 20; // inner badge size in Konva units (= 30 ref × SN_S)
 const SN_S = SN_INNER / 30; // scale factor from 30-unit reference
-const SN_BADGE_GAP = 4; // gap between badge and station name (Konva units)
+export const SN_BADGE_GAP = 4; // gap between badge and station name (Konva units)
 
 // Circular
 const C_SIZE = 760;
 const C_CX = C_SIZE / 2; // 380
 const C_CY = C_SIZE / 2; // 380
 const C_RADIUS = 250;
-const C_TICK_LEN = 3; // gap between dot edge and label anchor
-const C_STAGGER = 0; // no stagger — labels sit close to their dot
-const C_LABEL_GAP = 4; // gap between tick end and text
-const C_DIAG = 0.35; // |cosA| threshold below which station is in top/bottom zone
+export const C_TICK_LEN = 3; // gap between dot edge and label anchor
+export const C_STAGGER = 0; // no stagger — labels sit close to their dot
+export const C_LABEL_GAP = 4; // gap between tick end and text
+export const C_DIAG = 0.35; // |cosA| threshold below which station is in top/bottom zone
 
 // Fade dots — shown at line ends when the map is a partial view of the full line
-const FADE_DOT_SPACING = 10; // spacing between dots beyond the cutoff
 const FADE_OPACITIES = [0.65, 0.35, 0.15] as const; // nearest → farthest
 
 // ── Helper: JR East station number badge dimensions ─────────────────────────
@@ -534,7 +552,7 @@ const _snPrefixFont = 11 * SN_S;
 const _snPrefixY = 4 * SN_S;
 const _snValueFont = 17 * SN_S;
 const _snValueY = 14 * SN_S;
-function snBadgeDims(hasTrc: boolean): { w: number; h: number } {
+export function snBadgeDims(hasTrc: boolean): { w: number; h: number } {
   if (hasTrc) {
     return {
       w: SN_INNER + _snOuterPadX * 2, // 36 ref units
@@ -776,8 +794,16 @@ function stationNumberGroupLayout(
   badgeScale = 1,
   forceFullRender = false,
   strokeWidthAdjust = 0,
+  sharedThreeLetterCode?: string | null,
 ): { w: number; h: number; positions: number[] } {
-  const dimensions = numbers.map((number) => {
+  const hasSharedThreeLetterCode =
+    orientation === "vertical" &&
+    numbers.length > 1 &&
+    !!sharedThreeLetterCode;
+  const layoutNumbers = hasSharedThreeLetterCode
+    ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
+    : numbers;
+  const dimensions = layoutNumbers.map((number) => {
     const dims = snBadgeDims(!!number.threeLetterCode);
     return { w: dims.w * badgeScale, h: dims.h * badgeScale };
   });
@@ -785,7 +811,7 @@ function stationNumberGroupLayout(
   const axisExtents = dimensions.map((dims) =>
     orientation === "horizontal" ? dims.w : dims.h,
   );
-  const visualOutsets = numbers.map((number) =>
+  const visualOutsets = layoutNumbers.map((number) =>
     stationNumberBadgeVisualOutset(
       number,
       badgeScale,
@@ -794,25 +820,59 @@ function stationNumberGroupLayout(
     ),
   );
   const connected = layoutConnectedMarkers(axisExtents, visualOutsets);
+  const sharedHeaderHeight = hasSharedThreeLetterCode
+    ? (snBadgeDims(true).h - snBadgeDims(false).h) * badgeScale
+    : 0;
+  const sharedHeaderWidth = hasSharedThreeLetterCode
+    ? snBadgeDims(true).w * badgeScale
+    : 0;
+  if (hasSharedThreeLetterCode) {
+    // JR East connected badges sit on one black plate. Keep one stroke-width
+    // visible around and between the rounded route frames.
+    const sharedDivider = _snStroke * badgeScale;
+    const positions: number[] = [];
+    let position = sharedHeaderHeight;
+    dimensions.forEach((dims, index) => {
+      positions.push(position);
+      if (index < dimensions.length - 1) {
+        position += dims.h + sharedDivider * 2;
+      }
+    });
+    const lastIndex = dimensions.length - 1;
+    return {
+      w: Math.max(
+        sharedHeaderWidth + sharedDivider,
+        ...dimensions.map((dims) => dims.w + sharedDivider),
+      ),
+      h:
+        positions[lastIndex] +
+        dimensions[lastIndex].h +
+        sharedDivider * 1.5,
+      positions,
+    };
+  }
   return {
     w:
       orientation === "horizontal"
         ? connected.extent
-        : Math.max(...dimensions.map((dims) => dims.w)),
+        : Math.max(sharedHeaderWidth, ...dimensions.map((dims) => dims.w)),
     h:
       orientation === "horizontal"
         ? Math.max(...dimensions.map((dims) => dims.h))
-        : connected.extent,
-    positions: connected.positions,
+        : sharedHeaderHeight + connected.extent,
+    positions: connected.positions.map((position) =>
+      position + sharedHeaderHeight
+    ),
   };
 }
 
-function stationNumberGroupDimensions(
+export function stationNumberGroupDimensions(
   numbers: StationNumberInfo[],
   orientation: StationNumberGroupOrientation,
   badgeScale = 1,
   forceFullRender = false,
   strokeWidthAdjust = 0,
+  sharedThreeLetterCode?: string | null,
 ): { w: number; h: number } {
   const { w, h } = stationNumberGroupLayout(
     numbers,
@@ -820,6 +880,7 @@ function stationNumberGroupDimensions(
     badgeScale,
     forceFullRender,
     strokeWidthAdjust,
+    sharedThreeLetterCode,
   );
   return { w, h };
 }
@@ -849,7 +910,7 @@ export function getStationNumberGroupExtraExtent(
   }, 0);
 }
 
-function StationNumberBadgeGroup({
+export function StationNumberBadgeGroup({
   x,
   y,
   numbers,
@@ -858,6 +919,7 @@ function StationNumberBadgeGroup({
   badgeScale = 1,
   forceFullRender = false,
   strokeWidthAdjust = 0,
+  sharedThreeLetterCode,
 }: {
   x: number;
   y: number;
@@ -867,18 +929,54 @@ function StationNumberBadgeGroup({
   badgeScale?: number;
   forceFullRender?: boolean;
   strokeWidthAdjust?: number;
+  sharedThreeLetterCode?: string | null;
 }) {
+  const hasSharedThreeLetterCode =
+    orientation === "vertical" &&
+    numbers.length > 1 &&
+    !!sharedThreeLetterCode;
+  const displayNumbers = hasSharedThreeLetterCode
+    ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
+    : numbers;
   const group = stationNumberGroupLayout(
-    numbers,
+    displayNumbers,
     orientation,
     badgeScale,
     forceFullRender,
     strokeWidthAdjust,
+    sharedThreeLetterCode,
   );
-
+  const sharedCodeYOffset = hasSharedThreeLetterCode
+    ? (_snStroke * badgeScale) / 2
+    : 0;
   return (
     <Fragment>
-      {numbers.map((number, index) => {
+      {hasSharedThreeLetterCode && (
+        <Rect
+          x={x}
+          y={y}
+          width={group.w}
+          height={group.h}
+          fill="black"
+          cornerRadius={_snCornerOuter * badgeScale}
+        />
+      )}
+      {hasSharedThreeLetterCode && (
+        <Fragment>
+          <Text
+            x={x + (group.w - SN_INNER * badgeScale) / 2}
+            y={y + sharedCodeYOffset + _snTrcY * badgeScale}
+            width={SN_INNER * badgeScale}
+            text={sharedThreeLetterCode!}
+            fontSize={_snTrcFont * badgeScale}
+            fontFamily='"HindSemiBold", Arial, sans-serif'
+            fontStyle="bold"
+            fill="white"
+            align="center"
+          />
+        </Fragment>
+      )}
+      {displayNumbers.map((number, index) => {
         const baseDims = snBadgeDims(!!number.threeLetterCode);
         const dims = {
           w: baseDims.w * badgeScale,
@@ -915,12 +1013,12 @@ function StationNumberBadgeGroup({
 // ── Line indicator badge (JR East style) ────────────────────────────────────
 
 // Badge side length — same as SN_INNER so line and station badges share proportions.
-const LI_SIZE = SN_INNER - 3; // 20 Konva units
+export const LI_SIZE = SN_INNER - 3; // 20 Konva units
 const LI_STROKE = 2;
 // Font/badge ratio 19:30 — identical to the canvas LineIndicatorBadgePreview.
 const LI_FONT = Math.round((LI_SIZE * 20) / 28); // 13
 const LI_CORNER = 1.5;
-const LI_GAP = 5; // gap between badge and line name text
+export const LI_GAP = 5; // gap between badge and line name text
 
 const EMPTY_LINE_STYLES: Record<string, string> = {};
 const EMPTY_STATION_COLORS: Record<string, string> = {};
@@ -963,7 +1061,7 @@ function liTextY(
   return size / 2 - glyphH / 2 - emTopToGlyphTop;
 }
 
-function LineIndicatorBadge({
+export function LineIndicatorBadge({
   x,
   y,
   color,
@@ -1079,7 +1177,7 @@ function TransitLineIcon({
   );
 }
 
-function getHorizontalTransitLayout(
+export function getHorizontalTransitLayout(
   lines: Line[],
   showNames: boolean,
   side: "left" | "right",
@@ -1128,7 +1226,7 @@ function getDiagonalTransitLayout(
   );
 }
 
-function HorizontalTransitLines({
+export function HorizontalTransitLines({
   x,
   y,
   lines,
@@ -1374,6 +1472,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     const serviceTrackGap = getServiceTrackGap(effectiveTrackWidth);
     const fadeDotRadius = effectiveTrackWidth / 2;
     const serviceFadeDotRadius = serviceTrackWidth / 2;
+    const fadeDotSpacing = getFadeDotSpacing(effectiveTrackWidth);
+    const serviceFadeDotSpacing = getFadeDotSpacing(serviceTrackWidth);
     const lineExchangeEdgeRadius = getTrackEdgeRadius(
       XCHG_R,
       effectiveTrackWidth,
@@ -1624,7 +1724,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 const angle0 = -Math.PI / 2;
                 const angleN = (n - 1) * angleStep - Math.PI / 2;
                 const arcExt = (2 * Math.PI) / n / 3;
-                const arcDot = FADE_DOT_SPACING / C_RADIUS;
+                const arcDot = fadeDotSpacing / C_RADIUS;
                 const extAngle0 = angle0 - arcExt;
                 const extAngleN = angleN + arcExt;
                 return (
@@ -1965,7 +2065,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const rawCanvasH = nameSideExtent + bundleSpan + transitSideExtent;
 
       const vnFadeLen = Math.round(hSpacing / 3);
-      const vnFadeExtra = vnFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const vnFadeExtra =
+        vnFadeLen + serviceFadeDotSpacing * FADE_OPACITIES.length;
       const vnExtraL = hasMoreBefore ? vnFadeExtra : 0;
       const vnExtraR = hasMoreAfter ? vnFadeExtra : 0;
 
@@ -2087,7 +2188,11 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       {FADE_OPACITIES.map((opacity, idx) => (
                         <Circle
                           key={`fb-${si}-${idx}`}
-                          x={tL - vnFadeLen - FADE_DOT_SPACING * (idx + 1)}
+                          x={
+                            tL -
+                            vnFadeLen -
+                            serviceFadeDotSpacing * (idx + 1)
+                          }
                           y={ty}
                           radius={serviceFadeDotRadius}
                           fill={svc.color}
@@ -2116,7 +2221,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                             tL +
                             (n - 1) * hSpacing +
                             vnFadeLen +
-                            FADE_DOT_SPACING * (idx + 1)
+                            serviceFadeDotSpacing * (idx + 1)
                           }
                           y={ty}
                           radius={serviceFadeDotRadius}
@@ -2414,7 +2519,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         nameStyle === "above" ? stationSideExtent : transitSideExtent;
       const rawCanvasH = stationSideExtent + transitSideExtent;
       const vnFadeLen = Math.round(hSpacing / 3);
-      const vnFadeExtra = vnFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const vnFadeExtra = vnFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
       const vnExtraL = hasMoreBefore ? vnFadeExtra : 0;
       const vnExtraR = hasMoreAfter ? vnFadeExtra : 0;
       const rawCanvasW = Math.max(
@@ -2523,7 +2628,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       vnExtraL -
                       vnFadeLen +
                       horizontalFirstPosition -
-                      FADE_DOT_SPACING * (idx + 1)
+                      fadeDotSpacing * (idx + 1)
                     }
                     y={vnTrackY}
                     radius={fadeDotRadius}
@@ -2559,7 +2664,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       vnExtraL +
                       horizontalLastPosition +
                       vnFadeLen +
-                      FADE_DOT_SPACING * (idx + 1)
+                      fadeDotSpacing * (idx + 1)
                     }
                     y={vnTrackY}
                     radius={fadeDotRadius}
@@ -2884,7 +2989,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
     if (orientation === "horizontal") {
       const hFadeLen = Math.round(hSpacing / 3);
-      const hFadeExtra = hFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const hFadeExtra = hFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
       const hExtraL = hasMoreBefore ? hFadeExtra : 0;
       const hExtraR = hasMoreAfter ? hFadeExtra : 0;
       const rawCanvasW = Math.max(
@@ -2984,7 +3089,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       hExtraL -
                       hFadeLen +
                       horizontalFirstPosition -
-                      FADE_DOT_SPACING * (idx + 1)
+                      fadeDotSpacing * (idx + 1)
                     }
                     y={H_TRACK_Y}
                     radius={fadeDotRadius}
@@ -3020,7 +3125,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       hExtraL +
                       horizontalLastPosition +
                       hFadeLen +
-                      FADE_DOT_SPACING * (idx + 1)
+                      fadeDotSpacing * (idx + 1)
                     }
                     y={H_TRACK_Y}
                     radius={fadeDotRadius}
@@ -3290,7 +3395,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       );
 
       const vFadeLen = Math.round(vSpacing / 3);
-      const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+      const vFadeExtra =
+        vFadeLen + serviceFadeDotSpacing * FADE_OPACITIES.length;
       const vExtraT = hasMoreBefore ? vFadeExtra : 0;
       const vExtraB = hasMoreAfter ? vFadeExtra : 0;
       const rawCanvasH = Math.max(
@@ -3455,7 +3561,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                             PADDING +
                             vExtraT -
                             vFadeLen -
-                            FADE_DOT_SPACING * (idx + 1)
+                            serviceFadeDotSpacing * (idx + 1)
                           }
                           radius={serviceFadeDotRadius}
                           fill={svc.color}
@@ -3486,7 +3592,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                             vExtraT +
                             (n - 1) * vSpacing +
                             vFadeLen +
-                            FADE_DOT_SPACING * (idx + 1)
+                            serviceFadeDotSpacing * (idx + 1)
                           }
                           radius={serviceFadeDotRadius}
                           fill={svc.color}
@@ -3663,7 +3769,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         V_RIGHT_MARGIN,
     );
     const vFadeLen = Math.round(vSpacing / 3);
-    const vFadeExtra = vFadeLen + FADE_DOT_SPACING * FADE_OPACITIES.length;
+    const vFadeExtra = vFadeLen + fadeDotSpacing * FADE_OPACITIES.length;
     const vExtraT = hasMoreBefore ? vFadeExtra : 0;
     const vExtraB = hasMoreAfter ? vFadeExtra : 0;
     const rawCanvasH = Math.max(
@@ -3772,7 +3878,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     vExtraT +
                     verticalFirstPosition -
                     vFadeLen -
-                    FADE_DOT_SPACING * (idx + 1)
+                    fadeDotSpacing * (idx + 1)
                   }
                   radius={fadeDotRadius}
                   fill={firstTrackColor}
@@ -3808,7 +3914,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     vExtraT +
                     verticalLastPosition +
                     vFadeLen +
-                    FADE_DOT_SPACING * (idx + 1)
+                    fadeDotSpacing * (idx + 1)
                   }
                   radius={fadeDotRadius}
                   fill={lastTrackColor}

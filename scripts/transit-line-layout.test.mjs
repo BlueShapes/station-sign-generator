@@ -24,8 +24,10 @@ import {
   DEFAULT_TRACK_WIDTH,
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
+  getFadeDotSpacing,
   getServiceTrackGap,
   getServiceTrackWidth,
+  getSegmentedTrackEndCaps,
   getConnectedMarkerExtraExtent,
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
@@ -57,6 +59,43 @@ describe("transit line layout", () => {
     expect(MAX_TRACK_WIDTH / 2).toBeGreaterThan(10 + 1.5);
     expect(getServiceTrackWidth(MAX_TRACK_WIDTH)).toBe(20);
     expect(getServiceTrackGap(MAX_TRACK_WIDTH)).toBeGreaterThan(20);
+  });
+
+  test("keeps whitespace between fade dots when the route is thick", () => {
+    expect(getFadeDotSpacing(DEFAULT_TRACK_WIDTH)).toBe(10);
+    expect(getFadeDotSpacing(MAX_TRACK_WIDTH)).toBe(34);
+    expect(getFadeDotSpacing(MAX_TRACK_WIDTH) - MAX_TRACK_WIDTH).toBe(4);
+    expect(getFadeDotSpacing(20)).toBe(24);
+  });
+
+  test("rounds both ends of horizontal and vertical segmented tracks", () => {
+    expect(
+      getSegmentedTrackEndCaps(
+        [
+          { x: 10, y: 20 },
+          { x: 50, y: 20 },
+          { x: 90, y: 20 },
+        ],
+        ["#ff0000", "#0000ff"],
+        30,
+      ),
+    ).toEqual([
+      { x: 10, y: 20, color: "#ff0000", radius: 15 },
+      { x: 90, y: 20, color: "#0000ff", radius: 15 },
+    ]);
+    expect(
+      getSegmentedTrackEndCaps(
+        [
+          { x: 20, y: 10 },
+          { x: 20, y: 90 },
+        ],
+        ["#00aa00"],
+        12,
+      ),
+    ).toEqual([
+      { x: 20, y: 10, color: "#00aa00", radius: 6 },
+      { x: 20, y: 90, color: "#00aa00", radius: 6 },
+    ]);
   });
 
   test("expands only the gaps beside an oversized connected marker", () => {

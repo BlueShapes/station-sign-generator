@@ -258,9 +258,11 @@ route:
     flip: 翻轉方向
     prev-station: 上一站
     next-station: 下一站
-    adjacent-select: 最多選擇 2 個電台
-    adjacent-order: 外側 → 內側
-    adjacent-swap-order: 交換外側／內側順序
+    adjacent-select: 最多選擇 {count} 個車站
+    adjacent-order: 目前順序
+    adjacent-move-up: 上移
+    adjacent-move-down: 下移
+    adjacent-swap-order: 反轉順序
     jreast: JR東日本風格
     jreastbranch: JR東日本風格（支援分支）
     jrwest: JR西日本風格
@@ -279,7 +281,16 @@ route:
     linemap: 路線圖（單線／直通）
     multiline-linemap: 路線圖（複線）
   linemap:
+    section-route: 路線與範圍
+    section-layout: 版面配置
+    section-content: 顯示內容
     filename-suffix: 路線圖
+    export-format: 匯出格式
+    format-png: PNG（影像）
+    format-svg: SVG（向量）
+    format-pdf: PDF（向量）
+    vector-size-note: 向量格式不需要設定影像尺寸
+    export-error: 匯出失敗，請嘗試其他格式或影像尺寸。
     orientation: 方向
     horizontal: 水平
     vertical: 垂直

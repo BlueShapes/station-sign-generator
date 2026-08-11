@@ -258,9 +258,11 @@ route:
     flip: दिशा पलटें
     prev-station: पिछला स्टेशन
     next-station: अगला स्टेशन
-    adjacent-select: अधिकतम 2 स्टेशन चुनें
-    adjacent-order: बाहर → भीतर
-    adjacent-swap-order: बाहरी / भीतरी क्रम बदलें
+    adjacent-select: अधिकतम {count} स्टेशन चुनें
+    adjacent-order: वर्तमान क्रम
+    adjacent-move-up: ऊपर ले जाएँ
+    adjacent-move-down: नीचे ले जाएँ
+    adjacent-swap-order: क्रम उलटें
     jreast: जेआर ईस्ट स्टाइल
     jreastbranch: जेआर ईस्ट शैली (शाखा)
     jrwest: जेआर वेस्ट स्टाइल
@@ -279,7 +281,16 @@ route:
     linemap: लाइन मानचित्र (एकल/सीधी)
     multiline-linemap: लाइन मानचित्र (एकाधिक लाइनें)
   linemap:
+    section-route: मार्ग और सीमा
+    section-layout: लेआउट
+    section-content: प्रदर्शन सामग्री
     filename-suffix: मार्ग मानचित्र
+    export-format: निर्यात प्रारूप
+    format-png: PNG (छवि)
+    format-svg: SVG (वेक्टर)
+    format-pdf: PDF (वेक्टर)
+    vector-size-note: वेक्टर प्रारूपों में छवि आकार की आवश्यकता नहीं है
+    export-error: निर्यात विफल रहा। कोई अन्य प्रारूप या छवि आकार आज़माएँ।
     orientation: अभिमुखीकरण
     horizontal: क्षैतिज
     vertical: लंबवत
