@@ -21,6 +21,25 @@ const METRO_BADGE_FONT_SPECS = [
 ] as const;
 const JOST_FONT_SPECS = ["500 1em Jost", "600 1em Jost"] as const;
 
+/**
+ * JR Central keeps the JNR-era Sumi Maru Gothic / JNR-L lettering on its
+ * station signs. Those proprietary sign faces are not distributed as web
+ * fonts, so the renderer uses OFL-licensed Zen Maru Gothic for station names
+ * and Public Sans as a Helvetica-like substitute for the numbering badge.
+ */
+export const JR_CENTRAL_BADGE_FONT_SPECS = [
+  "700 1em PublicSans",
+] as const;
+
+export const JR_CENTRAL_FONT_SPECS = [
+  "700 1em ZenMaruGothic",
+  "400 1em PublicSans",
+  ...JR_CENTRAL_BADGE_FONT_SPECS,
+] as const;
+
+export const JR_CENTRAL_STATION_NAME_FONT_FAMILY = "ZenMaruGothic";
+export const JR_CENTRAL_STATION_NUMBER_FONT_FAMILY = "PublicSans";
+
 /** Fonts needed by the default JR East sign shown at startup. */
 export const JR_EAST_FONT_SPECS = [
   ...CJK_FONT_SPECS,
@@ -47,7 +66,15 @@ export const LINE_MAP_FONT_SPECS = [
   ...METRO_BADGE_FONT_SPECS,
 ] as const;
 
-/** Complete set, used only for optional background prefetching. */
+const JR_CENTRAL_LINE_MAP_FONT_SPECS = [
+  ...LINE_MAP_FONT_SPECS,
+  ...JR_CENTRAL_BADGE_FONT_SPECS,
+] as const;
+
+/**
+ * Common font set used for optional background prefetching. Large
+ * style-specific fonts such as Zen Maru Gothic remain strictly on demand.
+ */
 export const CANVAS_FONT_SPECS = [
   ...CJK_FONT_SPECS,
   ...HIND_BADGE_FONT_SPECS,
@@ -58,6 +85,7 @@ export const CANVAS_FONT_SPECS = [
 export type CanvasSignStyle =
   | "jreast"
   | "jreastbranch"
+  | "jrcentral"
   | "jrwest"
   | "jrwestlarge"
   | "metrolong"
@@ -69,15 +97,29 @@ export type CanvasSignStyle =
 export function getStationNumberFontSpecs(
   stationNumberStyle?: string,
 ): readonly string[] {
+  if (stationNumberStyle === "jrcentral") {
+    return JR_CENTRAL_BADGE_FONT_SPECS;
+  }
   return stationNumberStyle === "tokyometro"
     ? METRO_BADGE_FONT_SPECS
     : HIND_BADGE_FONT_SPECS;
+}
+
+export function getLineMapFontSpecs(
+  stationNumberStyles: readonly (string | undefined)[] = [],
+): readonly string[] {
+  return stationNumberStyles.includes("jrcentral")
+    ? JR_CENTRAL_LINE_MAP_FONT_SPECS
+    : LINE_MAP_FONT_SPECS;
 }
 
 export function getStationSignFontSpecs(
   style: CanvasSignStyle,
   stationNumberStyle?: string,
 ): readonly string[] {
+  if (style === "jrcentral") {
+    return JR_CENTRAL_FONT_SPECS;
+  }
   if (
     style === "metrolong" ||
     style === "metroforeign" ||

@@ -768,6 +768,11 @@ export const ToeiMediumSign = createSubwaySign("toeiMedium");
 export const ToeiLargeSign = createSubwaySign("toeiLarge");
 
 const CanvasImage = styled.img`
+  width: 100%;
+  max-width: 60rem;
+  max-height: 20vh;
+  margin-inline: auto;
+  object-fit: contain;
   display: block;
   user-select: none;
   -webkit-user-drag: none;

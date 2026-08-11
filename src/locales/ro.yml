@@ -163,6 +163,7 @@ route:
     color: Culoare companie
     station-number-style: Stil de număr de stație
     station-number-style-jreast: Stil JR East
+    station-number-style-jrcentral: Stil JR Central
     station-number-style-tokyometro: Stilul Metrou Tokyo / Metrou Toei
     station-number-style-preview: Exemplu de insignă (folosind culoarea companiei ca culoare de linie)
     empty: Nu există companii încă
@@ -268,6 +269,7 @@ route:
     adjacent-swap-order: Inversează ordinea
     jreast: JR East Style
     jreastbranch: Stil JR East (ramificație)
+    jrcentral: Stil JR Central
     jrwest: JR West Style
     jrwestlarge: JR West Style (mare)
     metrolong: Stil metrou Tokyo (mic / japoneză)

@@ -163,6 +163,7 @@ route:
     color: कंपनी का रंग
     station-number-style: स्टेशन संख्या शैली
     station-number-style-jreast: जेआर पूर्व शैली
+    station-number-style-jrcentral: जेआर सेंट्रल शैली
     station-number-style-tokyometro: टोक्यो मेट्रो/टोई सबवे शैली
     station-number-style-preview: नमूना बैज (लाइन रंग के रूप में कंपनी के रंग का उपयोग करके)
     empty: अभी तक कोई कंपनी नहीं
@@ -268,6 +269,7 @@ route:
     adjacent-swap-order: क्रम उलटें
     jreast: जेआर ईस्ट स्टाइल
     jreastbranch: जेआर ईस्ट शैली (शाखा)
+    jrcentral: जेआर सेंट्रल शैली
     jrwest: जेआर वेस्ट स्टाइल
     jrwestlarge: जेआर वेस्ट स्टाइल (बड़ा)
     metrolong: टोक्यो मेट्रो शैली (छोटा / जापानी)

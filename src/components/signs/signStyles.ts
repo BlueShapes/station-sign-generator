@@ -4,6 +4,7 @@
  */
 
 import { METRO_MEDIUM_DIMENSIONS } from "./subwaySignGeometry";
+import { JR_CENTRAL_SIGN_RATIO } from "./jrCentralSignLayout";
 
 type FieldRequirement = "required" | "optional" | "hidden";
 
@@ -48,6 +49,40 @@ interface SignStyleFieldSpec {
 }
 
 export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
+  jrcentral: {
+    primaryName: "required",
+    primaryNameFurigana: "required",
+    secondaryName: "required",
+    tertiaryName: "hidden",
+    quaternaryName: "hidden",
+    note: "optional",
+    numberPrimary: "optional",
+    numberSecondary: "hidden",
+    threeLetterCode: "hidden",
+    stationAreas: "optional",
+    left: {
+      primaryName: "hidden",
+      primaryNameFurigana: "required",
+      secondaryName: "required",
+      numberPrimary: "hidden",
+      numberSecondary: "hidden",
+    },
+    right: {
+      primaryName: "hidden",
+      primaryNameFurigana: "required",
+      secondaryName: "required",
+      numberPrimary: "hidden",
+      numberSecondary: "hidden",
+    },
+    maxAdjacentCount: 2,
+    baseColor: "required",
+    centerSquareColors: "hidden",
+    ratio: "hidden",
+    fixedRatio: JR_CENTRAL_SIGN_RATIO,
+    direction: "hidden",
+    localLinesMax: 1,
+    localLinesMin: 1,
+  },
   metrolong: {
     primaryName: "required",
     primaryNameFurigana: "required",

@@ -5,6 +5,7 @@ import notoSansJpBoldUrl from "@/fonts/NotoSansJP-Bold.ttf?url";
 import hindSemiBoldUrl from "@/fonts/Hind-SemiBold.ttf?url";
 import hindBoldUrl from "@/fonts/Hind-Bold.ttf?url";
 import jostTrispaceUrl from "@/fonts/JostTrispaceHybrid-600.ttf?url";
+import publicSansUrl from "@/fonts/PublicSans-VariableFont_wght.ttf?url";
 import { createKonvaStageSvg } from "@/lib/konvaSvgExport";
 import { exportStageToStreamingPng } from "@/lib/streamingPngExport";
 
@@ -28,6 +29,12 @@ const FONT_DEFINITIONS = [
     url: jostTrispaceUrl,
     filename: "JostTrispaceHybrid.ttf",
     weights: [400, 600, 700],
+  },
+  {
+    family: "PublicSans",
+    url: publicSansUrl,
+    filename: "PublicSans.ttf",
+    weights: [400, 700],
   },
 ] as const;
 
@@ -76,6 +83,18 @@ const PDF_FONT_DEFINITIONS = [
     filename: "JostTrispaceHybrid.ttf",
     weight: 700,
   },
+  {
+    family: "PublicSans",
+    url: publicSansUrl,
+    filename: "PublicSans.ttf",
+    weight: 400,
+  },
+  {
+    family: "PublicSans",
+    url: publicSansUrl,
+    filename: "PublicSans.ttf",
+    weight: 700,
+  },
 ] as const;
 
 const fontBase64Cache = new Map<string, Promise<string>>();
@@ -86,6 +105,7 @@ const fontBase64Cache = new Map<string, Promise<string>>();
 const PDF_BADGE_BASELINE_ADJUSTMENTS = {
   HindSemiBold: -1,
   JostTrispaceHybrid: -1,
+  PublicSans: -1,
 } as const;
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {

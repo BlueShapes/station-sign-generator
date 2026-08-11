@@ -163,6 +163,7 @@ route:
     color: Warna Syarikat
     station-number-style: Gaya Nombor Stesen
     station-number-style-jreast: Gaya JR East
+    station-number-style-jrcentral: Gaya JR Central
     station-number-style-tokyometro: Gaya Tokyo Metro / Toei Subway
     station-number-style-preview: Contoh lencana (menggunakan warna syarikat sebagai warna garis)
     empty: Tiada syarikat lagi
@@ -268,6 +269,7 @@ route:
     adjacent-swap-order: Songsangkan susunan
     jreast: Gaya JR Timur
     jreastbranch: Gaya JR Timur (bercabang)
+    jrcentral: Gaya JR Central
     jrwest: Gaya JR Barat
     jrwestlarge: Gaya JR West (Besar)
     metrolong: Gaya Metro Tokyo (kecil / Jepun)

@@ -171,6 +171,7 @@ route:
     color: 会社カラー
     station-number-style: 駅番号スタイル
     station-number-style-jreast: JR東日本風
+    station-number-style-jrcentral: JR東海風
     station-number-style-tokyometro: 東京メトロ・都営地下鉄風
     station-number-style-preview: サンプルバッジ（会社カラーを路線カラーとして使用）
     empty: 会社がありません
@@ -276,6 +277,7 @@ route:
     adjacent-swap-order: 順番を反転
     jreast: JR東日本風
     jreastbranch: JR東日本風（分岐対応）
+    jrcentral: JR東海風
     jrwest: JR西日本風
     jrwestlarge: JR西日本風（大）
     metrolong: 東京メトロ風（小・日）

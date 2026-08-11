@@ -163,6 +163,7 @@ route:
     color: Цвет компании
     station-number-style: Стиль номера станции
     station-number-style-jreast: JR Восточный стиль
+    station-number-style-jrcentral: Стиль JR Central
     station-number-style-tokyometro: Токийское метро / стиль метро Toei
     station-number-style-preview: Образец значка (с использованием цвета компании в качестве цвета линии)
     empty: Пока нет компаний
@@ -268,6 +269,7 @@ route:
     adjacent-swap-order: Обратить порядок
     jreast: JR Восточный стиль
     jreastbranch: Стиль JR East (разветвление)
+    jrcentral: Стиль JR Central
     jrwest: JR Вест Стиль
     jrwestlarge: JR West Style (большой)
     metrolong: Стиль Токийского метро (малый / японский)

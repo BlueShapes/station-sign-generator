@@ -149,3 +149,19 @@ html.theme-ready *::after {
   font-family: 'JostTrispaceHybrid';
   src: url('../fonts/JostTrispaceHybrid-600.ttf') format('truetype');
 }
+
+/* JR Central-style signs: OFL substitute for Sumi Maru Gothic / JNR-L. */
+@font-face {
+  font-family: 'ZenMaruGothic';
+  src: url('../fonts/ZenMaruGothic-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* Helvetica-like station-number substitute, loaded only for JR Central. */
+@font-face {
+  font-family: 'PublicSans';
+  src: url('../fonts/PublicSans-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}

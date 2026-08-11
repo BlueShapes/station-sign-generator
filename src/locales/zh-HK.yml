@@ -163,6 +163,7 @@ route:
     color: 公司顏色
     station-number-style: 站號樣式
     station-number-style-jreast: JR東日本風格
+    station-number-style-jrcentral: JR東海風格
     station-number-style-tokyometro: 東京地鐵/都營地鐵風格
     station-number-style-preview: 徽章範例（使用公司顏色作為線條顏色）
     empty: 還沒有公司
@@ -268,6 +269,7 @@ route:
     adjacent-swap-order: 反轉次序
     jreast: JR東日本風格
     jreastbranch: JR東日本風格（支援分支）
+    jrcentral: JR東海風格
     jrwest: JR西日本風格
     jrwestlarge: JR西日本風（大）
     metrolong: 東京地鐵風格（小・日文）

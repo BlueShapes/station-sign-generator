@@ -163,6 +163,7 @@ route:
     color: Barva společnosti
     station-number-style: Styl čísla stanice
     station-number-style-jreast: JR východní styl
+    station-number-style-jrcentral: Styl JR Central
     station-number-style-tokyometro: Styl tokijského metra / metra Toei
     station-number-style-preview: Ukázka odznaku (jako barva čáry se používá barva společnosti)
     empty: Zatím žádné společnosti
@@ -268,6 +269,7 @@ route:
     adjacent-swap-order: Obrátit pořadí
     jreast: JR východní styl
     jreastbranch: Styl JR East (větvení)
+    jrcentral: Styl JR Central
     jrwest: JR West Style
     jrwestlarge: JR West Style (velký)
     metrolong: Styl Tokyo Metro (malý / japonsky)

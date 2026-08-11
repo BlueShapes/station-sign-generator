@@ -163,6 +163,7 @@ route:
     color: Cor da Empresa
     station-number-style: Estilo de número de estação
     station-number-style-jreast: Estilo JR Leste
+    station-number-style-jrcentral: Estilo JR Central
     station-number-style-tokyometro: Estilo Metrô de Tóquio / Metrô Toei
     station-number-style-preview: Exemplo de emblema (usando a cor da empresa como cor da linha)
     empty: Nenhuma empresa ainda
@@ -268,6 +269,7 @@ route:
     adjacent-swap-order: Inverter ordem
     jreast: JR Estilo Leste
     jreastbranch: Estilo JR Leste (ramificação)
+    jrcentral: Estilo JR Central
     jrwest: Estilo JR Oeste
     jrwestlarge: Estilo JR West (grande)
     metrolong: Estilo Metro de Tóquio (pequeno / japonês)

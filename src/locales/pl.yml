@@ -163,6 +163,7 @@ route:
     color: Kolor firmowy
     station-number-style: Styl numeru stacji
     station-number-style-jreast: Styl JR Wschodni
+    station-number-style-jrcentral: Styl JR Central
     station-number-style-tokyometro: Styl metra w Tokio / metra Toei
     station-number-style-preview: Przykładowa plakietka (przy użyciu koloru firmy jako koloru linii)
     empty: Nie ma jeszcze żadnych firm
@@ -268,6 +269,7 @@ route:
     adjacent-swap-order: Odwróć kolejność
     jreast: Styl JR Wschodni
     jreastbranch: Styl JR East (rozgałęzienie)
+    jrcentral: Styl JR Central
     jrwest: Styl JR Westa
     jrwestlarge: Styl JR West (duży)
     metrolong: Styl metra tokijskiego (mały / japoński)

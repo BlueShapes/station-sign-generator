@@ -59,8 +59,8 @@ import {
 import Konva from "konva";
 import { useLocale, useTranslations } from "@/i18n/useTranslation";
 import {
+  getLineMapFontSpecs,
   getStationSignFontSpecs,
-  LINE_MAP_FONT_SPECS,
   waitForCanvasFonts,
 } from "@/lib/fonts";
 import { useCanvasFonts } from "@/lib/useCanvasFonts";
@@ -115,6 +115,10 @@ import JrEastBranchSign, {
   height as JrEastBranchSignHeight,
   scale as JrEastBranchSignBaseScale,
 } from "@/components/signs/JrEastBranchSign";
+import JrCentralSign, {
+  height as JrCentralSignHeight,
+  scale as JrCentralSignBaseScale,
+} from "@/components/signs/JrCentralSign";
 import JrWestSign, {
   height as JrWestSignHeight,
   scale as JrWestSignBaseScale,
@@ -174,6 +178,7 @@ import styles from "./RouteInputTab.module.css";
 type SignStyle =
   | "jreast"
   | "jreastbranch"
+  | "jrcentral"
   | "jrwest"
   | "jrwestlarge"
   | "metrolong"
@@ -359,6 +364,11 @@ const SIGN_STYLES: Record<
     Component: JrEastBranchSign,
     height: JrEastBranchSignHeight,
     scale: JrEastBranchSignBaseScale,
+  },
+  jrcentral: {
+    Component: JrCentralSign,
+    height: JrCentralSignHeight,
+    scale: JrCentralSignBaseScale,
   },
   jrwest: {
     Component: JrWestSign,
@@ -1086,16 +1096,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const mapCompanyStyle = mapCompany?.station_number_style;
   const signFontSpecs = getStationSignFontSpecs(signStyle, mapCompanyStyle);
   const signFonts = useCanvasFonts(signFontSpecs, tabMode === "sign");
-  const mapFonts = useCanvasFonts(
-    LINE_MAP_FONT_SPECS,
-    tabMode === "linemap" || tabMode === "multiline-linemap",
-  );
-  const mapLanguageOptions = getCompanyLanguages(mapCompany).map(
-    (language, index) => ({
-      value: STATION_NAME_FIELDS[index],
-      label: `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
-    }),
-  );
   const mapLineIndicatorStyles = useMemo(() => {
     const styleByCompanyId = new Map(
       routeCompanies.map((company) => [
@@ -1112,7 +1112,24 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ]),
     );
   }, [lines, routeCompanies]);
-
+  const mapFontSpecs = getLineMapFontSpecs([
+    mapCompanyStyle,
+    ...multiSelectedLineIds.map((lineId) => mapLineIndicatorStyles[lineId]),
+    ...Object.values(mapStationNumbers).map((number) => number.style),
+    ...Object.values(mapStationNumberGroups)
+      .flat()
+      .map((number) => number.style),
+  ]);
+  const mapFonts = useCanvasFonts(
+    mapFontSpecs,
+    tabMode === "linemap" || tabMode === "multiline-linemap",
+  );
+  const mapLanguageOptions = getCompanyLanguages(mapCompany).map(
+    (language, index) => ({
+      value: STATION_NAME_FIELDS[index],
+      label: `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
+    }),
+  );
   const multiSelectedLines = useMemo(
     () =>
       multiSelectedLineIds
@@ -1585,7 +1602,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setMapExporting(true);
     setMapExportError(null);
     try {
-      await waitForCanvasFonts(LINE_MAP_FONT_SPECS).catch(() => undefined);
+      await waitForCanvasFonts(mapFontSpecs).catch(() => undefined);
       const blob = await createLineMapExportBlob({
         stage,
         format: mapExportFormat,
@@ -1731,6 +1748,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     value: "jreastbranch",
                     label: t("route.sign.jreastbranch"),
                   },
+                  { value: "jrcentral", label: t("route.sign.jrcentral") },
                   { value: "jrwest", label: t("route.sign.jrwest") },
                   {
                     value: "jrwestlarge",

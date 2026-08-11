@@ -56,12 +56,17 @@ describe("line-map exports", () => {
   });
 
   test("can compensate PDF badge baselines without moving station names", () => {
-    const adjustments = { HindSemiBold: -1, JostTrispaceHybrid: -1 };
+    const adjustments = {
+      HindSemiBold: -1,
+      JostTrispaceHybrid: -1,
+      PublicSans: -1,
+    };
     expect(svgTextBaselineAdjustment("HindSemiBold", adjustments)).toBe(-1);
     expect(
       svgTextBaselineAdjustment("'JostTrispaceHybrid', sans-serif", adjustments),
     ).toBe(-1);
     expect(svgTextBaselineAdjustment("NotoSansJP", adjustments)).toBe(0);
+    expect(svgTextBaselineAdjustment("PublicSans", adjustments)).toBe(-1);
   });
 
   test("uses static Noto Sans JP faces for PDF weight fidelity", () => {

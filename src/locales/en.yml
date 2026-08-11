@@ -171,6 +171,7 @@ route:
     color: Company Color
     station-number-style: Station Number Style
     station-number-style-jreast: JR East style
+    station-number-style-jrcentral: JR Central style
     station-number-style-tokyometro: Tokyo Metro / Toei Subway style
     station-number-style-preview: Sample badge (using company color as line color)
     empty: No companies yet
@@ -276,6 +277,7 @@ route:
     adjacent-swap-order: Reverse order
     jreast: JR East Style
     jreastbranch: JR East Style (Branching)
+    jrcentral: JR Central Style
     jrwest: JR West Style
     jrwestlarge: JR West Style (Large)
     metrolong: Tokyo Metro Style (Small / Japanese)
