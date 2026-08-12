@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import {
   applyParallelRouteLanes,
+  getMultiLineLinearLabelSide,
   getMultiLineLoopRadius,
   getParallelRouteIdsByStation,
   layoutCircularMultiLineMap,
@@ -188,7 +189,78 @@ describe("multiple-line route map layout", () => {
     const jyShared = layout.paths[0].points.find((point) => point.stationId === "jy25");
     const jkShared = layout.paths[1].points.find((point) => point.stationId === "jy25");
     expect(jyShared).not.toEqual(jkShared);
+    expect(
+      getMultiLineLinearLabelSide(
+        layout.paths[1],
+        jkShared?.x ?? 0,
+        layout.loopCenter?.x,
+        new Set(yamanote),
+      ),
+    ).toBe("above");
     expect(layout.width).toBeGreaterThan(760);
+  });
+
+  test("keeps a disconnected parent and branch connected beside a loop", () => {
+    const yamanote = Array.from({ length: 30 }, (_, index) => `jy${index + 1}`);
+    const layout = layoutCircularMultiLineMap(
+      [
+        { lineId: "jy", parentLineId: null, stationIds: yamanote, isLoop: true },
+        { lineId: "m", parentLineId: null, stationIds: mainStations },
+        {
+          lineId: "mb",
+          parentLineId: "m",
+          stationIds: ["station-m06", "station-mb05", "station-mb04", "station-mb03"],
+        },
+      ],
+      "jy",
+      75,
+      16,
+    );
+
+    const main = layout.paths.find((path) => path.lineId === "m");
+    const branch = layout.paths.find((path) => path.lineId === "mb");
+    const mainJunction = main?.points.find(
+      (point) => point.stationId === "station-m06",
+    );
+    const branchJunction = branch?.points.find(
+      (point) => point.stationId === "station-m06",
+    );
+
+    expect(branchJunction).toEqual(mainJunction);
+    expect(branch?.points[1].x).toBeLessThan(branchJunction?.x ?? 0);
+    expect(branch?.points[1].y).toBeGreaterThan(branchJunction?.y ?? 0);
+
+    const reordered = layoutCircularMultiLineMap(
+      [
+        { lineId: "jy", parentLineId: null, stationIds: yamanote, isLoop: true },
+        {
+          lineId: "mb",
+          parentLineId: "m",
+          stationIds: ["station-m06", "station-mb05", "station-mb04", "station-mb03"],
+        },
+        { lineId: "m", parentLineId: null, stationIds: mainStations },
+      ],
+      "jy",
+      75,
+      16,
+    );
+    const reorderedMainJunction = reordered.paths
+      .find((path) => path.lineId === "m")
+      ?.points.find((point) => point.stationId === "station-m06");
+    const reorderedBranchJunction = reordered.paths
+      .find((path) => path.lineId === "mb")
+      ?.points.find((point) => point.stationId === "station-m06");
+    expect(reorderedBranchJunction).toEqual(reorderedMainJunction);
+
+    const branchStation = branch?.points[1];
+    expect(
+      getMultiLineLinearLabelSide(
+        branch,
+        branchStation?.x ?? 0,
+        layout.loopCenter?.x,
+        new Set(yamanote),
+      ),
+    ).toBe("below");
   });
 
   test("expands a loop so its chord spacing matches the station-spacing control", () => {

@@ -43,6 +43,7 @@ import {
 } from "@/components/signs/lineMapGeometry";
 import {
   applyParallelRouteLanes,
+  getMultiLineLinearLabelSide,
   getParallelRouteIdsByStation,
   layoutCircularMultiLineMap,
   layoutMultiLineMap,
@@ -356,9 +357,12 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
       const orientation = verticalGroup ? "vertical" : "horizontal";
       const showSnBadge = stationNumberMode === "badge" && numbers.length > 0;
       const showSnDot = stationNumberMode === "dot" && numbers.length > 0;
-      const labelAbove = isCircular && layout.loopCenter
-        ? x < layout.loopCenter.x
-        : path.labelSide === "above";
+      const labelAbove = getMultiLineLinearLabelSide(
+        path,
+        x,
+        layout.loopCenter?.x,
+        rootStationIds,
+      ) === "above";
       const stationTransits = getStationTransits(item);
       const markerRadius = DOT_R;
       const transitLayout = getHorizontalTransitLayout(
