@@ -208,7 +208,14 @@ describe("multiple-line route map layout", () => {
     expect(renderer).toContain("stationNumberGroupDimensions(");
     expect(renderer).toContain("A three-letter code identifies the station");
     expect(renderer).toContain("sharedThreeLetterCode={");
-    expect(renderer).toContain("threeLetterCode: null");
+    expect(renderer).toContain("resolveConnectedStationNumbers(");
+    const presentation = readFileSync(
+      "src/components/signs/stationNumberGroup.ts",
+      "utf8",
+    );
+    expect(presentation).toContain(
+      "jrEastNumbers.length === numbers.length",
+    );
     const sharedBadgeRenderer = readFileSync(
       "src/components/signs/LineMapRenderer.tsx",
       "utf8",

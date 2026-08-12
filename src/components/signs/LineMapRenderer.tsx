@@ -32,6 +32,7 @@ import {
   getLineIndicatorVisualStyle,
   shouldShowLineIndicatorBadge,
 } from "@/components/signs/lineIndicatorStyle";
+import { isJrEastStationNumber } from "@/components/signs/stationNumberGroup";
 import { getLineMapFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import {
   ceilCanvasDimensions,
@@ -792,6 +793,26 @@ function SnBadge({
 
 type StationNumberGroupOrientation = "horizontal" | "vertical";
 
+function getSharedStationThreeLetterCode(
+  numbers: StationNumberInfo[],
+  sharedThreeLetterCode?: string | null,
+): string | null {
+  if (
+    numbers.length < 2 ||
+    !numbers.every((number) =>
+      isJrEastStationNumber(number, _snBadgeStyle),
+    )
+  ) {
+    return null;
+  }
+  return (
+    sharedThreeLetterCode?.trim() ||
+    numbers.find((number) => number.threeLetterCode?.trim())
+      ?.threeLetterCode?.trim() ||
+    null
+  );
+}
+
 function stationNumberBadgeVisualOutset(
   number: StationNumberInfo,
   badgeScale: number,
@@ -825,11 +846,11 @@ function stationNumberGroupLayout(
   strokeWidthAdjust = 0,
   sharedThreeLetterCode?: string | null,
 ): { w: number; h: number; positions: number[] } {
-  const hasSharedThreeLetterCode =
-    orientation === "vertical" &&
-    numbers.length > 1 &&
-    !!sharedThreeLetterCode &&
-    numbers.every((number) => (number.style ?? _snBadgeStyle) !== "jrcentral");
+  const resolvedSharedThreeLetterCode = getSharedStationThreeLetterCode(
+    numbers,
+    sharedThreeLetterCode,
+  );
+  const hasSharedThreeLetterCode = !!resolvedSharedThreeLetterCode;
   const layoutNumbers = hasSharedThreeLetterCode
     ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
     : numbers;
@@ -863,6 +884,18 @@ function stationNumberGroupLayout(
     // JR East connected badges sit on one black plate. Keep one stroke-width
     // visible around and between the rounded route frames.
     const sharedDivider = _snStroke * badgeScale;
+    if (orientation === "horizontal") {
+      return {
+        w: connected.extent + sharedDivider,
+        h:
+          sharedHeaderHeight +
+          Math.max(...dimensions.map((dims) => dims.h)) +
+          sharedDivider * 1.5,
+        positions: connected.positions.map(
+          (position) => position + sharedDivider / 2,
+        ),
+      };
+    }
     const positions: number[] = [];
     let position = sharedHeaderHeight;
     dimensions.forEach((dims, index) => {
@@ -967,11 +1000,11 @@ export function StationNumberBadgeGroup({
   strokeWidthAdjust?: number;
   sharedThreeLetterCode?: string | null;
 }) {
-  const hasSharedThreeLetterCode =
-    orientation === "vertical" &&
-    numbers.length > 1 &&
-    !!sharedThreeLetterCode &&
-    numbers.every((number) => (number.style ?? _snBadgeStyle) !== "jrcentral");
+  const resolvedSharedThreeLetterCode = getSharedStationThreeLetterCode(
+    numbers,
+    sharedThreeLetterCode,
+  );
+  const hasSharedThreeLetterCode = !!resolvedSharedThreeLetterCode;
   const displayNumbers = hasSharedThreeLetterCode
     ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
     : numbers;
@@ -981,7 +1014,7 @@ export function StationNumberBadgeGroup({
     badgeScale,
     forceFullRender,
     strokeWidthAdjust,
-    sharedThreeLetterCode,
+    resolvedSharedThreeLetterCode,
   );
   const sharedCodeYOffset = hasSharedThreeLetterCode
     ? (_snStroke * badgeScale) / 2
@@ -1004,7 +1037,7 @@ export function StationNumberBadgeGroup({
             x={x + (group.w - SN_INNER * badgeScale) / 2}
             y={y + sharedCodeYOffset + _snTrcY * badgeScale}
             width={SN_INNER * badgeScale}
-            text={sharedThreeLetterCode!}
+            text={resolvedSharedThreeLetterCode!}
             fontSize={_snTrcFont * badgeScale}
             fontFamily='"HindSemiBold", Arial, sans-serif'
             fontStyle="bold"
@@ -1028,7 +1061,10 @@ export function StationNumberBadgeGroup({
             : x + (group.w - dims.w) / 2;
         const badgeY =
           orientation === "horizontal"
-            ? y + (group.h - dims.h) / 2
+            ? hasSharedThreeLetterCode
+              ? y +
+                (snBadgeDims(true).h - snBadgeDims(false).h) * badgeScale
+              : y + (group.h - dims.h) / 2
             : y + group.positions[index];
         return (
           <SnBadge
@@ -2108,17 +2144,19 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         0,
         ...diagonalTransitLayouts.map((layout) => layout.width),
       );
+      const stationNumberBadgeGroups = stations.map((station) =>
+        getStationNumbers(station.id),
+      );
       const hasAnySnBadge =
         stationNumberMode === "badge" &&
-        stations.some((s) => !!stationNumbers[s.id]?.value);
+        stationNumberBadgeGroups.some((numbers) => numbers.length > 0);
       const maxSnH = hasAnySnBadge
         ? Math.max(
-            ...stations.map((s) => {
-              const snNum = stationNumbers[s.id];
-              return snNum
-                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style).h
-                : 0;
-            }),
+            ...stationNumberBadgeGroups.map((numbers) =>
+              numbers.length > 0
+                ? stationNumberGroupDimensions(numbers, "horizontal").h
+                : 0,
+            ),
           )
         : 0;
 
@@ -2322,12 +2360,17 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const jpTextH = jpTextHeights[i];
               const enW = enWidths[i];
 
-              const snNum = stationNumbers[station.id];
+              const stationNumberGroup = getStationNumbers(station.id);
               const showSnBadge =
-                stationNumberMode === "badge" && !!snNum?.value;
-              const snDims = snNum
-                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style)
+                stationNumberMode === "badge" &&
+                stationNumberGroup.length > 0;
+              const snDims = stationNumberGroup.length > 0
+                ? stationNumberGroupDimensions(
+                    stationNumberGroup,
+                    "horizontal",
+                  )
                 : snBadgeDims(false);
+              const stationColor = getStationColor(station, i);
 
               // Walk outward from the bundle's outer edge
               let cur =
@@ -2389,14 +2432,13 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   />
 
                   {/* Station number badge */}
-                  {showSnBadge && snNum && (
-                    <SnBadge
+                  {showSnBadge && (
+                    <StationNumberBadgeGroup
                       x={x - snDims.w / 2}
                       y={snBadgeTopY}
-                      color={lc}
-                      prefix={snNum.prefix}
-                      value={snNum.value}
-                      trc={snNum.threeLetterCode}
+                      numbers={stationNumberGroup}
+                      orientation="horizontal"
+                      fallbackColor={stationColor}
                     />
                   )}
 
@@ -3693,12 +3735,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 verticalNameSide,
               );
 
-              const snNum = stationNumbers[station.id];
+              const stationNumberGroup = getStationNumbers(station.id);
               const showSnBadge =
-                stationNumberMode === "badge" && !!snNum?.value;
-              const snDims = snNum
-                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style)
+                stationNumberMode === "badge" &&
+                stationNumberGroup.length > 0;
+              const snDims = stationNumberGroup.length > 0
+                ? stationNumberGroupDimensions(stationNumberGroup, "vertical")
                 : snBadgeDims(false);
+              const stationColor = getStationColor(station, i);
 
               const jpNameY = y - JP_FONT / 2;
               const enNameY = jpNameY + JP_FONT + 1;
@@ -3771,14 +3815,13 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   />
 
                   {/* Station number badge */}
-                  {showSnBadge && snNum && (
-                    <SnBadge
+                  {showSnBadge && (
+                    <StationNumberBadgeGroup
                       x={snBadgeX}
                       y={y - snDims.h / 2}
-                      color={lc}
-                      prefix={snNum.prefix}
-                      value={snNum.value}
-                      trc={snNum.threeLetterCode}
+                      numbers={stationNumberGroup}
+                      orientation="vertical"
+                      fallbackColor={stationColor}
                     />
                   )}
 

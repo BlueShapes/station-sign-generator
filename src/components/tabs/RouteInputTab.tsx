@@ -1451,6 +1451,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
     const result: StationNumberMap = {};
     const groups: StationNumberGroupMap = {};
+    const stationById = new Map(
+      getAllStations(db).map((station) => [station.id, station]),
+    );
     const toStationNumberInfo = (
       lineId: string,
       station: Station,
@@ -1487,14 +1490,24 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ) {
         continue;
       }
+      const incomingStationId = getStationIdForLine(
+        db,
+        stationIds,
+        incomingLineId,
+      );
+      const outgoingStationId = getStationIdForLine(
+        db,
+        stationIds,
+        outgoingLineId,
+      );
       const incomingResolved = getResolvedStationNumber(
         db,
-        getStationIdForLine(db, stationIds, incomingLineId),
+        incomingStationId,
         incomingLineId,
       );
       const outgoingResolved = getResolvedStationNumber(
         db,
-        getStationIdForLine(db, stationIds, outgoingLineId),
+        outgoingStationId,
         outgoingLineId,
       );
       if (
@@ -1508,14 +1521,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         {
           prefix: incomingResolved.prefix,
           value: incomingResolved.value,
-          threeLetterCode: station.three_letter_code,
+          threeLetterCode:
+            stationById.get(incomingStationId)?.three_letter_code,
           color: incomingResolved.line_color,
           style: incomingResolved.station_number_style,
         },
         {
           prefix: outgoingResolved.prefix,
           value: outgoingResolved.value,
-          threeLetterCode: station.three_letter_code,
+          threeLetterCode:
+            stationById.get(outgoingStationId)?.three_letter_code,
           color: outgoingResolved.line_color,
           style: outgoingResolved.station_number_style,
         },

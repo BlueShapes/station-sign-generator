@@ -426,4 +426,29 @@ describe("transit line layout", () => {
     );
     expect(source.match(/x - TRANSIT_ICON_SIZE \/ 2/g)?.length).toBe(2);
   });
+
+  test("keeps station-number appearances distinct with multiple services", () => {
+    const source = readFileSync(
+      "src/components/signs/LineMapRenderer.tsx",
+      "utf8",
+    );
+    const horizontal = source.slice(
+      source.indexOf("Multi-service horizontal layout"),
+      source.indexOf("Multi-service vertical layout"),
+    );
+    const vertical = source.slice(
+      source.indexOf("Multi-service vertical layout"),
+    );
+
+    for (const layout of [horizontal, vertical]) {
+      expect(layout).toContain(
+        "const stationNumberGroup = getStationNumbers(station.id);",
+      );
+      expect(layout).toContain("<StationNumberBadgeGroup");
+      expect(layout).toContain("numbers={stationNumberGroup}");
+      expect(layout).toContain("fallbackColor={stationColor}");
+    }
+    expect(horizontal).toContain('orientation="horizontal"');
+    expect(vertical).toContain('orientation="vertical"');
+  });
 });

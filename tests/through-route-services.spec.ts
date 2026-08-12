@@ -52,4 +52,49 @@ test("configures and selects a rapid service on a through route", async ({
   await serviceSelect.click();
   await page.getByRole("option", { name: "Rapid", exact: true }).click();
   await expect(page.getByText("Passed Stations", { exact: true })).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await serviceSelect.click();
+  await page.getByRole("option", { name: "Local", exact: true }).click();
+  await page
+    .getByRole("radio", { name: "Badge", exact: true })
+    .evaluate((element) => (element as HTMLInputElement).click());
+
+  const stationNumberColors = await page
+    .locator(".map-preview canvas")
+    .first()
+    .evaluate((element) => {
+      const canvas = element as HTMLCanvasElement;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) throw new Error("Canvas context is unavailable");
+      const pixels = context.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      ).data;
+      const hasColor = (target: [number, number, number]) => {
+        for (let index = 0; index < pixels.length; index += 4) {
+          if (
+            Math.abs(pixels[index] - target[0]) <= 2 &&
+            Math.abs(pixels[index + 1] - target[1]) <= 2 &&
+            Math.abs(pixels[index + 2] - target[2]) <= 2
+          ) {
+            return true;
+          }
+        }
+        return false;
+      };
+      return {
+        hasChuoSobu: hasColor([255, 212, 0]),
+        hasTozai: hasColor([0, 167, 219]),
+        hasToyoRapid: hasColor([120, 233, 0]),
+      };
+    });
+
+  expect(stationNumberColors).toEqual({
+    hasChuoSobu: true,
+    hasTozai: true,
+    hasToyoRapid: true,
+  });
 });
