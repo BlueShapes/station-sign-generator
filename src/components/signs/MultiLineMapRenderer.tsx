@@ -53,9 +53,17 @@ import {
 
 export const multiLineMapScale = 2;
 const FONT = "NotoSansJP, Noto Sans JP, sans-serif";
-export const MULTI_LINE_STATION_NAME_SCALE = 1.3;
-const MULTI_LINE_JP_FONT = JP_FONT * MULTI_LINE_STATION_NAME_SCALE;
-const MULTI_LINE_EN_FONT = EN_FONT * MULTI_LINE_STATION_NAME_SCALE;
+export type MultiLineStationFontSize = "small" | "medium" | "large";
+export const MULTI_LINE_STATION_NAME_SCALES: Record<
+  MultiLineStationFontSize,
+  number
+> = {
+  // Small matches the single-line route map; large preserves the original
+  // multiple-line map size. Medium is the midpoint between them.
+  small: 1,
+  medium: 1.15,
+  large: 1.3,
+};
 
 export interface MultiLineRouteData {
   line: Line;
@@ -76,6 +84,7 @@ interface MultiLineMapRendererProps {
   showSecondaryLang?: boolean;
   showTransitNames?: boolean;
   lineStyles?: Record<string, string>;
+  stationFontSize?: MultiLineStationFontSize;
 }
 
 interface StationItem {
@@ -134,9 +143,13 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
       showSecondaryLang = true,
       showTransitNames = true,
       lineStyles = {},
+      stationFontSize = "large",
     },
     ref,
   ) {
+    const stationNameScale = MULTI_LINE_STATION_NAME_SCALES[stationFontSize];
+    const multiLineJpFont = JP_FONT * stationNameScale;
+    const multiLineEnFont = EN_FONT * stationNameScale;
     const effectiveTrackWidth = normalizeTrackWidth(trackWidth);
     const laneGap = Math.max(16, effectiveTrackWidth + 4);
     const routeInputs: MultiLineLayoutInput[] = routes.map(({ line, stations }) => ({
@@ -355,9 +368,9 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
       );
       const primaryName = station[primaryLangField] ?? "";
       const secondaryName = showSecondaryLang ? station[secondaryLangField] : null;
-      const primaryWidth = measureTextWidth(primaryName, MULTI_LINE_JP_FONT);
+      const primaryWidth = measureTextWidth(primaryName, multiLineJpFont);
       const secondaryWidth = secondaryName
-        ? measureTextWidth(secondaryName, MULTI_LINE_EN_FONT)
+        ? measureTextWidth(secondaryName, multiLineEnFont)
         : 0;
       const dimensions = numbers.length > 0
         ? stationNumberGroupDimensions(
@@ -386,8 +399,8 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
           labelAbove ? "above" : "below",
           labelAbove ? numberY : numberY + dimensions.h,
           SN_BADGE_GAP,
-          MULTI_LINE_JP_FONT,
-          secondaryName ? MULTI_LINE_EN_FONT : 0,
+          multiLineJpFont,
+          secondaryName ? multiLineEnFont : 0,
           stationTransits.length > 0 ? transitLayout.height : 0,
         );
         primaryNameY = details.primaryNameY;
@@ -398,8 +411,8 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
           labelAbove ? "above" : "below",
           labelAbove ? y - effectiveMarkerRadius : y + effectiveMarkerRadius,
           labelAbove ? 8 : 6,
-          MULTI_LINE_JP_FONT,
-          secondaryName ? MULTI_LINE_EN_FONT : 0,
+          multiLineJpFont,
+          secondaryName ? multiLineEnFont : 0,
           stationTransits.length > 0 ? transitLayout.height : 0,
         );
         primaryNameY = details.primaryNameY;
@@ -420,9 +433,9 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
               sharedThreeLetterCode={sharedThreeLetterCode}
             />
           )}
-          <Text x={x - primaryWidth / 2} y={primaryNameY} text={primaryName} fontFamily={FONT} fontSize={MULTI_LINE_JP_FONT} fill="#222" />
+          <Text x={x - primaryWidth / 2} y={primaryNameY} text={primaryName} fontFamily={FONT} fontSize={multiLineJpFont} fill="#222" />
           {secondaryName && (
-            <Text x={x - secondaryWidth / 2} y={secondaryNameY} text={secondaryName} fontFamily={FONT} fontSize={MULTI_LINE_EN_FONT} fill="#666" />
+            <Text x={x - secondaryWidth / 2} y={secondaryNameY} text={secondaryName} fontFamily={FONT} fontSize={multiLineEnFont} fill="#666" />
           )}
           <HorizontalTransitLines
             x={x - transitLayout.width / 2}
@@ -467,14 +480,14 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
       const anchorY = center.y + sinA * labelDistance;
       const primaryName = item.station[primaryLangField] ?? "";
       const secondaryName = showSecondaryLang ? item.station[secondaryLangField] : null;
-      const primaryWidth = measureTextWidth(primaryName, MULTI_LINE_JP_FONT);
+      const primaryWidth = measureTextWidth(primaryName, multiLineJpFont);
       const secondaryWidth = secondaryName
-        ? measureTextWidth(secondaryName, MULTI_LINE_EN_FONT)
+        ? measureTextWidth(secondaryName, multiLineEnFont)
         : 0;
       const transitLayout = getHorizontalTransitLayout(stationTransits, showTransitNames, "right");
       const blockWidth = Math.max(primaryWidth, secondaryWidth, transitLayout.width);
-      const blockHeight = MULTI_LINE_JP_FONT +
-        (secondaryName ? MULTI_LINE_EN_FONT + 2 : 0) +
+      const blockHeight = multiLineJpFont +
+        (secondaryName ? multiLineEnFont + 2 : 0) +
         (stationTransits.length ? transitLayout.height + 3 : 0);
       const showSnBadge = stationNumberMode === "badge" && numbers.length > 0;
       const isRight = cosA > C_DIAG;
@@ -530,13 +543,13 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
               sharedThreeLetterCode={sharedThreeLetterCode}
             />
           )}
-          <Text x={blockX} y={blockY} width={blockWidth} text={primaryName} fontFamily={FONT} fontSize={MULTI_LINE_JP_FONT} fill="#222" align={textAlign} />
+          <Text x={blockX} y={blockY} width={blockWidth} text={primaryName} fontFamily={FONT} fontSize={multiLineJpFont} fill="#222" align={textAlign} />
           {secondaryName && (
-            <Text x={blockX} y={blockY + MULTI_LINE_JP_FONT + 2} width={blockWidth} text={secondaryName} fontFamily={FONT} fontSize={MULTI_LINE_EN_FONT} fill="#666" align={textAlign} />
+            <Text x={blockX} y={blockY + multiLineJpFont + 2} width={blockWidth} text={secondaryName} fontFamily={FONT} fontSize={multiLineEnFont} fill="#666" align={textAlign} />
           )}
           <HorizontalTransitLines
             x={isRight ? blockX + blockWidth - transitLayout.width : blockX}
-            y={blockY + MULTI_LINE_JP_FONT + (secondaryName ? MULTI_LINE_EN_FONT + 4 : 2)}
+            y={blockY + multiLineJpFont + (secondaryName ? multiLineEnFont + 4 : 2)}
             lines={stationTransits}
             side="right"
             showNames={showTransitNames}

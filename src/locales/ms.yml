@@ -319,6 +319,9 @@ route:
     transit-show-names: Tunjukkan nama laluan pertukaran
     download-text-warning: Simpan (bahasa kedua mungkin tidak dapat dibaca)
     font-size: Saiz Font Nama Stesen
+    font-size-small: Kecil
+    font-size-medium: Sederhana
+    font-size-large: Besar
     overlap-warning-title: Pertindihan Label Dikesan
     overlap-warning: Beberapa nama stesen bertindih. Cuba kecilkan saiz fon.
     station-number-mode: Paparan Nombor Stesen

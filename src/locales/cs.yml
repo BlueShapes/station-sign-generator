@@ -319,6 +319,9 @@ route:
     transit-show-names: Zobrazit názvy přestupních linek
     download-text-warning: Uložit (druhý jazyk může být nečitelný)
     font-size: Název stanice Velikost písma
+    font-size-small: Malá
+    font-size-medium: Střední
+    font-size-large: Velká
     overlap-warning-title: Bylo zjištěno překrývání štítků
     overlap-warning: Některé názvy stanic se překrývají. Zkuste zmenšit velikost písma.
     station-number-mode: Zobrazení čísla stanice

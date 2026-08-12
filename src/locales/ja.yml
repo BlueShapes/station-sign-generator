@@ -327,6 +327,9 @@ route:
     transit-show-names: 乗換先の路線名を表示
     download-text-warning: 保存（第2言語が読めない可能性）
     font-size: 駅名フォントサイズ
+    font-size-small: 小
+    font-size-medium: 中
+    font-size-large: 大
     overlap-warning-title: 駅名の重なりを検出
     overlap-warning: 一部の駅名が重なっています。フォントサイズを小さくしてみてください。
     station-number-mode: 駅番号の表示

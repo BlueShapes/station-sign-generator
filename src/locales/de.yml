@@ -327,6 +327,9 @@ route:
     transit-show-names: Namen der Umsteigelinien anzeigen
     download-text-warning: Speichern (zweite Sprache evtl. unleserlich)
     font-size: Schriftgröße des Stationsnamens
+    font-size-small: Klein
+    font-size-medium: Mittel
+    font-size-large: Groß
     overlap-warning-title: Überlappende Beschriftungen erkannt
     overlap-warning: Einige Stationsnamen überlappen sich. Verkleinere die Schrift.
     station-number-mode: Anzeige der Stationsnummer

@@ -159,6 +159,7 @@ import LineMapRenderer, {
 import MultiLineMapRenderer, {
   multiLineMapScale,
   type MultiLineRouteData,
+  type MultiLineStationFontSize,
 } from "@/components/signs/MultiLineMapRenderer";
 import {
   applyParallelRouteLanes,
@@ -531,6 +532,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   );
   const [multiStationNumberMode, setMultiStationNumberMode] =
     useState<StationNumberMode>("dot");
+  const [multiStationFontSize, setMultiStationFontSize] =
+    useState<MultiLineStationFontSize>("large");
   const [multiTransitFilter, setMultiTransitFilter] = useState<string[]>([]);
 
   // Load lines when db becomes available
@@ -3061,6 +3064,34 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         size="xs"
                       />
                     </Grid.Col>
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("route.linemap.font-size")}
+                      </Text>
+                      <SegmentedControl
+                        fullWidth
+                        value={multiStationFontSize}
+                        onChange={(value) =>
+                          setMultiStationFontSize(
+                            value as MultiLineStationFontSize,
+                          )
+                        }
+                        data={[
+                          {
+                            value: "small",
+                            label: t("route.linemap.font-size-small"),
+                          },
+                          {
+                            value: "medium",
+                            label: t("route.linemap.font-size-medium"),
+                          },
+                          {
+                            value: "large",
+                            label: t("route.linemap.font-size-large"),
+                          },
+                        ]}
+                      />
+                    </Grid.Col>
                     <Grid.Col span={{ base: 12 }}>
                       <Text size="sm" fw={500} mb={4}>
                         {t("route.linemap.station-number-mode")}
@@ -3148,6 +3179,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       showSecondaryLang={mapShowSecondaryLang}
                       showTransitNames={mapShowTransitNames}
                       lineStyles={mapLineIndicatorStyles}
+                      stationFontSize={multiStationFontSize}
                     />
                   </Box>
                 ) : (

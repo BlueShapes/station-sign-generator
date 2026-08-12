@@ -241,15 +241,28 @@ describe("multiple-line route map layout", () => {
     expect(renderer).not.toContain("CIRCULAR_LABEL_GAP");
   });
 
-  test("scales every multiple-line station name by 1.3", () => {
+  test("offers small, medium, and large multiple-line station-name sizes", () => {
     const renderer = readFileSync(
       "src/components/signs/MultiLineMapRenderer.tsx",
       "utf8",
     );
-    expect(renderer).toContain("MULTI_LINE_STATION_NAME_SCALE = 1.3");
-    expect(renderer).toContain("fontSize={MULTI_LINE_JP_FONT}");
-    expect(renderer).toContain("fontSize={MULTI_LINE_EN_FONT}");
+    const routeInput = readFileSync(
+      "src/components/tabs/RouteInputTab.tsx",
+      "utf8",
+    );
+
+    expect(renderer).toContain('small: 1');
+    expect(renderer).toContain('medium: 1.15');
+    expect(renderer).toContain('large: 1.3');
+    expect(renderer).toContain('stationFontSize = "large"');
+    expect(renderer).toContain("JP_FONT * stationNameScale");
+    expect(renderer).toContain("EN_FONT * stationNameScale");
     expect(renderer).not.toContain("fontSize={JP_FONT}");
     expect(renderer).not.toContain("fontSize={EN_FONT}");
+    expect(routeInput).toContain('useState<MultiLineStationFontSize>("large")');
+    expect(routeInput).toContain("stationFontSize={multiStationFontSize}");
+    expect(routeInput).toContain('t("route.linemap.font-size-small")');
+    expect(routeInput).toContain('t("route.linemap.font-size-medium")');
+    expect(routeInput).toContain('t("route.linemap.font-size-large")');
   });
 });

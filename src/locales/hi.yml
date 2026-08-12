@@ -319,6 +319,9 @@ route:
     transit-show-names: इंटरचेंज लाइन के नाम दिखाएँ
     download-text-warning: सहेजें (दूसरी भाषा अस्पष्ट हो सकती है)
     font-size: स्टेशन का नाम फ़ॉन्ट आकार
+    font-size-small: छोटा
+    font-size-medium: मध्यम
+    font-size-large: बड़ा
     overlap-warning-title: लेबल ओवरलैप का पता चला
     overlap-warning: कुछ स्टेशनों के नाम ओवरलैप होते हैं। फ़ॉन्ट का आकार कम करने का प्रयास करें.
     station-number-mode: स्टेशन संख्या प्रदर्शन

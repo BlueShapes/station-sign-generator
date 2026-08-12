@@ -319,6 +319,9 @@ route:
     transit-show-names: Pokaż nazwy linii przesiadkowych
     download-text-warning: Zapisz (drugi język może być nieczytelny)
     font-size: Rozmiar czcionki nazwy stacji
+    font-size-small: Mały
+    font-size-medium: Średni
+    font-size-large: Duży
     overlap-warning-title: Wykryto nakładanie się etykiet
     overlap-warning: Niektóre nazwy stacji pokrywają się. Spróbuj zmniejszyć rozmiar czcionki.
     station-number-mode: Wyświetlanie numeru stacji

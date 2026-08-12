@@ -319,6 +319,9 @@ route:
     transit-show-names: Afișează numele liniilor de transfer
     download-text-warning: Salvează (a doua limbă poate fi ilizibilă)
     font-size: Nume stație Dimensiune font
+    font-size-small: Mic
+    font-size-medium: Mediu
+    font-size-large: Mare
     overlap-warning-title: S-a detectat suprapunerea etichetelor
     overlap-warning: Unele nume de stații se suprapun. Încercați să reduceți dimensiunea fontului.
     station-number-mode: Afișarea numărului stației

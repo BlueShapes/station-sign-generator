@@ -319,6 +319,9 @@ route:
     transit-show-names: 顯示轉乘路綫名稱
     download-text-warning: 儲存（第二語言可能無法辨讀）
     font-size: 站名字體型大小
+    font-size-small: 小
+    font-size-medium: 中
+    font-size-large: 大
     overlap-warning-title: 偵測到標籤重疊
     overlap-warning: 有些站名重疊。嘗試減小字體大小。
     station-number-mode: 站號顯示

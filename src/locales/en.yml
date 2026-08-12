@@ -327,6 +327,9 @@ route:
     transit-show-names: Show transfer line names
     download-text-warning: Save (secondary name may be unreadable)
     font-size: Station Name Font Size
+    font-size-small: Small
+    font-size-medium: Medium
+    font-size-large: Large
     overlap-warning-title: Label Overlap Detected
     overlap-warning: Some station names overlap. Try reducing the font size.
     station-number-mode: Station Number Display
