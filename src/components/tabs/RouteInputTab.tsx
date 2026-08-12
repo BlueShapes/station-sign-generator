@@ -1131,27 +1131,31 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const firstThroughLine = selectedThroughRouteId
     ? lines.find((line) => line.id === throughRoutePath.lineIds[0]) ?? null
     : null;
-  const selectedLine: Line | null = selectedThroughRoute
-    ? {
-        ...(firstThroughLine ?? {
-          id: selectedThroughRoute.id,
-          company_id: null,
-          secondary_name: null,
-          tertiary_name: null,
-          quaternary_name: null,
-          line_color: "#333333",
-          prefix: "",
-          priority: null,
-          is_loop: 0,
-          parent_line_id: null,
-        }),
-        id: selectedThroughRoute.id,
-        name: selectedThroughRoute.name,
-        prefix: "",
-        is_loop: 0,
-        parent_line_id: null,
-      }
-    : selectedBaseLine;
+  const selectedLine: Line | null = useMemo(
+    () =>
+      selectedThroughRoute
+        ? {
+            ...(firstThroughLine ?? {
+              id: selectedThroughRoute.id,
+              company_id: null,
+              secondary_name: null,
+              tertiary_name: null,
+              quaternary_name: null,
+              line_color: "#333333",
+              prefix: "",
+              priority: null,
+              is_loop: 0,
+              parent_line_id: null,
+            }),
+            id: selectedThroughRoute.id,
+            name: selectedThroughRoute.name,
+            prefix: "",
+            is_loop: 0,
+            parent_line_id: null,
+          }
+        : selectedBaseLine,
+    [firstThroughLine, selectedBaseLine, selectedThroughRoute],
+  );
   const mapRouteSelectValue = selectedThroughRouteId
     ? `through:${selectedThroughRouteId}`
     : selectedLineId

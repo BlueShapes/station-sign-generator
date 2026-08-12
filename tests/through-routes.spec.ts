@@ -237,4 +237,60 @@ test("selects and draws a through route with each section color", async ({
   await expect
     .poll(async () => (await canvasSize()).height)
     .toBeLessThan(expandedVerticalHeight);
+
+  await page.evaluate(() => {
+    const createObjectUrl = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = (object: Blob | MediaSource) => {
+      if (object instanceof Blob && object.type === "image/png") {
+        (window as typeof window & { __lineMapDownload?: Blob })
+          .__lineMapDownload = object;
+      }
+      return createObjectUrl(object);
+    };
+  });
+
+  await page
+    .getByRole("button", { name: "Save as Image", exact: true })
+    .click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as typeof window & { __lineMapDownload?: Blob })
+            .__lineMapDownload?.size ?? 0,
+      ),
+    )
+    .toBeGreaterThan(0);
+
+  const downloadedImageHasContent = await page.evaluate(async () => {
+    const blob = (window as typeof window & { __lineMapDownload?: Blob })
+      .__lineMapDownload;
+    if (!blob) return false;
+    const bitmap = await createImageBitmap(blob);
+    const exportedCanvas = document.createElement("canvas");
+    exportedCanvas.width = bitmap.width;
+    exportedCanvas.height = bitmap.height;
+    const context = exportedCanvas.getContext("2d", {
+      willReadFrequently: true,
+    });
+    if (!context) return false;
+    context.drawImage(bitmap, 0, 0);
+    const pixels = context.getImageData(
+      0,
+      0,
+      exportedCanvas.width,
+      exportedCanvas.height,
+    ).data;
+    for (let index = 0; index < pixels.length; index += 4) {
+      if (
+        pixels[index] < 245 ||
+        pixels[index + 1] < 245 ||
+        pixels[index + 2] < 245
+      ) {
+        return true;
+      }
+    }
+    return false;
+  });
+  expect(downloadedImageHasContent).toBe(true);
 });
