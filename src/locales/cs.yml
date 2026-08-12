@@ -212,12 +212,20 @@ route:
     direction: Směr úseku
     forward: Vpřed (pořadí stanic)
     reverse: Obráceně (proti pořadí stanic)
+    guide-title: Pravidla platné trasy
+    guide-intro: Skutečný provoz se neověřuje. Uložit lze trasu, která v zadaných datech tvoří jednu souvislou cestu bez odboček.
+    guide-section: V každém úseku vyberte jako vstup a výstup dvě různé stanice stejné linky.
+    guide-direction: Směr vpřed odpovídá uloženému pořadí stanic, obrácený směr vede proti němu. U okružní linky směr určuje použitou stranu okruhu.
+    guide-connection: Každý další úsek musí začínat přesně stejným záznamem stanice, kde předchozí úsek končí. Shodný název stanice nestačí.
     delete-confirm: Smazat tuto průjezdnou trasu?
     error-incomplete: Pro každý úsek vyberte linku a obě koncové stanice.
     error-empty: Přidejte alespoň jeden úsek linky.
     error-station-not-on-line: Vybraná stanice nepatří k dané lince.
     error-invalid-direction: Z výstupní stanice nelze ve zvoleném směru dojet ze vstupní stanice.
     error-disconnected: Sousední úseky nemají stejnou přestupní stanici.
+    error-same-station: Pro vstup a výstup vyberte různé stanice.
+    error-invalid-direction-detail: 'Pro cestu ze stanice „{entry}“ do „{exit}“ vyberte směr „{direction}“.'
+    error-disconnected-detail: 'Vstup úseku {current} musí používat stejný záznam jako „{station}“, výstup úseku {previous}.'
   service:
     title: Služby
     local: Místní

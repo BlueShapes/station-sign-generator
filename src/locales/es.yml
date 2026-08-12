@@ -212,12 +212,20 @@ route:
     direction: Dirección del tramo
     forward: Normal (orden de estaciones)
     reverse: Inversa (orden opuesto)
+    guide-title: Reglas para una ruta válida
+    guide-intro: No se comprueban los servicios reales. Puede guardar cualquier ruta que forme un único camino continuo y sin ramificaciones en los datos registrados.
+    guide-section: En cada tramo, elija como entrada y salida dos estaciones distintas de la misma línea.
+    guide-direction: La dirección normal sigue el orden registrado de las estaciones; la inversa va en sentido contrario. En una línea circular, la dirección determina el lado del anillo.
+    guide-connection: Cada tramo siguiente debe entrar con el mismo registro de estación donde sale el tramo anterior. No basta con que el nombre de la estación coincida.
     delete-confirm: ¿Eliminar esta ruta directa?
     error-incomplete: Seleccione una línea y ambas estaciones terminales para cada tramo.
     error-empty: Añada al menos un tramo de línea.
     error-station-not-on-line: Una estación seleccionada no pertenece a su línea.
     error-invalid-direction: No se puede llegar a la estación de salida desde la entrada en la dirección seleccionada.
     error-disconnected: Los tramos contiguos no comparten la misma estación de enlace.
+    error-same-station: Elija estaciones distintas para la entrada y la salida.
+    error-invalid-direction-detail: 'Para ir de «{entry}» a «{exit}», seleccione «{direction}».'
+    error-disconnected-detail: 'La entrada del tramo {current} debe usar el mismo registro que «{station}», la salida del tramo {previous}.'
   service:
     title: Servicios
     local: locales

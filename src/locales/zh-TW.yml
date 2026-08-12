@@ -212,12 +212,20 @@ route:
     direction: 區段方向
     forward: 順向（依車站順序）
     reverse: 反向（逆車站順序）
+    guide-title: 可儲存路徑的規則
+    guide-intro: 不會核對現實中的營運路線。只要在已登記資料中形成一條連續且無分支的路徑，即可儲存。
+    guide-section: 每個區段的入口站與出口站必須是同一路線上的兩個不同車站。
+    guide-direction: 順向依已登記的車站順序前進，反向則依相反順序。環狀線會依方向選擇環路的一側。
+    guide-connection: 下一區段的入口站必須與上一區段的出口站使用完全相同的車站資料。只有車站名稱相同並不算轉接。
     delete-confirm: 刪除此直通路徑？
     error-incomplete: 請為每個區段選擇路線及兩個端點車站。
     error-empty: 請至少新增一個路線區段。
     error-station-not-on-line: 所選車站不屬於該路線。
     error-invalid-direction: 無法依所選方向從入口站抵達出口站。
     error-disconnected: 相鄰路線區段的轉接站不一致。
+    error-same-station: 入口站與出口站請選擇不同車站。
+    error-invalid-direction-detail: '從「{entry}」前往「{exit}」時，請選擇「{direction}」。'
+    error-disconnected-detail: '區段 {current} 的入口站必須與區段 {previous} 的出口站「{station}」使用相同的車站資料。'
   service:
     title: 服務
     local: 本地

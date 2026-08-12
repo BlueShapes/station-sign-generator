@@ -212,12 +212,20 @@ route:
     direction: Kierunek odcinka
     forward: Do przodu (kolejność stacji)
     reverse: Odwrotnie (przeciwnie do kolejności stacji)
+    guide-title: Zasady poprawnej trasy
+    guide-intro: Rzeczywiste połączenia nie są sprawdzane. Można zapisać każdą trasę, która w zarejestrowanych danych tworzy jedną ciągłą ścieżkę bez rozgałęzień.
+    guide-section: W każdym odcinku wybierz jako wjazd i wyjazd dwie różne stacje tej samej linii.
+    guide-direction: Kierunek do przodu odpowiada zapisanej kolejności stacji, a odwrotny biegnie przeciwnie. Na linii okrężnej kierunek wybiera stronę pętli.
+    guide-connection: Każdy następny odcinek musi zaczynać się dokładnie tym samym rekordem stacji, na którym kończy się poprzedni. Sama zgodność nazwy stacji nie wystarcza.
     delete-confirm: Usunąć tę trasę bezpośrednią?
     error-incomplete: Wybierz linię i obie stacje końcowe każdego odcinka.
     error-empty: Dodaj co najmniej jeden odcinek linii.
     error-station-not-on-line: Wybrana stacja nie należy do tej linii.
     error-invalid-direction: Nie można dotrzeć do stacji wyjazdowej ze stacji wjazdowej w wybranym kierunku.
     error-disconnected: Sąsiednie odcinki nie mają wspólnej stacji połączenia.
+    error-same-station: Wybierz różne stacje wjazdową i wyjazdową.
+    error-invalid-direction-detail: 'Aby przejechać z „{entry}” do „{exit}”, wybierz „{direction}”.'
+    error-disconnected-detail: 'Wjazd odcinka {current} musi używać tego samego rekordu co „{station}”, wyjazd odcinka {previous}.'
   service:
     title: Usługi
     local: Lokalny

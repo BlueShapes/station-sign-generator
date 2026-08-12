@@ -8,6 +8,7 @@ import migrateV054toV060 from "../src/db/migrations/v0.5.4_to_v0.6.0.ts";
 import {
   getAllThroughRoutes,
   getRelativeLineDirectionAtStation,
+  getThroughRouteValidationIssues,
   getThroughRoutePath,
   getThroughRouteSegmentStationIds,
   getThroughRouteSegments,
@@ -146,12 +147,20 @@ describe("through route translations", () => {
       "direction",
       "forward",
       "reverse",
+      "guide-title",
+      "guide-intro",
+      "guide-section",
+      "guide-direction",
+      "guide-connection",
       "delete-confirm",
       "error-incomplete",
       "error-empty",
       "error-station-not-on-line",
       "error-invalid-direction",
       "error-disconnected",
+      "error-same-station",
+      "error-invalid-direction-detail",
+      "error-disconnected-detail",
     ];
     for (const locale of SUPPORTED_LOCALE_CODES) {
       const messages = parse(
@@ -250,6 +259,27 @@ describe("through route repository", () => {
         },
       ]),
     ).toBe("invalid-direction");
+  });
+
+  test("identifies every affected section for editor feedback", () => {
+    expect(
+      getThroughRouteValidationIssues(db, [
+        { ...forward, entry_station_id: "shared", exit_station_id: "a" },
+        {
+          ...reverse,
+          entry_station_id: "b",
+          exit_station_id: "shared",
+          direction: "forward",
+        },
+      ]),
+    ).toEqual([
+      { error: "invalid-direction", segmentIndex: 0 },
+      {
+        error: "disconnected",
+        segmentIndex: 1,
+        previousSegmentIndex: 0,
+      },
+    ]);
   });
 
   test("wraps across a loop boundary and direction selects the arc", () => {

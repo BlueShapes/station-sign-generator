@@ -212,12 +212,20 @@ route:
     direction: Direção do troço
     forward: Direta (ordem das estações)
     reverse: Inversa (ordem oposta)
+    guide-title: Regras para uma rota válida
+    guide-intro: Os serviços reais não são verificados. Pode guardar qualquer rota que forme um único caminho contínuo e sem ramificações nos dados registados.
+    guide-section: Em cada troço, escolha como entrada e saída duas estações diferentes da mesma linha.
+    guide-direction: A direção direta segue a ordem registada das estações; a inversa segue o sentido contrário. Numa linha circular, a direção escolhe o lado do circuito.
+    guide-connection: Cada troço seguinte deve entrar exatamente no mesmo registo de estação em que o troço anterior sai. Apenas o mesmo nome de estação não é suficiente.
     delete-confirm: Eliminar esta rota direta?
     error-incomplete: Selecione uma linha e as duas estações terminais de cada troço.
     error-empty: Adicione pelo menos um troço de linha.
     error-station-not-on-line: Uma estação selecionada não pertence à linha.
     error-invalid-direction: Não é possível chegar à estação de saída a partir da entrada na direção selecionada.
     error-disconnected: Troços adjacentes não partilham a mesma estação de ligação.
+    error-same-station: Escolha estações diferentes para a entrada e a saída.
+    error-invalid-direction-detail: 'Para ir de “{entry}” a “{exit}”, selecione “{direction}”.'
+    error-disconnected-detail: 'A entrada do troço {current} deve usar o mesmo registo de “{station}”, a saída do troço {previous}.'
   service:
     title: Serviços
     local: locais

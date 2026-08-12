@@ -212,12 +212,20 @@ route:
     direction: Direcția segmentului
     forward: Înainte (ordinea stațiilor)
     reverse: Invers (ordinea opusă)
+    guide-title: Reguli pentru o rută validă
+    guide-intro: Serviciile reale nu sunt verificate. Puteți salva orice rută care formează în datele înregistrate o singură cale continuă, fără ramificații.
+    guide-section: În fiecare segment, alegeți ca intrare și ieșire două stații diferite de pe aceeași linie.
+    guide-direction: Direcția înainte urmează ordinea înregistrată a stațiilor, iar cea inversă merge în sens opus. Pe o linie circulară, direcția alege partea buclei.
+    guide-connection: Fiecare segment următor trebuie să înceapă cu exact aceeași înregistrare de stație la care se termină segmentul anterior. Același nume de stație nu este suficient.
     delete-confirm: Ștergeți această rută directă?
     error-incomplete: Selectați linia și ambele stații terminale pentru fiecare segment.
     error-empty: Adăugați cel puțin un segment de linie.
     error-station-not-on-line: O stație selectată nu aparține liniei.
     error-invalid-direction: Stația de ieșire nu poate fi atinsă din stația de intrare în direcția selectată.
     error-disconnected: Segmentele adiacente nu au aceeași stație de legătură.
+    error-same-station: Alegeți stații diferite pentru intrare și ieșire.
+    error-invalid-direction-detail: 'Pentru a merge de la „{entry}” la „{exit}”, selectați „{direction}”.'
+    error-disconnected-detail: 'Intrarea segmentului {current} trebuie să folosească aceeași înregistrare ca „{station}”, ieșirea segmentului {previous}.'
   service:
     title: Servicii
     local: Local

@@ -220,12 +220,20 @@ route:
     direction: 区間の向き
     forward: 順方向（駅順に進む）
     reverse: 逆方向（駅順を戻る）
+    guide-title: 作成できる経路の規則
+    guide-intro: 実在する運行経路かどうかは判定しません。登録データ上で、枝分かれのない1本の経路になる場合に保存できます。
+    guide-section: 各区間では、同じ路線上にある異なる2駅を入口駅と出口駅にします。
+    guide-direction: 順方向は登録された駅順、逆方向はその反対に進みます。環状線では向きによって通る側が変わります。
+    guide-connection: 次の区間の入口駅は、直前の区間の出口駅と同じ駅データにします。同じ駅名でも、別に登録された駅は接続とみなしません。
     delete-confirm: この直通経路を削除しますか？
     error-incomplete: すべての区間で路線と両端駅を選択してください。
     error-empty: 路線区間を1件以上追加してください。
     error-station-not-on-line: 選択した駅が路線に含まれていません。
     error-invalid-direction: 入口駅から出口駅へ指定した方向では進めません。
     error-disconnected: 隣り合う路線区間の接続駅が一致していません。
+    error-same-station: 入口駅と出口駅には異なる駅を選択してください。
+    error-invalid-direction-detail: "「{entry}」から「{exit}」へ進むには「{direction}」を選択してください。"
+    error-disconnected-detail: "区間 {current} の入口駅は、区間 {previous} の出口「{station}」と同じ駅データにしてください。"
   service:
     title: 種別
     local: 各駅停車

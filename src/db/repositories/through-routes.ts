@@ -10,6 +10,12 @@ export type ThroughRouteValidationError =
   | "invalid-direction"
   | "disconnected";
 
+export interface ThroughRouteValidationIssue {
+  error: ThroughRouteValidationError;
+  segmentIndex: number;
+  previousSegmentIndex?: number;
+}
+
 export function getAllThroughRoutes(db: Database): ThroughRoute[] {
   const stmt = db.prepare(
     `SELECT id, name, sort_order
@@ -326,38 +332,54 @@ export function getThroughRoutePath(
   return { stationIds, edgeLineIds, lineIds };
 }
 
-export function validateThroughRouteSegments(
+export function getThroughRouteValidationIssues(
   db: Database,
   segments: ThroughRouteSegment[],
-): ThroughRouteValidationError | null {
-  if (segments.length === 0) return "empty";
+): ThroughRouteValidationIssue[] {
+  if (segments.length === 0) {
+    return [{ error: "empty", segmentIndex: -1 }];
+  }
 
+  const issues: ThroughRouteValidationIssue[] = [];
   let previousExitStationId: string | null = null;
-  for (const segment of segments) {
+  for (const [segmentIndex, segment] of segments.entries()) {
     const { order, isLoop } = getLineStationOrder(db, segment.line_id);
     const entryOrder = order.get(segment.entry_station_id);
     const exitOrder = order.get(segment.exit_station_id);
     if (entryOrder === undefined || exitOrder === undefined) {
-      return "station-not-on-line";
-    }
-    if (entryOrder === exitOrder) return "invalid-direction";
-    if (!isLoop) {
+      issues.push({ error: "station-not-on-line", segmentIndex });
+    } else if (entryOrder === exitOrder) {
+      issues.push({ error: "invalid-direction", segmentIndex });
+    } else if (!isLoop) {
       const followsDirection =
         segment.direction === "forward"
           ? entryOrder < exitOrder
           : entryOrder > exitOrder;
-      if (!followsDirection) return "invalid-direction";
+      if (!followsDirection) {
+        issues.push({ error: "invalid-direction", segmentIndex });
+      }
     }
     if (
       previousExitStationId !== null &&
       previousExitStationId !== segment.entry_station_id
     ) {
-      return "disconnected";
+      issues.push({
+        error: "disconnected",
+        segmentIndex,
+        previousSegmentIndex: segmentIndex - 1,
+      });
     }
     previousExitStationId = segment.exit_station_id;
   }
 
-  return null;
+  return issues;
+}
+
+export function validateThroughRouteSegments(
+  db: Database,
+  segments: ThroughRouteSegment[],
+): ThroughRouteValidationError | null {
+  return getThroughRouteValidationIssues(db, segments)[0]?.error ?? null;
 }
 
 export function replaceThroughRouteSegments(

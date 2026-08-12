@@ -212,12 +212,20 @@ route:
     direction: Arah Segmen
     forward: Ke hadapan (susunan stesen)
     reverse: Terbalik (lawan susunan stesen)
+    guide-title: Peraturan laluan yang sah
+    guide-intro: Perkhidmatan sebenar tidak disemak. Anda boleh menyimpan mana-mana laluan yang membentuk satu perjalanan berterusan tanpa cabang dalam data berdaftar.
+    guide-section: Dalam setiap segmen, pilih dua stesen berbeza pada laluan yang sama sebagai stesen masuk dan keluar.
+    guide-direction: Ke hadapan mengikut susunan stesen yang didaftarkan; terbalik bergerak melawannya. Pada laluan gelung, arah menentukan bahagian gelung yang digunakan.
+    guide-connection: Setiap segmen berikutnya mesti bermula pada rekod stesen yang sama tempat segmen sebelumnya berakhir. Nama stesen yang sama sahaja tidak mencukupi.
     delete-confirm: Padam laluan terus ini?
     error-incomplete: Pilih laluan dan kedua-dua stesen hujung bagi setiap segmen.
     error-empty: Tambah sekurang-kurangnya satu segmen laluan.
     error-station-not-on-line: Stesen yang dipilih bukan dalam laluan tersebut.
     error-invalid-direction: Stesen keluar tidak boleh dicapai dari stesen masuk dalam arah yang dipilih.
     error-disconnected: Segmen bersebelahan tidak berkongsi stesen sambungan yang sama.
+    error-same-station: Pilih stesen yang berbeza untuk masuk dan keluar.
+    error-invalid-direction-detail: 'Untuk bergerak dari “{entry}” ke “{exit}”, pilih “{direction}”.'
+    error-disconnected-detail: 'Stesen masuk segmen {current} mesti menggunakan rekod yang sama dengan “{station}”, stesen keluar segmen {previous}.'
   service:
     title: Perkhidmatan
     local: Tempatan

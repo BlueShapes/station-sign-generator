@@ -220,12 +220,20 @@ route:
     direction: Section Direction
     forward: Forward (station order)
     reverse: Reverse (opposite station order)
+    guide-title: Rules for a valid route
+    guide-intro: Real-world services are not checked. You can save any route that forms one continuous, branch-free path in the registered data.
+    guide-section: Within each section, choose two different stations on the same line as its entry and exit.
+    guide-direction: Forward follows the registered station order; reverse goes against it. On a loop line, the direction chooses which side of the loop is used.
+    guide-connection: Each following section must enter at the exact same station record where the previous section exits. A matching station name alone is not enough.
     delete-confirm: Delete this through route?
     error-incomplete: Select a line and both endpoint stations for every section.
     error-empty: Add at least one line section.
     error-station-not-on-line: A selected station does not belong to its line.
     error-invalid-direction: The exit station is not reachable from the entry station in the selected direction.
     error-disconnected: Adjacent line sections do not share the same connection station.
+    error-same-station: Choose different stations for the entry and exit.
+    error-invalid-direction-detail: 'To travel from “{entry}” to “{exit}”, select “{direction}”.'
+    error-disconnected-detail: 'The entry of section {current} must use the same station record as “{station}”, the exit of section {previous}.'
   service:
     title: Services
     local: Local

@@ -32,12 +32,14 @@ import {
   IconArrowUp,
   IconArrowDown,
   IconAlertCircle,
+  IconInfoCircle,
   IconDatabaseImport,
   IconLink,
   IconX,
 } from "@tabler/icons-react";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
+import { formatStationOptionLabel } from "@/components/tabs/stationOptionLabel";
 import { getStationNumberFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import { getJrCentralStationNumberBadgeMetrics } from "@/components/signs/jrCentralStationNumberBadgeMetrics";
 import {
@@ -66,6 +68,7 @@ import {
 import {
   deleteThroughRoute,
   getAllThroughRoutes,
+  getThroughRouteValidationIssues,
   getThroughRouteSegments,
   replaceThroughRouteSegments,
   upsertThroughRoute,
@@ -1021,6 +1024,9 @@ function ThroughRouteForm({
     complete
       ? validateThroughRouteSegments(db, persistedSegments)
       : "incomplete";
+  const validationIssues = complete
+    ? getThroughRouteValidationIssues(db, persistedSegments)
+    : [];
 
   const updateSegment = (
     index: number,
@@ -1099,28 +1105,119 @@ function ThroughRouteForm({
         required
       />
 
+      <Alert
+        icon={<IconInfoCircle size={18} />}
+        color="blue"
+        variant="light"
+        title={t("route.through-route.guide-title")}
+      >
+        <Stack gap={6}>
+          <Text size="sm">{t("route.through-route.guide-intro")}</Text>
+          <Text size="sm">
+            <Text span fw={700}>1. </Text>
+            {t("route.through-route.guide-section")}
+          </Text>
+          <Text size="sm">
+            <Text span fw={700}>2. </Text>
+            {t("route.through-route.guide-direction")}
+          </Text>
+          <Text size="sm">
+            <Text span fw={700}>3. </Text>
+            {t("route.through-route.guide-connection")}
+          </Text>
+        </Stack>
+      </Alert>
+
       <Stack gap="sm">
         {segments.map((segment, index) => {
           const lineStations = segment.lineId
             ? getStationsByLine(db, segment.lineId)
             : [];
+          const stationLabels = new Map(
+            lineStations.map((station) => [
+              station.id,
+              formatStationOptionLabel(
+                station.primary_name,
+                segment.lineId
+                  ? getResolvedStationNumber(db, station.id, segment.lineId)
+                  : null,
+              ),
+            ]),
+          );
           const stationOptions = lineStations.map((station) => ({
             value: station.id,
-            label: station.primary_name,
+            label: stationLabels.get(station.id) ?? station.primary_name,
           }));
-          const entryName = lineStations.find(
-            (station) => station.id === segment.entryStationId,
-          )?.primary_name;
-          const exitName = lineStations.find(
-            (station) => station.id === segment.exitStationId,
-          )?.primary_name;
+          const entryName = stationLabels.get(segment.entryStationId);
+          const exitName = stationLabels.get(segment.exitStationId);
+          const segmentIssues = validationIssues.filter(
+            (issue) => issue.segmentIndex === index,
+          );
+          const hasInvalidDirection = segmentIssues.some(
+            (issue) => issue.error === "invalid-direction",
+          );
+          const hasDisconnectedEntry = segmentIssues.some(
+            (issue) => issue.error === "disconnected",
+          );
+          const previousSegment = segments[index - 1];
+          const previousLineStations = previousSegment?.lineId
+            ? getStationsByLine(db, previousSegment.lineId)
+            : [];
+          const expectedEntryStation = previousLineStations.find(
+            (station) => station.id === previousSegment?.exitStationId,
+          );
+          const expectedEntryName = expectedEntryStation
+            ? formatStationOptionLabel(
+                expectedEntryStation.primary_name,
+                getResolvedStationNumber(
+                  db,
+                  expectedEntryStation.id,
+                  previousSegment!.lineId,
+                ),
+              )
+            : undefined;
+          const line = lines.find(
+            (candidate) => candidate.id === segment.lineId,
+          );
+          const requiredDirection =
+            line?.is_loop !== 1 &&
+            segment.entryStationId &&
+            segment.exitStationId &&
+            lineStations.findIndex(
+              (station) => station.id === segment.entryStationId,
+            ) <
+              lineStations.findIndex(
+                (station) => station.id === segment.exitStationId,
+              )
+              ? "forward"
+              : "reverse";
+          const directionError = hasInvalidDirection
+            ? segment.entryStationId === segment.exitStationId
+              ? t("route.through-route.error-same-station")
+              : t("route.through-route.error-invalid-direction-detail", {
+                  entry: entryName ?? "",
+                  exit: exitName ?? "",
+                  direction: t(`route.through-route.${requiredDirection}`),
+                })
+            : undefined;
+          const connectionError = hasDisconnectedEntry
+            ? t("route.through-route.error-disconnected-detail", {
+                previous: String(index),
+                station: expectedEntryName ?? "",
+                current: String(index + 1),
+              })
+            : undefined;
 
           return (
             <Box
               key={segment.id}
               p="sm"
               style={{
-                border: "1px solid var(--mantine-color-default-border)",
+                border: `1px solid ${
+                  segmentIssues.length > 0
+                    ? "var(--mantine-color-red-6)"
+                    : "var(--mantine-color-default-border)"
+                }`,
                 borderRadius: "var(--mantine-radius-sm)",
               }}
             >
@@ -1184,6 +1281,7 @@ function ThroughRouteForm({
                     data={stationOptions}
                     searchable
                     disabled={!segment.lineId}
+                    error={connectionError}
                     required
                   />
                   <Select
@@ -1217,6 +1315,7 @@ function ThroughRouteForm({
                       label: t("route.through-route.reverse"),
                     },
                   ]}
+                  error={directionError}
                 />
                 {entryName && exitName && (
                   <Text size="xs" c="dimmed">

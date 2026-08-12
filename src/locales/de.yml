@@ -220,12 +220,20 @@ route:
     direction: Abschnittsrichtung
     forward: Vorwärts (Bahnhofsreihenfolge)
     reverse: Rückwärts (entgegen der Bahnhofsreihenfolge)
+    guide-title: Regeln für eine gültige Route
+    guide-intro: Der reale Betrieb wird nicht geprüft. Speichern lassen sich Routen, die in den erfassten Daten einen einzigen durchgehenden Weg ohne Verzweigung bilden.
+    guide-section: Wählen Sie je Abschnitt zwei verschiedene Bahnhöfe derselben Linie als Ein- und Ausfahrt.
+    guide-direction: Vorwärts folgt der erfassten Bahnhofsreihenfolge, rückwärts verläuft entgegengesetzt. Bei einer Ringlinie bestimmt die Richtung die Seite des Rings.
+    guide-connection: Jeder folgende Abschnitt muss am exakt gleichen Bahnhofseintrag beginnen, an dem der vorherige endet. Ein gleicher Bahnhofsname allein genügt nicht.
     delete-confirm: Diese durchgehende Route löschen?
     error-incomplete: Wählen Sie für jeden Abschnitt eine Linie und beide Endbahnhöfe aus.
     error-empty: Fügen Sie mindestens einen Linienabschnitt hinzu.
     error-station-not-on-line: Ein ausgewählter Bahnhof gehört nicht zur Linie.
     error-invalid-direction: Der Ausfahrtsbahnhof ist vom Einfahrtsbahnhof in der gewählten Richtung nicht erreichbar.
     error-disconnected: Benachbarte Linienabschnitte haben keinen gemeinsamen Anschlussbahnhof.
+    error-same-station: Wählen Sie für Ein- und Ausfahrt unterschiedliche Bahnhöfe.
+    error-invalid-direction-detail: 'Um von „{entry}“ nach „{exit}“ zu fahren, wählen Sie „{direction}“.'
+    error-disconnected-detail: 'Die Einfahrt von Abschnitt {current} muss denselben Bahnhofseintrag wie „{station}“, die Ausfahrt von Abschnitt {previous}, verwenden.'
   service:
     title: Zugarten
     local: Nahverkehr
