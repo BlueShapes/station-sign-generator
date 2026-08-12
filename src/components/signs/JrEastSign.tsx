@@ -15,6 +15,7 @@ import styled from "styled-components";
 import { getJrEastLineArrowPoints } from "./arrowGeometry";
 import JrEastBranchArrows from "./JrEastBranchArrows";
 import JrEastAdjacentNumberBadge from "./JrEastAdjacentNumberBadge";
+import { getJrEastAdjacentNumberBadgeX } from "./jrEastAdjacentNumberBadgeLayout";
 import { StationNumberBadgeRow } from "./StationNumberBadge";
 import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
 import {
@@ -104,8 +105,6 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       (!!numberSecondaryPrefix &&
         secondaryNumberAppearance.style === "jreast") ||
       (!!numberTertiaryPrefix &&
-        branchMode &&
-        !!numberSecondaryPrefix &&
         tertiaryNumberAppearance.style === "jreast");
     const threeLetterCode = hasJrEastNumber
       ? threeLetterCodeRaw
@@ -129,6 +128,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
           numberSecondaryValue: undefined,
           numberSecondaryColor: undefined,
           numberSecondaryStyle: undefined,
+          numberTertiaryPrefix: undefined,
+          numberTertiaryValue: undefined,
+          numberTertiaryColor: undefined,
+          numberTertiaryStyle: undefined,
         };
       }
       if (stations.length === 1) {
@@ -143,6 +146,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
           numberSecondaryValue: stations[0].numberSecondaryValue,
           numberSecondaryColor: stations[0].numberSecondaryColor,
           numberSecondaryStyle: stations[0].numberSecondaryStyle,
+          numberTertiaryPrefix: stations[0].numberTertiaryPrefix,
+          numberTertiaryValue: stations[0].numberTertiaryValue,
+          numberTertiaryColor: stations[0].numberTertiaryColor,
+          numberTertiaryStyle: stations[0].numberTertiaryStyle,
         };
       }
       return {
@@ -156,6 +163,10 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
         numberSecondaryValue: stations[1].numberPrimaryValue,
         numberSecondaryColor: stations[1].numberPrimaryColor,
         numberSecondaryStyle: stations[1].numberPrimaryStyle,
+        numberTertiaryPrefix: undefined,
+        numberTertiaryValue: undefined,
+        numberTertiaryColor: undefined,
+        numberTertiaryStyle: undefined,
       };
     };
     const leftMerged = mergeAdjacentStations(left);
@@ -176,6 +187,13 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       leftMerged.numberSecondaryColor,
       leftMerged.numberSecondaryStyle,
     );
+    const leftNumberTertiaryPrefix = leftMerged.numberTertiaryPrefix;
+    const leftNumberTertiaryValue = leftMerged.numberTertiaryValue;
+    const leftNumberTertiaryAppearance = resolveNumberAppearance(
+      leftMerged.numberTertiaryPrefix,
+      leftMerged.numberTertiaryColor,
+      leftMerged.numberTertiaryStyle,
+    );
     const rightPrimaryName = rightMerged.primaryName;
     const rightSecondaryName = rightMerged.secondaryName;
     const rightNumberPrimaryPrefix = rightMerged.numberPrimaryPrefix;
@@ -191,6 +209,13 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       rightMerged.numberSecondaryPrefix,
       rightMerged.numberSecondaryColor,
       rightMerged.numberSecondaryStyle,
+    );
+    const rightNumberTertiaryPrefix = rightMerged.numberTertiaryPrefix;
+    const rightNumberTertiaryValue = rightMerged.numberTertiaryValue;
+    const rightNumberTertiaryAppearance = resolveNumberAppearance(
+      rightMerged.numberTertiaryPrefix,
+      rightMerged.numberTertiaryColor,
+      rightMerged.numberTertiaryStyle,
     );
     const spacedStationName = (() => {
       const str = primaryName;
@@ -227,8 +252,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     const branchCenterTextYOffset = hasActiveBranches
       ? JR_EAST_BRANCH_LAYOUT.centerTextYOffset
       : 0;
-    const numberTertiaryPrefixForRender =
-      branchMode && numberSecondaryPrefix ? numberTertiaryPrefix : undefined;
+    const numberTertiaryPrefixForRender = numberTertiaryPrefix;
     const numberTertiaryValueForRender = numberTertiaryPrefixForRender
       ? numberTertiaryValue
       : undefined;
@@ -498,7 +522,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   />
                   {leftNumberPrimaryValue && (
                     <JrEastAdjacentNumberBadge
-                      x={44}
+                      x={getJrEastAdjacentNumberBadgeX("left", width, 0)}
                       y={yOffset + 97}
                       prefix={leftNumberPrimaryPrefix}
                       value={leftNumberPrimaryValue}
@@ -508,12 +532,22 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   )}
                   {leftNumberSecondaryValue && (
                     <JrEastAdjacentNumberBadge
-                      x={24}
+                      x={getJrEastAdjacentNumberBadgeX("left", width, 1)}
                       y={yOffset + 97}
                       prefix={leftNumberSecondaryPrefix}
                       value={leftNumberSecondaryValue}
                       color={leftNumberSecondaryAppearance.color}
                       stationNumberStyle={leftNumberSecondaryAppearance.style}
+                    />
+                  )}
+                  {leftNumberTertiaryValue && (
+                    <JrEastAdjacentNumberBadge
+                      x={getJrEastAdjacentNumberBadgeX("left", width, 2)}
+                      y={yOffset + 97}
+                      prefix={leftNumberTertiaryPrefix}
+                      value={leftNumberTertiaryValue}
+                      color={leftNumberTertiaryAppearance.color}
+                      stationNumberStyle={leftNumberTertiaryAppearance.style}
                     />
                   )}
                 </>
@@ -543,7 +577,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   />
                   {rightNumberPrimaryValue && (
                     <JrEastAdjacentNumberBadge
-                      x={width - 60}
+                      x={getJrEastAdjacentNumberBadgeX("right", width, 0)}
                       y={yOffset + 97}
                       prefix={rightNumberPrimaryPrefix}
                       value={rightNumberPrimaryValue}
@@ -553,12 +587,22 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   )}
                   {rightNumberSecondaryValue && (
                     <JrEastAdjacentNumberBadge
-                      x={width - 40}
+                      x={getJrEastAdjacentNumberBadgeX("right", width, 1)}
                       y={yOffset + 97}
                       prefix={rightNumberSecondaryPrefix}
                       value={rightNumberSecondaryValue}
                       color={rightNumberSecondaryAppearance.color}
                       stationNumberStyle={rightNumberSecondaryAppearance.style}
+                    />
+                  )}
+                  {rightNumberTertiaryValue && (
+                    <JrEastAdjacentNumberBadge
+                      x={getJrEastAdjacentNumberBadgeX("right", width, 2)}
+                      y={yOffset + 97}
+                      prefix={rightNumberTertiaryPrefix}
+                      value={rightNumberTertiaryValue}
+                      color={rightNumberTertiaryAppearance.color}
+                      stationNumberStyle={rightNumberTertiaryAppearance.style}
                     />
                   )}
                 </>

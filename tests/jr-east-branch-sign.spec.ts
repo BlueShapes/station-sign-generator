@@ -98,6 +98,24 @@ const THREE_NUMBER_BADGE_DATA = {
   ],
 };
 
+const THREE_ADJACENT_NUMBER_BADGE_DATA = {
+  ...TWO_CHOICE_SIGN_DATA,
+  left: [
+    {
+      ...TWO_CHOICE_SIGN_DATA.left[0],
+      numberSecondaryPrefix: "JS",
+      numberSecondaryValue: "07",
+      numberTertiaryPrefix: "JT",
+      numberTertiaryValue: "07",
+    },
+  ],
+  localLines: [
+    ...TWO_CHOICE_SIGN_DATA.localLines,
+    { id: "secondary-line", prefix: "JS", color: "#0066ff" },
+    { id: "tertiary-line", prefix: "JT", color: "#ff00ff" },
+  ],
+};
+
 async function setSignStyle(
   page: import("@playwright/test").Page,
   style: "jreast" | "jreastbranch",
@@ -111,6 +129,40 @@ async function setSignStyle(
     { data, selectedStyle: style },
   );
   await page.reload();
+}
+
+async function countPreviewPixels(
+  page: import("@playwright/test").Page,
+  color: readonly [number, number, number],
+) {
+  const preview = page.locator('img[src^="data:image/png"]').first();
+  await preview.waitFor({ state: "visible" });
+  return preview.evaluate((element, [red, green, blue]) => {
+    const image = element as HTMLImageElement;
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas context is unavailable");
+    context.drawImage(image, 0, 0);
+    const pixels = context.getImageData(
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    ).data;
+    let matches = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      if (
+        pixels[index] === red &&
+        pixels[index + 1] === green &&
+        pixels[index + 2] === blue
+      ) {
+        matches += 1;
+      }
+    }
+    return matches;
+  }, color);
 }
 
 test("two-choice branch signs keep the standard JR East image ratio", async ({
@@ -137,47 +189,33 @@ test("two-choice branch signs keep the standard JR East image ratio", async ({
   expect(branchSize.width / branchSize.height).toBeCloseTo(3.5);
 });
 
-test("only the branch style renders a third current-station number badge", async ({
+test("both JR East styles render a third current-station number badge", async ({
   page,
 }) => {
   await page.goto("/");
 
-  const countTertiaryBadgePixels = async () => {
-    const preview = page.locator('img[src^="data:image/png"]').first();
-    await preview.waitFor({ state: "visible" });
-    return preview.evaluate((element) => {
-      const image = element as HTMLImageElement;
-      const canvas = document.createElement("canvas");
-      canvas.width = image.naturalWidth;
-      canvas.height = image.naturalHeight;
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("Canvas context is unavailable");
-      context.drawImage(image, 0, 0);
-      const pixels = context.getImageData(
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      ).data;
-      let matches = 0;
-      for (let index = 0; index < pixels.length; index += 4) {
-        if (
-          pixels[index] === 255 &&
-          pixels[index + 1] === 0 &&
-          pixels[index + 2] === 255
-        ) {
-          matches += 1;
-        }
-      }
-      return matches;
-    });
-  };
-
   await setSignStyle(page, "jreastbranch", THREE_NUMBER_BADGE_DATA);
-  await expect.poll(countTertiaryBadgePixels).toBeGreaterThan(0);
+  await expect
+    .poll(() => countPreviewPixels(page, [255, 0, 255]))
+    .toBeGreaterThan(0);
 
   await setSignStyle(page, "jreast", THREE_NUMBER_BADGE_DATA);
-  await expect.poll(countTertiaryBadgePixels).toBe(0);
+  await expect
+    .poll(() => countPreviewPixels(page, [255, 0, 255]))
+    .toBeGreaterThan(0);
+});
+
+test("both JR East styles render a third adjacent-station number badge", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  for (const style of ["jreast", "jreastbranch"] as const) {
+    await setSignStyle(page, style, THREE_ADJACENT_NUMBER_BADGE_DATA);
+    await expect
+      .poll(() => countPreviewPixels(page, [255, 0, 255]))
+      .toBeGreaterThan(0);
+  }
 });
 
 test("consecutive JR East badges share one three-letter-code frame", async ({
@@ -225,7 +263,10 @@ test("consecutive JR East badges share one three-letter-code frame", async ({
   });
 
   await setSignStyle(page, "jreast", THREE_NUMBER_BADGE_DATA);
-  await expect.poll(longestBadgeHeaderRun).toBeGreaterThan(190);
+  await expect.poll(longestBadgeHeaderRun).toBeGreaterThan(290);
+  await page.locator('img[src^="data:image/png"]').first().screenshot({
+    path: testInfo.outputPath("three-connected-jr-east-badges-standard.png"),
+  });
 
   await setSignStyle(page, "jreastbranch", THREE_NUMBER_BADGE_DATA);
   await expect.poll(longestBadgeHeaderRun).toBeGreaterThan(290);

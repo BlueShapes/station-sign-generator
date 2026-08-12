@@ -25,18 +25,17 @@ import {
 import { SIGN_STYLE_FIELDS } from "../src/components/signs/signStyles.ts";
 
 describe("JR East branch sign layout", () => {
-  test("allows up to three station numbers only in the branch style", () => {
-    const fields = SIGN_STYLE_FIELDS.jreastbranch;
+  test("allows up to three station numbers in both JR East styles", () => {
+    for (const style of ["jreast", "jreastbranch"]) {
+      const fields = SIGN_STYLE_FIELDS[style];
 
-    expect(fields.numberSecondary).toBe("optional");
-    expect(fields.numberTertiary).toBe("optional");
-    expect(fields.left.numberSecondary).toBe("optional");
-    expect(fields.left.numberTertiary).toBe("optional");
-    expect(fields.right.numberSecondary).toBe("optional");
-    expect(fields.right.numberTertiary).toBe("optional");
-    expect(SIGN_STYLE_FIELDS.jreast.numberTertiary).toBeUndefined();
-    expect(SIGN_STYLE_FIELDS.jreast.left.numberTertiary).toBeUndefined();
-    expect(SIGN_STYLE_FIELDS.jreast.right.numberTertiary).toBeUndefined();
+      expect(fields.numberSecondary).toBe("optional");
+      expect(fields.numberTertiary).toBe("optional");
+      expect(fields.left.numberSecondary).toBe("optional");
+      expect(fields.left.numberTertiary).toBe("optional");
+      expect(fields.right.numberSecondary).toBe("optional");
+      expect(fields.right.numberTertiary).toBe("optional");
+    }
   });
 
   test("places one, two, and three branches symmetrically", () => {
