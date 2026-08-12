@@ -185,6 +185,25 @@ export function getConnectedMarkerExtraExtent(markerExtents: number[]): number {
 }
 
 /**
+ * Connected station-number groups need extra room when they sit on the route
+ * itself, or when vertical station names place every badge on the same row.
+ * Standard horizontal names alternate badges above and below the route, so
+ * expanding those gaps would only make the map unnecessarily sparse.
+ */
+export function shouldExpandStationNumberGroups(
+  mode: "none" | "badge" | "dot",
+  orientation: "horizontal" | "vertical",
+  nameStyle?: "normal" | "above" | "below",
+): boolean {
+  return (
+    mode === "dot" ||
+    (mode === "badge" &&
+      orientation === "horizontal" &&
+      (nameStyle === "above" || nameStyle === "below"))
+  );
+}
+
+/**
  * Expand adjacent station gaps around oversized markers while keeping each
  * marker centered in the space assigned to it.
  */

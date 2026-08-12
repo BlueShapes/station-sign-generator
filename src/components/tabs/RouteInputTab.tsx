@@ -168,6 +168,7 @@ import {
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
   normalizeTrackWidth,
+  shouldExpandStationNumberGroups,
 } from "@/components/signs/lineMapGeometry";
 import {
   isTransitSecondaryNameExportTooSmall,
@@ -1563,11 +1564,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     [mapTransits, mapTransitFilter],
   );
   const mapStationNumberExtraExtent =
-    mapStationNumberMode === "dot"
+    shouldExpandStationNumberGroups(
+      mapStationNumberMode,
+      mapOrientation,
+      mapNameStyle,
+    )
       ? getStationNumberGroupExtraExtent(
           mapStationNumberGroups,
           mapOrientation,
-          1,
+          mapStationNumberMode === "dot" ? 1 : 0,
         )
       : 0;
 

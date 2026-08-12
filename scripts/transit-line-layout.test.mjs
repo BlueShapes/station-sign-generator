@@ -7,6 +7,7 @@ import {
   TRANSIT_DIAGONAL_TEXT_GAP,
   TRANSIT_ICON_SIZE,
   TRANSIT_ITEM_GAP,
+  TRANSIT_NAME_FONT,
   TRANSIT_SECONDARY_NAME_FONT,
   isTransitSecondaryNameExportTooSmall,
   layoutDiagonalTransitLines,
@@ -35,6 +36,7 @@ import {
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
   normalizeTrackWidth,
+  shouldExpandStationNumberGroups,
 } from "../src/components/signs/lineMapGeometry";
 
 describe("transit line layout", () => {
@@ -135,6 +137,27 @@ describe("transit line layout", () => {
       positions: [0, 86.5, 173],
       extent: 173,
     });
+    expect(layoutExpandedLinearStations(30, [0, 23, 0])).toEqual({
+      positions: [0, 41.5, 83],
+      extent: 83,
+    });
+  });
+
+  test("expands badge groups only when neighbouring badges share their row", () => {
+    expect(shouldExpandStationNumberGroups("dot", "horizontal", "normal"))
+      .toBe(true);
+    expect(shouldExpandStationNumberGroups("dot", "vertical", "normal"))
+      .toBe(true);
+    expect(shouldExpandStationNumberGroups("badge", "horizontal", "above"))
+      .toBe(true);
+    expect(shouldExpandStationNumberGroups("badge", "horizontal", "below"))
+      .toBe(true);
+    expect(shouldExpandStationNumberGroups("badge", "horizontal", "normal"))
+      .toBe(false);
+    expect(shouldExpandStationNumberGroups("badge", "vertical", "normal"))
+      .toBe(false);
+    expect(shouldExpandStationNumberGroups("none", "horizontal", "above"))
+      .toBe(false);
   });
 
   test("joins stroked markers without overlapping their outer edges", () => {
@@ -255,20 +278,26 @@ describe("transit line layout", () => {
   test("stacks vertical-writing transfers on one station axis", () => {
     const above = layoutDiagonalTransitLines([10, 20, 30, 40], "above");
     const below = layoutDiagonalTransitLines([10, 20, 30, 40], "below");
+    const itemStep = Math.max(
+      TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP,
+      Math.ceil(
+        (TRANSIT_NAME_FONT + TRANSIT_DIAGONAL_TEXT_GAP) * Math.SQRT2,
+      ),
+    );
 
     expect(above.items.map((item) => item.x)).toEqual([0, 0, 0, 0]);
     expect(below.items.map((item) => item.x)).toEqual([0, 0, 0, 0]);
     expect(above.items.map((item) => item.y)).toEqual([
       -TRANSIT_ICON_SIZE,
-      -2 * TRANSIT_ICON_SIZE - TRANSIT_ITEM_GAP,
-      -3 * TRANSIT_ICON_SIZE - 2 * TRANSIT_ITEM_GAP,
-      -4 * TRANSIT_ICON_SIZE - 3 * TRANSIT_ITEM_GAP,
+      -TRANSIT_ICON_SIZE - itemStep,
+      -TRANSIT_ICON_SIZE - 2 * itemStep,
+      -TRANSIT_ICON_SIZE - 3 * itemStep,
     ]);
     expect(below.items.map((item) => item.y)).toEqual([
       0,
-      TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP,
-      2 * (TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP),
-      3 * (TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP),
+      itemStep,
+      2 * itemStep,
+      3 * itemStep,
     ]);
     expect(above.width).toBeGreaterThan(TRANSIT_ICON_SIZE);
     expect(above.height).toBeGreaterThan(4 * TRANSIT_ICON_SIZE);
@@ -282,9 +311,16 @@ describe("transit line layout", () => {
       [bilingualNameHeight, bilingualNameHeight, bilingualNameHeight],
     );
     const itemStep = layout.items[1].y - layout.items[0].y;
+    const expectedItemStep = Math.ceil(
+      (bilingualNameHeight + TRANSIT_DIAGONAL_TEXT_GAP) * Math.SQRT2,
+    );
 
-    expect(itemStep).toBe(16);
-    expect(layout.items.map((item) => item.y)).toEqual([0, 16, 32]);
+    expect(itemStep).toBe(expectedItemStep);
+    expect(layout.items.map((item) => item.y)).toEqual([
+      0,
+      expectedItemStep,
+      2 * expectedItemStep,
+    ]);
     expect(itemStep * Math.SQRT1_2).toBeGreaterThanOrEqual(
       bilingualNameHeight + TRANSIT_DIAGONAL_TEXT_GAP,
     );

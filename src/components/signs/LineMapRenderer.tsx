@@ -45,6 +45,7 @@ import {
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
   normalizeTrackWidth,
+  shouldExpandStationNumberGroups,
 } from "@/components/signs/lineMapGeometry";
 
 export const scale = 2;
@@ -1589,13 +1590,21 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     };
     const horizontalMarkerExtras = stations.map((station) => {
       const numbers = getStationNumbers(station.id);
-      if (stationNumberMode !== "dot" || numbers.length < 2) return 0;
+      if (
+        !shouldExpandStationNumberGroups(
+          stationNumberMode,
+          "horizontal",
+          nameStyle,
+        ) || numbers.length < 2
+      ) {
+        return 0;
+      }
       const group = stationNumberGroupDimensions(
         numbers,
         "horizontal",
         1,
         false,
-        1,
+        stationNumberMode === "dot" ? 1 : 0,
       );
       const largestSingle = Math.max(
         ...numbers.map(
@@ -1607,7 +1616,15 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     });
     const verticalMarkerExtras = stations.map((station) => {
       const numbers = getStationNumbers(station.id);
-      if (stationNumberMode !== "dot" || numbers.length < 2) return 0;
+      if (
+        !shouldExpandStationNumberGroups(
+          stationNumberMode,
+          "vertical",
+          nameStyle,
+        ) || numbers.length < 2
+      ) {
+        return 0;
+      }
       const group = stationNumberGroupDimensions(
         numbers,
         "vertical",
