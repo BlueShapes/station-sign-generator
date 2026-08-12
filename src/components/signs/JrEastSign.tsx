@@ -15,7 +15,7 @@ import styled from "styled-components";
 import { getJrEastLineArrowPoints } from "./arrowGeometry";
 import JrEastBranchArrows from "./JrEastBranchArrows";
 import JrEastAdjacentNumberBadge from "./JrEastAdjacentNumberBadge";
-import StationNumberBadge from "./StationNumberBadge";
+import { StationNumberBadgeRow } from "./StationNumberBadge";
 import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
 import {
   getJrEastBranchCanvasHeight,
@@ -99,8 +99,15 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       numberTertiaryColor,
       numberTertiaryStyle,
     );
-    // Three-letter code belongs only to the JR East badge decoration.
-    const threeLetterCode = primaryNumberAppearance.style === "jreast"
+    const hasJrEastNumber =
+      (!!numberPrimaryPrefix && primaryNumberAppearance.style === "jreast") ||
+      (!!numberSecondaryPrefix &&
+        secondaryNumberAppearance.style === "jreast") ||
+      (!!numberTertiaryPrefix &&
+        branchMode &&
+        !!numberSecondaryPrefix &&
+        tertiaryNumberAppearance.style === "jreast");
+    const threeLetterCode = hasJrEastNumber
       ? threeLetterCodeRaw
       : undefined;
     const stationBadgeFontFamily =
@@ -1268,40 +1275,48 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   ))}
               </Group>
               <Group y={branchCenterBadgeYOffset}>
-                {numberPrimaryPrefix && (
-                  <StationNumberBadge
-                    x={xOffsetWithNote + (width - stationNameWidth) / 2}
-                    y={yOffset + yOffsetWithNote + 18}
-                    size={30}
-                    prefix={numberPrimaryPrefix}
-                    value={numberPrimaryValue}
-                    color={primaryNumberAppearance.color}
-                    style={primaryNumberAppearance.style}
-                    threeLetterCode={threeLetterCode}
-                  />
-                )}
-                {numberSecondaryPrefix && (
-                  <StationNumberBadge
-                    x={xOffsetWithNote - 37 + (width - stationNameWidth) / 2}
-                    y={yOffset + yOffsetWithNote + 18}
-                    size={30}
-                    prefix={numberSecondaryPrefix}
-                    value={numberSecondaryValue}
-                    color={secondaryNumberAppearance.color}
-                    style={secondaryNumberAppearance.style}
-                  />
-                )}
-                {numberTertiaryPrefixForRender && (
-                  <StationNumberBadge
-                    x={xOffsetWithNote - 74 + (width - stationNameWidth) / 2}
-                    y={yOffset + yOffsetWithNote + 18}
-                    size={30}
-                    prefix={numberTertiaryPrefixForRender}
-                    value={numberTertiaryValueForRender}
-                    color={tertiaryNumberAppearance.color}
-                    style={tertiaryNumberAppearance.style}
-                  />
-                )}
+                <StationNumberBadgeRow
+                  y={yOffset + yOffsetWithNote + 18}
+                  size={30}
+                  threeLetterCode={threeLetterCode}
+                  numbers={[
+                    ...(numberTertiaryPrefixForRender
+                      ? [{
+                          x:
+                            xOffsetWithNote -
+                            74 +
+                            (width - stationNameWidth) / 2,
+                          prefix: numberTertiaryPrefixForRender,
+                          value: numberTertiaryValueForRender,
+                          color: tertiaryNumberAppearance.color,
+                          style: tertiaryNumberAppearance.style,
+                        }]
+                      : []),
+                    ...(numberSecondaryPrefix
+                      ? [{
+                          x:
+                            xOffsetWithNote -
+                            37 +
+                            (width - stationNameWidth) / 2,
+                          prefix: numberSecondaryPrefix,
+                          value: numberSecondaryValue,
+                          color: secondaryNumberAppearance.color,
+                          style: secondaryNumberAppearance.style,
+                        }]
+                      : []),
+                    ...(numberPrimaryPrefix
+                      ? [{
+                          x:
+                            xOffsetWithNote +
+                            (width - stationNameWidth) / 2,
+                          prefix: numberPrimaryPrefix,
+                          value: numberPrimaryValue,
+                          color: primaryNumberAppearance.color,
+                          style: primaryNumberAppearance.style,
+                        }]
+                      : []),
+                  ]}
+                />
               </Group>
               <Group y={branchCenterTextYOffset}>
                 {note ? (

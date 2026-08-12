@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { resolveConnectedStationNumbers } from "../src/components/signs/stationNumberGroup";
+import {
+  resolveConnectedStationNumberRuns,
+  resolveConnectedStationNumbers,
+} from "../src/components/signs/stationNumberGroup";
 
 describe("connected station-number badges", () => {
   test("shares one three-letter code across JR East badges", () => {
@@ -49,6 +52,42 @@ describe("connected station-number badges", () => {
 
     expect(result.sharedThreeLetterCode).toBeNull();
     expect(result.numbers.every((number) => !number.threeLetterCode)).toBe(true);
+  });
+
+  test("groups only consecutive JR East badges under a shared code", () => {
+    const runs = resolveConnectedStationNumberRuns(
+      [
+        { prefix: "M", style: "tokyometro" },
+        { prefix: "JY", style: "jreast" },
+        { prefix: "JS", style: "jreast" },
+      ],
+      "SJK",
+    );
+
+    expect(runs.map((run) => run.numbers.map((number) => number.prefix)))
+      .toEqual([["M"], ["JY", "JS"]]);
+    expect(runs.map((run) => run.sharedThreeLetterCode)).toEqual([null, "SJK"]);
+    expect(runs[0].numbers[0].threeLetterCode).toBeNull();
+    expect(runs[1].numbers.every((number) => !number.threeLetterCode)).toBe(true);
+  });
+
+  test("does not join JR East badges separated by another style", () => {
+    const runs = resolveConnectedStationNumberRuns(
+      [
+        { prefix: "JY", style: "jreast" },
+        { prefix: "M", style: "tokyometro" },
+        { prefix: "JS", style: "jreast" },
+      ],
+      "SJK",
+    );
+
+    expect(runs).toHaveLength(3);
+    expect(runs.every((run) => run.sharedThreeLetterCode === null)).toBe(true);
+    expect(runs.map((run) => run.numbers[0].threeLetterCode)).toEqual([
+      "SJK",
+      null,
+      "SJK",
+    ]);
   });
 
   test("reads each through-route boundary code from its actual station", () => {

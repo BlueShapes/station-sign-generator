@@ -2,6 +2,8 @@ import { Group, Ellipse, Rect, Text } from "react-konva";
 import JrCentralStationNumberBadge from "./JrCentralStationNumberBadge";
 import { getTokyoMetroStationNumberMetrics } from "./stationNumberBadgeMetrics";
 import { getStationNumberBadgeThreeLetterCode } from "./subwayStationNumberAppearance";
+import { resolveConnectedStationNumberRuns } from "./stationNumberGroup";
+import { getJrEastStationNumberBadgeFrameMetrics } from "./stationNumberBadgeFrame";
 
 export type StationNumberBadgeStyle = "jreast" | "tokyometro" | "jrcentral";
 
@@ -15,7 +17,14 @@ type StationNumberBadgeProps = {
   style?: string;
   /** JR East-only header decoration. Ignored by every other badge style. */
   threeLetterCode?: string;
+  /** Use the framed JR East corner geometry without drawing another header. */
+  insideThreeLetterCodeFrame?: boolean;
 };
+
+export type StationNumberBadgeRowItem = Omit<
+  StationNumberBadgeProps,
+  "y" | "size" | "threeLetterCode" | "insideThreeLetterCodeFrame"
+> & { threeLetterCode?: string | null };
 
 /** Renders one station number using the appearance of the line that owns it. */
 export default function StationNumberBadge({
@@ -27,6 +36,7 @@ export default function StationNumberBadge({
   value = "",
   style = "jreast",
   threeLetterCode,
+  insideThreeLetterCodeFrame = false,
 }: StationNumberBadgeProps) {
   if (!prefix && !value) return null;
 
@@ -88,9 +98,8 @@ export default function StationNumberBadge({
     threeLetterCode,
   );
   const hasHeader = Boolean(jrEastThreeLetterCode);
-  const outerPadding = 3 * scale;
-  const headerHeight = 12 * scale;
-  const badgeY = hasHeader ? headerHeight : 0;
+  const frame = getJrEastStationNumberBadgeFrameMetrics(size);
+  const badgeY = hasHeader ? frame.innerYOffset : 0;
   const fontFamily = "HindSemiBold";
 
   return (
@@ -98,20 +107,22 @@ export default function StationNumberBadge({
       {hasHeader && (
         <>
           <Rect
-            x={-outerPadding}
-            y={-outerPadding}
-            width={size + outerPadding * 2}
-            height={size + headerHeight + outerPadding * 2}
-            cornerRadius={4 * scale}
+            x={-frame.outerPaddingX}
+            y={frame.outerYOffset}
+            width={size + frame.outerPaddingX * 2}
+            height={frame.outerHeight}
+            cornerRadius={frame.outerCornerRadius}
             fill="black"
+            stroke="black"
+            strokeWidth={frame.strokeWidth}
           />
           <Text
             text={jrEastThreeLetterCode}
-            x={-outerPadding}
-            y={-1 * scale}
-            width={size + outerPadding * 2}
+            x={-frame.outerPaddingX}
+            y={frame.codeYOffset}
+            width={size + frame.outerPaddingX * 2}
             align="center"
-            fontSize={12.2 * scale}
+            fontSize={frame.codeFontSize}
             fontFamily={fontFamily}
             fontStyle="800"
             fill="white"
@@ -123,10 +134,19 @@ export default function StationNumberBadge({
         y={badgeY}
         width={size}
         height={size}
-        cornerRadius={2 * scale}
+        cornerRadius={
+          hasHeader || insideThreeLetterCodeFrame
+            ? [
+                frame.innerCornerRadius,
+                frame.innerCornerRadius,
+                frame.innerBottomCornerRadius,
+                frame.innerBottomCornerRadius,
+              ]
+            : frame.innerCornerRadius
+        }
         fill="white"
         stroke={color}
-        strokeWidth={3 * scale}
+        strokeWidth={frame.strokeWidth}
       />
       <Text
         text={prefix}
@@ -150,6 +170,86 @@ export default function StationNumberBadge({
         fontStyle="600"
         fill="black"
       />
+    </Group>
+  );
+}
+
+/**
+ * Renders a horizontal row of station numbers. Consecutive JR East badges
+ * share one black three-letter-code frame; other badge styles remain separate.
+ */
+export function StationNumberBadgeRow({
+  y,
+  size,
+  numbers,
+  threeLetterCode,
+}: {
+  y: number;
+  size: number;
+  numbers: StationNumberBadgeRowItem[];
+  threeLetterCode?: string;
+}) {
+  const frame = getJrEastStationNumberBadgeFrameMetrics(size);
+  const runs = resolveConnectedStationNumberRuns(numbers, threeLetterCode);
+
+  return (
+    <Group>
+      {runs.map((run, runIndex) => {
+        const sharedCode = run.sharedThreeLetterCode;
+        const rightmostX = Math.max(
+          ...run.numbers.map((number) => number.x),
+        );
+        const badgeXs = sharedCode
+          ? run.numbers.map(
+              (_, index) =>
+                rightmostX -
+                (run.numbers.length - 1 - index) * frame.connectedBadgeStep,
+            )
+          : run.numbers.map((number) => number.x);
+        const left = Math.min(...badgeXs);
+        const right = Math.max(...badgeXs.map((badgeX) => badgeX + size));
+
+        return (
+          <Group key={`${runIndex}:${left}`}>
+            {sharedCode && (
+              <>
+                <Rect
+                  x={left - frame.outerPaddingX}
+                  y={y + frame.outerYOffset}
+                  width={right - left + frame.outerPaddingX * 2}
+                  height={frame.outerHeight}
+                  cornerRadius={frame.outerCornerRadius}
+                  fill="black"
+                  stroke="black"
+                  strokeWidth={frame.strokeWidth}
+                />
+                <Text
+                  text={sharedCode}
+                  x={left - frame.outerPaddingX}
+                  y={y + frame.codeYOffset}
+                  width={right - left + frame.outerPaddingX * 2}
+                  align="center"
+                  fontSize={frame.codeFontSize}
+                  fontFamily="HindSemiBold"
+                  fontStyle="800"
+                  fill="white"
+                />
+              </>
+            )}
+            {run.numbers.map((number, numberIndex) => (
+              <StationNumberBadge
+                key={`${number.prefix}:${number.value}:${numberIndex}`}
+                {...number}
+                x={badgeXs[numberIndex]}
+                y={sharedCode ? y + frame.innerYOffset : y}
+                size={size}
+                threeLetterCode={number.threeLetterCode ?? undefined}
+                insideThreeLetterCodeFrame={!!sharedCode}
+              />
+            ))}
+          </Group>
+        );
+      })}
     </Group>
   );
 }

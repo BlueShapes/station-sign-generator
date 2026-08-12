@@ -180,6 +180,60 @@ test("only the branch style renders a third current-station number badge", async
   await expect.poll(countTertiaryBadgePixels).toBe(0);
 });
 
+test("consecutive JR East badges share one three-letter-code frame", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+
+  const longestBadgeHeaderRun = async () => {
+    const preview = page.locator('img[src^="data:image/png"]').first();
+    await preview.waitFor({ state: "visible" });
+    return preview.evaluate((element) => {
+      const image = element as HTMLImageElement;
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) throw new Error("Canvas context is unavailable");
+      context.drawImage(image, 0, 0);
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      let longest = 0;
+
+      // The current-station badge header occupies reference y=21..33. The
+      // exported preview uses the standard 3x canvas scale.
+      for (let y = 63; y <= 90; y += 1) {
+        let current = 0;
+        for (let x = 0; x < canvas.width; x += 1) {
+          const index = (y * canvas.width + x) * 4;
+          const isBlack =
+            pixels[index] < 20 &&
+            pixels[index + 1] < 20 &&
+            pixels[index + 2] < 20;
+          current = isBlack ? current + 1 : 0;
+          longest = Math.max(longest, current);
+        }
+      }
+      return longest;
+    });
+  };
+
+  await setSignStyle(page, "jreast", TWO_CHOICE_SIGN_DATA);
+  await expect.poll(longestBadgeHeaderRun).toBeGreaterThan(100);
+  await expect.poll(longestBadgeHeaderRun).toBeLessThan(150);
+  await page.locator('img[src^="data:image/png"]').first().screenshot({
+    path: testInfo.outputPath("single-jr-east-badge.png"),
+  });
+
+  await setSignStyle(page, "jreast", THREE_NUMBER_BADGE_DATA);
+  await expect.poll(longestBadgeHeaderRun).toBeGreaterThan(190);
+
+  await setSignStyle(page, "jreastbranch", THREE_NUMBER_BADGE_DATA);
+  await expect.poll(longestBadgeHeaderRun).toBeGreaterThan(290);
+  await page.locator('img[src^="data:image/png"]').first().screenshot({
+    path: testInfo.outputPath("three-connected-jr-east-badges.png"),
+  });
+});
+
 test("three-choice branch signs add vertical room without changing width", async ({
   context,
   page,

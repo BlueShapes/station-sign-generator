@@ -14,6 +14,41 @@
 - Keep Hong Kong Traditional Chinese (`zh-HK`) and Taiwanese Traditional
   Chinese (`zh-TW`) as separate translations, using region-appropriate terms.
 
+## Station-sign and route-map visual geometry
+
+- Treat each rendering context as its own visual system. Station signs,
+  positions within a sign, station-number badges, and route maps may need
+  different font sizes, line heights, spacing, and optical alignment even when
+  they display the same data.
+- Do not share a font size, baseline, offset, stroke width, corner radius, or
+  badge dimension merely because two elements have the same meaning. Share
+  geometry only when the designs intentionally use the same reference shape.
+- Extract a small typed metrics or geometry helper when several dimensions are
+  coupled, when values scale from a reference size, or when multiple consumers
+  intentionally share the same geometry. Keep genuine one-off optical
+  corrections local to their rendering context.
+- Derive scaled values from one named reference size instead of scattering
+  magic-number ratios through JSX. Name offsets by their visual purpose, such
+  as an outer-frame lift or a text-baseline correction.
+- Keep context-specific optical corrections explicit. Do not move a correction
+  into a generic shared component if that would alter unrelated badge styles,
+  sign layouts, or route-map rendering.
+- Before modifying an established shared component or helper, inspect all call
+  sites and relevant Git history to understand why it was shared and which
+  variants it supports. Preserve unaffected variants, or split the helper when
+  the consumers no longer share the same visual geometry.
+- Remember that canvas and SVG strokes are normally centered on their paths.
+  Define nominal bounds and stroke thickness separately when the visible outer
+  edge or uniform border weight matters.
+- Verify geometry changes at every affected size and variant, including single
+  and connected badges, applicable railway styles, sign positions, and route-map
+  orientations. Add or update unit tests for derived metrics and use a rendered
+  browser/image regression when pixel placement or stroke thickness is relevant.
+- The JR East station-sign frame metrics are defined in
+  `src/components/signs/stationNumberBadgeFrame.ts`. Extend that helper only for
+  the same reference geometry; create a context-specific helper for route maps
+  or other layouts whose typography or geometry differs.
+
 ## Database schema changes
 
 ### 1. Update DB_VERSION
