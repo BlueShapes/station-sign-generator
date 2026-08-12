@@ -40,6 +40,7 @@ import {
   getServiceTrackGap,
   getServiceTrackWidth,
   getSegmentedTrackEndCaps,
+  getSegmentedTrackRuns,
   getTrackEdgeRadius,
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
@@ -452,27 +453,19 @@ function SegmentedTrack({
     colors,
     strokeWidth,
   );
+  const runs = getSegmentedTrackRuns(stationPoints, colors);
 
   return (
     <Fragment>
-      {colors.map((color, index) => {
-        const startPoint = stationPoints[index];
-        const endPoint = stationPoints[index + 1];
-        return (
-          <KonvaLine
-            key={`track-segment-${index}`}
-            points={[
-              startPoint.x,
-              startPoint.y,
-              endPoint.x,
-              endPoint.y,
-            ]}
-            stroke={color}
-            strokeWidth={strokeWidth}
-            lineCap="butt"
-          />
-        );
-      })}
+      {runs.map((run, index) => (
+        <KonvaLine
+          key={`track-run-${index}`}
+          points={run.points.flatMap((point) => [point.x, point.y])}
+          stroke={run.color}
+          strokeWidth={strokeWidth}
+          lineCap="butt"
+        />
+      ))}
       {endCaps.map((cap, index) => (
         <Circle
           key={`track-end-cap-${index}`}

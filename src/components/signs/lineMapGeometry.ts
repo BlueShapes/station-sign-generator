@@ -67,6 +67,53 @@ export interface SegmentedTrackEndCap {
   radius: number;
 }
 
+export interface SegmentedTrackRun {
+  points: Array<{ x: number; y: number }>;
+  color: string;
+}
+
+/**
+ * Merge adjacent segments with the same colour into one canvas stroke.
+ * Drawing every edge separately can leave an anti-aliased hairline at the
+ * shared endpoint, especially when a thick track extends past a badge.
+ */
+export function getSegmentedTrackRuns(
+  stationPoints: Array<{ x: number; y: number }>,
+  colors: string[],
+): SegmentedTrackRun[] {
+  if (
+    colors.length === 0 ||
+    colors.length !== stationPoints.length - 1
+  ) {
+    return [];
+  }
+
+  const runs: SegmentedTrackRun[] = [];
+  let currentRun: SegmentedTrackRun = {
+    points: [stationPoints[0], stationPoints[1]],
+    color: colors[0],
+  };
+
+  for (let index = 1; index < colors.length; index += 1) {
+    const color = colors[index];
+    const isSameColor =
+      color.trim().toLowerCase() === currentRun.color.trim().toLowerCase();
+    if (isSameColor) {
+      currentRun.points.push(stationPoints[index + 1]);
+      continue;
+    }
+
+    runs.push(currentRun);
+    currentRun = {
+      points: [stationPoints[index], stationPoints[index + 1]],
+      color,
+    };
+  }
+
+  runs.push(currentRun);
+  return runs;
+}
+
 /**
  * Add round caps only to the outside ends of a colour-segmented track.
  * Segment joins remain square so adjacent route colours meet cleanly.

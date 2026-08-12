@@ -29,6 +29,7 @@ import {
   getServiceTrackGap,
   getServiceTrackWidth,
   getSegmentedTrackEndCaps,
+  getSegmentedTrackRuns,
   getConnectedMarkerExtraExtent,
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
@@ -96,6 +97,28 @@ describe("transit line layout", () => {
     ).toEqual([
       { x: 20, y: 10, color: "#00aa00", radius: 6 },
       { x: 20, y: 90, color: "#00aa00", radius: 6 },
+    ]);
+  });
+
+  test("merges consecutive same-colour track edges to avoid canvas seams", () => {
+    const points = [
+      { x: 10, y: 20 },
+      { x: 40, y: 20 },
+      { x: 70, y: 20 },
+      { x: 100, y: 20 },
+    ];
+
+    expect(
+      getSegmentedTrackRuns(points, ["#55aaff", "#55AAFF", "#ff0000"]),
+    ).toEqual([
+      {
+        color: "#55aaff",
+        points: [points[0], points[1], points[2]],
+      },
+      {
+        color: "#ff0000",
+        points: [points[2], points[3]],
+      },
     ]);
   });
 

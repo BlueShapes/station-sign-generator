@@ -173,6 +173,56 @@ test("selects and draws a through route with each section color", async ({
     .poll(async () => (await canvasSize()).width)
     .toBeGreaterThan(baseHorizontalSize.width);
 
+  const trackWidthSlider = page.getByRole("slider").nth(1);
+  await trackWidthSlider.focus();
+  await page.keyboard.press("End");
+  await expect(trackWidthSlider).toHaveAttribute("aria-valuenow", "30");
+
+  const whiteHairlineXs = await canvas.evaluate((element) => {
+    const routeCanvas = element as HTMLCanvasElement;
+    const context = routeCanvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("Canvas context is unavailable");
+
+    const centerY = 210;
+    const lowerTrackY = 236;
+    const centerRow = context.getImageData(
+      0,
+      centerY,
+      routeCanvas.width,
+      1,
+    ).data;
+    const lowerRow = context.getImageData(
+      0,
+      lowerTrackY,
+      routeCanvas.width,
+      1,
+    ).data;
+    const isWhite = (pixels: Uint8ClampedArray, x: number) => {
+      const offset = x * 4;
+      return (
+        pixels[offset] > 245 &&
+        pixels[offset + 1] > 245 &&
+        pixels[offset + 2] > 245
+      );
+    };
+
+    let firstTrackX = 0;
+    while (firstTrackX < routeCanvas.width && isWhite(centerRow, firstTrackX)) {
+      firstTrackX += 1;
+    }
+    let lastTrackX = routeCanvas.width - 1;
+    while (lastTrackX > firstTrackX && isWhite(centerRow, lastTrackX)) {
+      lastTrackX -= 1;
+    }
+
+    const hairlines: number[] = [];
+    for (let x = firstTrackX + 40; x <= lastTrackX - 40; x += 1) {
+      if (isWhite(lowerRow, x)) hairlines.push(x);
+    }
+    return hairlines;
+  });
+  expect(whiteHairlineXs).toEqual([]);
+
   await page
     .getByRole("radio", { name: "Vertical", exact: true })
     .evaluate((element) => (element as HTMLInputElement).click());
