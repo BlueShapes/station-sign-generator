@@ -190,6 +190,7 @@ function SpecialZoneForm({ db, zone, onSave, onClose }: SpecialZoneFormProps) {
   const t = useTranslations();
   const [name, setName] = useState(zone?.name ?? "");
   const [abbreviation, setAbbreviation] = useState(zone?.abbreviation ?? "");
+  const isComposingAbbreviation = useRef(false);
   const [isBlack, setIsBlack] = useState((zone?.is_black ?? 0) === 1);
 
   const handleSave = () => {
@@ -215,8 +216,19 @@ function SpecialZoneForm({ db, zone, onSave, onClose }: SpecialZoneFormProps) {
       <TextInput
         label={t("route.special-zone.abbreviation")}
         value={abbreviation}
-        onChange={(e) => setAbbreviation(e.target.value.charAt(0))}
-        maxLength={1}
+        onChange={(e) => {
+          const value = e.currentTarget.value;
+          setAbbreviation(
+            isComposingAbbreviation.current ? value : value.charAt(0),
+          );
+        }}
+        onCompositionStart={() => {
+          isComposingAbbreviation.current = true;
+        }}
+        onCompositionEnd={(e) => {
+          isComposingAbbreviation.current = false;
+          setAbbreviation(e.currentTarget.value.charAt(0));
+        }}
         required
       />
       <Switch
