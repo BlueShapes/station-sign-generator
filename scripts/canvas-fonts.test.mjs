@@ -52,6 +52,9 @@ describe("canvas font loading", () => {
       "700 1em ZenMaruGothic",
       "400 1em PublicSans",
       "700 1em PublicSans",
+      "600 1em HindSemiBold",
+      "600 1em JostTrispaceHybrid",
+      "700 1em JostTrispaceHybrid",
     ]);
     expect(JR_CENTRAL_BADGE_FONT_SPECS).toEqual([
       "700 1em PublicSans",
@@ -62,6 +65,8 @@ describe("canvas font loading", () => {
     expect(CANVAS_FONT_SPECS).not.toContain("700 1em ZenMaruGothic");
     expect(JR_EAST_FONT_SPECS).toContain("400 1em NotoSansTC");
     expect(JR_EAST_FONT_SPECS).toContain("400 1em NotoSansKR");
+    expect(JR_EAST_FONT_SPECS).toContain("700 1em PublicSans");
+    expect(JR_EAST_FONT_SPECS).toContain("700 1em JostTrispaceHybrid");
     expect(JR_EAST_FONT_SPECS).not.toContain("500 1em Jost");
     expect(METRO_LONG_FONT_SPECS).toContain("500 1em Jost");
     expect(METRO_LONG_FONT_SPECS).not.toContain("400 1em NotoSansTC");

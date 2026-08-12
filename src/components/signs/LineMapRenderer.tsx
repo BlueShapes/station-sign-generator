@@ -32,18 +32,22 @@ import {
   getLineIndicatorVisualStyle,
   shouldShowLineIndicatorBadge,
 } from "@/components/signs/lineIndicatorStyle";
+import { isJrEastStationNumber } from "@/components/signs/stationNumberGroup";
 import { getLineMapFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import {
   ceilCanvasDimensions,
   DEFAULT_TRACK_WIDTH,
   getFadeDotSpacing,
+  getConnectedStationNameScale,
   getServiceTrackGap,
   getServiceTrackWidth,
   getSegmentedTrackEndCaps,
+  getSegmentedTrackRuns,
   getTrackEdgeRadius,
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
   normalizeTrackWidth,
+  shouldExpandStationNumberGroups,
 } from "@/components/signs/lineMapGeometry";
 
 export const scale = 2;
@@ -115,6 +119,8 @@ export interface LineMapRendererProps {
   stationNumbers?: StationNumberMap;
   /** Multiple station numbers shown as one connected badge at through boundaries. */
   stationNumberGroups?: StationNumberGroupMap;
+  /** Enlarge station names at through-route boundaries. Defaults to true. */
+  emphasizeConnectedStationNames?: boolean;
   /** Per-gap route colours. Used by a direction-aware through route. */
   trackColors?: string[];
   /** Per-station marker colours for a direction-aware through route. */
@@ -452,27 +458,19 @@ function SegmentedTrack({
     colors,
     strokeWidth,
   );
+  const runs = getSegmentedTrackRuns(stationPoints, colors);
 
   return (
     <Fragment>
-      {colors.map((color, index) => {
-        const startPoint = stationPoints[index];
-        const endPoint = stationPoints[index + 1];
-        return (
-          <KonvaLine
-            key={`track-segment-${index}`}
-            points={[
-              startPoint.x,
-              startPoint.y,
-              endPoint.x,
-              endPoint.y,
-            ]}
-            stroke={color}
-            strokeWidth={strokeWidth}
-            lineCap="butt"
-          />
-        );
-      })}
+      {runs.map((run, index) => (
+        <KonvaLine
+          key={`track-run-${index}`}
+          points={run.points.flatMap((point) => [point.x, point.y])}
+          stroke={run.color}
+          strokeWidth={strokeWidth}
+          lineCap="butt"
+        />
+      ))}
       {endCaps.map((cap, index) => (
         <Circle
           key={`track-end-cap-${index}`}
@@ -798,6 +796,26 @@ function SnBadge({
 
 type StationNumberGroupOrientation = "horizontal" | "vertical";
 
+function getSharedStationThreeLetterCode(
+  numbers: StationNumberInfo[],
+  sharedThreeLetterCode?: string | null,
+): string | null {
+  if (
+    numbers.length < 2 ||
+    !numbers.every((number) =>
+      isJrEastStationNumber(number, _snBadgeStyle),
+    )
+  ) {
+    return null;
+  }
+  return (
+    sharedThreeLetterCode?.trim() ||
+    numbers.find((number) => number.threeLetterCode?.trim())
+      ?.threeLetterCode?.trim() ||
+    null
+  );
+}
+
 function stationNumberBadgeVisualOutset(
   number: StationNumberInfo,
   badgeScale: number,
@@ -831,11 +849,11 @@ function stationNumberGroupLayout(
   strokeWidthAdjust = 0,
   sharedThreeLetterCode?: string | null,
 ): { w: number; h: number; positions: number[] } {
-  const hasSharedThreeLetterCode =
-    orientation === "vertical" &&
-    numbers.length > 1 &&
-    !!sharedThreeLetterCode &&
-    numbers.every((number) => (number.style ?? _snBadgeStyle) !== "jrcentral");
+  const resolvedSharedThreeLetterCode = getSharedStationThreeLetterCode(
+    numbers,
+    sharedThreeLetterCode,
+  );
+  const hasSharedThreeLetterCode = !!resolvedSharedThreeLetterCode;
   const layoutNumbers = hasSharedThreeLetterCode
     ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
     : numbers;
@@ -869,6 +887,18 @@ function stationNumberGroupLayout(
     // JR East connected badges sit on one black plate. Keep one stroke-width
     // visible around and between the rounded route frames.
     const sharedDivider = _snStroke * badgeScale;
+    if (orientation === "horizontal") {
+      return {
+        w: connected.extent + sharedDivider,
+        h:
+          sharedHeaderHeight +
+          Math.max(...dimensions.map((dims) => dims.h)) +
+          sharedDivider * 1.5,
+        positions: connected.positions.map(
+          (position) => position + sharedDivider / 2,
+        ),
+      };
+    }
     const positions: number[] = [];
     let position = sharedHeaderHeight;
     dimensions.forEach((dims, index) => {
@@ -973,11 +1003,11 @@ export function StationNumberBadgeGroup({
   strokeWidthAdjust?: number;
   sharedThreeLetterCode?: string | null;
 }) {
-  const hasSharedThreeLetterCode =
-    orientation === "vertical" &&
-    numbers.length > 1 &&
-    !!sharedThreeLetterCode &&
-    numbers.every((number) => (number.style ?? _snBadgeStyle) !== "jrcentral");
+  const resolvedSharedThreeLetterCode = getSharedStationThreeLetterCode(
+    numbers,
+    sharedThreeLetterCode,
+  );
+  const hasSharedThreeLetterCode = !!resolvedSharedThreeLetterCode;
   const displayNumbers = hasSharedThreeLetterCode
     ? numbers.map((number) => ({ ...number, threeLetterCode: null }))
     : numbers;
@@ -987,7 +1017,7 @@ export function StationNumberBadgeGroup({
     badgeScale,
     forceFullRender,
     strokeWidthAdjust,
-    sharedThreeLetterCode,
+    resolvedSharedThreeLetterCode,
   );
   const sharedCodeYOffset = hasSharedThreeLetterCode
     ? (_snStroke * badgeScale) / 2
@@ -1010,7 +1040,7 @@ export function StationNumberBadgeGroup({
             x={x + (group.w - SN_INNER * badgeScale) / 2}
             y={y + sharedCodeYOffset + _snTrcY * badgeScale}
             width={SN_INNER * badgeScale}
-            text={sharedThreeLetterCode!}
+            text={resolvedSharedThreeLetterCode!}
             fontSize={_snTrcFont * badgeScale}
             fontFamily='"HindSemiBold", Arial, sans-serif'
             fontStyle="bold"
@@ -1034,7 +1064,10 @@ export function StationNumberBadgeGroup({
             : x + (group.w - dims.w) / 2;
         const badgeY =
           orientation === "horizontal"
-            ? y + (group.h - dims.h) / 2
+            ? hasSharedThreeLetterCode
+              ? y +
+                (snBadgeDims(true).h - snBadgeDims(false).h) * badgeScale
+              : y + (group.h - dims.h) / 2
             : y + group.positions[index];
         return (
           <SnBadge
@@ -1489,6 +1522,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       stationNumberMode = "none",
       stationNumbers = {},
       stationNumberGroups = EMPTY_STATION_NUMBER_GROUPS,
+      emphasizeConnectedStationNames = true,
       trackColors,
       stationColors = EMPTY_STATION_COLORS,
       stationSpacing,
@@ -1573,6 +1607,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       trackColors,
       stationColors,
       stationNumberGroups,
+      emphasizeConnectedStationNames,
     ]);
 
     const lc = line.line_color;
@@ -1594,15 +1629,34 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const singleNumber = stationNumbers[stationId];
       return singleNumber?.value ? [singleNumber] : [];
     };
+    const getStationNameScale = (stationId: string) =>
+      getConnectedStationNameScale(
+        getStationNumbers(stationId).length,
+        emphasizeConnectedStationNames,
+      );
+    const getPrimaryNameFontSize = (stationId: string) =>
+      JP_FONT * getStationNameScale(stationId);
+    const getSecondaryNameFontSize = (stationId: string) =>
+      EN_FONT * getStationNameScale(stationId);
+    const getVerticalTextExtent = (text: string, fontSize: number) =>
+      text.length > 0 ? [...text].length * (fontSize + 1) - 1 : 0;
     const horizontalMarkerExtras = stations.map((station) => {
       const numbers = getStationNumbers(station.id);
-      if (stationNumberMode !== "dot" || numbers.length < 2) return 0;
+      if (
+        !shouldExpandStationNumberGroups(
+          stationNumberMode,
+          "horizontal",
+          nameStyle,
+        ) || numbers.length < 2
+      ) {
+        return 0;
+      }
       const group = stationNumberGroupDimensions(
         numbers,
         "horizontal",
         1,
         false,
-        1,
+        stationNumberMode === "dot" ? 1 : 0,
       );
       const largestSingle = Math.max(
         ...numbers.map(
@@ -1614,7 +1668,15 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
     });
     const verticalMarkerExtras = stations.map((station) => {
       const numbers = getStationNumbers(station.id);
-      if (stationNumberMode !== "dot" || numbers.length < 2) return 0;
+      if (
+        !shouldExpandStationNumberGroups(
+          stationNumberMode,
+          "vertical",
+          nameStyle,
+        ) || numbers.length < 2
+      ) {
+        return 0;
+      }
       const group = stationNumberGroupDimensions(
         numbers,
         "vertical",
@@ -2065,12 +2127,13 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         const sName = showSecondaryLang
           ? (s[secondaryLangField] ?? null)
           : null;
-        return sName ? measureTextWidth(sName, EN_FONT) : 0;
+        return sName
+          ? measureTextWidth(sName, getSecondaryNameFontSize(s.id))
+          : 0;
       });
       const jpTextHeights = stations.map((s) => {
         const pName = stationName(s, primaryLangField);
-        const cn = [...pName].length;
-        return cn > 0 ? cn * (JP_FONT + 1) - 1 : 0;
+        return getVerticalTextExtent(pName, getPrimaryNameFontSize(s.id));
       });
       const maxJpTextH = Math.max(1, ...jpTextHeights);
       const maxSecondaryTextH = Math.max(
@@ -2082,7 +2145,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
           if (!secondaryName) return 0;
           return /[a-zA-Z]/.test(secondaryName)
             ? enWidths[index]
-            : [...secondaryName].length * (EN_FONT + 1) - 1;
+            : getVerticalTextExtent(
+                secondaryName,
+                getSecondaryNameFontSize(station.id),
+              );
         }),
       );
       const maxStationNameExtent = Math.max(maxJpTextH, maxSecondaryTextH);
@@ -2098,17 +2164,19 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         0,
         ...diagonalTransitLayouts.map((layout) => layout.width),
       );
+      const stationNumberBadgeGroups = stations.map((station) =>
+        getStationNumbers(station.id),
+      );
       const hasAnySnBadge =
         stationNumberMode === "badge" &&
-        stations.some((s) => !!stationNumbers[s.id]?.value);
+        stationNumberBadgeGroups.some((numbers) => numbers.length > 0);
       const maxSnH = hasAnySnBadge
         ? Math.max(
-            ...stations.map((s) => {
-              const snNum = stationNumbers[s.id];
-              return snNum
-                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style).h
-                : 0;
-            }),
+            ...stationNumberBadgeGroups.map((numbers) =>
+              numbers.length > 0
+                ? stationNumberGroupDimensions(numbers, "horizontal").h
+                : 0,
+            ),
           )
         : 0;
 
@@ -2148,7 +2216,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const rawCanvasW = Math.max(
         300,
         tL +
-          (n - 1) * hSpacing +
+          horizontalStationLayout.extent +
           Math.max(PADDING, maxTransitWidth + 5) +
           vnExtraR,
       );
@@ -2211,8 +2279,11 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             {services.map((svc, si) => {
               const ty = trackYs[si];
               const labelFont = svcLabelFontSize;
-              // right edge must clear the dot: tL - SVC_DOT_R - 6 gap
-              const labelW = Math.max(20, tL - SVC_DOT_R - 10);
+              // The right edge must clear the first station marker.
+              const labelW = Math.max(
+                20,
+                tL + horizontalFirstPosition - SVC_DOT_R - 10,
+              );
               return (
                 <Text
                   key={`svclab-${svc.id}`}
@@ -2234,7 +2305,12 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               return (
                 <Fragment key={`svctrack-${svc.id}`}>
                   <KonvaLine
-                    points={[tL, ty, tL + (n - 1) * hSpacing, ty]}
+                    points={[
+                      tL + horizontalFirstPosition,
+                      ty,
+                      tL + horizontalLastPosition,
+                      ty,
+                    ]}
                     stroke={svc.color}
                     strokeWidth={serviceTrackWidth}
                     lineCap="round"
@@ -2242,7 +2318,12 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   {hasMoreBefore && (
                     <Fragment>
                       <KonvaLine
-                        points={[tL, ty, tL - vnFadeLen, ty]}
+                        points={[
+                          tL + horizontalFirstPosition,
+                          ty,
+                          tL + horizontalFirstPosition - vnFadeLen,
+                          ty,
+                        ]}
                         stroke={svc.color}
                         strokeWidth={serviceTrackWidth}
                         lineCap="round"
@@ -2251,7 +2332,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         <Circle
                           key={`fb-${si}-${idx}`}
                           x={
-                            tL -
+                            tL +
+                            horizontalFirstPosition -
                             vnFadeLen -
                             serviceFadeDotSpacing * (idx + 1)
                           }
@@ -2267,9 +2349,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     <Fragment>
                       <KonvaLine
                         points={[
-                          tL + (n - 1) * hSpacing,
+                          tL + horizontalLastPosition,
                           ty,
-                          tL + (n - 1) * hSpacing + vnFadeLen,
+                          tL + horizontalLastPosition + vnFadeLen,
                           ty,
                         ]}
                         stroke={svc.color}
@@ -2281,7 +2363,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           key={`fa-${si}-${idx}`}
                           x={
                             tL +
-                            (n - 1) * hSpacing +
+                            horizontalLastPosition +
                             vnFadeLen +
                             serviceFadeDotSpacing * (idx + 1)
                           }
@@ -2299,7 +2381,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
             {/* Station labels + per-service dots */}
             {stations.map((station, i) => {
-              const x = tL + i * hSpacing;
+              const x = tL + horizontalPositions[i];
               const stopsHere = services.some(
                 (svc) => !!serviceStops[station.id]?.[svc.id],
               );
@@ -2309,15 +2391,22 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const secondaryName = showSecondaryLang
                 ? (station[secondaryLangField] ?? null)
                 : null;
+              const primaryFontSize = getPrimaryNameFontSize(station.id);
+              const secondaryFontSize = getSecondaryNameFontSize(station.id);
               const jpTextH = jpTextHeights[i];
               const enW = enWidths[i];
 
-              const snNum = stationNumbers[station.id];
+              const stationNumberGroup = getStationNumbers(station.id);
               const showSnBadge =
-                stationNumberMode === "badge" && !!snNum?.value;
-              const snDims = snNum
-                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style)
+                stationNumberMode === "badge" &&
+                stationNumberGroup.length > 0;
+              const snDims = stationNumberGroup.length > 0
+                ? stationNumberGroupDimensions(
+                    stationNumberGroup,
+                    "horizontal",
+                  )
                 : snBadgeDims(false);
+              const stationColor = getStationColor(station, i);
 
               // Walk outward from the bundle's outer edge
               let cur =
@@ -2325,15 +2414,18 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const snBadgeTopY = d === -1 ? cur - snDims.h : cur;
               if (showSnBadge) cur += d * (snDims.h + VN_ITEM_GAP);
               const jpTopY = d === -1 ? cur - jpTextH : cur;
-              const enX = x + JP_FONT / 2 + 2 + EN_FONT / 2;
+              const enX =
+                x + primaryFontSize / 2 + 2 + secondaryFontSize / 2;
               const enCenterY =
                 d === -1 ? jpTopY + jpTextH - enW / 2 : jpTopY + enW / 2;
               const secChars =
                 secondaryName && !/[a-zA-Z]/.test(secondaryName)
                   ? [...secondaryName]
                   : [];
-              const actualSecH =
-                secChars.length > 0 ? secChars.length * (EN_FONT + 1) - 1 : 0;
+              const actualSecH = getVerticalTextExtent(
+                secondaryName ?? "",
+                secondaryFontSize,
+              );
               const secTopY = d === -1 ? jpTopY + jpTextH - actualSecH : jpTopY;
               const jpChars = [...primaryName];
               const transitAnchorX = x - TRANSIT_ICON_SIZE / 2;
@@ -2379,27 +2471,26 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   />
 
                   {/* Station number badge */}
-                  {showSnBadge && snNum && (
-                    <SnBadge
+                  {showSnBadge && (
+                    <StationNumberBadgeGroup
                       x={x - snDims.w / 2}
                       y={snBadgeTopY}
-                      color={lc}
-                      prefix={snNum.prefix}
-                      value={snNum.value}
-                      trc={snNum.threeLetterCode}
+                      numbers={stationNumberGroup}
+                      orientation="horizontal"
+                      fallbackColor={stationColor}
                     />
                   )}
 
                   {/* JP 縦書き name */}
                   {jpChars.map((char, ci) => {
-                    const charTopY = jpTopY + ci * (JP_FONT + 1);
+                    const charTopY = jpTopY + ci * (primaryFontSize + 1);
                     if (char in VJ_LINE_WIDTHS) {
-                      const barLen = VJ_LINE_WIDTHS[char] * JP_FONT;
+                      const barLen = VJ_LINE_WIDTHS[char] * primaryFontSize;
                       return (
                         <Rect
                           key={ci}
                           x={x - 0.5}
-                          y={charTopY + (JP_FONT - barLen) / 2}
+                          y={charTopY + (primaryFontSize - barLen) / 2}
                           width={1}
                           height={barLen}
                           fill="#222"
@@ -2411,15 +2502,15 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         <Text
                           key={ci}
                           x={x}
-                          y={charTopY + JP_FONT / 2}
-                          offsetX={JP_FONT / 2}
-                          offsetY={JP_FONT / 2}
+                          y={charTopY + primaryFontSize / 2}
+                          offsetX={primaryFontSize / 2}
+                          offsetY={primaryFontSize / 2}
                           rotation={90}
                           text={char}
-                          fontSize={JP_FONT}
+                          fontSize={primaryFontSize}
                           fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                           fill="#222"
-                          width={JP_FONT}
+                          width={primaryFontSize}
                           align="center"
                         />
                       );
@@ -2427,10 +2518,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     return (
                       <Text
                         key={ci}
-                        x={x - JP_FONT / 2}
+                        x={x - primaryFontSize / 2}
                         y={charTopY}
                         text={char}
-                        fontSize={JP_FONT}
+                        fontSize={primaryFontSize}
                         fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                         fill="#222"
                       />
@@ -2444,24 +2535,26 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         x={enX}
                         y={enCenterY}
                         offsetX={enW / 2}
-                        offsetY={EN_FONT / 2}
+                        offsetY={secondaryFontSize / 2}
                         rotation={90}
                         text={secondaryName}
-                        fontSize={EN_FONT}
+                        fontSize={secondaryFontSize}
                         fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                         fill="#666"
                       />
                     ) : (
                       <Fragment>
                         {secChars.map((char, ci) => {
-                          const charTopY = secTopY + ci * (EN_FONT + 1);
+                          const charTopY =
+                            secTopY + ci * (secondaryFontSize + 1);
                           if (char in VJ_LINE_WIDTHS) {
-                            const barLen = VJ_LINE_WIDTHS[char] * EN_FONT;
+                            const barLen =
+                              VJ_LINE_WIDTHS[char] * secondaryFontSize;
                             return (
                               <Rect
                                 key={ci}
                                 x={enX - 0.35}
-                                y={charTopY + (EN_FONT - barLen) / 2}
+                                y={charTopY + (secondaryFontSize - barLen) / 2}
                                 width={0.7}
                                 height={barLen}
                                 fill="#666"
@@ -2473,15 +2566,15 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                               <Text
                                 key={ci}
                                 x={enX}
-                                y={charTopY + EN_FONT / 2}
-                                offsetX={EN_FONT / 2}
-                                offsetY={EN_FONT / 2}
+                                y={charTopY + secondaryFontSize / 2}
+                                offsetX={secondaryFontSize / 2}
+                                offsetY={secondaryFontSize / 2}
                                 rotation={90}
                                 text={char}
-                                fontSize={EN_FONT}
+                                fontSize={secondaryFontSize}
                                 fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                                 fill="#666"
-                                width={EN_FONT}
+                                width={secondaryFontSize}
                                 align="center"
                               />
                             );
@@ -2489,10 +2582,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           return (
                             <Text
                               key={ci}
-                              x={enX - EN_FONT / 2}
+                              x={enX - secondaryFontSize / 2}
                               y={charTopY}
                               text={char}
-                              fontSize={EN_FONT}
+                              fontSize={secondaryFontSize}
                               fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                               fill="#666"
                             />
@@ -2519,13 +2612,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
         const sName = showSecondaryLang
           ? (s[secondaryLangField] ?? null)
           : null;
-        return sName ? measureTextWidth(sName, EN_FONT) : 0;
+        return sName
+          ? measureTextWidth(sName, getSecondaryNameFontSize(s.id))
+          : 0;
       });
       // JP 縦書き text height: each character is JP_FONT tall, +1px gap between chars
       const jpTextHeights = stations.map((s) => {
         const pName = stationName(s, primaryLangField);
-        const cn = [...pName].length;
-        return cn > 0 ? cn * (JP_FONT + 1) - 1 : 0;
+        return getVerticalTextExtent(pName, getPrimaryNameFontSize(s.id));
       });
       const maxJpTextH = Math.max(1, ...jpTextHeights);
       const maxSecondaryTextH = Math.max(
@@ -2537,7 +2631,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
           if (!secondaryName) return 0;
           return /[a-zA-Z]/.test(secondaryName)
             ? enWidths[index]
-            : [...secondaryName].length * (EN_FONT + 1) - 1;
+            : getVerticalTextExtent(
+                secondaryName,
+                getSecondaryNameFontSize(station.id),
+              );
         }),
       );
       const maxStationNameExtent = Math.max(maxJpTextH, maxSecondaryTextH);
@@ -2771,6 +2868,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const secondaryName = showSecondaryLang
                 ? (station[secondaryLangField] ?? null)
                 : null;
+              const primaryFontSize = getPrimaryNameFontSize(station.id);
+              const secondaryFontSize = getSecondaryNameFontSize(station.id);
               const jpTextH = jpTextHeights[i];
               const enW = enWidths[i];
 
@@ -2795,7 +2894,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
               // EN text (rotation=-90°) sits to the RIGHT of the JP block,
               // vertically centred on it — does not affect vertical extent.
-              const enX = x + JP_FONT / 2 + 2 + EN_FONT / 2;
+              const enX =
+                x + primaryFontSize / 2 + 2 + secondaryFontSize / 2;
               // "above": EN bottom-edge aligns with JP block bottom (closest to track)
               // "below": EN top-edge aligns with JP block top (closest to track)
               const enCenterY =
@@ -2811,8 +2911,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 secondaryName && !/[a-zA-Z]/.test(secondaryName)
                   ? [...secondaryName]
                   : [];
-              const actualSecH =
-                secChars.length > 0 ? secChars.length * (EN_FONT + 1) - 1 : 0;
+              const actualSecH = getVerticalTextExtent(
+                secondaryName ?? "",
+                secondaryFontSize,
+              );
               // above (d=-1): align block bottom with JP block bottom (nearest track)
               // below (d=+1): align block top with JP block top (nearest track)
               const secTopY = d === -1 ? jpTopY + jpTextH - actualSecH : jpTopY;
@@ -2928,16 +3030,17 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       Horizontal glyphs (ー, 〜, …) are rotated 90° around
                       their cell centre so they render as vertical strokes. */}
                     {jpChars.map((char, ci) => {
-                      const charTopY = effectiveJpTopY + ci * (JP_FONT + 1);
+                      const charTopY =
+                        effectiveJpTopY + ci * (primaryFontSize + 1);
                       // Hyphens/dashes: draw as a precisely centred vertical bar
                       // (thin vertical line spanning the cell) for 縦書き layout.
                       if (char in VJ_LINE_WIDTHS) {
-                        const barLen = VJ_LINE_WIDTHS[char] * JP_FONT;
+                        const barLen = VJ_LINE_WIDTHS[char] * primaryFontSize;
                         return (
                           <Rect
                             key={ci}
                             x={x - 0.5}
-                            y={charTopY + (JP_FONT - barLen) / 2}
+                            y={charTopY + (primaryFontSize - barLen) / 2}
                             width={1}
                             height={barLen}
                             fill="#222"
@@ -2949,15 +3052,15 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           <Text
                             key={ci}
                             x={x}
-                            y={charTopY + JP_FONT / 2}
-                            offsetX={JP_FONT / 2}
-                            offsetY={JP_FONT / 2}
+                            y={charTopY + primaryFontSize / 2}
+                            offsetX={primaryFontSize / 2}
+                            offsetY={primaryFontSize / 2}
                             rotation={90}
                             text={char}
-                            fontSize={JP_FONT}
+                            fontSize={primaryFontSize}
                             fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                             fill="#222"
-                            width={JP_FONT}
+                            width={primaryFontSize}
                             align="center"
                           />
                         );
@@ -2965,10 +3068,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       return (
                         <Text
                           key={ci}
-                          x={x - JP_FONT / 2}
+                          x={x - primaryFontSize / 2}
                           y={charTopY}
                           text={char}
-                          fontSize={JP_FONT}
+                          fontSize={primaryFontSize}
                           fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                           fill="#222"
                         />
@@ -2983,10 +3086,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           x={enX}
                           y={effectiveEnCenterY}
                           offsetX={enW / 2}
-                          offsetY={EN_FONT / 2}
+                          offsetY={secondaryFontSize / 2}
                           rotation={90}
                           text={secondaryName}
-                          fontSize={EN_FONT}
+                          fontSize={secondaryFontSize}
                           fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                           fill="#666"
                         />
@@ -2994,14 +3097,18 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         <Fragment>
                           {secChars.map((char, ci) => {
                             const charTopY =
-                              effectiveSecTopY + ci * (EN_FONT + 1);
+                              effectiveSecTopY + ci * (secondaryFontSize + 1);
                             if (char in VJ_LINE_WIDTHS) {
-                              const barLen = VJ_LINE_WIDTHS[char] * EN_FONT;
+                              const barLen =
+                                VJ_LINE_WIDTHS[char] * secondaryFontSize;
                               return (
                                 <Rect
                                   key={ci}
                                   x={enX - 0.35}
-                                  y={charTopY + (EN_FONT - barLen) / 2}
+                                  y={
+                                    charTopY +
+                                    (secondaryFontSize - barLen) / 2
+                                  }
                                   width={0.7}
                                   height={barLen}
                                   fill="#666"
@@ -3013,15 +3120,15 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                                 <Text
                                   key={ci}
                                   x={enX}
-                                  y={charTopY + EN_FONT / 2}
-                                  offsetX={EN_FONT / 2}
-                                  offsetY={EN_FONT / 2}
+                                  y={charTopY + secondaryFontSize / 2}
+                                  offsetX={secondaryFontSize / 2}
+                                  offsetY={secondaryFontSize / 2}
                                   rotation={90}
                                   text={char}
-                                  fontSize={EN_FONT}
+                                  fontSize={secondaryFontSize}
                                   fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                                   fill="#666"
-                                  width={EN_FONT}
+                                  width={secondaryFontSize}
                                   align="center"
                                 />
                               );
@@ -3029,10 +3136,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                             return (
                               <Text
                                 key={ci}
-                                x={enX - EN_FONT / 2}
+                                x={enX - secondaryFontSize / 2}
                                 y={charTopY}
                                 text={char}
-                                fontSize={EN_FONT}
+                                fontSize={secondaryFontSize}
                                 fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                                 fill="#666"
                               />
@@ -3231,14 +3338,16 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const secondaryName = showSecondaryLang
                 ? (station[secondaryLangField] ?? null)
                 : null;
-              const jpW = measureTextWidth(primaryName, JP_FONT);
+              const primaryFontSize = getPrimaryNameFontSize(station.id);
+              const secondaryFontSize = getSecondaryNameFontSize(station.id);
+              const jpW = measureTextWidth(primaryName, primaryFontSize);
               const enW = secondaryName
-                ? measureTextWidth(secondaryName, EN_FONT)
+                ? measureTextWidth(secondaryName, secondaryFontSize)
                 : 0;
 
               // Calculate label heights
-              const jpH = JP_FONT;
-              const enH = secondaryName ? EN_FONT : 0;
+              const jpH = primaryFontSize;
+              const enH = secondaryName ? secondaryFontSize : 0;
               const transitH = stTransits.length > 0 ? transitLayout.height : 0;
 
               // Dot replacement: center badge on the dot position
@@ -3332,7 +3441,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       }
                       y={
                         jpNameY +
-                        (JP_FONT * 0.85) / 2 -
+                        (primaryFontSize * 0.85) / 2 -
                         (snDotDims.h * 0.85) / 2
                       }
                       numbers={stationNumberGroup}
@@ -3392,7 +3501,11 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       x={x - (jpW * (isPassed ? 0.85 : 1)) / 2}
                       y={jpNameY}
                       text={primaryName}
-                      fontSize={isPassed ? Math.round(JP_FONT * 0.85) : JP_FONT}
+                      fontSize={
+                        isPassed
+                          ? Math.round(primaryFontSize * 0.85)
+                          : primaryFontSize
+                      }
                       fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                       fill="#222"
                     />
@@ -3404,7 +3517,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         y={enNameY}
                         text={secondaryName}
                         fontSize={
-                          isPassed ? Math.round(EN_FONT * 0.85) : EN_FONT
+                          isPassed
+                            ? Math.round(secondaryFontSize * 0.85)
+                            : secondaryFontSize
                         }
                         fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                         fill="#666"
@@ -3465,7 +3580,11 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const vExtraB = hasMoreAfter ? vFadeExtra : 0;
       const rawCanvasH = Math.max(
         200,
-        PADDING + vExtraT + (n - 1) * vSpacing + PADDING + vExtraB,
+        PADDING +
+          vExtraT +
+          verticalStationLayout.extent +
+          PADDING +
+          vExtraB,
       );
       const { w: canvasW, h: canvasH } = ceilCanvasDimensions(
         rawCanvasW,
@@ -3528,7 +3647,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             {/* Service labels at track start — 縦書き, above first dot */}
             {services.map((svc, si) => {
               const tx = trackXs[si];
-              const topY = PADDING + vExtraT;
+              const topY = PADDING + vExtraT + verticalFirstPosition;
               const labelFont = 9;
               const charH = labelFont + 1;
               const chars = [...svc.name];
@@ -3596,9 +3715,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   <KonvaLine
                     points={[
                       tx,
-                      PADDING + vExtraT,
+                      PADDING + vExtraT + verticalFirstPosition,
                       tx,
-                      PADDING + vExtraT + (n - 1) * vSpacing,
+                      PADDING + vExtraT + verticalLastPosition,
                     ]}
                     stroke={svc.color}
                     strokeWidth={serviceTrackWidth}
@@ -3609,9 +3728,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       <KonvaLine
                         points={[
                           tx,
-                          PADDING + vExtraT,
+                          PADDING + vExtraT + verticalFirstPosition,
                           tx,
-                          PADDING + vExtraT - vFadeLen,
+                          PADDING + vExtraT + verticalFirstPosition - vFadeLen,
                         ]}
                         stroke={svc.color}
                         strokeWidth={serviceTrackWidth}
@@ -3623,7 +3742,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           x={tx}
                           y={
                             PADDING +
-                            vExtraT -
+                            vExtraT +
+                            verticalFirstPosition -
                             vFadeLen -
                             serviceFadeDotSpacing * (idx + 1)
                           }
@@ -3639,9 +3759,12 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       <KonvaLine
                         points={[
                           tx,
-                          PADDING + vExtraT + (n - 1) * vSpacing,
+                          PADDING + vExtraT + verticalLastPosition,
                           tx,
-                          PADDING + vExtraT + (n - 1) * vSpacing + vFadeLen,
+                          PADDING +
+                            vExtraT +
+                            verticalLastPosition +
+                            vFadeLen,
                         ]}
                         stroke={svc.color}
                         strokeWidth={serviceTrackWidth}
@@ -3654,7 +3777,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           y={
                             PADDING +
                             vExtraT +
-                            (n - 1) * vSpacing +
+                            verticalLastPosition +
                             vFadeLen +
                             serviceFadeDotSpacing * (idx + 1)
                           }
@@ -3671,7 +3794,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
             {/* Stations */}
             {stations.map((station, i) => {
-              const y = PADDING + vExtraT + i * vSpacing;
+              const y = PADDING + vExtraT + verticalPositions[i];
               const stopsHere = services.some(
                 (svc) => !!serviceStops[station.id]?.[svc.id],
               );
@@ -3683,23 +3806,29 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 verticalNameSide,
               );
 
-              const snNum = stationNumbers[station.id];
+              const stationNumberGroup = getStationNumbers(station.id);
               const showSnBadge =
-                stationNumberMode === "badge" && !!snNum?.value;
-              const snDims = snNum
-                ? snBadgeDims(!!snNum.threeLetterCode, snNum.style)
+                stationNumberMode === "badge" &&
+                stationNumberGroup.length > 0;
+              const snDims = stationNumberGroup.length > 0
+                ? stationNumberGroupDimensions(stationNumberGroup, "vertical")
                 : snBadgeDims(false);
+              const stationColor = getStationColor(station, i);
 
-              const jpNameY = y - JP_FONT / 2;
-              const enNameY = jpNameY + JP_FONT + 1;
               const primaryName = stationName(station, primaryLangField);
               const secondaryName =
                 showSecondaryLang && station[secondaryLangField]
                   ? station[secondaryLangField]!
                   : null;
+              const primaryFontSize = getPrimaryNameFontSize(station.id);
+              const secondaryFontSize = getSecondaryNameFontSize(station.id);
+              const jpNameY = y - primaryFontSize / 2;
+              const enNameY = jpNameY + primaryFontSize + 1;
               const nameBlockWidth = Math.max(
-                measureTextWidth(primaryName, JP_FONT),
-                secondaryName ? measureTextWidth(secondaryName, EN_FONT) : 0,
+                measureTextWidth(primaryName, primaryFontSize),
+                secondaryName
+                  ? measureTextWidth(secondaryName, secondaryFontSize)
+                  : 0,
               );
 
               // Name/badge positions — same as single-service vertical,
@@ -3761,14 +3890,13 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   />
 
                   {/* Station number badge */}
-                  {showSnBadge && snNum && (
-                    <SnBadge
+                  {showSnBadge && (
+                    <StationNumberBadgeGroup
                       x={snBadgeX}
                       y={y - snDims.h / 2}
-                      color={lc}
-                      prefix={snNum.prefix}
-                      value={snNum.value}
-                      trc={snNum.threeLetterCode}
+                      numbers={stationNumberGroup}
+                      orientation="vertical"
+                      fallbackColor={stationColor}
                     />
                   )}
 
@@ -3777,7 +3905,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     x={nameX}
                     y={jpNameY}
                     text={primaryName}
-                    fontSize={JP_FONT}
+                    fontSize={primaryFontSize}
                     fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                     fill="#222"
                     align={nameAlign}
@@ -3791,7 +3919,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       x={nameX}
                       y={enNameY}
                       text={secondaryName}
-                      fontSize={EN_FONT}
+                      fontSize={secondaryFontSize}
                       fontFamily="NotoSansJP, Noto Sans JP, sans-serif"
                       fill="#666"
                       align={nameAlign}
@@ -4021,19 +4149,21 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                 )
               : snBadgeDims(false);
 
-            const jpNameY = y - JP_FONT / 2;
-            const enNameY = jpNameY + JP_FONT + 1;
             const primaryName = stationName(station, primaryLangField);
             const secondaryName =
               showSecondaryLang && station[secondaryLangField]
                 ? station[secondaryLangField]!
                 : null;
+            const basePrimaryFontSize = getPrimaryNameFontSize(station.id);
+            const baseSecondaryFontSize = getSecondaryNameFontSize(station.id);
             const primaryFontSize = isPassed
-              ? Math.round(JP_FONT * 0.85)
-              : JP_FONT;
+              ? Math.round(basePrimaryFontSize * 0.85)
+              : basePrimaryFontSize;
             const secondaryFontSize = isPassed
-              ? Math.round(EN_FONT * 0.85)
-              : EN_FONT;
+              ? Math.round(baseSecondaryFontSize * 0.85)
+              : baseSecondaryFontSize;
+            const jpNameY = y - primaryFontSize / 2;
+            const enNameY = jpNameY + primaryFontSize + 1;
             const nameBlockWidth = Math.max(
               measureTextWidth(primaryName, primaryFontSize),
               secondaryName

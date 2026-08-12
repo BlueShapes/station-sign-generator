@@ -11,6 +11,7 @@
     "test": "bun run test:unit && bun run test:e2e",
     "test:unit": "bun test scripts",
     "test:e2e": "playwright test",
+    "test:e2e:pdf": "playwright test --config=playwright.pdf.config.ts",
     "postinstall": "node scripts/copy-wasm.mjs"
   },
   "dependencies": {

@@ -19,6 +19,7 @@
 # debug
 npm-debug.log*
 .pnpm-debug.log*
+test-results/
 
 # env files (can opt-in for committing if needed)
 .env*

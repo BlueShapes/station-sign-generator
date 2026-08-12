@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: Estilo Metrô de Tóquio / Metrô Toei
     station-number-style-preview: Exemplo de emblema (usando a cor da empresa como cor da linha)
     empty: Nenhuma empresa ainda
-    delete-confirm: Excluir esta empresa? As linhas associadas também serão excluídas.
+    delete-confirm: Excluir esta empresa? Suas linhas e todas as rotas diretas que as contenham também serão excluídas.
   special-zone:
     title: Zonas Especiais
     add: Adicionar zona
@@ -191,7 +191,10 @@ route:
     select: Selecione uma linha
     all: Todas as empresas
     unassigned-company: Empresa não atribuída
-    delete-confirm: Excluir esta linha?
+    delete-confirm: Excluir esta linha? Todas as rotas diretas que a contenham também serão excluídas.
+    delete-all: Excluir todas as linhas
+    delete-all-confirm: Excluir todas as linhas? As associações de estações, os números de estação, os serviços e todas as rotas diretas também serão excluídos. Esta ação não pode ser desfeita.
+    delete-targets: Linhas que serão excluídas
     prefix-preview: Visualização do selo do indicador de linha
     station-number-preview: Visualização do número da estação (01)
   through-route:
@@ -209,12 +212,22 @@ route:
     direction: Direção do trecho
     forward: Direta (ordem das estações)
     reverse: Inversa (ordem oposta)
+    guide-title: Regras para uma rota válida
+    guide-intro: Os serviços reais não são verificados. Você pode salvar qualquer rota que forme um único caminho contínuo e sem ramificações nos dados cadastrados.
+    guide-section: Em cada trecho, escolha como entrada e saída duas estações diferentes da mesma linha.
+    guide-direction: A direção direta segue a ordem cadastrada das estações; a inversa segue o sentido contrário. Em uma linha circular, a direção escolhe o lado do circuito.
+    guide-connection: Cada trecho seguinte deve entrar no mesmo registro em que o anterior sai ou em uma estação ligada por uma transferência explícita.
     delete-confirm: Excluir esta rota direta?
+    service-help: Configure os serviços para toda esta rota direta. Depois de salvar, defina as paradas no editor de rotas abaixo.
+    service-editor-help: Editando serviços e paradas de “{name}”. Altere os trechos ou a ordem no editor de rotas diretas.
     error-incomplete: Selecione uma linha e as duas estações de ponta de cada trecho.
     error-empty: Adicione pelo menos um trecho de linha.
     error-station-not-on-line: Uma estação selecionada não pertence à linha.
     error-invalid-direction: Não é possível chegar à estação de saída a partir da entrada na direção selecionada.
     error-disconnected: Trechos adjacentes não compartilham a mesma estação de conexão.
+    error-same-station: Escolha estações diferentes para a entrada e a saída.
+    error-invalid-direction-detail: 'Para ir de “{entry}” a “{exit}”, selecione “{direction}”.'
+    error-disconnected-detail: 'No trecho {current}, use o mesmo registro de “{station}”, a saída do trecho {previous}, ou adicione uma transferência explícita entre eles.'
   service:
     title: Serviços
     local: locais
@@ -249,13 +262,14 @@ route:
     select: Selecione uma estação
     transfer-title: "Informações de transferência — {name}"
     transfer-manage: Ver e gerenciar transferências
+    transfer-line-select: Linha de transferência
     transfer-select: Estação de transferência
     transfer-empty: Nenhuma conexão de transferência
     same-id-lines: Linhas com o mesmo ID de estação
     same-id-lines-help: Estas linhas compartilham o registro da estação e são tratadas automaticamente como transferências. Aqui são somente leitura.
     same-id-lines-empty: Nenhuma outra linha compartilha este ID de estação
     explicit-transfers: Transferências explícitas entre estações
-    explicit-transfers-help: Adicione ou remova transferências entre IDs de estação diferentes.
+    explicit-transfers-help: Adicione ou remova conexões entre registros de estação diferentes. Estações adicionadas aparecem abaixo e também conectam rotas diretas.
   sign:
     style: Estilo
     direction: Direção
@@ -305,12 +319,16 @@ route:
     transit-show-names: Mostrar nomes das linhas de integração
     download-text-warning: Salvar (o segundo idioma pode ficar ilegível)
     font-size: Tamanho da fonte do nome da estação
+    font-size-small: Pequeno
+    font-size-medium: Médio
+    font-size-large: Grande
     overlap-warning-title: Sobreposição de rótulo detectada
     overlap-warning: Alguns nomes de estações se sobrepõem. Tente reduzir o tamanho da fonte.
     station-number-mode: Exibição do número da estação
     station-number-none: Nenhum
     station-number-badge: Distintivo
     station-number-dot: Substituir ponto
+    emphasize-connected-station-names: Ampliar nomes das estações de conexão entre linhas
     name-style: Estilo de nome
     name-style-normal: Normais
     name-style-above: Acima

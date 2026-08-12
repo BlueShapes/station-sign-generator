@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: Stilul Metrou Tokyo / Metrou Toei
     station-number-style-preview: Exemplu de insignă (folosind culoarea companiei ca culoare de linie)
     empty: Nu există companii încă
-    delete-confirm: Ștergeți această companie? Liniile asociate vor fi, de asemenea, șterse.
+    delete-confirm: Ștergeți această companie? Liniile sale și toate rutele directe care le conțin vor fi, de asemenea, șterse.
   special-zone:
     title: Zone speciale
     add: Adăugați o zonă
@@ -191,7 +191,10 @@ route:
     select: Selectați o linie
     all: Toate Companiile
     unassigned-company: Companie neatribuită
-    delete-confirm: Ștergeți această linie?
+    delete-confirm: Ștergeți această linie? Toate rutele directe care o conțin vor fi, de asemenea, șterse.
+    delete-all: Ștergeți toate liniile
+    delete-all-confirm: Ștergeți toate liniile? Vor fi șterse și asocierile stațiilor, numerele stațiilor, serviciile și toate rutele directe. Această acțiune nu poate fi anulată.
+    delete-targets: Linii care vor fi șterse
     prefix-preview: Previzualizarea insignei cu indicator de linie
     station-number-preview: Previzualizarea numărului stației (01)
   through-route:
@@ -209,12 +212,22 @@ route:
     direction: Direcția segmentului
     forward: Înainte (ordinea stațiilor)
     reverse: Invers (ordinea opusă)
+    guide-title: Reguli pentru o rută validă
+    guide-intro: Serviciile reale nu sunt verificate. Puteți salva orice rută care formează în datele înregistrate o singură cale continuă, fără ramificații.
+    guide-section: În fiecare segment, alegeți ca intrare și ieșire două stații diferite de pe aceeași linie.
+    guide-direction: Direcția înainte urmează ordinea înregistrată a stațiilor, iar cea inversă merge în sens opus. Pe o linie circulară, direcția alege partea buclei.
+    guide-connection: Fiecare segment următor trebuie să înceapă cu aceeași înregistrare la care se termină cel anterior sau cu o stație legată printr-un transfer explicit.
     delete-confirm: Ștergeți această rută directă?
+    service-help: Configurați serviciile pentru întreaga rută directă. După salvare, setați opririle în editorul de rute de mai jos.
+    service-editor-help: Editați serviciile și opririle pentru „{name}”. Schimbați segmentele sau ordinea în editorul rutelor directe.
     error-incomplete: Selectați linia și ambele stații terminale pentru fiecare segment.
     error-empty: Adăugați cel puțin un segment de linie.
     error-station-not-on-line: O stație selectată nu aparține liniei.
     error-invalid-direction: Stația de ieșire nu poate fi atinsă din stația de intrare în direcția selectată.
     error-disconnected: Segmentele adiacente nu au aceeași stație de legătură.
+    error-same-station: Alegeți stații diferite pentru intrare și ieșire.
+    error-invalid-direction-detail: 'Pentru a merge de la „{entry}” la „{exit}”, selectați „{direction}”.'
+    error-disconnected-detail: 'Pentru segmentul {current}, folosiți aceeași înregistrare ca „{station}”, ieșirea segmentului {previous}, sau adăugați un transfer explicit între ele.'
   service:
     title: Servicii
     local: Local
@@ -249,13 +262,14 @@ route:
     select: Selectați o stație
     transfer-title: "Informații despre transfer — {name}"
     transfer-manage: Vezi și gestionează transferurile
+    transfer-line-select: Linie de transfer
     transfer-select: Stație de transfer
     transfer-empty: Nu există legături de transfer
     same-id-lines: Linii cu același ID de stație
     same-id-lines-help: Aceste linii folosesc aceeași înregistrare de stație și sunt considerate automat transferuri. Aici sunt doar pentru citire.
     same-id-lines-empty: Nicio altă linie nu folosește acest ID de stație
     explicit-transfers: Transferuri explicite între stații
-    explicit-transfers-help: Adăugați sau eliminați transferuri între ID-uri de stație diferite.
+    explicit-transfers-help: Adăugați sau eliminați legături între înregistrări de stație diferite. Stațiile adăugate apar mai jos și pot lega și rute directe.
   sign:
     style: Stil
     direction: Direcția
@@ -305,12 +319,16 @@ route:
     transit-show-names: Afișează numele liniilor de transfer
     download-text-warning: Salvează (a doua limbă poate fi ilizibilă)
     font-size: Nume stație Dimensiune font
+    font-size-small: Mic
+    font-size-medium: Mediu
+    font-size-large: Mare
     overlap-warning-title: S-a detectat suprapunerea etichetelor
     overlap-warning: Unele nume de stații se suprapun. Încercați să reduceți dimensiunea fontului.
     station-number-mode: Afișarea numărului stației
     station-number-none: Niciuna
     station-number-badge: Insigna
     station-number-dot: Înlocuiește Dot
+    emphasize-connected-station-names: Mărește numele stațiilor de legătură între linii
     name-style: Stilul numelui
     name-style-normal: Normal
     name-style-above: Mai sus

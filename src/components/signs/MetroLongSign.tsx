@@ -16,6 +16,8 @@ import {
   spaceTokyoMetroPrimaryName,
 } from "./stationNameLayout";
 import { getMetroSmallArrowPoints } from "./arrowGeometry";
+import JrCentralStationNumberBadge from "./JrCentralStationNumberBadge";
+import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
 
 export const height = 105;
 export const scale = 3;
@@ -35,6 +37,9 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
       right,
       numberPrimaryPrefix,
       numberPrimaryValue,
+      numberPrimaryColor,
+      numberPrimaryStyle,
+      stationNumberStyle,
       baseColor,
       localLines,
       direction,
@@ -114,8 +119,70 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
       valueYOffsetDelta = 0,
       prefixXOffsetDelta = 0,
       valueXOffsetDelta = 0,
+      color?: string,
+      style?: string,
     ) => {
       if (!prefix || !value) return null;
+
+      const appearance = resolveSubwayStationNumberAppearance({
+        prefix,
+        color,
+        style,
+        localLines,
+        fallbackColor: lineColor,
+        fallbackStyle: stationNumberStyle ?? "tokyometro",
+      });
+      if (appearance.style === "jrcentral") {
+        return (
+          <JrCentralStationNumberBadge
+            x={cx - innerSize / 2}
+            y={cy - innerSize / 2}
+            size={innerSize}
+            color={appearance.color}
+            prefix={prefix}
+            value={value}
+          />
+        );
+      }
+      if (appearance.style !== "tokyometro") {
+        const top = cy - innerSize / 2;
+        return (
+          <>
+            <Rect
+              x={cx - innerSize / 2}
+              y={top}
+              width={innerSize}
+              height={innerSize}
+              fill="white"
+              stroke={appearance.color}
+              strokeWidth={Math.max(1.5, innerSize * 0.1)}
+              cornerRadius={innerSize / 15}
+            />
+            <Text
+              text={prefix}
+              x={cx - innerSize / 2}
+              y={top + (innerSize * 4) / 30}
+              width={innerSize}
+              fontSize={(innerSize * 11) / 30}
+              fontFamily="HindSemiBold"
+              fontStyle="600"
+              fill="#1f2230"
+              align="center"
+            />
+            <Text
+              text={value}
+              x={cx - innerSize / 2}
+              y={top + (innerSize * 14) / 30}
+              width={innerSize}
+              fontSize={(innerSize * 17) / 30}
+              fontFamily="HindSemiBold"
+              fontStyle="600"
+              fill="#1f2230"
+              align="center"
+            />
+          </>
+        );
+      }
 
       return (
         <>
@@ -124,7 +191,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
             y={cy}
             radius={(innerSize / 2 + strokeWidth) * BADGE_RADIUS_SCALE}
             fill="white"
-            stroke={lineColor}
+            stroke={appearance.color}
             strokeWidth={strokeWidth}
           />
           <Text
@@ -316,6 +383,8 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
               0.5,
               0,
               0.6,
+              station.numberPrimaryColor,
+              station.numberPrimaryStyle,
             )}
         </>
       );
@@ -383,6 +452,8 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
                     0.5,
                     0,
                     0.6,
+                    station.numberPrimaryColor,
+                    station.numberPrimaryStyle,
                   )}
               </Fragment>
             );
@@ -457,6 +528,8 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
                   0,
                   0,
                   0,
+                  numberPrimaryColor,
+                  numberPrimaryStyle,
                 )}
                 <Text
                   text={displayPrimaryName}

@@ -39,9 +39,9 @@ test("shows canonical through routes from the sample database", async ({
   await tsudanumaRouteRow.getByRole("button").first().click();
   const editDialog = page.getByRole("dialog");
   await expect(editDialog).toContainText(/edit through route|直通経路を編集/i);
-  await expect(editDialog.getByText("三鷹 → 中野")).toBeVisible();
-  await expect(editDialog.getByText("中野 → 西船橋")).toBeVisible();
-  await expect(editDialog.getByText("西船橋 → 津田沼")).toBeVisible();
+  await expect(editDialog.getByText(/三鷹.*→.*中野/)).toBeVisible();
+  await expect(editDialog.getByText(/中野.*→.*西船橋/)).toBeVisible();
+  await expect(editDialog.getByText(/西船橋.*→.*津田沼/)).toBeVisible();
 });
 
 test("aligns reversed adjacent lines in route input", async ({ page }) => {
@@ -106,6 +106,19 @@ test("selects and draws a through route with each section color", async ({
 
   const canvas = page.locator(".map-preview canvas").first();
   await expect(canvas).toBeVisible();
+  const connectionNameSwitch = page.getByRole("switch", {
+    name: "Enlarge route-connection station names",
+  });
+  await expect(connectionNameSwitch).toBeChecked();
+  await connectionNameSwitch.evaluate((element) =>
+    (element as HTMLInputElement).click(),
+  );
+  await expect(connectionNameSwitch).not.toBeChecked();
+  await connectionNameSwitch.evaluate((element) =>
+    (element as HTMLInputElement).click(),
+  );
+  await expect(connectionNameSwitch).toBeChecked();
+
   const [firstSectionColor, lastSectionColor] = await canvas.evaluate(
     (element) => {
       const routeCanvas = element as HTMLCanvasElement;
@@ -173,6 +186,56 @@ test("selects and draws a through route with each section color", async ({
     .poll(async () => (await canvasSize()).width)
     .toBeGreaterThan(baseHorizontalSize.width);
 
+  const trackWidthSlider = page.getByRole("slider").nth(1);
+  await trackWidthSlider.focus();
+  await page.keyboard.press("End");
+  await expect(trackWidthSlider).toHaveAttribute("aria-valuenow", "30");
+
+  const whiteHairlineXs = await canvas.evaluate((element) => {
+    const routeCanvas = element as HTMLCanvasElement;
+    const context = routeCanvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("Canvas context is unavailable");
+
+    const centerY = 210;
+    const lowerTrackY = 236;
+    const centerRow = context.getImageData(
+      0,
+      centerY,
+      routeCanvas.width,
+      1,
+    ).data;
+    const lowerRow = context.getImageData(
+      0,
+      lowerTrackY,
+      routeCanvas.width,
+      1,
+    ).data;
+    const isWhite = (pixels: Uint8ClampedArray, x: number) => {
+      const offset = x * 4;
+      return (
+        pixels[offset] > 245 &&
+        pixels[offset + 1] > 245 &&
+        pixels[offset + 2] > 245
+      );
+    };
+
+    let firstTrackX = 0;
+    while (firstTrackX < routeCanvas.width && isWhite(centerRow, firstTrackX)) {
+      firstTrackX += 1;
+    }
+    let lastTrackX = routeCanvas.width - 1;
+    while (lastTrackX > firstTrackX && isWhite(centerRow, lastTrackX)) {
+      lastTrackX -= 1;
+    }
+
+    const hairlines: number[] = [];
+    for (let x = firstTrackX + 40; x <= lastTrackX - 40; x += 1) {
+      if (isWhite(lowerRow, x)) hairlines.push(x);
+    }
+    return hairlines;
+  });
+  expect(whiteHairlineXs).toEqual([]);
+
   await page
     .getByRole("radio", { name: "Vertical", exact: true })
     .evaluate((element) => (element as HTMLInputElement).click());
@@ -187,4 +250,60 @@ test("selects and draws a through route with each section color", async ({
   await expect
     .poll(async () => (await canvasSize()).height)
     .toBeLessThan(expandedVerticalHeight);
+
+  await page.evaluate(() => {
+    const createObjectUrl = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = (object: Blob | MediaSource) => {
+      if (object instanceof Blob && object.type === "image/png") {
+        (window as typeof window & { __lineMapDownload?: Blob })
+          .__lineMapDownload = object;
+      }
+      return createObjectUrl(object);
+    };
+  });
+
+  await page
+    .getByRole("button", { name: "Save as Image", exact: true })
+    .click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as typeof window & { __lineMapDownload?: Blob })
+            .__lineMapDownload?.size ?? 0,
+      ),
+    )
+    .toBeGreaterThan(0);
+
+  const downloadedImageHasContent = await page.evaluate(async () => {
+    const blob = (window as typeof window & { __lineMapDownload?: Blob })
+      .__lineMapDownload;
+    if (!blob) return false;
+    const bitmap = await createImageBitmap(blob);
+    const exportedCanvas = document.createElement("canvas");
+    exportedCanvas.width = bitmap.width;
+    exportedCanvas.height = bitmap.height;
+    const context = exportedCanvas.getContext("2d", {
+      willReadFrequently: true,
+    });
+    if (!context) return false;
+    context.drawImage(bitmap, 0, 0);
+    const pixels = context.getImageData(
+      0,
+      0,
+      exportedCanvas.width,
+      exportedCanvas.height,
+    ).data;
+    for (let index = 0; index < pixels.length; index += 4) {
+      if (
+        pixels[index] < 245 ||
+        pixels[index + 1] < 245 ||
+        pixels[index + 2] < 245
+      ) {
+        return true;
+      }
+    }
+    return false;
+  });
+  expect(downloadedImageHasContent).toBe(true);
 });

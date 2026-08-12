@@ -157,7 +157,7 @@ describe("JR Central sign layout", () => {
       new URL("../src/components/signs/LineMapRenderer.tsx", import.meta.url),
       "utf8",
     );
-    expect(signSource).toContain("<JrCentralStationNumberBadge");
+    expect(signSource).toContain("<StationNumberBadge");
     expect(mapSource).toContain("<JrCentralStationNumberBadge");
     expect(signSource).not.toContain("direction");
   });

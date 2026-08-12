@@ -4,8 +4,10 @@ import { parse } from "yaml";
 import { SUPPORTED_LOCALE_CODES } from "../src/i18n/locales";
 import {
   TRANSIT_GROUP_GAP,
+  TRANSIT_DIAGONAL_TEXT_GAP,
   TRANSIT_ICON_SIZE,
   TRANSIT_ITEM_GAP,
+  TRANSIT_NAME_FONT,
   TRANSIT_SECONDARY_NAME_FONT,
   isTransitSecondaryNameExportTooSmall,
   layoutDiagonalTransitLines,
@@ -22,6 +24,7 @@ import {
 } from "../src/components/signs/lineIndicatorStyle";
 import {
   ceilCanvasDimensions,
+  CONNECTED_STATION_NAME_SCALE,
   DEFAULT_TRACK_WIDTH,
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
@@ -29,10 +32,13 @@ import {
   getServiceTrackGap,
   getServiceTrackWidth,
   getSegmentedTrackEndCaps,
+  getSegmentedTrackRuns,
   getConnectedMarkerExtraExtent,
+  getConnectedStationNameScale,
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
   normalizeTrackWidth,
+  shouldExpandStationNumberGroups,
 } from "../src/components/signs/lineMapGeometry";
 
 describe("transit line layout", () => {
@@ -99,6 +105,28 @@ describe("transit line layout", () => {
     ]);
   });
 
+  test("merges consecutive same-colour track edges to avoid canvas seams", () => {
+    const points = [
+      { x: 10, y: 20 },
+      { x: 40, y: 20 },
+      { x: 70, y: 20 },
+      { x: 100, y: 20 },
+    ];
+
+    expect(
+      getSegmentedTrackRuns(points, ["#55aaff", "#55AAFF", "#ff0000"]),
+    ).toEqual([
+      {
+        color: "#55aaff",
+        points: [points[0], points[1], points[2]],
+      },
+      {
+        color: "#ff0000",
+        points: [points[2], points[3]],
+      },
+    ]);
+  });
+
   test("expands only the gaps beside an oversized connected marker", () => {
     expect(getConnectedMarkerExtraExtent([])).toBe(0);
     expect(getConnectedMarkerExtraExtent([23])).toBe(0);
@@ -111,6 +139,35 @@ describe("transit line layout", () => {
       positions: [0, 86.5, 173],
       extent: 173,
     });
+    expect(layoutExpandedLinearStations(30, [0, 23, 0])).toEqual({
+      positions: [0, 41.5, 83],
+      extent: 83,
+    });
+  });
+
+  test("expands badge groups only when neighbouring badges share their row", () => {
+    expect(shouldExpandStationNumberGroups("dot", "horizontal", "normal"))
+      .toBe(true);
+    expect(shouldExpandStationNumberGroups("dot", "vertical", "normal"))
+      .toBe(true);
+    expect(shouldExpandStationNumberGroups("badge", "horizontal", "above"))
+      .toBe(true);
+    expect(shouldExpandStationNumberGroups("badge", "horizontal", "below"))
+      .toBe(true);
+    expect(shouldExpandStationNumberGroups("badge", "horizontal", "normal"))
+      .toBe(false);
+    expect(shouldExpandStationNumberGroups("badge", "vertical", "normal"))
+      .toBe(false);
+    expect(shouldExpandStationNumberGroups("none", "horizontal", "above"))
+      .toBe(false);
+  });
+
+  test("emphasizes only enabled route-connection station names", () => {
+    expect(getConnectedStationNameScale(2, true)).toBe(
+      CONNECTED_STATION_NAME_SCALE,
+    );
+    expect(getConnectedStationNameScale(1, true)).toBe(1);
+    expect(getConnectedStationNameScale(2, false)).toBe(1);
   });
 
   test("joins stroked markers without overlapping their outer edges", () => {
@@ -231,23 +288,52 @@ describe("transit line layout", () => {
   test("stacks vertical-writing transfers on one station axis", () => {
     const above = layoutDiagonalTransitLines([10, 20, 30, 40], "above");
     const below = layoutDiagonalTransitLines([10, 20, 30, 40], "below");
+    const itemStep = Math.max(
+      TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP,
+      Math.ceil(
+        (TRANSIT_NAME_FONT + TRANSIT_DIAGONAL_TEXT_GAP) * Math.SQRT2,
+      ),
+    );
 
     expect(above.items.map((item) => item.x)).toEqual([0, 0, 0, 0]);
     expect(below.items.map((item) => item.x)).toEqual([0, 0, 0, 0]);
     expect(above.items.map((item) => item.y)).toEqual([
       -TRANSIT_ICON_SIZE,
-      -2 * TRANSIT_ICON_SIZE - TRANSIT_ITEM_GAP,
-      -3 * TRANSIT_ICON_SIZE - 2 * TRANSIT_ITEM_GAP,
-      -4 * TRANSIT_ICON_SIZE - 3 * TRANSIT_ITEM_GAP,
+      -TRANSIT_ICON_SIZE - itemStep,
+      -TRANSIT_ICON_SIZE - 2 * itemStep,
+      -TRANSIT_ICON_SIZE - 3 * itemStep,
     ]);
     expect(below.items.map((item) => item.y)).toEqual([
       0,
-      TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP,
-      2 * (TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP),
-      3 * (TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP),
+      itemStep,
+      2 * itemStep,
+      3 * itemStep,
     ]);
     expect(above.width).toBeGreaterThan(TRANSIT_ICON_SIZE);
     expect(above.height).toBeGreaterThan(4 * TRANSIT_ICON_SIZE);
+  });
+
+  test("adds diagonal clearance between bilingual transfer names", () => {
+    const bilingualNameHeight = 9;
+    const layout = layoutDiagonalTransitLines(
+      [40, 50, 60],
+      "below",
+      [bilingualNameHeight, bilingualNameHeight, bilingualNameHeight],
+    );
+    const itemStep = layout.items[1].y - layout.items[0].y;
+    const expectedItemStep = Math.ceil(
+      (bilingualNameHeight + TRANSIT_DIAGONAL_TEXT_GAP) * Math.SQRT2,
+    );
+
+    expect(itemStep).toBe(expectedItemStep);
+    expect(layout.items.map((item) => item.y)).toEqual([
+      0,
+      expectedItemStep,
+      2 * expectedItemStep,
+    ]);
+    expect(itemStep * Math.SQRT1_2).toBeGreaterThanOrEqual(
+      bilingualNameHeight + TRANSIT_DIAGONAL_TEXT_GAP,
+    );
   });
 
   test("places vertical-writing transfers opposite the station names", () => {
@@ -349,5 +435,30 @@ describe("transit line layout", () => {
       "const transitAnchorX = x - TRANSIT_ICON_SIZE / 2;",
     );
     expect(source.match(/x - TRANSIT_ICON_SIZE \/ 2/g)?.length).toBe(2);
+  });
+
+  test("keeps station-number appearances distinct with multiple services", () => {
+    const source = readFileSync(
+      "src/components/signs/LineMapRenderer.tsx",
+      "utf8",
+    );
+    const horizontal = source.slice(
+      source.indexOf("Multi-service horizontal layout"),
+      source.indexOf("Multi-service vertical layout"),
+    );
+    const vertical = source.slice(
+      source.indexOf("Multi-service vertical layout"),
+    );
+
+    for (const layout of [horizontal, vertical]) {
+      expect(layout).toContain(
+        "const stationNumberGroup = getStationNumbers(station.id);",
+      );
+      expect(layout).toContain("<StationNumberBadgeGroup");
+      expect(layout).toContain("numbers={stationNumberGroup}");
+      expect(layout).toContain("fallbackColor={stationColor}");
+    }
+    expect(horizontal).toContain('orientation="horizontal"');
+    expect(vertical).toContain('orientation="vertical"');
   });
 });

@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: Styl tokijského metra / metra Toei
     station-number-style-preview: Ukázka odznaku (jako barva čáry se používá barva společnosti)
     empty: Zatím žádné společnosti
-    delete-confirm: Smazat tuto společnost? Přidružené řádky budou také smazány.
+    delete-confirm: Smazat tuto společnost? Budou odstraněny také její linky a všechny průjezdné trasy, které je obsahují.
   special-zone:
     title: Speciální zóny
     add: Přidat zónu
@@ -191,7 +191,10 @@ route:
     select: Vyberte řádek
     all: Všechny společnosti
     unassigned-company: Bez přiřazené společnosti
-    delete-confirm: Smazat tento řádek?
+    delete-confirm: Smazat tuto linku? Budou odstraněny také všechny průjezdné trasy, které ji obsahují.
+    delete-all: Smazat všechny linky
+    delete-all-confirm: Smazat všechny linky? Budou odstraněna také přiřazení stanic, čísla stanic, spoje a všechny průjezdné trasy. Tuto akci nelze vrátit zpět.
+    delete-targets: Linky, které budou smazány
     prefix-preview: Náhled odznaku indikátoru čáry
     station-number-preview: Náhled čísla stanice (01)
   through-route:
@@ -209,12 +212,22 @@ route:
     direction: Směr úseku
     forward: Vpřed (pořadí stanic)
     reverse: Obráceně (proti pořadí stanic)
+    guide-title: Pravidla platné trasy
+    guide-intro: Skutečný provoz se neověřuje. Uložit lze trasu, která v zadaných datech tvoří jednu souvislou cestu bez odboček.
+    guide-section: V každém úseku vyberte jako vstup a výstup dvě různé stanice stejné linky.
+    guide-direction: Směr vpřed odpovídá uloženému pořadí stanic, obrácený směr vede proti němu. U okružní linky směr určuje použitou stranu okruhu.
+    guide-connection: Každý další úsek musí začínat stejným záznamem stanice, kde předchozí končí, nebo stanicí propojenou výslovným přestupem.
     delete-confirm: Smazat tuto průjezdnou trasu?
+    service-help: Nastavte spoje pro celou tuto průjezdnou trasu. Po uložení určete zastávky v editoru tras níže.
+    service-editor-help: Upravujete spoje a zastávky pro „{name}“. Úseky nebo jejich pořadí změňte v editoru průjezdných tras.
     error-incomplete: Pro každý úsek vyberte linku a obě koncové stanice.
     error-empty: Přidejte alespoň jeden úsek linky.
     error-station-not-on-line: Vybraná stanice nepatří k dané lince.
     error-invalid-direction: Z výstupní stanice nelze ve zvoleném směru dojet ze vstupní stanice.
     error-disconnected: Sousední úseky nemají stejnou přestupní stanici.
+    error-same-station: Pro vstup a výstup vyberte různé stanice.
+    error-invalid-direction-detail: 'Pro cestu ze stanice „{entry}“ do „{exit}“ vyberte směr „{direction}“.'
+    error-disconnected-detail: 'Pro úsek {current} vyberte stejný záznam jako „{station}“, výstup úseku {previous}, nebo mezi stanicemi přidejte výslovný přestup.'
   service:
     title: Služby
     local: Místní
@@ -249,13 +262,14 @@ route:
     select: Vyberte stanici
     transfer-title: "Informace o přestupech — {name}"
     transfer-manage: Zobrazit a upravit přestupy
+    transfer-line-select: Přestupní linka
     transfer-select: Přestupní stanice
     transfer-empty: Žádné přestupní vazby
     same-id-lines: Linky se stejným ID stanice
     same-id-lines-help: Tyto linky sdílejí stejný záznam stanice a automaticky se považují za přestupní. Zde je nelze upravit.
     same-id-lines-empty: Stejné ID stanice nesdílí žádná další linka
     explicit-transfers: Výslovné přestupy mezi stanicemi
-    explicit-transfers-help: Přidejte nebo odeberte přestupy mezi různými ID stanic.
+    explicit-transfers-help: Přidávejte či odebírejte spojení mezi různými záznamy stanic. Přidané stanice se zobrazí dole a mohou spojovat i průjezdné trasy.
   sign:
     style: styl
     direction: Směr
@@ -305,12 +319,16 @@ route:
     transit-show-names: Zobrazit názvy přestupních linek
     download-text-warning: Uložit (druhý jazyk může být nečitelný)
     font-size: Název stanice Velikost písma
+    font-size-small: Malá
+    font-size-medium: Střední
+    font-size-large: Velká
     overlap-warning-title: Bylo zjištěno překrývání štítků
     overlap-warning: Některé názvy stanic se překrývají. Zkuste zmenšit velikost písma.
     station-number-mode: Zobrazení čísla stanice
     station-number-none: žádný
     station-number-badge: Odznak
     station-number-dot: Nahradit tečku
+    emphasize-connected-station-names: Zvětšit názvy stanic propojujících tratě
     name-style: Styl názvu
     name-style-normal: Normální
     name-style-above: Nahoře

@@ -27,6 +27,28 @@ export function getAllStationTransfers(db: Database): StationTransfer[] {
   return transfers;
 }
 
+export function hasStationTransfer(
+  db: Database,
+  firstStationId: string,
+  secondStationId: string,
+): boolean {
+  if (firstStationId === secondStationId) return true;
+  const [stationAId, stationBId] = normalizeStationPair(
+    firstStationId,
+    secondStationId,
+  );
+  const statement = db.prepare(
+    `SELECT 1
+     FROM station_transfers
+     WHERE station_a_id = ? AND station_b_id = ?
+     LIMIT 1`,
+  );
+  statement.bind([stationAId, stationBId]);
+  const found = statement.step();
+  statement.free();
+  return found;
+}
+
 export function getConnectingStations(
   db: Database,
   stationId: string,

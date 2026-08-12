@@ -542,15 +542,7 @@ export default function SimpleInputTab() {
           }
         >
           {signFonts.ready ? (
-            <SignComponent
-              {...previewData}
-              stationNumberStyle={
-                currentStyle === "jreast" || currentStyle === "jreastbranch"
-                  ? "jreast"
-                  : undefined
-              }
-              ref={ref}
-            />
+            <SignComponent {...previewData} ref={ref} />
           ) : (
             <CanvasFontLoading show={!heldPreview && signFonts.showLoader} />
           )}

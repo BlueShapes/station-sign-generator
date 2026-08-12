@@ -14,6 +14,7 @@ export interface ResolvedStationNumber {
   value: string;
   prefix: string;
   line_color: string;
+  station_number_style: string;
 }
 
 // ── Stations ──────────────────────────────────────────────────────────────────
@@ -195,19 +196,25 @@ export function getResolvedStationNumber(
   if (!stationNumber) return null;
 
   const lineStmt = db.prepare(
-    `SELECT prefix, line_color FROM lines WHERE id = ?`,
+    `SELECT l.prefix, l.line_color, c.station_number_style
+       FROM lines l
+       LEFT JOIN companies c ON c.id = l.company_id
+      WHERE l.id = ?`,
   );
   lineStmt.bind([stationNumber.line_id]);
 
   let prefix = "";
   let lineColor = "#000000";
+  let stationNumberStyle = "jreast";
   if (lineStmt.step()) {
     const row = lineStmt.getAsObject() as {
       prefix: string | null;
       line_color: string | null;
+      station_number_style: string | null;
     };
     prefix = row.prefix ?? "";
     lineColor = row.line_color ?? "#000000";
+    stationNumberStyle = row.station_number_style ?? "jreast";
   }
   lineStmt.free();
 
@@ -215,6 +222,7 @@ export function getResolvedStationNumber(
     ...stationNumber,
     prefix,
     line_color: lineColor,
+    station_number_style: stationNumberStyle,
   };
 }
 

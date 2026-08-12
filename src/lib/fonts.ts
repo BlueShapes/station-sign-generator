@@ -35,6 +35,8 @@ export const JR_CENTRAL_FONT_SPECS = [
   "700 1em ZenMaruGothic",
   "400 1em PublicSans",
   ...JR_CENTRAL_BADGE_FONT_SPECS,
+  ...HIND_BADGE_FONT_SPECS,
+  ...METRO_BADGE_FONT_SPECS,
 ] as const;
 
 export const JR_CENTRAL_STATION_NAME_FONT_FAMILY = "ZenMaruGothic";
@@ -44,18 +46,17 @@ export const JR_CENTRAL_STATION_NUMBER_FONT_FAMILY = "PublicSans";
 export const JR_EAST_FONT_SPECS = [
   ...CJK_FONT_SPECS,
   ...HIND_BADGE_FONT_SPECS,
-] as const;
-
-const JR_EAST_METRO_BADGE_FONT_SPECS = [
-  ...CJK_FONT_SPECS,
   ...METRO_BADGE_FONT_SPECS,
+  ...JR_CENTRAL_BADGE_FONT_SPECS,
 ] as const;
 
 export const JR_WEST_FONT_SPECS = [...NOTO_SANS_JP_FONT_SPECS] as const;
 
 export const METRO_LONG_FONT_SPECS = [
   ...NOTO_SANS_JP_FONT_SPECS,
+  ...HIND_BADGE_FONT_SPECS,
   ...METRO_BADGE_FONT_SPECS,
+  ...JR_CENTRAL_BADGE_FONT_SPECS,
   ...JOST_FONT_SPECS,
 ] as const;
 
@@ -115,7 +116,7 @@ export function getLineMapFontSpecs(
 
 export function getStationSignFontSpecs(
   style: CanvasSignStyle,
-  stationNumberStyle?: string,
+  _stationNumberStyle?: string,
 ): readonly string[] {
   if (style === "jrcentral") {
     return JR_CENTRAL_FONT_SPECS;
@@ -131,9 +132,6 @@ export function getStationSignFontSpecs(
   }
   if (style === "jrwest" || style === "jrwestlarge") {
     return JR_WEST_FONT_SPECS;
-  }
-  if (stationNumberStyle === "tokyometro") {
-    return JR_EAST_METRO_BADGE_FONT_SPECS;
   }
   return JR_EAST_FONT_SPECS;
 }

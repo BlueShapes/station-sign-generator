@@ -7,6 +7,7 @@ export const TRANSIT_NAME_FONT = 5;
 export const TRANSIT_SECONDARY_NAME_FONT = 3.5;
 export const TRANSIT_NAME_LINE_GAP = 0.5;
 export const TRANSIT_DIAGONAL_ANGLE = 45;
+export const TRANSIT_DIAGONAL_TEXT_GAP = 7;
 export const MIN_READABLE_TRANSIT_SECONDARY_FONT_PX = 10;
 
 export function isTransitSecondaryNameExportTooSmall(
@@ -203,7 +204,7 @@ export function layoutHorizontalTransitLines(
     width,
     height:
       Math.min(nameWidths.length, TRANSIT_ITEMS_PER_GROUP) *
-        (TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP) -
+      (TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP) -
       (nameWidths.length > 0 ? TRANSIT_ITEM_GAP : 0),
   };
 }
@@ -222,8 +223,21 @@ export function layoutDiagonalTransitLines(
   if (nameWidths.length === 0) {
     return { items: [], width: 0, height: 0 };
   }
-  const itemStep = TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP;
   const diagonalFactor = Math.SQRT1_2;
+  const textSafeStep = Math.max(
+    0,
+    ...nameHeights.map((nameHeight) =>
+      nameHeight > 0
+        ? Math.ceil(
+          (nameHeight + TRANSIT_DIAGONAL_TEXT_GAP) / diagonalFactor,
+        )
+        : 0,
+    ),
+  );
+  const itemStep = Math.max(
+    TRANSIT_ICON_SIZE + TRANSIT_ITEM_GAP,
+    textSafeStep,
+  );
   const items = nameWidths.map((_, index) => ({
     x: 0,
     y:
@@ -236,8 +250,8 @@ export function layoutDiagonalTransitLines(
     ...nameWidths.map((nameWidth, index) =>
       nameWidth > 0
         ? TRANSIT_ICON_SIZE +
-          TRANSIT_ICON_NAME_GAP +
-          (nameWidth + nameHeights[index]) * diagonalFactor
+        TRANSIT_ICON_NAME_GAP +
+        (nameWidth + nameHeights[index]) * diagonalFactor
         : TRANSIT_ICON_SIZE,
     ),
   );
@@ -247,8 +261,8 @@ export function layoutDiagonalTransitLines(
       Math.max(
         (index + 1) * TRANSIT_ICON_SIZE + index * TRANSIT_ITEM_GAP,
         index * itemStep +
-          TRANSIT_ICON_SIZE +
-          (nameWidth + nameHeights[index]) * diagonalFactor,
+        TRANSIT_ICON_SIZE +
+        (nameWidth + nameHeights[index]) * diagonalFactor,
       ),
     ),
   );

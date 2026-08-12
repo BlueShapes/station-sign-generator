@@ -175,7 +175,7 @@ route:
     station-number-style-tokyometro: Stil von Tokyo Metro / Toei Subway
     station-number-style-preview: Beispielplakette (Unternehmensfarbe als Linienfarbe)
     empty: Noch keine Unternehmen vorhanden
-    delete-confirm: Dieses Unternehmen löschen? Zugehörige Linien werden ebenfalls gelöscht.
+    delete-confirm: Dieses Unternehmen löschen? Seine Linien und alle durchgehenden Routen, die sie enthalten, werden ebenfalls gelöscht.
   special-zone:
     title: Sonderzonen
     add: Zone hinzufügen
@@ -199,7 +199,10 @@ route:
     select: Linie auswählen
     all: Alle Unternehmen
     unassigned-company: Kein Unternehmen zugewiesen
-    delete-confirm: Diese Linie löschen?
+    delete-confirm: Diese Linie löschen? Alle durchgehenden Routen, die sie enthalten, werden ebenfalls gelöscht.
+    delete-all: Alle Linien löschen
+    delete-all-confirm: Alle Linien löschen? Zugehörige Stationszuordnungen, Stationsnummern, Zugarten und alle durchgehenden Routen werden ebenfalls gelöscht. Dies kann nicht rückgängig gemacht werden.
+    delete-targets: Zu löschende Linien
     prefix-preview: Vorschau der Linienplakette
     station-number-preview: Vorschau der Stationsnummer (01)
   through-route:
@@ -217,12 +220,22 @@ route:
     direction: Abschnittsrichtung
     forward: Vorwärts (Bahnhofsreihenfolge)
     reverse: Rückwärts (entgegen der Bahnhofsreihenfolge)
+    guide-title: Regeln für eine gültige Route
+    guide-intro: Der reale Betrieb wird nicht geprüft. Speichern lassen sich Routen, die in den erfassten Daten einen einzigen durchgehenden Weg ohne Verzweigung bilden.
+    guide-section: Wählen Sie je Abschnitt zwei verschiedene Bahnhöfe derselben Linie als Ein- und Ausfahrt.
+    guide-direction: Vorwärts folgt der erfassten Bahnhofsreihenfolge, rückwärts verläuft entgegengesetzt. Bei einer Ringlinie bestimmt die Richtung die Seite des Rings.
+    guide-connection: Jeder folgende Abschnitt muss am gleichen Bahnhofseintrag beginnen, an dem der vorherige endet, oder an einem durch einen expliziten Umstieg verbundenen Bahnhof.
     delete-confirm: Diese durchgehende Route löschen?
+    service-help: Legen Sie die Zugarten für diese gesamte durchgehende Route fest. Halte können nach dem Speichern unten im Routeneditor festgelegt werden.
+    service-editor-help: Zugarten und Halte für „{name}“ werden bearbeitet. Abschnitte oder Reihenfolge können im Editor für durchgehende Routen geändert werden.
     error-incomplete: Wählen Sie für jeden Abschnitt eine Linie und beide Endbahnhöfe aus.
     error-empty: Fügen Sie mindestens einen Linienabschnitt hinzu.
     error-station-not-on-line: Ein ausgewählter Bahnhof gehört nicht zur Linie.
     error-invalid-direction: Der Ausfahrtsbahnhof ist vom Einfahrtsbahnhof in der gewählten Richtung nicht erreichbar.
     error-disconnected: Benachbarte Linienabschnitte haben keinen gemeinsamen Anschlussbahnhof.
+    error-same-station: Wählen Sie für Ein- und Ausfahrt unterschiedliche Bahnhöfe.
+    error-invalid-direction-detail: 'Um von „{entry}“ nach „{exit}“ zu fahren, wählen Sie „{direction}“.'
+    error-disconnected-detail: 'Wählen Sie für Abschnitt {current} denselben Bahnhofseintrag wie „{station}“, die Ausfahrt von Abschnitt {previous}, oder fügen Sie einen expliziten Umstieg hinzu.'
   service:
     title: Zugarten
     local: Nahverkehr
@@ -257,13 +270,14 @@ route:
     select: Station auswählen
     transfer-title: "Umsteigeinformationen — {name}"
     transfer-manage: Umsteigeinformationen anzeigen und bearbeiten
+    transfer-line-select: Anschlusslinie
     transfer-select: Umsteigebahnhof
     transfer-empty: Keine Umsteigebeziehungen
     same-id-lines: Linien mit derselben Bahnhofs-ID
     same-id-lines-help: Diese Linien teilen denselben Bahnhofseintrag und gelten automatisch als Umstieg. Sie sind hier schreibgeschützt.
     same-id-lines-empty: Keine andere Linie teilt diese Bahnhofs-ID
     explicit-transfers: Explizite Umstiege zwischen Bahnhöfen
-    explicit-transfers-help: Umstiege zwischen unterschiedlichen Bahnhofs-IDs hinzufügen oder entfernen.
+    explicit-transfers-help: Verbindungen zwischen verschiedenen Bahnhofseinträgen hinzufügen oder entfernen. Bereits hinzugefügte Bahnhöfe stehen unten und können auch Durchgangsrouten verbinden.
   sign:
     style: Stil
     direction: Richtung
@@ -313,12 +327,16 @@ route:
     transit-show-names: Namen der Umsteigelinien anzeigen
     download-text-warning: Speichern (zweite Sprache evtl. unleserlich)
     font-size: Schriftgröße des Stationsnamens
+    font-size-small: Klein
+    font-size-medium: Mittel
+    font-size-large: Groß
     overlap-warning-title: Überlappende Beschriftungen erkannt
     overlap-warning: Einige Stationsnamen überlappen sich. Verkleinere die Schrift.
     station-number-mode: Anzeige der Stationsnummer
     station-number-none: Keine
     station-number-badge: Plakette
     station-number-dot: Punkt ersetzen
+    emphasize-connected-station-names: Namen von Streckenverknüpfungsstationen vergrößern
     name-style: Namensstil
     name-style-normal: Normal
     name-style-above: Oben

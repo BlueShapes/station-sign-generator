@@ -2,6 +2,7 @@ export const DEFAULT_TRACK_WIDTH = 6;
 export const MIN_TRACK_WIDTH = 2;
 export const MAX_TRACK_WIDTH = 30;
 export const DEFAULT_FADE_DOT_SPACING = 10;
+export const CONNECTED_STATION_NAME_SCALE = 1.15;
 
 const DEFAULT_SERVICE_TRACK_WIDTH = 4;
 const DEFAULT_SERVICE_TRACK_GAP = 16;
@@ -65,6 +66,53 @@ export interface SegmentedTrackEndCap {
   y: number;
   color: string;
   radius: number;
+}
+
+export interface SegmentedTrackRun {
+  points: Array<{ x: number; y: number }>;
+  color: string;
+}
+
+/**
+ * Merge adjacent segments with the same colour into one canvas stroke.
+ * Drawing every edge separately can leave an anti-aliased hairline at the
+ * shared endpoint, especially when a thick track extends past a badge.
+ */
+export function getSegmentedTrackRuns(
+  stationPoints: Array<{ x: number; y: number }>,
+  colors: string[],
+): SegmentedTrackRun[] {
+  if (
+    colors.length === 0 ||
+    colors.length !== stationPoints.length - 1
+  ) {
+    return [];
+  }
+
+  const runs: SegmentedTrackRun[] = [];
+  let currentRun: SegmentedTrackRun = {
+    points: [stationPoints[0], stationPoints[1]],
+    color: colors[0],
+  };
+
+  for (let index = 1; index < colors.length; index += 1) {
+    const color = colors[index];
+    const isSameColor =
+      color.trim().toLowerCase() === currentRun.color.trim().toLowerCase();
+    if (isSameColor) {
+      currentRun.points.push(stationPoints[index + 1]);
+      continue;
+    }
+
+    runs.push(currentRun);
+    currentRun = {
+      points: [stationPoints[index], stationPoints[index + 1]],
+      color,
+    };
+  }
+
+  runs.push(currentRun);
+  return runs;
 }
 
 /**
@@ -135,6 +183,35 @@ export function getConnectedMarkerExtraExtent(markerExtents: number[]): number {
     validExtents.reduce((sum, extent) => sum + extent, 0) -
       Math.max(...validExtents),
   );
+}
+
+/**
+ * Connected station-number groups need extra room when they sit on the route
+ * itself, or when vertical station names place every badge on the same row.
+ * Standard horizontal names alternate badges above and below the route, so
+ * expanding those gaps would only make the map unnecessarily sparse.
+ */
+export function shouldExpandStationNumberGroups(
+  mode: "none" | "badge" | "dot",
+  orientation: "horizontal" | "vertical",
+  nameStyle?: "normal" | "above" | "below",
+): boolean {
+  return (
+    mode === "dot" ||
+    (mode === "badge" &&
+      orientation === "horizontal" &&
+      (nameStyle === "above" || nameStyle === "below"))
+  );
+}
+
+/** Slightly emphasize route-connection stations that carry multiple numbers. */
+export function getConnectedStationNameScale(
+  stationNumberCount: number,
+  emphasize: boolean,
+): number {
+  return emphasize && stationNumberCount >= 2
+    ? CONNECTED_STATION_NAME_SCALE
+    : 1;
 }
 
 /**

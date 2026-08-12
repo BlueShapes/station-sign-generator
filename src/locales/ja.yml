@@ -175,7 +175,7 @@ route:
     station-number-style-tokyometro: 東京メトロ・都営地下鉄風
     station-number-style-preview: サンプルバッジ（会社カラーを路線カラーとして使用）
     empty: 会社がありません
-    delete-confirm: この会社を削除しますか？関連する路線も削除されます。
+    delete-confirm: この会社を削除しますか？所属する路線と、それらを含む直通系統も削除されます。
   special-zone:
     title: 特定都区市内
     add: 区域を追加
@@ -199,7 +199,10 @@ route:
     select: 路線を選択してください
     all: すべての会社
     unassigned-company: 会社未設定
-    delete-confirm: この路線を削除しますか？
+    delete-confirm: この路線を削除しますか？この路線を含む直通系統も削除されます。
+    delete-all: すべての路線を削除
+    delete-all-confirm: すべての路線を削除しますか？各路線に関連する駅の所属、駅番号、種別、直通系統もすべて削除され、元に戻せません。
+    delete-targets: 削除される路線
     prefix-preview: 路線インジケータバッジのプレビュー
     station-number-preview: 駅番号のプレビュー（01）
   through-route:
@@ -217,12 +220,22 @@ route:
     direction: 区間の向き
     forward: 順方向（駅順に進む）
     reverse: 逆方向（駅順を戻る）
+    guide-title: 作成できる経路の規則
+    guide-intro: 実在する運行経路かどうかは判定しません。登録データ上で、枝分かれのない1本の経路になる場合に保存できます。
+    guide-section: 各区間では、同じ路線上にある異なる2駅を入口駅と出口駅にします。
+    guide-direction: 順方向は登録された駅順、逆方向はその反対に進みます。環状線では向きによって通る側が変わります。
+    guide-connection: 次の区間の入口駅は、直前の出口駅と同じ駅データ、または「別駅間の乗換関係」で結ばれた駅にします。
     delete-confirm: この直通経路を削除しますか？
+    service-help: この直通経路全体で使用する種別を設定します。停車駅は保存後、画面下部の路線編集で設定できます。
+    service-editor-help: 「{name}」の種別と停車駅を編集しています。経路の区間や順序は直通経路の編集画面で変更できます。
     error-incomplete: すべての区間で路線と両端駅を選択してください。
     error-empty: 路線区間を1件以上追加してください。
     error-station-not-on-line: 選択した駅が路線に含まれていません。
     error-invalid-direction: 入口駅から出口駅へ指定した方向では進めません。
     error-disconnected: 隣り合う路線区間の接続駅が一致していません。
+    error-same-station: 入口駅と出口駅には異なる駅を選択してください。
+    error-invalid-direction-detail: "「{entry}」から「{exit}」へ進むには「{direction}」を選択してください。"
+    error-disconnected-detail: "区間 {current} の入口駅は、区間 {previous} の出口「{station}」と同じ駅データを選ぶか、両駅を「別駅間の乗換関係」に追加してください。"
   service:
     title: 種別
     local: 各駅停車
@@ -257,13 +270,14 @@ route:
     select: 駅を選択してください
     transfer-title: "乗換情報 — {name}"
     transfer-manage: 乗換情報を確認・編集
+    transfer-line-select: 乗換先の路線
     transfer-select: 乗換先の駅
     transfer-empty: 乗換関係はありません
     same-id-lines: 同一駅IDで所属する他路線
     same-id-lines-help: 同じ駅データを共有する路線です。乗換候補に自動で含まれ、この画面からは変更できません。
     same-id-lines-empty: 同一駅IDを共有する他路線はありません
     explicit-transfers: 別駅間の乗換関係
-    explicit-transfers-help: 異なる駅ID同士を乗換可能として追加・削除します。
+    explicit-transfers-help: 異なる駅データ同士を乗換可能として追加・削除します。追加済みの駅は候補から除かれて下に表示され、直通経路の接続にも使用できます。
   sign:
     style: スタイル
     direction: 表示方向
@@ -313,12 +327,16 @@ route:
     transit-show-names: 乗換先の路線名を表示
     download-text-warning: 保存（第2言語が読めない可能性）
     font-size: 駅名フォントサイズ
+    font-size-small: 小
+    font-size-medium: 中
+    font-size-large: 大
     overlap-warning-title: 駅名の重なりを検出
     overlap-warning: 一部の駅名が重なっています。フォントサイズを小さくしてみてください。
     station-number-mode: 駅番号の表示
     station-number-none: 非表示
     station-number-badge: バッジ
     station-number-dot: ドットを置換
+    emphasize-connected-station-names: 接続駅の駅名を大きく表示
     name-style: 駅名スタイル
     name-style-normal: 標準
     name-style-above: 上（縦書き）

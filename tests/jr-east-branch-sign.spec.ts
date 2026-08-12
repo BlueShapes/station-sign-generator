@@ -229,14 +229,22 @@ test("a three-branch side makes the opposite center line thin", async ({
     {
       data: THREE_CHOICE_SIGN_DATA,
       expectedRightPriorityColor: [58, 146, 0],
+      expectedUpperRightRootColor: [255, 255, 255],
     },
     {
       data: THREE_AND_TWO_CHOICE_SIGN_DATA,
       expectedRightPriorityColor: [48, 48, 255],
+      // A two-branch diagonal uses the thicker three-branch geometry when the
+      // opposite side has three branches, so its upper root reaches this pixel.
+      expectedUpperRightRootColor: [48, 48, 255],
     },
   ];
 
-  for (const { data, expectedRightPriorityColor } of cases) {
+  for (const {
+    data,
+    expectedRightPriorityColor,
+    expectedUpperRightRootColor,
+  } of cases) {
     await setSignStyle(page, "jreastbranch", data);
     const preview = page.locator('img[src^="data:image/png"]').first();
     await preview.waitFor({ state: "visible" });
@@ -263,7 +271,7 @@ test("a three-branch side makes the opposite center line thin", async ({
 
       return {
         outsideThinLine: readPixel(275, 77),
-        outsideTwoBranchRoot: readPixel(354, 76),
+        upperRightRoot: readPixel(354, 76),
         leftPriorityTrunk: readPixel(200, 88),
         leftPriorityRoot: readPixel(136, 88),
         rightPriorityTrunk: readPixel(275, 88),
@@ -272,7 +280,9 @@ test("a three-branch side makes the opposite center line thin", async ({
     });
 
     expect(pixels.outsideThinLine.slice(0, 3)).toEqual([255, 255, 255]);
-    expect(pixels.outsideTwoBranchRoot.slice(0, 3)).toEqual([255, 255, 255]);
+    expect(pixels.upperRightRoot.slice(0, 3)).toEqual(
+      expectedUpperRightRootColor,
+    );
     expect(pixels.leftPriorityTrunk.slice(0, 3)).toEqual([240, 0, 0]);
     expect(pixels.leftPriorityRoot.slice(0, 3)).toEqual([240, 0, 0]);
     expect(pixels.rightPriorityTrunk.slice(0, 3)).toEqual(

@@ -34,6 +34,7 @@ import {
   type StationNumberMode,
 } from "@/components/signs/LineMapRenderer";
 import { shouldShowLineIndicatorBadge } from "@/components/signs/lineIndicatorStyle";
+import { resolveConnectedStationNumbers } from "@/components/signs/stationNumberGroup";
 import { layoutHorizontalStationDetails } from "@/components/signs/transitLineLayout";
 import {
   getTrackEdgeRadius,
@@ -42,6 +43,7 @@ import {
 } from "@/components/signs/lineMapGeometry";
 import {
   applyParallelRouteLanes,
+  getMultiLineLinearLabelSide,
   getParallelRouteIdsByStation,
   layoutCircularMultiLineMap,
   layoutMultiLineMap,
@@ -52,9 +54,17 @@ import {
 
 export const multiLineMapScale = 2;
 const FONT = "NotoSansJP, Noto Sans JP, sans-serif";
-export const MULTI_LINE_STATION_NAME_SCALE = 1.3;
-const MULTI_LINE_JP_FONT = JP_FONT * MULTI_LINE_STATION_NAME_SCALE;
-const MULTI_LINE_EN_FONT = EN_FONT * MULTI_LINE_STATION_NAME_SCALE;
+export type MultiLineStationFontSize = "small" | "medium" | "large";
+export const MULTI_LINE_STATION_NAME_SCALES: Record<
+  MultiLineStationFontSize,
+  number
+> = {
+  // Small matches the single-line route map; large preserves the original
+  // multiple-line map size. Medium is the midpoint between them.
+  small: 1,
+  medium: 1.15,
+  large: 1.3,
+};
 
 export interface MultiLineRouteData {
   line: Line;
@@ -75,6 +85,7 @@ interface MultiLineMapRendererProps {
   showSecondaryLang?: boolean;
   showTransitNames?: boolean;
   lineStyles?: Record<string, string>;
+  stationFontSize?: MultiLineStationFontSize;
 }
 
 interface StationItem {
@@ -133,9 +144,13 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
       showSecondaryLang = true,
       showTransitNames = true,
       lineStyles = {},
+      stationFontSize = "large",
     },
     ref,
   ) {
+    const stationNameScale = MULTI_LINE_STATION_NAME_SCALES[stationFontSize];
+    const multiLineJpFont = JP_FONT * stationNameScale;
+    const multiLineEnFont = EN_FONT * stationNameScale;
     const effectiveTrackWidth = normalizeTrackWidth(trackWidth);
     const laneGap = Math.max(16, effectiveTrackWidth + 4);
     const routeInputs: MultiLineLayoutInput[] = routes.map(({ line, stations }) => ({
@@ -252,25 +267,27 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
         .map((lineId) => routeById.get(lineId))
         .filter((route): route is MultiLineRouteData => !!route);
     };
-    const getStationNumbers = (item: StationItem): StationNumberInfo[] => {
+    const getStationNumberPresentation = (item: StationItem) => {
       const stationRoutes = getStationRoutes(item);
       const numbers = stationRoutes.flatMap((route) => {
         const number = route.stationNumbers[item.station.id];
         return number?.value
-          ? [{ ...number, color: number.color ?? route.line.line_color }]
+          ? [
+              {
+                ...number,
+                color: number.color ?? route.line.line_color,
+                style: number.style ?? route.companyStyle ?? "jreast",
+              },
+            ]
           : [];
       });
-      if (stationRoutes.length < 2 || !item.station.three_letter_code) {
-        return numbers;
-      }
-
-      // A three-letter code identifies the station, not each serving line.
-      // In the vertical connected form the first badge owns the shared header;
-      // subsequent badges contribute only their line prefix and station number.
-      return numbers.map((number) => ({
-        ...number,
-        threeLetterCode: null,
-      }));
+      // A three-letter code identifies the station. JR East badges can share
+      // one connected header; mixed badge styles keep it on JR East only.
+      return resolveConnectedStationNumbers(
+        numbers,
+        item.station.three_letter_code,
+        stationRoutes.length > 1,
+      );
     };
     const getStationTransits = (item: StationItem): Line[] => {
       const seen = new Set<string>();
@@ -285,6 +302,7 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
     const renderMarker = (
       item: StationItem,
       numbers: StationNumberInfo[],
+      sharedThreeLetterCode: string | null,
     ) => {
       const stationRoutes = getStationRoutes(item);
       if (stationNumberMode === "dot" && numbers.length > 0) {
@@ -295,7 +313,7 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
           1,
           false,
           1,
-          stationRoutes.length > 1 ? item.station.three_letter_code : null,
+          sharedThreeLetterCode,
         );
         return (
           <StationNumberBadgeGroup
@@ -305,9 +323,7 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
             orientation={orientation}
             fallbackColor={item.route.line.line_color}
             strokeWidthAdjust={1}
-            sharedThreeLetterCode={
-              stationRoutes.length > 1 ? item.station.three_letter_code : null
-            }
+            sharedThreeLetterCode={sharedThreeLetterCode}
           />
         );
       }
@@ -335,14 +351,18 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
     const renderLinearStation = (item: StationItem) => {
       const { path, route, station, x, y } = item;
       const stationRoutes = getStationRoutes(item);
-      const numbers = getStationNumbers(item);
+      const { numbers, sharedThreeLetterCode } =
+        getStationNumberPresentation(item);
       const verticalGroup = stationRoutes.length > 1;
       const orientation = verticalGroup ? "vertical" : "horizontal";
       const showSnBadge = stationNumberMode === "badge" && numbers.length > 0;
       const showSnDot = stationNumberMode === "dot" && numbers.length > 0;
-      const labelAbove = isCircular && layout.loopCenter
-        ? x < layout.loopCenter.x
-        : path.labelSide === "above";
+      const labelAbove = getMultiLineLinearLabelSide(
+        path,
+        x,
+        layout.loopCenter?.x,
+        rootStationIds,
+      ) === "above";
       const stationTransits = getStationTransits(item);
       const markerRadius = DOT_R;
       const transitLayout = getHorizontalTransitLayout(
@@ -352,9 +372,9 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
       );
       const primaryName = station[primaryLangField] ?? "";
       const secondaryName = showSecondaryLang ? station[secondaryLangField] : null;
-      const primaryWidth = measureTextWidth(primaryName, MULTI_LINE_JP_FONT);
+      const primaryWidth = measureTextWidth(primaryName, multiLineJpFont);
       const secondaryWidth = secondaryName
-        ? measureTextWidth(secondaryName, MULTI_LINE_EN_FONT)
+        ? measureTextWidth(secondaryName, multiLineEnFont)
         : 0;
       const dimensions = numbers.length > 0
         ? stationNumberGroupDimensions(
@@ -363,7 +383,7 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
             1,
             false,
             showSnDot ? 1 : 0,
-            verticalGroup ? station.three_letter_code : null,
+            sharedThreeLetterCode,
           )
         : snBadgeDims(false);
       const markerEdgeRadius = getTrackEdgeRadius(markerRadius, effectiveTrackWidth);
@@ -383,8 +403,8 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
           labelAbove ? "above" : "below",
           labelAbove ? numberY : numberY + dimensions.h,
           SN_BADGE_GAP,
-          MULTI_LINE_JP_FONT,
-          secondaryName ? MULTI_LINE_EN_FONT : 0,
+          multiLineJpFont,
+          secondaryName ? multiLineEnFont : 0,
           stationTransits.length > 0 ? transitLayout.height : 0,
         );
         primaryNameY = details.primaryNameY;
@@ -395,8 +415,8 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
           labelAbove ? "above" : "below",
           labelAbove ? y - effectiveMarkerRadius : y + effectiveMarkerRadius,
           labelAbove ? 8 : 6,
-          MULTI_LINE_JP_FONT,
-          secondaryName ? MULTI_LINE_EN_FONT : 0,
+          multiLineJpFont,
+          secondaryName ? multiLineEnFont : 0,
           stationTransits.length > 0 ? transitLayout.height : 0,
         );
         primaryNameY = details.primaryNameY;
@@ -406,7 +426,7 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
 
       return (
         <Fragment key={station.id}>
-          {renderMarker(item, numbers)}
+          {renderMarker(item, numbers, sharedThreeLetterCode)}
           {showSnBadge && (
             <StationNumberBadgeGroup
               x={x - dimensions.w / 2}
@@ -414,14 +434,12 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
               numbers={numbers}
               orientation={orientation}
               fallbackColor={route.line.line_color}
-              sharedThreeLetterCode={
-                verticalGroup ? station.three_letter_code : null
-              }
+              sharedThreeLetterCode={sharedThreeLetterCode}
             />
           )}
-          <Text x={x - primaryWidth / 2} y={primaryNameY} text={primaryName} fontFamily={FONT} fontSize={MULTI_LINE_JP_FONT} fill="#222" />
+          <Text x={x - primaryWidth / 2} y={primaryNameY} text={primaryName} fontFamily={FONT} fontSize={multiLineJpFont} fill="#222" />
           {secondaryName && (
-            <Text x={x - secondaryWidth / 2} y={secondaryNameY} text={secondaryName} fontFamily={FONT} fontSize={MULTI_LINE_EN_FONT} fill="#666" />
+            <Text x={x - secondaryWidth / 2} y={secondaryNameY} text={secondaryName} fontFamily={FONT} fontSize={multiLineEnFont} fill="#666" />
           )}
           <HorizontalTransitLines
             x={x - transitLayout.width / 2}
@@ -437,7 +455,8 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
 
     const renderCircularStation = (item: StationItem) => {
       const center = layout.loopCenter!;
-      const numbers = getStationNumbers(item);
+      const { numbers, sharedThreeLetterCode } =
+        getStationNumberPresentation(item);
       const stationRoutes = getStationRoutes(item);
       const orientation = stationRoutes.length > 1 ? "vertical" : "horizontal";
       const dimensions = numbers.length > 0
@@ -447,7 +466,7 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
             1,
             false,
             stationNumberMode === "dot" ? 1 : 0,
-            stationRoutes.length > 1 ? item.station.three_letter_code : null,
+            sharedThreeLetterCode,
           )
         : snBadgeDims(false);
       const stationTransits = getStationTransits(item);
@@ -465,14 +484,14 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
       const anchorY = center.y + sinA * labelDistance;
       const primaryName = item.station[primaryLangField] ?? "";
       const secondaryName = showSecondaryLang ? item.station[secondaryLangField] : null;
-      const primaryWidth = measureTextWidth(primaryName, MULTI_LINE_JP_FONT);
+      const primaryWidth = measureTextWidth(primaryName, multiLineJpFont);
       const secondaryWidth = secondaryName
-        ? measureTextWidth(secondaryName, MULTI_LINE_EN_FONT)
+        ? measureTextWidth(secondaryName, multiLineEnFont)
         : 0;
       const transitLayout = getHorizontalTransitLayout(stationTransits, showTransitNames, "right");
       const blockWidth = Math.max(primaryWidth, secondaryWidth, transitLayout.width);
-      const blockHeight = MULTI_LINE_JP_FONT +
-        (secondaryName ? MULTI_LINE_EN_FONT + 2 : 0) +
+      const blockHeight = multiLineJpFont +
+        (secondaryName ? multiLineEnFont + 2 : 0) +
         (stationTransits.length ? transitLayout.height + 3 : 0);
       const showSnBadge = stationNumberMode === "badge" && numbers.length > 0;
       const isRight = cosA > C_DIAG;
@@ -517,7 +536,7 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
 
       return (
         <Fragment key={item.station.id}>
-          {renderMarker(item, numbers)}
+          {renderMarker(item, numbers, sharedThreeLetterCode)}
           {showSnBadge && (
             <StationNumberBadgeGroup
               x={badgeX}
@@ -525,20 +544,16 @@ const MultiLineMapRenderer = forwardRef<Konva.Stage, MultiLineMapRendererProps>(
               numbers={numbers}
               orientation={orientation}
               fallbackColor={item.route.line.line_color}
-              sharedThreeLetterCode={
-                stationRoutes.length > 1
-                  ? item.station.three_letter_code
-                  : null
-              }
+              sharedThreeLetterCode={sharedThreeLetterCode}
             />
           )}
-          <Text x={blockX} y={blockY} width={blockWidth} text={primaryName} fontFamily={FONT} fontSize={MULTI_LINE_JP_FONT} fill="#222" align={textAlign} />
+          <Text x={blockX} y={blockY} width={blockWidth} text={primaryName} fontFamily={FONT} fontSize={multiLineJpFont} fill="#222" align={textAlign} />
           {secondaryName && (
-            <Text x={blockX} y={blockY + MULTI_LINE_JP_FONT + 2} width={blockWidth} text={secondaryName} fontFamily={FONT} fontSize={MULTI_LINE_EN_FONT} fill="#666" align={textAlign} />
+            <Text x={blockX} y={blockY + multiLineJpFont + 2} width={blockWidth} text={secondaryName} fontFamily={FONT} fontSize={multiLineEnFont} fill="#666" align={textAlign} />
           )}
           <HorizontalTransitLines
             x={isRight ? blockX + blockWidth - transitLayout.width : blockX}
-            y={blockY + MULTI_LINE_JP_FONT + (secondaryName ? MULTI_LINE_EN_FONT + 4 : 2)}
+            y={blockY + multiLineJpFont + (secondaryName ? multiLineEnFont + 4 : 2)}
             lines={stationTransits}
             side="right"
             showNames={showTransitNames}

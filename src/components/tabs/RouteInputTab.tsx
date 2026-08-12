@@ -90,7 +90,9 @@ import {
 } from "@/db/repositories/station-transfers";
 import {
   getServicesByLine,
+  getServicesByThroughRoute,
   getServiceStopsByLine,
+  getServiceStopsByThroughRoute,
 } from "@/db/repositories/services";
 import {
   getAllThroughRoutes,
@@ -157,6 +159,7 @@ import LineMapRenderer, {
 import MultiLineMapRenderer, {
   multiLineMapScale,
   type MultiLineRouteData,
+  type MultiLineStationFontSize,
 } from "@/components/signs/MultiLineMapRenderer";
 import {
   applyParallelRouteLanes,
@@ -165,9 +168,11 @@ import {
 } from "@/components/signs/multiLineMapLayout";
 import {
   DEFAULT_TRACK_WIDTH,
+  getConnectedStationNameScale,
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
   normalizeTrackWidth,
+  shouldExpandStationNumberGroups,
 } from "@/components/signs/lineMapGeometry";
 import {
   isTransitSecondaryNameExportTooSmall,
@@ -203,6 +208,20 @@ const LANGUAGE_SLOT_LABEL_KEYS = [
   "route.linemap.lang-3rd",
   "route.linemap.lang-4th",
 ] as const;
+
+function getStationIdForLine(
+  db: Database,
+  stationIds: string[],
+  lineId: string,
+): string {
+  return (
+    stationIds.find((stationId) =>
+      getStationLines(db, stationId).some(
+        (stationLine) => stationLine.line_id === lineId,
+      ),
+    ) ?? stationIds[0] ?? ""
+  );
+}
 
 type AdjacentCandidate = AdjacentStationProps & {
   optionValue: string;
@@ -485,6 +504,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     useState<StationNumberMap>({});
   const [mapStationNumberGroups, setMapStationNumberGroups] =
     useState<StationNumberGroupMap>({});
+  const [
+    mapEmphasizeConnectedStationNames,
+    setMapEmphasizeConnectedStationNames,
+  ] = useState(true);
   const [mapNameStyle, setMapNameStyle] = useState<
     "normal" | "above" | "below"
   >("normal");
@@ -514,6 +537,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   );
   const [multiStationNumberMode, setMultiStationNumberMode] =
     useState<StationNumberMode>("dot");
+  const [multiStationFontSize, setMultiStationFontSize] =
+    useState<MultiLineStationFontSize>("large");
   const [multiTransitFilter, setMultiTransitFilter] = useState<string[]>([]);
 
   // Load lines when db becomes available
@@ -538,26 +563,30 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setMapTransitFilter([]);
   }, [db, selectedLineId]);
 
-  // Load services and service stops when line changes
+  // Load services and service stops when the selected line/through route changes.
   useEffect(() => {
-    if (!db || !selectedLineId) {
+    if (!db || (!selectedLineId && !selectedThroughRouteId)) {
       setMapServices([]);
       setMapSelectedServiceIds([]);
       setMapServiceStops({});
       return;
     }
-    const svcs = getServicesByLine(db, selectedLineId);
+    const svcs = selectedThroughRouteId
+      ? getServicesByThroughRoute(db, selectedThroughRouteId)
+      : getServicesByLine(db, selectedLineId!);
     setMapServices(svcs);
     setMapSelectedServiceIds([]);
     // Build serviceStops map: stationId → serviceId → status
-    const rawStops = getServiceStopsByLine(db, selectedLineId);
+    const rawStops = selectedThroughRouteId
+      ? getServiceStopsByThroughRoute(db, selectedThroughRouteId)
+      : getServiceStopsByLine(db, selectedLineId!);
     const stopMap: ServiceStopMap = {};
     for (const s of rawStops) {
       if (!stopMap[s.station_id]) stopMap[s.station_id] = {};
       stopMap[s.station_id][s.service_id] = s.status;
     }
     setMapServiceStops(stopMap);
-  }, [db, selectedLineId]);
+  }, [db, selectedLineId, selectedThroughRouteId]);
 
   // Reset center square line selection when station or primary line changes
   useEffect(() => {
@@ -591,7 +620,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         stationId: station.id,
         stationLines: getStationLines(db, station.id),
       })),
-    ];
+];
 
     for (const stationContext of stationContexts) {
       for (const stationLine of stationContext.stationLines) {
@@ -644,6 +673,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               : undefined,
             numberPrimaryPrefix: stationNumber?.prefix ?? "",
             numberPrimaryValue: stationNumber?.value ?? "",
+            numberPrimaryColor: stationNumber?.line_color,
+            numberPrimaryStyle: stationNumber?.station_number_style,
           };
         };
 
@@ -705,30 +736,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const orderedLeftAdjacentIds = selectedLeftAdjacentIds;
   const orderedRightAdjacentIds = selectedRightAdjacentIds;
 
-  // Enforce constraints when services have passed stations
-  useEffect(() => {
-    if (mapSelectedServiceIds.length === 0) return;
-    const startIdx = mapStartId
-      ? stations.findIndex((s) => s.id === mapStartId)
-      : 0;
-    const endIdx = mapEndId
-      ? stations.findIndex((s) => s.id === mapEndId)
-      : stations.length - 1;
-    const lo = Math.min(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
-    const hi = Math.max(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
-    const rangeStations = stations.slice(lo, hi + 1);
-    const hasPassedStations =
-      mapSelectedServiceIds.length >= 2 ||
-      rangeStations.some(
-        (s) =>
-          !mapSelectedServiceIds.some((id) => !!mapServiceStops[s.id]?.[id]),
-      );
-    if (hasPassedStations)
-      setMapNameStyle((s) => (s === "normal" ? "above" : s));
-    if (mapSelectedServiceIds.length >= 2)
-      setMapStationNumberMode((s) => (s === "dot" ? "none" : s));
-  }, [mapSelectedServiceIds, stations, mapStartId, mapEndId, mapServiceStops]);
-
   // Build sign data when station changes
   useEffect(() => {
     if (!db || !selectedLineId || !selectedStationId) {
@@ -756,11 +763,13 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     // Get station areas with zone details
     const areas = getStationAreasWithZones(db, currentStation.id);
 
-    // Get company color and station number style
+    // Get company color. Station-number appearance comes from the resolved
+    // source line, which may differ from the selected line (for example a
+    // branch inheriting its parent line's number).
     let baseColor = "#3a9200";
     let stationNumberStyle: string | undefined;
+    const companies = getAllCompanies(db);
     if (line?.company_id) {
-      const companies = getAllCompanies(db);
       const company = companies.find((c) => c.id === line.company_id);
       if (company) {
         baseColor = company.company_color;
@@ -801,6 +810,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       : currentNum
         ? [currentNum]
         : [];
+    stationNumberStyle =
+      currentNumbers[0]?.station_number_style ?? stationNumberStyle;
 
     // Center square colors — map selected line IDs to their colors
     const centerColors =
@@ -835,10 +846,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       threeLetterCode: currentStation.three_letter_code ?? undefined,
       numberPrimaryPrefix: currentNumbers[0]?.prefix ?? "",
       numberPrimaryValue: currentNumbers[0]?.value ?? "",
+      numberPrimaryColor: currentNumbers[0]?.line_color,
+      numberPrimaryStyle: currentNumbers[0]?.station_number_style,
       numberSecondaryPrefix: currentNumbers[1]?.prefix ?? "",
       numberSecondaryValue: currentNumbers[1]?.value ?? "",
+      numberSecondaryColor: currentNumbers[1]?.line_color,
+      numberSecondaryStyle: currentNumbers[1]?.station_number_style,
       numberTertiaryPrefix: currentNumbers[2]?.prefix ?? "",
       numberTertiaryValue: currentNumbers[2]?.value ?? "",
+      numberTertiaryColor: currentNumbers[2]?.line_color,
+      numberTertiaryStyle: currentNumbers[2]?.station_number_style,
       stationAreas: areas.map((a) => ({
         id: a.id,
         name: a.zone_abbreviation,
@@ -853,6 +870,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           arrowColor: station.arrowColor,
           numberPrimaryPrefix: station.numberPrimaryPrefix,
           numberPrimaryValue: station.numberPrimaryValue,
+          numberPrimaryColor: station.numberPrimaryColor,
+          numberPrimaryStyle: station.numberPrimaryStyle,
         }),
       ),
       right: (flipped ? selectedLeftStations : selectedRightStations).map(
@@ -864,6 +883,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
           arrowColor: station.arrowColor,
           numberPrimaryPrefix: station.numberPrimaryPrefix,
           numberPrimaryValue: station.numberPrimaryValue,
+          numberPrimaryColor: station.numberPrimaryColor,
+          numberPrimaryStyle: station.numberPrimaryStyle,
         }),
       ),
       baseColor,
@@ -872,7 +893,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       localLines: [
         ...allStationLines.filter((l) => l.id === selectedLineId),
         ...allStationLines.filter((l) => l.id !== selectedLineId),
-      ].map((l) => ({ id: l.id, prefix: l.prefix, color: l.line_color })),
+      ].map((l) => ({
+        id: l.id,
+        prefix: l.prefix,
+        color: l.line_color,
+        stationNumberStyle:
+          companies.find((company) => company.id === l.company_id)
+            ?.station_number_style ?? "jreast",
+      })),
       ratio,
       direction,
     };
@@ -918,13 +946,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         stations: [] as Station[],
         edgeLineIds: [] as string[],
         lineIds: [] as string[],
+        stationIdGroups: [] as string[][],
       };
     }
 
     const stationById = new Map(
       getAllStations(db).map((station) => [station.id, station]),
     );
-    const { stationIds, edgeLineIds, lineIds } = getThroughRoutePath(
+    const { stationIds, edgeLineIds, lineIds, stationIdGroups } = getThroughRoutePath(
       db,
       selectedThroughRouteId,
     );
@@ -935,12 +964,21 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         .filter((station): station is Station => !!station),
       edgeLineIds,
       lineIds,
+      stationIdGroups:
+        stationIdGroups ?? stationIds.map((stationId) => [stationId]),
     };
   }, [db, selectedThroughRouteId]);
 
   const mapSourceStations = selectedThroughRouteId
     ? throughRoutePath.stations
     : stations;
+  const mapSourceStationIdGroups = useMemo(
+    () =>
+      selectedThroughRouteId
+        ? throughRoutePath.stationIdGroups
+        : stations.map((station) => [station.id]),
+    [selectedThroughRouteId, throughRoutePath.stationIdGroups, stations],
+  );
   const mapSourceEdgeLineIds = useMemo(
     () =>
       selectedThroughRouteId
@@ -967,6 +1005,41 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setMapTransitFilter([]);
   }, [selectedLineId, selectedThroughRouteId, mapSourceStations]);
 
+  // Express services on both ordinary lines and through routes share the same
+  // route-map rendering constraints.
+  useEffect(() => {
+    if (mapSelectedServiceIds.length === 0) return;
+    const startIdx = mapStartId
+      ? mapSourceStations.findIndex((station) => station.id === mapStartId)
+      : 0;
+    const endIdx = mapEndId
+      ? mapSourceStations.findIndex((station) => station.id === mapEndId)
+      : mapSourceStations.length - 1;
+    const lo = Math.min(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
+    const hi = Math.max(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
+    const rangeStations = mapSourceStations.slice(lo, hi + 1);
+    const hasPassedStations =
+      mapSelectedServiceIds.length >= 2 ||
+      rangeStations.some(
+        (station) =>
+          !mapSelectedServiceIds.some(
+            (id) => !!mapServiceStops[station.id]?.[id],
+          ),
+      );
+    if (hasPassedStations) {
+      setMapNameStyle((style) => (style === "normal" ? "above" : style));
+    }
+    if (mapSelectedServiceIds.length >= 2) {
+      setMapStationNumberMode((mode) => (mode === "dot" ? "none" : mode));
+    }
+  }, [
+    mapSelectedServiceIds,
+    mapSourceStations,
+    mapStartId,
+    mapEndId,
+    mapServiceStops,
+  ]);
+
   // Compute transit lines for all stations when in line map mode
   useEffect(() => {
     if (!db || mapRouteLineIds.length === 0 || mapSourceStations.length === 0) {
@@ -975,9 +1048,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
     const result: Record<string, Line[]> = {};
     const routeLineIdSet = new Set(mapRouteLineIds);
-    for (const station of mapSourceStations) {
-      const transferLineIds = new Set(getTransferLineIds(db, station.id));
-      const stationLineRecords = getStationLines(db, station.id);
+    for (const [index, station] of mapSourceStations.entries()) {
+      const stationIds = mapSourceStationIdGroups[index] ?? [station.id];
+      const transferLineIds = new Set(
+        stationIds.flatMap((stationId) => getTransferLineIds(db, stationId)),
+      );
+      const stationLineRecords = stationIds.flatMap((stationId) =>
+        getStationLines(db, stationId),
+      );
       const otherLines = lines.filter(
         (l) =>
           !routeLineIdSet.has(l.id) &&
@@ -989,12 +1067,19 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       if (otherLines.length > 0) result[station.id] = otherLines;
     }
     setMapTransits(result);
-  }, [db, mapRouteLineIds, mapSourceStations, lines]);
+  }, [
+    db,
+    mapRouteLineIds,
+    mapSourceStations,
+    mapSourceStationIdGroups,
+    lines,
+  ]);
 
   // ── Derived: stations in selected map range (respects direction) ─────────
   const {
     mapStations,
     mapEdgeLineIds,
+    mapStationIdGroups,
     mapHasMoreBefore,
     mapHasMoreAfter,
   } = useMemo(() => {
@@ -1002,6 +1087,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       return {
         mapStations: [],
         mapEdgeLineIds: [] as string[],
+        mapStationIdGroups: [] as string[][],
         mapHasMoreBefore: false,
         mapHasMoreAfter: false,
       };
@@ -1020,6 +1106,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     const slicedEdgeLineIds = reversed
       ? mapSourceEdgeLineIds.slice(ei, si).reverse()
       : mapSourceEdgeLineIds.slice(si, ei);
+    const slicedStationIdGroups = reversed
+      ? mapSourceStationIdGroups.slice(ei, si + 1).reverse()
+      : mapSourceStationIdGroups.slice(si, ei + 1);
     // "More before/after" tracks whether the route continues beyond each
     // displayed end in the direction of travel.
     const hasMoreBefore = reversed
@@ -1031,36 +1120,47 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     return {
       mapStations: sliced,
       mapEdgeLineIds: slicedEdgeLineIds,
+      mapStationIdGroups: slicedStationIdGroups,
       mapHasMoreBefore: hasMoreBefore,
       mapHasMoreAfter: hasMoreAfter,
     };
-  }, [mapSourceStations, mapSourceEdgeLineIds, mapStartId, mapEndId]);
+  }, [
+    mapSourceStations,
+    mapSourceStationIdGroups,
+    mapSourceEdgeLineIds,
+    mapStartId,
+    mapEndId,
+  ]);
 
   const selectedBaseLine = lines.find((l) => l.id === selectedLineId) ?? null;
   const firstThroughLine = selectedThroughRouteId
     ? lines.find((line) => line.id === throughRoutePath.lineIds[0]) ?? null
     : null;
-  const selectedLine: Line | null = selectedThroughRoute
-    ? {
-        ...(firstThroughLine ?? {
-          id: selectedThroughRoute.id,
-          company_id: null,
-          secondary_name: null,
-          tertiary_name: null,
-          quaternary_name: null,
-          line_color: "#333333",
-          prefix: "",
-          priority: null,
-          is_loop: 0,
-          parent_line_id: null,
-        }),
-        id: selectedThroughRoute.id,
-        name: selectedThroughRoute.name,
-        prefix: "",
-        is_loop: 0,
-        parent_line_id: null,
-      }
-    : selectedBaseLine;
+  const selectedLine: Line | null = useMemo(
+    () =>
+      selectedThroughRoute
+        ? {
+            ...(firstThroughLine ?? {
+              id: selectedThroughRoute.id,
+              company_id: null,
+              secondary_name: null,
+              tertiary_name: null,
+              quaternary_name: null,
+              line_color: "#333333",
+              prefix: "",
+              priority: null,
+              is_loop: 0,
+              parent_line_id: null,
+            }),
+            id: selectedThroughRoute.id,
+            name: selectedThroughRoute.name,
+            prefix: "",
+            is_loop: 0,
+            parent_line_id: null,
+          }
+        : selectedBaseLine,
+    [firstThroughLine, selectedBaseLine, selectedThroughRoute],
+  );
   const mapRouteSelectValue = selectedThroughRouteId
     ? `through:${selectedThroughRouteId}`
     : selectedLineId
@@ -1166,7 +1266,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
             value: number.value,
             threeLetterCode: station.three_letter_code,
             color: number.line_color,
-            style: mapLineIndicatorStyles[line.id] ?? "jreast",
+            style: number.station_number_style,
           };
         }
         const transferIds = new Set(getTransferLineIds(db, station.id));
@@ -1331,7 +1431,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       const edgeIndex = Math.min(index, mapSourceEdgeLineIds.length - 1);
       const lineId =
         mapSourceEdgeLineIds[edgeIndex] ?? mapRouteLineIds[0] ?? selectedLineId;
-      const num = lineId ? getResolvedStationNumber(db, s.id, lineId) : null;
+      const stationId = lineId
+        ? getStationIdForLine(
+            db,
+            mapSourceStationIdGroups[index] ?? [s.id],
+            lineId,
+          )
+        : s.id;
+      const num = lineId
+        ? getResolvedStationNumber(db, stationId, lineId)
+        : null;
       const badge = num?.prefix ? `[${num.prefix}${num.value}] ` : "";
       result[s.id] = `${badge}${s.primary_name}`;
     }
@@ -1339,6 +1448,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   }, [
     db,
     mapSourceStations,
+    mapSourceStationIdGroups,
     mapSourceEdgeLineIds,
     mapRouteLineIds,
     selectedLineId,
@@ -1353,6 +1463,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
     const result: StationNumberMap = {};
     const groups: StationNumberGroupMap = {};
+    const stationById = new Map(
+      getAllStations(db).map((station) => [station.id, station]),
+    );
     const toStationNumberInfo = (
       lineId: string,
       station: Station,
@@ -1364,14 +1477,19 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         value: number.value,
         threeLetterCode: station.three_letter_code,
         color: number.line_color,
-        style: mapLineIndicatorStyles[lineId] ?? "jreast",
+        style: number.station_number_style,
       };
     };
 
     for (const [index, station] of mapStations.entries()) {
       const lineId = mapStationLineIds[index];
       if (!lineId) continue;
-      const displayNumber = toStationNumberInfo(lineId, station);
+      const stationIds = mapStationIdGroups[index] ?? [station.id];
+      const displayStationId = getStationIdForLine(db, stationIds, lineId);
+      const displayNumber = toStationNumberInfo(lineId, {
+        ...station,
+        id: displayStationId,
+      });
       if (displayNumber) result[station.id] = displayNumber;
 
       const incomingLineId = mapEdgeLineIds[index - 1];
@@ -1384,14 +1502,24 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ) {
         continue;
       }
+      const incomingStationId = getStationIdForLine(
+        db,
+        stationIds,
+        incomingLineId,
+      );
+      const outgoingStationId = getStationIdForLine(
+        db,
+        stationIds,
+        outgoingLineId,
+      );
       const incomingResolved = getResolvedStationNumber(
         db,
-        station.id,
+        incomingStationId,
         incomingLineId,
       );
       const outgoingResolved = getResolvedStationNumber(
         db,
-        station.id,
+        outgoingStationId,
         outgoingLineId,
       );
       if (
@@ -1405,16 +1533,18 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         {
           prefix: incomingResolved.prefix,
           value: incomingResolved.value,
-          threeLetterCode: station.three_letter_code,
+          threeLetterCode:
+            stationById.get(incomingStationId)?.three_letter_code,
           color: incomingResolved.line_color,
-          style: mapLineIndicatorStyles[incomingLineId] ?? "jreast",
+          style: incomingResolved.station_number_style,
         },
         {
           prefix: outgoingResolved.prefix,
           value: outgoingResolved.value,
-          threeLetterCode: station.three_letter_code,
+          threeLetterCode:
+            stationById.get(outgoingStationId)?.three_letter_code,
           color: outgoingResolved.line_color,
-          style: mapLineIndicatorStyles[outgoingLineId] ?? "jreast",
+          style: outgoingResolved.station_number_style,
         },
       ];
     }
@@ -1423,6 +1553,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   }, [
     db,
     mapStations,
+    mapStationIdGroups,
     mapStationLineIds,
     mapEdgeLineIds,
     selectedThroughRouteId,
@@ -1447,22 +1578,32 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   // Max 縦書き text height (Konva units) — used to size canvas when nameStyle is above/below
   const mapMaxNameExtent = useMemo(() => {
     if (mapStations.length === 0) return 60;
-    const maxCharCount = Math.max(
-      ...mapStations.map((station) =>
-        Math.max(
+    const maxExtent = Math.max(
+      ...mapStations.map((station) => {
+        const maxCharCount = Math.max(
           [...(station[mapPrimaryLang] ?? "")].length,
           mapShowSecondaryLang
             ? [...(station[mapSecondaryLang] ?? "")].length
             : 0,
-        ),
-      ),
+        );
+        const nameScale = getConnectedStationNameScale(
+          mapStationNumberGroups[station.id]?.length ?? 0,
+          !!selectedThroughRouteId && mapEmphasizeConnectedStationNames,
+        );
+        return maxCharCount > 0
+          ? maxCharCount * (JP_FONT * nameScale + 1) - 1
+          : 0;
+      }),
     );
-    return maxCharCount > 0 ? maxCharCount * (JP_FONT + 1) - 1 : 60;
+    return maxExtent > 0 ? maxExtent : 60;
   }, [
     mapStations,
     mapPrimaryLang,
     mapSecondaryLang,
     mapShowSecondaryLang,
+    mapStationNumberGroups,
+    selectedThroughRouteId,
+    mapEmphasizeConnectedStationNames,
   ]);
 
   // Apply transit filter before passing to renderer
@@ -1477,11 +1618,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     [mapTransits, mapTransitFilter],
   );
   const mapStationNumberExtraExtent =
-    mapStationNumberMode === "dot"
+    shouldExpandStationNumberGroups(
+      mapStationNumberMode,
+      mapOrientation,
+      mapNameStyle,
+    )
       ? getStationNumberGroupExtraExtent(
           mapStationNumberGroups,
           mapOrientation,
-          1,
+          mapStationNumberMode === "dot" ? 1 : 0,
         )
       : 0;
 
@@ -2208,7 +2353,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
             </Paper>
 
             {/* ── Services ── */}
-            {mapServices.length >= 2 && (
+            {(mapServices.length >= 2 ||
+              (!!selectedThroughRouteId && mapServices.length >= 1)) && (
               <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
                 <Group className={styles.mapSectionHeader} gap="sm">
                   <Box className={styles.mapSectionIndex} aria-hidden="true">
@@ -2575,6 +2721,21 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       ]}
                     />
                   </Grid.Col>
+                  {selectedThroughRouteId && (
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
+                      <Switch
+                        label={t(
+                          "route.linemap.emphasize-connected-station-names",
+                        )}
+                        checked={mapEmphasizeConnectedStationNames}
+                        onChange={(event) =>
+                          setMapEmphasizeConnectedStationNames(
+                            event.currentTarget.checked,
+                          )
+                        }
+                      />
+                    </Grid.Col>
+                  )}
                   {allTransitLines.length > 0 && (
                     <Grid.Col span={{ base: 12, md: 6 }}>
                       <MultiSelect
@@ -2675,6 +2836,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       stationNumberMode={mapStationNumberMode}
                       stationNumbers={mapStationNumbers}
                       stationNumberGroups={mapStationNumberGroups}
+                      emphasizeConnectedStationNames={
+                        !!selectedThroughRouteId &&
+                        mapEmphasizeConnectedStationNames
+                      }
                       trackColors={
                         selectedThroughRouteId ? mapTrackColors : undefined
                       }
@@ -2937,6 +3102,34 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         size="xs"
                       />
                     </Grid.Col>
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <Text size="sm" fw={500} mb={4}>
+                        {t("route.linemap.font-size")}
+                      </Text>
+                      <SegmentedControl
+                        fullWidth
+                        value={multiStationFontSize}
+                        onChange={(value) =>
+                          setMultiStationFontSize(
+                            value as MultiLineStationFontSize,
+                          )
+                        }
+                        data={[
+                          {
+                            value: "small",
+                            label: t("route.linemap.font-size-small"),
+                          },
+                          {
+                            value: "medium",
+                            label: t("route.linemap.font-size-medium"),
+                          },
+                          {
+                            value: "large",
+                            label: t("route.linemap.font-size-large"),
+                          },
+                        ]}
+                      />
+                    </Grid.Col>
                     <Grid.Col span={{ base: 12 }}>
                       <Text size="sm" fw={500} mb={4}>
                         {t("route.linemap.station-number-mode")}
@@ -3024,6 +3217,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       showSecondaryLang={mapShowSecondaryLang}
                       showTransitNames={mapShowTransitNames}
                       lineStyles={mapLineIndicatorStyles}
+                      stationFontSize={multiStationFontSize}
                     />
                   </Box>
                 ) : (

@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: 東京地鐵/都營地鐵風格
     station-number-style-preview: 徽章範例（使用公司顏色作為線條顏色）
     empty: 還沒有公司
-    delete-confirm: 刪除這家公司？相關行也將刪除。
+    delete-confirm: 刪除這家公司嗎？其所屬路線及包含這些路線的所有直通路徑也會被刪除。
   special-zone:
     title: 特區
     add: 新增區域
@@ -191,7 +191,10 @@ route:
     select: 選取一行
     all: 所有公司
     unassigned-company: 未指定公司
-    delete-confirm: 刪除這一行嗎？
+    delete-confirm: 刪除這條路線嗎？包含此路線的所有直通路徑也會被刪除。
+    delete-all: 刪除所有路線
+    delete-all-confirm: 刪除所有路線嗎？相關的車站所屬、車站編號、服務類型及所有直通路徑也會被刪除，且無法復原。
+    delete-targets: 將被刪除的路線
     prefix-preview: 線路指示器徽章預覽
     station-number-preview: 車站編號預覽（01）
   through-route:
@@ -209,12 +212,22 @@ route:
     direction: 區段方向
     forward: 順向（依車站順序）
     reverse: 反向（逆車站順序）
+    guide-title: 可儲存路徑的規則
+    guide-intro: 不會核對現實中的營運路線。只要在已登記資料中形成一條連續且無分支的路徑，即可儲存。
+    guide-section: 每個區段的入口站與出口站必須是同一路線上的兩個不同車站。
+    guide-direction: 順向依已登記的車站順序前進，反向則依相反順序。環狀線會依方向選擇環路的一側。
+    guide-connection: 下一區段的入口站必須與上一區段的出口站使用相同車站資料，或使用已建立明確轉乘關係的車站。
     delete-confirm: 刪除此直通路徑？
+    service-help: 設定此直通路徑全程使用的服務類型。儲存後，可在下方的路線編輯器設定停靠站。
+    service-editor-help: 正在編輯「{name}」的服務類型及停靠站。請在直通路徑編輯器變更區間或順序。
     error-incomplete: 請為每個區段選擇路線及兩個端點車站。
     error-empty: 請至少新增一個路線區段。
     error-station-not-on-line: 所選車站不屬於該路線。
     error-invalid-direction: 無法依所選方向從入口站抵達出口站。
     error-disconnected: 相鄰路線區段的轉接站不一致。
+    error-same-station: 入口站與出口站請選擇不同車站。
+    error-invalid-direction-detail: '從「{entry}」前往「{exit}」時，請選擇「{direction}」。'
+    error-disconnected-detail: '區段 {current} 請選擇與區段 {previous} 的出口站「{station}」相同的車站資料，或在兩站之間新增明確轉乘關係。'
   service:
     title: 服務
     local: 本地
@@ -249,13 +262,14 @@ route:
     select: 選擇電台
     transfer-title: "轉乘資訊 — {name}"
     transfer-manage: 檢視及編輯轉乘資訊
+    transfer-line-select: 轉乘路線
     transfer-select: 轉乘車站
     transfer-empty: 尚無轉乘關係
     same-id-lines: 使用相同車站ID的路線
     same-id-lines-help: 這些路線共用同一車站資料，並會自動視為轉乘路線。此處僅供檢視。
     same-id-lines-empty: 沒有其他路線使用此車站ID
     explicit-transfers: 不同車站間的明確轉乘關係
-    explicit-transfers-help: 新增或刪除不同車站ID之間的轉乘關係。
+    explicit-transfers-help: 新增或刪除不同車站資料之間的轉乘關係。已新增車站會顯示在下方，也可用於連接直通路徑。
   sign:
     style: 風格
     direction: 方向
@@ -305,12 +319,16 @@ route:
     transit-show-names: 顯示轉乘路線名稱
     download-text-warning: 儲存（第二語言可能難以辨識）
     font-size: 站名字體型大小
+    font-size-small: 小
+    font-size-medium: 中
+    font-size-large: 大
     overlap-warning-title: 偵測到標籤重疊
     overlap-warning: 有些站名重疊。嘗試減小字體大小。
     station-number-mode: 站號顯示
     station-number-none: 無
     station-number-badge: 徽章
     station-number-dot: 替換點
+    emphasize-connected-station-names: 放大顯示路線銜接站名
     name-style: 名稱風格
     name-style-normal: 正常
     name-style-above: 以上

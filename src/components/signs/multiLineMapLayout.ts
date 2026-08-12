@@ -28,6 +28,19 @@ export interface MultiLineMapLayout {
   loopCenter?: { x: number; y: number };
 }
 
+export function getMultiLineLinearLabelSide(
+  path: MultiLinePathLayout,
+  stationX: number,
+  loopCenterX: number | undefined,
+  loopStationIds: ReadonlySet<string>,
+): "above" | "below" {
+  const touchesLoop =
+    loopCenterX != null &&
+    path.points.some((point) => loopStationIds.has(point.stationId));
+  if (touchesLoop) return stationX < loopCenterX ? "above" : "below";
+  return path.labelSide;
+}
+
 export const MULTI_LINE_MAP_PADDING = 50;
 export const MULTI_LINE_MAP_TITLE_HEIGHT = 54;
 export const MULTI_LINE_MAP_BRANCH_GAP = 104;
@@ -253,14 +266,93 @@ export function layoutCircularMultiLineMap(
     };
   });
 
-  const allPoints = rawPaths.flatMap((path) => path.points);
+  const routeById = new Map(routes.map((route) => [route.lineId, route]));
+  const rawPathById = new Map(rawPaths.map((path) => [path.lineId, path]));
+  const connectedPathById = new Map<string, MultiLinePathLayout>();
+  const resolving = new Set<string>();
+
+  const connectToParent = (route: MultiLineLayoutInput): MultiLinePathLayout => {
+    const connected = connectedPathById.get(route.lineId);
+    if (connected) return connected;
+
+    const rawPath = rawPathById.get(route.lineId)!;
+    const parentRoute = route.parentLineId
+      ? routeById.get(route.parentLineId)
+      : undefined;
+    const touchesLoop = route.stationIds.some((stationId) =>
+      rootIndex.has(stationId)
+    );
+    if (!parentRoute || touchesLoop || resolving.has(route.lineId)) {
+      connectedPathById.set(route.lineId, rawPath);
+      return rawPath;
+    }
+
+    resolving.add(route.lineId);
+    const parentPath = connectToParent(parentRoute);
+    resolving.delete(route.lineId);
+    const sharedId = route.stationIds.find((stationId) =>
+      parentRoute.stationIds.includes(stationId)
+    );
+    const junction = sharedId
+      ? parentPath.points.find((point) => point.stationId === sharedId)
+      : undefined;
+    if (!sharedId || !junction) {
+      connectedPathById.set(route.lineId, rawPath);
+      return rawPath;
+    }
+
+    junction.isJunction = true;
+    const sharedIndex = route.stationIds.indexOf(sharedId);
+    const branchY = rawPath.points.find(
+      (point) => point.stationId !== sharedId,
+    )?.y ?? junction.y;
+    let points: MultiLineStationPoint[];
+
+    if (sharedIndex > 0 && sharedIndex < route.stationIds.length - 1) {
+      points = route.stationIds.map((stationId, index) => ({
+        stationId,
+        x: junction.x + (index - sharedIndex) * stationSpacing,
+        y: index === sharedIndex ? junction.y : branchY,
+        isJunction: index === sharedIndex,
+      }));
+    } else {
+      const outwardStationIds =
+        sharedIndex === route.stationIds.length - 1
+          ? [...route.stationIds].reverse()
+          : route.stationIds.slice(sharedIndex);
+      const parentMinX = Math.min(...parentPath.points.map((point) => point.x));
+      const parentMaxX = Math.max(...parentPath.points.map((point) => point.x));
+      const growsLeft = junction.x <= (parentMinX + parentMaxX) / 2;
+      const direction = growsLeft ? -1 : 1;
+      points = outwardStationIds.map((stationId, index) => ({
+        stationId,
+        x: junction.x + direction * index * stationSpacing,
+        y: index === 0 ? junction.y : branchY,
+        isJunction: index === 0,
+      }));
+    }
+
+    const path = {
+      ...rawPath,
+      points,
+      trackPoints: points.flatMap(({ x, y }) => [x, y]),
+    };
+    connectedPathById.set(route.lineId, path);
+    return path;
+  };
+
+  // Routes that do not touch the loop can still form their own parent/branch
+  // family. Resolve those relationships after placing the loop so their shared
+  // station remains connected regardless of route selection order.
+  const connectedPaths = routes.map(connectToParent);
+  const allPoints = connectedPaths.flatMap((path) => path.points);
   const minX = Math.min(...allPoints.map((point) => point.x));
   const maxX = Math.max(...allPoints.map((point) => point.x));
   const minY = Math.min(...allPoints.map((point) => point.y));
   const maxY = Math.max(...allPoints.map((point) => point.y));
   const shiftX = LOOP_LABEL_MARGIN - minX;
   const shiftY = LOOP_LABEL_MARGIN - minY;
-  const paths = rawPaths.map((path) => {
+  const paths = connectedPaths.map((path) => {
     const points = path.points.map((point) => ({
       ...point,
       x: point.x + shiftX,

@@ -1,5 +1,6 @@
 import type { Database } from "sql.js";
 import type { Company } from "@/db/types";
+import { deleteLines } from "@/db/repositories/lines";
 
 export function getAllCompanies(db: Database): Company[] {
   const stmt = db.prepare(
@@ -56,5 +57,22 @@ export function upsertCompany(db: Database, company: Company): void {
 }
 
 export function deleteCompany(db: Database, id: string): void {
-  db.run(`DELETE FROM companies WHERE id = ?`, [id]);
+  db.run("SAVEPOINT delete_company");
+  try {
+    const statement = db.prepare(`SELECT id FROM lines WHERE company_id = ?`);
+    statement.bind([id]);
+    const lineIds: string[] = [];
+    while (statement.step()) {
+      lineIds.push(statement.getAsObject().id as string);
+    }
+    statement.free();
+
+    deleteLines(db, lineIds);
+    db.run(`DELETE FROM companies WHERE id = ?`, [id]);
+    db.run("RELEASE SAVEPOINT delete_company");
+  } catch (error) {
+    db.run("ROLLBACK TO SAVEPOINT delete_company");
+    db.run("RELEASE SAVEPOINT delete_company");
+    throw error;
+  }
 }

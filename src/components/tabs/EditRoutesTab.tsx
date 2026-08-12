@@ -21,6 +21,7 @@ import {
   Table,
   Alert,
   ScrollArea,
+  SimpleGrid,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -32,12 +33,15 @@ import {
   IconArrowUp,
   IconArrowDown,
   IconAlertCircle,
+  IconInfoCircle,
   IconDatabaseImport,
   IconLink,
   IconX,
 } from "@tabler/icons-react";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
+import { formatStationOptionLabel } from "@/components/tabs/stationOptionLabel";
+import { sortStationTransferCandidates } from "@/components/tabs/stationTransferCandidateOrder";
 import { getStationNumberFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import { getJrCentralStationNumberBadgeMetrics } from "@/components/signs/jrCentralStationNumberBadgeMetrics";
 import {
@@ -57,10 +61,17 @@ import {
   upsertCompany,
   deleteCompany,
 } from "@/db/repositories/companies";
-import { getAllLines, upsertLine, deleteLine } from "@/db/repositories/lines";
+import {
+  getAllLines,
+  upsertLine,
+  deleteLine,
+  deleteAllLines,
+} from "@/db/repositories/lines";
 import {
   deleteThroughRoute,
   getAllThroughRoutes,
+  getThroughRoutePath,
+  getThroughRouteValidationIssues,
   getThroughRouteSegments,
   replaceThroughRouteSegments,
   upsertThroughRoute,
@@ -69,9 +80,11 @@ import {
 } from "@/db/repositories/through-routes";
 import {
   getServicesByLine,
+  getServicesByThroughRoute,
   upsertService,
   deleteService,
   getServiceStopsByLine,
+  getServiceStopsByThroughRoute,
   upsertStationServiceStop,
   setStationServiceStop,
 } from "@/db/repositories/services";
@@ -777,6 +790,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
       upsertService(db, {
         id: svcId,
         line_id: lineId,
+        through_route_id: null,
         name: svc.name.trim() || t("route.service.local"),
         color: svc.color,
         sort_order: i,
@@ -993,6 +1007,54 @@ function ThroughRouteForm({
       },
     ];
   });
+  const defaultServiceColor =
+    lines.find((line) => line.id === segments[0]?.lineId)?.line_color ??
+    "#8cc800";
+  const [draftServices, setDraftServices] = useState<
+    { id: string | null; name: string; color: string }[]
+  >(() => {
+    const existing = route ? getServicesByThroughRoute(db, route.id) : [];
+    return existing.length > 0
+      ? existing.map((service) => ({
+          id: service.id,
+          name: service.name,
+          color: service.color,
+        }))
+      : [
+          {
+            id: null,
+            name: t("route.service.local"),
+            color: defaultServiceColor,
+          },
+        ];
+  });
+  const [deletedServiceIds, setDeletedServiceIds] = useState<string[]>([]);
+  const [newServiceName, setNewServiceName] = useState("");
+
+  const handleAddService = () => {
+    if (!newServiceName.trim()) return;
+    setDraftServices((current) => [
+      ...current,
+      {
+        id: null,
+        name: newServiceName.trim(),
+        color:
+          lines.find((line) => line.id === segments[0]?.lineId)?.line_color ??
+          defaultServiceColor,
+      },
+    ]);
+    setNewServiceName("");
+  };
+
+  const handleRemoveService = (index: number) => {
+    const service = draftServices[index];
+    if (service?.id) {
+      setDeletedServiceIds((current) => [...current, service.id!]);
+    }
+    setDraftServices((current) =>
+      current.filter((_, currentIndex) => currentIndex !== index),
+    );
+  };
 
   const routeId = route?.id ?? "draft-through-route";
   const complete = segments.every(
@@ -1016,6 +1078,9 @@ function ThroughRouteForm({
     complete
       ? validateThroughRouteSegments(db, persistedSegments)
       : "incomplete";
+  const validationIssues = complete
+    ? getThroughRouteValidationIssues(db, persistedSegments)
+    : [];
 
   const updateSegment = (
     index: number,
@@ -1081,6 +1146,31 @@ function ThroughRouteForm({
       sort_order: route?.sort_order ?? nextSortOrder,
     });
     replaceThroughRouteSegments(db, id, finalSegments);
+    for (const serviceId of deletedServiceIds) {
+      deleteService(db, serviceId);
+    }
+    const routeStationIds = getThroughRoutePath(db, id).stationIds;
+    draftServices.forEach((service, index) => {
+      const serviceId = service.id ?? uuidv7();
+      upsertService(db, {
+        id: serviceId,
+        line_id: null,
+        through_route_id: id,
+        name: service.name.trim() || t("route.service.local"),
+        color: service.color,
+        sort_order: index,
+      });
+      if (!service.id) {
+        for (const stationId of routeStationIds) {
+          upsertStationServiceStop(db, {
+            id: uuidv7(),
+            station_id: stationId,
+            service_id: serviceId,
+            status: "stop",
+          });
+        }
+      }
+    });
     onSave();
     onClose();
   };
@@ -1094,28 +1184,190 @@ function ThroughRouteForm({
         required
       />
 
+      <Divider label={t("route.service.title")} labelPosition="left" />
+      <Text size="sm" c="dimmed">
+        {t("route.through-route.service-help")}
+      </Text>
+      <Stack gap="xs">
+        {draftServices.map((service, index) => (
+          <Group key={service.id ?? `new-${index}`} gap="xs" align="center">
+            <ColorInput
+              size="xs"
+              value={service.color}
+              onChange={(color) => {
+                setDraftServices((current) =>
+                  current.map((candidate, currentIndex) =>
+                    currentIndex === index
+                      ? { ...candidate, color }
+                      : candidate,
+                  ),
+                );
+              }}
+              format="hex"
+              withEyeDropper={false}
+              style={{ width: 100 }}
+            />
+            <TextInput
+              size="xs"
+              value={service.name}
+              onChange={(event) => {
+                const serviceName = event.currentTarget.value;
+                setDraftServices((current) =>
+                  current.map((candidate, currentIndex) =>
+                    currentIndex === index
+                      ? { ...candidate, name: serviceName }
+                      : candidate,
+                  ),
+                );
+              }}
+              style={{ flex: 1 }}
+            />
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="red"
+              onClick={() => handleRemoveService(index)}
+              aria-label={t("common.delete")}
+            >
+              <IconX size={14} />
+            </ActionIcon>
+          </Group>
+        ))}
+        <Group gap="xs">
+          <TextInput
+            size="xs"
+            placeholder={t("route.service.add-placeholder")}
+            value={newServiceName}
+            onChange={(event) => setNewServiceName(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") handleAddService();
+            }}
+            style={{ flex: 1 }}
+          />
+          <ActionIcon
+            size="sm"
+            onClick={handleAddService}
+            disabled={!newServiceName.trim()}
+            aria-label={t("common.add")}
+          >
+            <IconPlus size={12} />
+          </ActionIcon>
+        </Group>
+      </Stack>
+
+      <Alert
+        icon={<IconInfoCircle size={18} />}
+        color="blue"
+        variant="light"
+        title={t("route.through-route.guide-title")}
+      >
+        <Stack gap={6}>
+          <Text size="sm">{t("route.through-route.guide-intro")}</Text>
+          <Text size="sm">
+            <Text span fw={700}>1. </Text>
+            {t("route.through-route.guide-section")}
+          </Text>
+          <Text size="sm">
+            <Text span fw={700}>2. </Text>
+            {t("route.through-route.guide-direction")}
+          </Text>
+          <Text size="sm">
+            <Text span fw={700}>3. </Text>
+            {t("route.through-route.guide-connection")}
+          </Text>
+        </Stack>
+      </Alert>
+
       <Stack gap="sm">
         {segments.map((segment, index) => {
           const lineStations = segment.lineId
             ? getStationsByLine(db, segment.lineId)
             : [];
+          const stationLabels = new Map(
+            lineStations.map((station) => [
+              station.id,
+              formatStationOptionLabel(
+                station.primary_name,
+                segment.lineId
+                  ? getResolvedStationNumber(db, station.id, segment.lineId)
+                  : null,
+              ),
+            ]),
+          );
           const stationOptions = lineStations.map((station) => ({
             value: station.id,
-            label: station.primary_name,
+            label: stationLabels.get(station.id) ?? station.primary_name,
           }));
-          const entryName = lineStations.find(
-            (station) => station.id === segment.entryStationId,
-          )?.primary_name;
-          const exitName = lineStations.find(
-            (station) => station.id === segment.exitStationId,
-          )?.primary_name;
+          const entryName = stationLabels.get(segment.entryStationId);
+          const exitName = stationLabels.get(segment.exitStationId);
+          const segmentIssues = validationIssues.filter(
+            (issue) => issue.segmentIndex === index,
+          );
+          const hasInvalidDirection = segmentIssues.some(
+            (issue) => issue.error === "invalid-direction",
+          );
+          const hasDisconnectedEntry = segmentIssues.some(
+            (issue) => issue.error === "disconnected",
+          );
+          const previousSegment = segments[index - 1];
+          const previousLineStations = previousSegment?.lineId
+            ? getStationsByLine(db, previousSegment.lineId)
+            : [];
+          const expectedEntryStation = previousLineStations.find(
+            (station) => station.id === previousSegment?.exitStationId,
+          );
+          const expectedEntryName = expectedEntryStation
+            ? formatStationOptionLabel(
+                expectedEntryStation.primary_name,
+                getResolvedStationNumber(
+                  db,
+                  expectedEntryStation.id,
+                  previousSegment!.lineId,
+                ),
+              )
+            : undefined;
+          const line = lines.find(
+            (candidate) => candidate.id === segment.lineId,
+          );
+          const requiredDirection =
+            line?.is_loop !== 1 &&
+            segment.entryStationId &&
+            segment.exitStationId &&
+            lineStations.findIndex(
+              (station) => station.id === segment.entryStationId,
+            ) <
+              lineStations.findIndex(
+                (station) => station.id === segment.exitStationId,
+              )
+              ? "forward"
+              : "reverse";
+          const directionError = hasInvalidDirection
+            ? segment.entryStationId === segment.exitStationId
+              ? t("route.through-route.error-same-station")
+              : t("route.through-route.error-invalid-direction-detail", {
+                  entry: entryName ?? "",
+                  exit: exitName ?? "",
+                  direction: t(`route.through-route.${requiredDirection}`),
+                })
+            : undefined;
+          const connectionError = hasDisconnectedEntry
+            ? t("route.through-route.error-disconnected-detail", {
+                previous: String(index),
+                station: expectedEntryName ?? "",
+                current: String(index + 1),
+              })
+            : undefined;
 
           return (
             <Box
               key={segment.id}
               p="sm"
               style={{
-                border: "1px solid var(--mantine-color-default-border)",
+                border: `1px solid ${
+                  segmentIssues.length > 0
+                    ? "var(--mantine-color-red-6)"
+                    : "var(--mantine-color-default-border)"
+                }`,
                 borderRadius: "var(--mantine-radius-sm)",
               }}
             >
@@ -1179,6 +1431,7 @@ function ThroughRouteForm({
                     data={stationOptions}
                     searchable
                     disabled={!segment.lineId}
+                    error={connectionError}
                     required
                   />
                   <Select
@@ -1212,6 +1465,7 @@ function ThroughRouteForm({
                       label: t("route.through-route.reverse"),
                     },
                   ]}
+                  error={directionError}
                 />
                 {entryName && exitName && (
                   <Text size="xs" c="dimmed">
@@ -1779,6 +2033,9 @@ function StationTransferForm({
   const [selectedStationId, setSelectedStationId] = useState<string | null>(
     null,
   );
+  const [selectedTransferLineId, setSelectedTransferLineId] = useState<
+    string | null
+  >(null);
 
   const getStationLineNames = (stationId: string): string => {
     const stationLineIds = new Set(
@@ -1794,6 +2051,55 @@ function StationTransferForm({
     (candidate) =>
       candidate.id !== station.id && !connectedStationIds.has(candidate.id),
   );
+  const availableStationIds = new Set(
+    availableStations.map((candidate) => candidate.id),
+  );
+  const stationsByTransferLine = new Map(
+    allLines.map((line) => [
+      line.id,
+      getStationsByLine(db, line.id).filter((candidate) =>
+        availableStationIds.has(candidate.id),
+      ),
+    ]),
+  );
+  const transferLineOptions = allLines
+    .filter((line) => (stationsByTransferLine.get(line.id)?.length ?? 0) > 0)
+    .map((line) => ({
+      value: line.id,
+      label: line.prefix ? `[${line.prefix}] ${line.name}` : line.name,
+    }));
+  const selectedTransferLineStations = selectedTransferLineId
+    ? (stationsByTransferLine.get(selectedTransferLineId) ?? [])
+    : [];
+  const sortedTransferCandidates = selectedTransferLineId
+    ? sortStationTransferCandidates(
+        station.primary_name,
+        selectedTransferLineStations.map((candidate, routeOrder) => {
+          const stationNumber = getResolvedStationNumber(
+            db,
+            candidate.id,
+            selectedTransferLineId,
+          );
+          return {
+            id: candidate.id,
+            name: candidate.primary_name,
+            stationNumber: stationNumber?.value ?? null,
+            routeOrder,
+          };
+        }),
+      )
+    : [];
+  const transferStationOptions = sortedTransferCandidates.map((candidate) => {
+    const stationNumber = getResolvedStationNumber(
+      db,
+      candidate.id,
+      selectedTransferLineId!,
+    );
+    return {
+      value: candidate.id,
+      label: formatStationOptionLabel(candidate.name, stationNumber),
+    };
+  });
 
   const handleAdd = () => {
     if (!selectedStationId) return;
@@ -1837,24 +2143,29 @@ function StationTransferForm({
       <Text size="sm" c="dimmed">
         {t("route.station.explicit-transfers-help")}
       </Text>
-      <Group align="flex-end" wrap="nowrap">
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         <Select
-          style={{ flex: 1 }}
-          label={t("route.station.transfer-select")}
-          value={selectedStationId}
-          onChange={setSelectedStationId}
-          data={availableStations.map((candidate) => {
-            const lineNames = getStationLineNames(candidate.id);
-            return {
-              value: candidate.id,
-              label: lineNames
-                ? `${candidate.primary_name} (${lineNames})`
-                : candidate.primary_name,
-            };
-          })}
+          label={t("route.station.transfer-line-select")}
+          value={selectedTransferLineId}
+          onChange={(value) => {
+            setSelectedTransferLineId(value);
+            setSelectedStationId(null);
+          }}
+          data={transferLineOptions}
           searchable
           clearable
         />
+        <Select
+          label={t("route.station.transfer-select")}
+          value={selectedStationId}
+          onChange={setSelectedStationId}
+          data={transferStationOptions}
+          searchable
+          clearable
+          disabled={!selectedTransferLineId}
+        />
+      </SimpleGrid>
+      <Group justify="flex-end">
         <Button onClick={handleAdd} disabled={!selectedStationId}>
           {t("common.add")}
         </Button>
@@ -2043,6 +2354,8 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   ] = useDisclosure(false);
   const [transferStation, setTransferStation] = useState<Station | null>(null);
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const [selectedStationThroughRouteId, setSelectedStationThroughRouteId] =
+    useState<string | null>(null);
   const [newServiceName, setNewServiceName] = useState("");
 
   // Shared confirm modal
@@ -2050,10 +2363,21 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     useDisclosure(false);
   const [confirmPending, setConfirmPending] = useState<{
     message: string;
+    affectedLineNames: string[];
     onConfirm: () => void;
   } | null>(null);
-  const openConfirmModal = (message: string, onConfirm: () => void) => {
-    setConfirmPending({ message, onConfirm });
+  const openConfirmModal = (
+    message: string,
+    onConfirm: () => void,
+    affectedLines: Line[] = [],
+  ) => {
+    setConfirmPending({
+      message,
+      affectedLineNames: affectedLines.map((line) =>
+        line.prefix ? `[${line.prefix}] ${line.name}` : line.name,
+      ),
+      onConfirm,
+    });
     openConfirm();
   };
   const handleConfirmOk = () => {
@@ -2087,6 +2411,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const unassignedLines = allLines.filter(
     (line) => !line.company_id || !knownCompanyIds.has(line.company_id),
   );
+  const throughRoutes = getAllThroughRoutes(db);
   const lineSelectData = [
     ...companies.flatMap((company) => {
       const companyLines = allLines.filter(
@@ -2096,7 +2421,10 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         ? [
             {
               group: company.name,
-              items: companyLines.map(toLineSelectItem),
+              items: companyLines.map(toLineSelectItem).map((item) => ({
+                ...item,
+                value: `line:${item.value}`,
+              })),
             },
           ]
         : [];
@@ -2105,28 +2433,71 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
       ? [
           {
             group: t("route.line.unassigned-company"),
-            items: unassignedLines.map(toLineSelectItem),
+            items: unassignedLines.map(toLineSelectItem).map((item) => ({
+              ...item,
+              value: `line:${item.value}`,
+            })),
+          },
+        ]
+      : []),
+    ...(throughRoutes.length > 0
+      ? [
+          {
+            group: t("route.through-route.title"),
+            items: throughRoutes.map((route) => ({
+              value: `through:${route.id}`,
+              label: route.name,
+            })),
           },
         ]
       : []),
   ];
-  const throughRoutes = getAllThroughRoutes(db);
   const filteredLines = lineCompanyFilter
     ? allLines.filter((l) => l.company_id === lineCompanyFilter)
     : allLines;
-  const stationsInLine = selectedLineId
-    ? getStationsByLine(db, selectedLineId)
-    : [];
+  const selectedStationThroughRoute = throughRoutes.find(
+    (route) => route.id === selectedStationThroughRouteId,
+  );
+  const selectedThroughRoutePath = selectedStationThroughRouteId
+    ? getThroughRoutePath(db, selectedStationThroughRouteId)
+    : null;
+  const allStationsById = new Map(
+    getAllStations(db).map((station) => [station.id, station]),
+  );
+  const stationsInLine = selectedStationThroughRouteId
+    ? (selectedThroughRoutePath?.stationIds ?? [])
+        .map((stationId) => allStationsById.get(stationId))
+        .filter((station): station is Station => !!station)
+    : selectedLineId
+      ? getStationsByLine(db, selectedLineId)
+      : [];
   const alreadyOnLineIds = new Set(stationsInLine.map((s) => s.id));
   const selectedLine = allLines.find((l) => l.id === selectedLineId);
-  const lineServices: Service[] = selectedLineId
-    ? getServicesByLine(db, selectedLineId)
-    : [];
+  const selectedThroughRouteFirstLine = selectedThroughRoutePath?.lineIds[0]
+    ? allLines.find((line) => line.id === selectedThroughRoutePath.lineIds[0])
+    : undefined;
+  const selectedServiceOwnerColor =
+    selectedLine?.line_color ?? selectedThroughRouteFirstLine?.line_color ?? "#8cc800";
+  const lineServices: Service[] = selectedStationThroughRouteId
+    ? getServicesByThroughRoute(db, selectedStationThroughRouteId)
+    : selectedLineId
+      ? getServicesByLine(db, selectedLineId)
+      : [];
   const serviceStopMap = new Map<string, ServiceStopStatus>(
-    (selectedLineId ? getServiceStopsByLine(db, selectedLineId) : []).map(
+    (selectedStationThroughRouteId
+      ? getServiceStopsByThroughRoute(db, selectedStationThroughRouteId)
+      : selectedLineId
+        ? getServiceStopsByLine(db, selectedLineId)
+        : []
+    ).map(
       (s) => [`${s.station_id}:${s.service_id}`, s.status],
     ),
   );
+  const selectedStationRouteValue = selectedStationThroughRouteId
+    ? `through:${selectedStationThroughRouteId}`
+    : selectedLineId
+      ? `line:${selectedLineId}`
+      : null;
 
   const handleDeleteZone = (id: string) => {
     openConfirmModal(t("route.special-zone.delete-confirm"), () => {
@@ -2136,22 +2507,70 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   };
 
   const handleDeleteCompany = (id: string) => {
-    openConfirmModal(t("route.company.delete-confirm"), () => {
-      deleteCompany(db, id);
-      refresh();
-    });
+    const affectedLines = allLines.filter((line) => line.company_id === id);
+    openConfirmModal(
+      t("route.company.delete-confirm"),
+      () => {
+        deleteCompany(db, id);
+        if (affectedLines.some((line) => line.id === selectedLineId)) {
+          setSelectedLineId(null);
+          setNewServiceName("");
+        }
+        if (
+          selectedThroughRoutePath?.lineIds.some((lineId) =>
+            affectedLines.some((line) => line.id === lineId),
+          )
+        ) {
+          setSelectedStationThroughRouteId(null);
+          setNewServiceName("");
+        }
+        refresh();
+      },
+      affectedLines,
+    );
   };
 
   const handleDeleteLine = (id: string) => {
-    openConfirmModal(t("route.line.delete-confirm"), () => {
-      deleteLine(db, id);
-      refresh();
-    });
+    const affectedLines = allLines.filter((line) => line.id === id);
+    openConfirmModal(
+      t("route.line.delete-confirm"),
+      () => {
+        deleteLine(db, id);
+        if (selectedLineId === id) {
+          setSelectedLineId(null);
+          setNewServiceName("");
+        }
+        if (selectedThroughRoutePath?.lineIds.includes(id)) {
+          setSelectedStationThroughRouteId(null);
+          setNewServiceName("");
+        }
+        refresh();
+      },
+      affectedLines,
+    );
+  };
+
+  const handleDeleteAllLines = () => {
+    openConfirmModal(
+      t("route.line.delete-all-confirm"),
+      () => {
+        deleteAllLines(db);
+        setSelectedLineId(null);
+        setSelectedStationThroughRouteId(null);
+        setNewServiceName("");
+        refresh();
+      },
+      allLines,
+    );
   };
 
   const handleDeleteThroughRoute = (id: string) => {
     openConfirmModal(t("route.through-route.delete-confirm"), () => {
       deleteThroughRoute(db, id);
+      if (selectedStationThroughRouteId === id) {
+        setSelectedStationThroughRouteId(null);
+        setNewServiceName("");
+      }
       refresh();
     });
   };
@@ -2165,13 +2584,19 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   };
 
   const handleAddService = () => {
-    if (!selectedLineId || !newServiceName.trim()) return;
+    if (
+      (!selectedLineId && !selectedStationThroughRouteId) ||
+      !newServiceName.trim()
+    ) {
+      return;
+    }
     const serviceId = uuidv7();
     upsertService(db, {
       id: serviceId,
       line_id: selectedLineId,
+      through_route_id: selectedStationThroughRouteId,
       name: newServiceName.trim(),
-      color: selectedLine?.line_color ?? "#8cc800",
+      color: selectedServiceOwnerColor,
       sort_order: lineServices.length,
     });
     for (const station of stationsInLine) {
@@ -2456,16 +2881,28 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         <Box>
           <Group justify="space-between" mb="md">
             <Title order={3}>{t("route.line.title")}</Title>
-            <Button
-              size="sm"
-              leftSection={<IconPlus size={16} />}
-              onClick={() => {
-                setEditingLine(undefined);
-                openLineModal();
-              }}
-            >
-              {t("route.line.add")}
-            </Button>
+            <Group gap="xs">
+              <Button
+                size="sm"
+                variant="light"
+                color="red"
+                leftSection={<IconTrash size={16} />}
+                disabled={allLines.length === 0}
+                onClick={handleDeleteAllLines}
+              >
+                {t("route.line.delete-all")}
+              </Button>
+              <Button
+                size="sm"
+                leftSection={<IconPlus size={16} />}
+                onClick={() => {
+                  setEditingLine(undefined);
+                  openLineModal();
+                }}
+              >
+                {t("route.line.add")}
+              </Button>
+            </Group>
           </Group>
 
           <Select
@@ -2687,7 +3124,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                 size="sm"
                 variant="outline"
                 leftSection={<IconLink size={16} />}
-                disabled={!selectedLineId}
+                disabled={!selectedLineId || !!selectedStationThroughRouteId}
                 onClick={openLinkStationModal}
               >
                 {t("route.station.add-existing")}
@@ -2695,7 +3132,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
               <Button
                 size="sm"
                 leftSection={<IconPlus size={16} />}
-                disabled={!selectedLineId}
+                disabled={!selectedLineId || !!selectedStationThroughRouteId}
                 onClick={() => {
                   setEditingStation(undefined);
                   openStationModal();
@@ -2708,16 +3145,37 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
 
           <Select
             label={t("route.line.title")}
-            value={selectedLineId}
-            onChange={setSelectedLineId}
+            value={selectedStationRouteValue}
+            onChange={(value) => {
+              if (value?.startsWith("line:")) {
+                setSelectedLineId(value.slice("line:".length));
+                setSelectedStationThroughRouteId(null);
+              } else if (value?.startsWith("through:")) {
+                setSelectedLineId(null);
+                setSelectedStationThroughRouteId(
+                  value.slice("through:".length),
+                );
+              } else {
+                setSelectedLineId(null);
+                setSelectedStationThroughRouteId(null);
+              }
+              setNewServiceName("");
+            }}
             data={lineSelectData}
             placeholder={t("route.line.select")}
             mb="md"
             clearable
           />
 
-          {selectedLineId && (
+          {(selectedLineId || selectedStationThroughRouteId) && (
             <Box mb="md">
+              {selectedStationThroughRoute && (
+                <Alert color="blue" variant="light" mb="sm">
+                  {t("route.through-route.service-editor-help", {
+                    name: selectedStationThroughRoute.name,
+                  })}
+                </Alert>
+              )}
               <Group gap="xs" align="center" wrap="wrap">
                 <Text size="sm" fw={600}>
                   {t("route.service.title")}:
@@ -2776,7 +3234,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             </Box>
           )}
 
-          {!selectedLineId ? (
+          {!selectedLineId && !selectedStationThroughRouteId ? (
             <Text c="dimmed" size="sm">
               {t("route.station.empty")}
             </Text>
@@ -2788,7 +3246,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             (() => {
               const stationsWithNums = stationsInLine.map((station) => ({
                 station,
-                nums: getStationNumbers(db, station.id, selectedLineId!),
+                nums: selectedLineId
+                  ? getStationNumbers(db, station.id, selectedLineId)
+                  : [],
               }));
               const seen = new Set<string>();
               const duplicateNumbers = new Set<string>();
@@ -2877,9 +3337,10 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                         "#000000"
                                       }
                                       style={
-                                        companies.find(
-                                          (c) =>
-                                            c.id === selectedLine?.company_id,
+                                        getResolvedStationNumber(
+                                          db,
+                                          station.id,
+                                          selectedLineId!,
                                         )?.station_number_style ?? "jreast"
                                       }
                                       prefix={
@@ -3005,7 +3466,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                 <Group gap="xs">
                                   <ActionIcon
                                     variant="subtle"
-                                    disabled={idx === 0}
+                                    disabled={
+                                      !!selectedStationThroughRouteId || idx === 0
+                                    }
                                     onClick={() =>
                                       handleReorderStation(station.id, "up")
                                     }
@@ -3014,7 +3477,10 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   </ActionIcon>
                                   <ActionIcon
                                     variant="subtle"
-                                    disabled={idx === stationsInLine.length - 1}
+                                    disabled={
+                                      !!selectedStationThroughRouteId ||
+                                      idx === stationsInLine.length - 1
+                                    }
                                     onClick={() =>
                                       handleReorderStation(station.id, "down")
                                     }
@@ -3036,6 +3502,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   </ActionIcon>
                                   <ActionIcon
                                     variant="subtle"
+                                    disabled={!!selectedStationThroughRouteId}
                                     onClick={() => {
                                       setEditingStation(station);
                                       openStationModal();
@@ -3046,6 +3513,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   <ActionIcon
                                     variant="subtle"
                                     color="red"
+                                    disabled={!!selectedStationThroughRouteId}
                                     onClick={() =>
                                       handleDeleteStation(station.id)
                                     }
@@ -3269,6 +3737,22 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
       >
         <Stack gap="md">
           <Text size="sm">{confirmPending?.message}</Text>
+          {confirmPending && confirmPending.affectedLineNames.length > 0 && (
+            <Box>
+              <Text size="sm" fw={600} mb={4}>
+                {t("route.line.delete-targets")}
+              </Text>
+              <ScrollArea.Autosize mah={180}>
+                <Box component="ul" my={0} pl="xl">
+                  {confirmPending.affectedLineNames.map((name, index) => (
+                    <Text component="li" size="sm" key={`${index}:${name}`}>
+                      {name}
+                    </Text>
+                  ))}
+                </Box>
+              </ScrollArea.Autosize>
+            </Box>
+          )}
           <Group justify="flex-end">
             <Button variant="default" onClick={closeConfirm}>
               {t("common.cancel")}

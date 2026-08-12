@@ -85,6 +85,63 @@ test("multiple-line map includes only manually selected Marunouchi lines", async
   await expect(mapCanvas).toHaveCount(1);
 });
 
+test("a loop keeps a disconnected parent and branch connected", async ({
+  page,
+}) => {
+  await page.goto("/en/");
+  await page.waitForSelector('[role="tab"]', { timeout: 30000 });
+  await page.waitForTimeout(3000);
+  await loadSampleDatabase(page);
+
+  await page.getByRole("tab", { name: "From Route" }).click();
+  await page.getByText("Line Map (Multiple Lines)", { exact: true }).click();
+  const lineSelect = page.getByRole("textbox", { name: "Lines", exact: true });
+  for (const optionName of [/^\[JY\]/, /^\[M\]/, /^\[Mb\]/]) {
+    await lineSelect.click();
+    await page.getByRole("option", { name: optionName }).click();
+  }
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".map-preview canvas")).toHaveCount(1);
+
+  const formatSelect = page.getByRole("textbox", {
+    name: "Export Format",
+    exact: true,
+  });
+  await formatSelect.click();
+  await page.getByRole("option", { name: "SVG (Vector)" }).click();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save as Image", exact: true }).click();
+  const download = await downloadPromise;
+  const svgPath = await download.path();
+  expect(svgPath).not.toBeNull();
+  const svg = await readFile(svgPath!, "utf8");
+  const marunouchiTracks = [
+    ...svg.matchAll(
+      /<polyline points="([^"]+)" transform="matrix\(([^)]+)\)"[^>]*stroke="#dd3839"[^>]*>/g,
+    ),
+  ].map((match) => ({
+    points: match[1].split(" "),
+    transform: match[2].split(" ").map(Number),
+  }));
+  expect(marunouchiTracks).toHaveLength(2);
+  const mainTrack = marunouchiTracks.find(({ points }) => points.length === 25);
+  const branchTrack = marunouchiTracks.find(({ points }) => points.length === 4);
+  expect(branchTrack?.points[0]).toBe(mainTrack?.points[5]);
+
+  const branchStation = branchTrack?.points[1].split(",").map(Number);
+  const branchTransform = branchTrack?.transform;
+  const stationY = branchStation && branchTransform
+    ? branchTransform[1] * branchStation[0] +
+      branchTransform[3] * branchStation[1] +
+      branchTransform[5]
+    : Number.NaN;
+  const stationName = svg.match(
+    /<text transform="matrix\(([^)]+)\)"[^>]*><tspan[^>]*>Nakano-shimbashi<\/tspan><\/text>/,
+  );
+  const stationNameY = Number(stationName?.[1].split(" ")[5]);
+  expect(stationNameY).toBeGreaterThan(stationY);
+});
+
 test("Yamanote loop and Keihin-Tohoku shared section render together", async ({
   page,
 }) => {
@@ -152,10 +209,7 @@ test("Yamanote loop and Keihin-Tohoku shared section render together", async ({
     .toBeGreaterThan(3000);
 });
 
-test("multiple-line maps download as vector SVG, vector PDF, and streamed PNG", async ({
-  page,
-}) => {
-  test.setTimeout(120000);
+async function prepareMultipleLineMapExport(page: Page) {
   await page.goto("/en/");
   await page.waitForSelector('[role="tab"]', { timeout: 30000 });
   await page.waitForTimeout(3000);
@@ -180,6 +234,15 @@ test("multiple-line maps download as vector SVG, vector PDF, and streamed PNG", 
     exact: true,
   });
 
+  return { formatSelect, saveButton };
+}
+
+test("multiple-line maps download as vector SVG and streamed PNG", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  const { formatSelect, saveButton } = await prepareMultipleLineMapExport(page);
+
   await formatSelect.click();
   await page.getByRole("option", { name: "SVG (Vector)" }).click();
   const svgDownloadPromise = page.waitForEvent("download");
@@ -193,24 +256,6 @@ test("multiple-line maps download as vector SVG, vector PDF, and streamed PNG", 
   expect(svg).toContain("<text");
   expect(svg).toContain("@font-face");
   expect(svg).not.toContain("<image");
-
-  await formatSelect.click();
-  await page.getByRole("option", { name: "PDF (Vector)" }).click();
-  const pdfDownloadPromise = page.waitForEvent("download");
-  await saveButton.click();
-  const pdfDownload = await pdfDownloadPromise;
-  expect(pdfDownload.suggestedFilename()).toMatch(/\.pdf$/);
-  const pdfPath = await pdfDownload.path();
-  expect(pdfPath).not.toBeNull();
-  const pdf = await readFile(pdfPath!);
-  expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
-  const pdfSource = pdf.toString("latin1");
-  expect(pdfSource).toContain("/Font");
-  expect(pdfSource).toContain("NotoSansJP");
-  expect(pdfSource).toContain("HindSemiBold");
-  expect(pdfSource).toContain("Identity-H");
-  expect(pdfSource).not.toContain("/Subtype /Image");
-  expect(pdf.byteLength).toBeGreaterThan(200000);
 
   await formatSelect.click();
   await page.getByRole("option", { name: "PNG" }).click();
@@ -231,4 +276,27 @@ test("multiple-line maps download as vector SVG, vector PDF, and streamed PNG", 
   expect(png.byteLength).toBeLessThan(5_000_000);
   expect(png.readUInt32BE(16)).toBeGreaterThan(15000);
   expect(png.readUInt32BE(20)).toBeGreaterThan(5000);
+});
+
+test("multiple-line maps download as vector PDF @pdf", async ({ page }) => {
+  test.setTimeout(120000);
+  const { formatSelect, saveButton } = await prepareMultipleLineMapExport(page);
+
+  await formatSelect.click();
+  await page.getByRole("option", { name: "PDF (Vector)" }).click();
+  const pdfDownloadPromise = page.waitForEvent("download");
+  await saveButton.click();
+  const pdfDownload = await pdfDownloadPromise;
+  expect(pdfDownload.suggestedFilename()).toMatch(/\.pdf$/);
+  const pdfPath = await pdfDownload.path();
+  expect(pdfPath).not.toBeNull();
+  const pdf = await readFile(pdfPath!);
+  expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+  const pdfSource = pdf.toString("latin1");
+  expect(pdfSource).toContain("/Font");
+  expect(pdfSource).toContain("NotoSansJP");
+  expect(pdfSource).toContain("HindSemiBold");
+  expect(pdfSource).toContain("Identity-H");
+  expect(pdfSource).not.toContain("/Subtype /Image");
+  expect(pdf.byteLength).toBeGreaterThan(200000);
 });

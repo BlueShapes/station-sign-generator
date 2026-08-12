@@ -85,11 +85,13 @@ CREATE TABLE IF NOT EXISTS current_sign_configurations (
 );
 
 CREATE TABLE IF NOT EXISTS services (
-  id         TEXT PRIMARY KEY,
-  line_id    TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
-  name       TEXT NOT NULL,
-  color      TEXT NOT NULL DEFAULT '#8cc800',
-  sort_order INTEGER DEFAULT 0
+  id               TEXT PRIMARY KEY,
+  line_id          TEXT REFERENCES lines(id) ON DELETE CASCADE,
+  through_route_id TEXT REFERENCES through_routes(id) ON DELETE CASCADE,
+  name             TEXT NOT NULL,
+  color            TEXT NOT NULL DEFAULT '#8cc800',
+  sort_order       INTEGER DEFAULT 0,
+  CHECK ((line_id IS NOT NULL) <> (through_route_id IS NOT NULL))
 );
 
 CREATE TABLE IF NOT EXISTS station_service_stops (
@@ -562,7 +564,7 @@ def insert_line_services(cursor, line_id, id_prefix, stations, services):
     for sort_order, (key, name, color, stop_numbers, special_numbers) in enumerate(services):
         service_id = f"svc-{id_prefix}-{key}"
         cursor.execute(
-            "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO services (id, line_id, name, color, sort_order) VALUES (?, ?, ?, ?, ?)",
             (service_id, line_id, name, color, sort_order),
         )
         for number in sorted(stop_numbers):
@@ -591,7 +593,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.8.0')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.9.0')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -700,7 +702,7 @@ def main():
     # 普通: stops at all JK stations
     jk_futsuu_id = "svc-jk-futsuu"
     c.execute(
-        "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO services (id, line_id, name, color, sort_order) VALUES (?, ?, ?, ?, ?)",
         (jk_futsuu_id, jk_line_id, "普通", "#8cc800", 0),
     )
     for (jk_num, station_id) in jk_all:
@@ -712,7 +714,7 @@ def main():
     # 快速: passes 新橋(24), 有楽町(25), 鶯谷(31), 日暮里(32), 西日暮里(33); 御徒町(29) is special
     jk_kaisoku_id = "svc-jk-kaisoku"
     c.execute(
-        "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO services (id, line_id, name, color, sort_order) VALUES (?, ?, ?, ?, ?)",
         (jk_kaisoku_id, jk_line_id, "快速", "#006ab7", 1),
     )
     for (jk_num, station_id) in jk_all:
@@ -757,7 +759,7 @@ def main():
     }
     for key, (svc_id, name, color, sort_order) in js_services.items():
         c.execute(
-            "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO services (id, line_id, name, color, sort_order) VALUES (?, ?, ?, ?, ?)",
             (svc_id, js_line_id, name, color, sort_order),
         )
 
@@ -821,7 +823,7 @@ def main():
     # 普通 service for Marunouchi main line
     m_futsuu_id = "svc-m-futsuu"
     c.execute(
-        "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO services (id, line_id, name, color, sort_order) VALUES (?, ?, ?, ?, ?)",
         (m_futsuu_id, m_line_id, "普通", "#dd3839", 0),
     )
 
@@ -855,7 +857,7 @@ def main():
     # 普通 service for branch line
     mb_futsuu_id = "svc-mb-futsuu"
     c.execute(
-        "INSERT INTO services VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO services (id, line_id, name, color, sort_order) VALUES (?, ?, ?, ?, ?)",
         (mb_futsuu_id, mb_line_id, "普通", "#dd3839", 0),
     )
 
@@ -982,7 +984,7 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.8.0")
+    print(f"  - version: 0.9.0")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
     print(f"  - 3 companies (JR東日本, 東京メトロ, 東葉高速鉄道)")
     print(f"  - 10 lines:")

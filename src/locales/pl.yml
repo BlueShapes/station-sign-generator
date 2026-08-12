@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: Styl metra w Tokio / metra Toei
     station-number-style-preview: Przykładowa plakietka (przy użyciu koloru firmy jako koloru linii)
     empty: Nie ma jeszcze żadnych firm
-    delete-confirm: Usunąć tę firmę? Powiązane linie również zostaną usunięte.
+    delete-confirm: Usunąć tę firmę? Jej linie oraz wszystkie trasy bezpośrednie, które je zawierają, również zostaną usunięte.
   special-zone:
     title: Strefy Specjalne
     add: Dodaj strefę
@@ -191,7 +191,10 @@ route:
     select: Wybierz linię
     all: Wszystkie firmy
     unassigned-company: Brak przypisanej firmy
-    delete-confirm: Usunąć tę linię?
+    delete-confirm: Usunąć tę linię? Wszystkie trasy bezpośrednie, które ją zawierają, również zostaną usunięte.
+    delete-all: Usuń wszystkie linie
+    delete-all-confirm: Usunąć wszystkie linie? Powiązane przypisania stacji, numery stacji, usługi i wszystkie trasy bezpośrednie również zostaną usunięte. Tej operacji nie można cofnąć.
+    delete-targets: Linie, które zostaną usunięte
     prefix-preview: Podgląd plakietki wskaźnika linii
     station-number-preview: Podgląd numeru stacji (01)
   through-route:
@@ -209,12 +212,22 @@ route:
     direction: Kierunek odcinka
     forward: Do przodu (kolejność stacji)
     reverse: Odwrotnie (przeciwnie do kolejności stacji)
+    guide-title: Zasady poprawnej trasy
+    guide-intro: Rzeczywiste połączenia nie są sprawdzane. Można zapisać każdą trasę, która w zarejestrowanych danych tworzy jedną ciągłą ścieżkę bez rozgałęzień.
+    guide-section: W każdym odcinku wybierz jako wjazd i wyjazd dwie różne stacje tej samej linii.
+    guide-direction: Kierunek do przodu odpowiada zapisanej kolejności stacji, a odwrotny biegnie przeciwnie. Na linii okrężnej kierunek wybiera stronę pętli.
+    guide-connection: Każdy następny odcinek musi zaczynać się tym samym rekordem stacji, na którym kończy się poprzedni, albo stacją połączoną jawną przesiadką.
     delete-confirm: Usunąć tę trasę bezpośrednią?
+    service-help: Skonfiguruj rodzaje usług dla całej trasy bezpośredniej. Po zapisaniu ustaw postoje w edytorze trasy poniżej.
+    service-editor-help: Edytujesz rodzaje usług i postoje dla „{name}”. Odcinki lub kolejność zmień w edytorze tras bezpośrednich.
     error-incomplete: Wybierz linię i obie stacje końcowe każdego odcinka.
     error-empty: Dodaj co najmniej jeden odcinek linii.
     error-station-not-on-line: Wybrana stacja nie należy do tej linii.
     error-invalid-direction: Nie można dotrzeć do stacji wyjazdowej ze stacji wjazdowej w wybranym kierunku.
     error-disconnected: Sąsiednie odcinki nie mają wspólnej stacji połączenia.
+    error-same-station: Wybierz różne stacje wjazdową i wyjazdową.
+    error-invalid-direction-detail: 'Aby przejechać z „{entry}” do „{exit}”, wybierz „{direction}”.'
+    error-disconnected-detail: 'Dla odcinka {current} wybierz ten sam rekord co „{station}”, wyjazd odcinka {previous}, albo dodaj między nimi jawną przesiadkę.'
   service:
     title: Usługi
     local: Lokalny
@@ -249,13 +262,14 @@ route:
     select: Wybierz stację
     transfer-title: "Informacje o przesiadkach — {name}"
     transfer-manage: Wyświetl i edytuj informacje o przesiadkach
+    transfer-line-select: Linia przesiadkowa
     transfer-select: Stacja przesiadkowa
     transfer-empty: Brak połączeń przesiadkowych
     same-id-lines: Linie z tym samym ID stacji
     same-id-lines-help: Te linie współdzielą rekord stacji i są automatycznie traktowane jako przesiadki. Tutaj są tylko do odczytu.
     same-id-lines-empty: Żadna inna linia nie współdzieli tego ID stacji
     explicit-transfers: Jawne przesiadki między stacjami
-    explicit-transfers-help: Dodawaj lub usuwaj przesiadki między różnymi ID stacji.
+    explicit-transfers-help: Dodawaj lub usuwaj połączenia między różnymi rekordami stacji. Dodane stacje są pokazane poniżej i mogą też łączyć trasy bezpośrednie.
   sign:
     style: Styl
     direction: Kierunek
@@ -305,12 +319,16 @@ route:
     transit-show-names: Pokaż nazwy linii przesiadkowych
     download-text-warning: Zapisz (drugi język może być nieczytelny)
     font-size: Rozmiar czcionki nazwy stacji
+    font-size-small: Mały
+    font-size-medium: Średni
+    font-size-large: Duży
     overlap-warning-title: Wykryto nakładanie się etykiet
     overlap-warning: Niektóre nazwy stacji pokrywają się. Spróbuj zmniejszyć rozmiar czcionki.
     station-number-mode: Wyświetlanie numeru stacji
     station-number-none: Żadne
     station-number-badge: Odznaka
     station-number-dot: Zamień kropkę
+    emphasize-connected-station-names: Powiększ nazwy stacji łączących linie
     name-style: Styl nazwy
     name-style-normal: Normalne
     name-style-above: Powyżej

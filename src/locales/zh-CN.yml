@@ -167,7 +167,7 @@ route:
     station-number-style-tokyometro: 东京地铁/都营地铁风格
     station-number-style-preview: 徽章示例（使用公司颜色作为线条颜色）
     empty: 还没有公司
-    delete-confirm: 删除这家公司？相关行也将被删除。
+    delete-confirm: 删除这家公司吗？其所属线路以及包含这些线路的所有直通路径也会被删除。
   special-zone:
     title: 特区
     add: 添加区域
@@ -191,7 +191,10 @@ route:
     select: 选择一行
     all: 所有公司
     unassigned-company: 未指定公司
-    delete-confirm: 删除这一行吗？
+    delete-confirm: 删除这条线路吗？包含该线路的所有直通路径也会被删除。
+    delete-all: 删除所有线路
+    delete-all-confirm: 删除所有线路吗？相关的车站归属、车站编号、服务类型和所有直通路径也会被删除，且无法撤销。
+    delete-targets: 将被删除的线路
     prefix-preview: 线路指示器徽章预览
     station-number-preview: 车站编号预览（01）
   through-route:
@@ -209,12 +212,22 @@ route:
     direction: 区间方向
     forward: 正向（按车站顺序）
     reverse: 反向（逆车站顺序）
+    guide-title: 可保存路径的规则
+    guide-intro: 不会核对现实中的运营路线。只要在已登记的数据中形成一条连续且无分支的路径，即可保存。
+    guide-section: 每个区间的入口站和出口站必须是同一线路上的两个不同车站。
+    guide-direction: 正向按已登记的车站顺序行进，反向则按相反顺序。环线会根据方向选择环路的一侧。
+    guide-connection: 后一区间的入口站必须与前一区间的出口站使用相同的车站数据，或使用已建立明确换乘关系的车站。
     delete-confirm: 删除此直通路径？
+    service-help: 设置此直通路径全程使用的服务类型。保存后，可在下方的线路编辑器中设置停靠站。
+    service-editor-help: 正在编辑“{name}”的服务类型和停靠站。请在直通路径编辑器中更改区间或顺序。
     error-incomplete: 请为每个区间选择线路和两个端点站。
     error-empty: 请至少添加一个线路区间。
     error-station-not-on-line: 所选车站不属于对应线路。
     error-invalid-direction: 无法按所选方向从入口站到达出口站。
     error-disconnected: 相邻线路区间的连接站不一致。
+    error-same-station: 入口站和出口站请选择不同的车站。
+    error-invalid-direction-detail: '从“{entry}”前往“{exit}”时，请选择“{direction}”。'
+    error-disconnected-detail: '区间 {current} 请选择与区间 {previous} 的出口站“{station}”相同的车站数据，或在两站之间添加明确的换乘关系。'
   service:
     title: 服务
     local: 本地
@@ -249,13 +262,14 @@ route:
     select: 选择电台
     transfer-title: "换乘信息 — {name}"
     transfer-manage: 查看和编辑换乘信息
+    transfer-line-select: 换乘线路
     transfer-select: 换乘车站
     transfer-empty: 暂无换乘关系
     same-id-lines: 使用相同车站ID的线路
     same-id-lines-help: 这些线路共享同一车站记录，并会自动视为换乘线路。此处仅供查看。
     same-id-lines-empty: 没有其他线路使用此车站ID
     explicit-transfers: 不同车站间的明确换乘关系
-    explicit-transfers-help: 添加或删除不同车站ID之间的换乘关系。
+    explicit-transfers-help: 添加或删除不同车站数据之间的换乘关系。已添加的车站会显示在下方，也可用于连接直通路径。
   sign:
     style: 风格
     direction: 方向
@@ -305,12 +319,16 @@ route:
     transit-show-names: 显示换乘线路名称
     download-text-warning: 保存（第二语言可能无法辨认）
     font-size: 站名字体大小
+    font-size-small: 小
+    font-size-medium: 中
+    font-size-large: 大
     overlap-warning-title: 检测到标签重叠
     overlap-warning: 有些站名重叠。尝试减小字体大小。
     station-number-mode: 站号显示
     station-number-none: 无
     station-number-badge: 徽章
     station-number-dot: 替换点
+    emphasize-connected-station-names: 放大显示线路衔接站名
     name-style: 名称风格
     name-style-normal: 正常
     name-style-above: 以上
