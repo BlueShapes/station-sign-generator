@@ -336,6 +336,7 @@ route:
     station-number-none: None
     station-number-badge: Badge
     station-number-dot: Replace Dot
+    emphasize-connected-station-names: Enlarge route-connection station names
     name-style: Name Style
     name-style-normal: Normal
     name-style-above: Above

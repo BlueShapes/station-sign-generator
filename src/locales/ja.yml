@@ -336,6 +336,7 @@ route:
     station-number-none: 非表示
     station-number-badge: バッジ
     station-number-dot: ドットを置換
+    emphasize-connected-station-names: 接続駅の駅名を大きく表示
     name-style: 駅名スタイル
     name-style-normal: 標準
     name-style-above: 上（縦書き）

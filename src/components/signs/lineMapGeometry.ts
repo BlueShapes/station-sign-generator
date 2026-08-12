@@ -2,6 +2,7 @@ export const DEFAULT_TRACK_WIDTH = 6;
 export const MIN_TRACK_WIDTH = 2;
 export const MAX_TRACK_WIDTH = 30;
 export const DEFAULT_FADE_DOT_SPACING = 10;
+export const CONNECTED_STATION_NAME_SCALE = 1.15;
 
 const DEFAULT_SERVICE_TRACK_WIDTH = 4;
 const DEFAULT_SERVICE_TRACK_GAP = 16;
@@ -201,6 +202,16 @@ export function shouldExpandStationNumberGroups(
       orientation === "horizontal" &&
       (nameStyle === "above" || nameStyle === "below"))
   );
+}
+
+/** Slightly emphasize route-connection stations that carry multiple numbers. */
+export function getConnectedStationNameScale(
+  stationNumberCount: number,
+  emphasize: boolean,
+): number {
+  return emphasize && stationNumberCount >= 2
+    ? CONNECTED_STATION_NAME_SCALE
+    : 1;
 }
 
 /**

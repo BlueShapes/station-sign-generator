@@ -328,6 +328,7 @@ route:
     station-number-none: žádný
     station-number-badge: Odznak
     station-number-dot: Nahradit tečku
+    emphasize-connected-station-names: Zvětšit názvy stanic propojujících tratě
     name-style: Styl názvu
     name-style-normal: Normální
     name-style-above: Nahoře

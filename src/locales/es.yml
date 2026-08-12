@@ -328,6 +328,7 @@ route:
     station-number-none: Ninguno
     station-number-badge: Insignia
     station-number-dot: Reemplazar punto
+    emphasize-connected-station-names: Ampliar nombres de estaciones de conexión entre líneas
     name-style: Estilo de nombre
     name-style-normal: normales
     name-style-above: arriba

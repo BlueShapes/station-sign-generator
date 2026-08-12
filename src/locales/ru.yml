@@ -328,6 +328,7 @@ route:
     station-number-none: Нет
     station-number-badge: Значок
     station-number-dot: Заменить точку
+    emphasize-connected-station-names: Увеличить названия станций стыковки линий
     name-style: Имя Стиль
     name-style-normal: Нормальный
     name-style-above: Выше

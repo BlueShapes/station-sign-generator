@@ -106,6 +106,19 @@ test("selects and draws a through route with each section color", async ({
 
   const canvas = page.locator(".map-preview canvas").first();
   await expect(canvas).toBeVisible();
+  const connectionNameSwitch = page.getByRole("switch", {
+    name: "Enlarge route-connection station names",
+  });
+  await expect(connectionNameSwitch).toBeChecked();
+  await connectionNameSwitch.evaluate((element) =>
+    (element as HTMLInputElement).click(),
+  );
+  await expect(connectionNameSwitch).not.toBeChecked();
+  await connectionNameSwitch.evaluate((element) =>
+    (element as HTMLInputElement).click(),
+  );
+  await expect(connectionNameSwitch).toBeChecked();
+
   const [firstSectionColor, lastSectionColor] = await canvas.evaluate(
     (element) => {
       const routeCanvas = element as HTMLCanvasElement;

@@ -328,6 +328,7 @@ route:
     station-number-none: Niciuna
     station-number-badge: Insigna
     station-number-dot: Înlocuiește Dot
+    emphasize-connected-station-names: Mărește numele stațiilor de legătură între linii
     name-style: Stilul numelui
     name-style-normal: Normal
     name-style-above: Mai sus

@@ -168,6 +168,7 @@ import {
 } from "@/components/signs/multiLineMapLayout";
 import {
   DEFAULT_TRACK_WIDTH,
+  getConnectedStationNameScale,
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
   normalizeTrackWidth,
@@ -503,6 +504,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     useState<StationNumberMap>({});
   const [mapStationNumberGroups, setMapStationNumberGroups] =
     useState<StationNumberGroupMap>({});
+  const [
+    mapEmphasizeConnectedStationNames,
+    setMapEmphasizeConnectedStationNames,
+  ] = useState(true);
   const [mapNameStyle, setMapNameStyle] = useState<
     "normal" | "above" | "below"
   >("normal");
@@ -1573,22 +1578,32 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   // Max 縦書き text height (Konva units) — used to size canvas when nameStyle is above/below
   const mapMaxNameExtent = useMemo(() => {
     if (mapStations.length === 0) return 60;
-    const maxCharCount = Math.max(
-      ...mapStations.map((station) =>
-        Math.max(
+    const maxExtent = Math.max(
+      ...mapStations.map((station) => {
+        const maxCharCount = Math.max(
           [...(station[mapPrimaryLang] ?? "")].length,
           mapShowSecondaryLang
             ? [...(station[mapSecondaryLang] ?? "")].length
             : 0,
-        ),
-      ),
+        );
+        const nameScale = getConnectedStationNameScale(
+          mapStationNumberGroups[station.id]?.length ?? 0,
+          !!selectedThroughRouteId && mapEmphasizeConnectedStationNames,
+        );
+        return maxCharCount > 0
+          ? maxCharCount * (JP_FONT * nameScale + 1) - 1
+          : 0;
+      }),
     );
-    return maxCharCount > 0 ? maxCharCount * (JP_FONT + 1) - 1 : 60;
+    return maxExtent > 0 ? maxExtent : 60;
   }, [
     mapStations,
     mapPrimaryLang,
     mapSecondaryLang,
     mapShowSecondaryLang,
+    mapStationNumberGroups,
+    selectedThroughRouteId,
+    mapEmphasizeConnectedStationNames,
   ]);
 
   // Apply transit filter before passing to renderer
@@ -2706,6 +2721,21 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       ]}
                     />
                   </Grid.Col>
+                  {selectedThroughRouteId && (
+                    <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
+                      <Switch
+                        label={t(
+                          "route.linemap.emphasize-connected-station-names",
+                        )}
+                        checked={mapEmphasizeConnectedStationNames}
+                        onChange={(event) =>
+                          setMapEmphasizeConnectedStationNames(
+                            event.currentTarget.checked,
+                          )
+                        }
+                      />
+                    </Grid.Col>
+                  )}
                   {allTransitLines.length > 0 && (
                     <Grid.Col span={{ base: 12, md: 6 }}>
                       <MultiSelect
@@ -2806,6 +2836,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       stationNumberMode={mapStationNumberMode}
                       stationNumbers={mapStationNumbers}
                       stationNumberGroups={mapStationNumberGroups}
+                      emphasizeConnectedStationNames={
+                        !!selectedThroughRouteId &&
+                        mapEmphasizeConnectedStationNames
+                      }
                       trackColors={
                         selectedThroughRouteId ? mapTrackColors : undefined
                       }

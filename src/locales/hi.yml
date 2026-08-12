@@ -328,6 +328,7 @@ route:
     station-number-none: कोई नहीं
     station-number-badge: बिल्ला
     station-number-dot: डॉट बदलें
+    emphasize-connected-station-names: मार्ग-जंक्शन स्टेशन के नाम बड़े दिखाएँ
     name-style: नाम शैली
     name-style-normal: सामान्य
     name-style-above: ऊपर

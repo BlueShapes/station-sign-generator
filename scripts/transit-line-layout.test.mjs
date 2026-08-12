@@ -24,6 +24,7 @@ import {
 } from "../src/components/signs/lineIndicatorStyle";
 import {
   ceilCanvasDimensions,
+  CONNECTED_STATION_NAME_SCALE,
   DEFAULT_TRACK_WIDTH,
   MAX_TRACK_WIDTH,
   MIN_TRACK_WIDTH,
@@ -33,6 +34,7 @@ import {
   getSegmentedTrackEndCaps,
   getSegmentedTrackRuns,
   getConnectedMarkerExtraExtent,
+  getConnectedStationNameScale,
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
   normalizeTrackWidth,
@@ -158,6 +160,14 @@ describe("transit line layout", () => {
       .toBe(false);
     expect(shouldExpandStationNumberGroups("none", "horizontal", "above"))
       .toBe(false);
+  });
+
+  test("emphasizes only enabled route-connection station names", () => {
+    expect(getConnectedStationNameScale(2, true)).toBe(
+      CONNECTED_STATION_NAME_SCALE,
+    );
+    expect(getConnectedStationNameScale(1, true)).toBe(1);
+    expect(getConnectedStationNameScale(2, false)).toBe(1);
   });
 
   test("joins stroked markers without overlapping their outer edges", () => {

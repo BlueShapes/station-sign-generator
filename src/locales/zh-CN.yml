@@ -328,6 +328,7 @@ route:
     station-number-none: 无
     station-number-badge: 徽章
     station-number-dot: 替换点
+    emphasize-connected-station-names: 放大显示线路衔接站名
     name-style: 名称风格
     name-style-normal: 正常
     name-style-above: 以上

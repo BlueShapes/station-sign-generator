@@ -336,6 +336,7 @@ route:
     station-number-none: Keine
     station-number-badge: Plakette
     station-number-dot: Punkt ersetzen
+    emphasize-connected-station-names: Namen von Streckenverknüpfungsstationen vergrößern
     name-style: Namensstil
     name-style-normal: Normal
     name-style-above: Oben

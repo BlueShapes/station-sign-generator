@@ -328,6 +328,7 @@ route:
     station-number-none: tiada
     station-number-badge: Lencana
     station-number-dot: Gantikan Dot
+    emphasize-connected-station-names: Besarkan nama stesen penyambung laluan
     name-style: Gaya Nama
     name-style-normal: Biasalah
     name-style-above: Di atas
