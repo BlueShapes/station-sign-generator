@@ -6,7 +6,11 @@ import Konva from "konva";
 import { v7 as uuidv7 } from "uuid";
 import { isMobile } from "react-device-detect";
 import { getTokyoMetroStationNumberMetrics } from "@/components/signs/stationNumberBadgeMetrics";
-import { getStationSignFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
+import {
+  CHINESE_STATION_NAME_FONT_FAMILY,
+  getStationSignFontSpecs,
+  waitForCanvasFonts,
+} from "@/lib/fonts";
 import styled from "styled-components";
 import { getJrEastLineArrowPoints } from "./arrowGeometry";
 import JrEastBranchArrows from "./JrEastBranchArrows";
@@ -1308,7 +1312,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     y={yOffset + 18 - 8}
                     fontSize={10}
                     fontStyle="400"
-                    fontFamily="NotoSansTC"
+                    fontFamily={CHINESE_STATION_NAME_FONT_FAMILY}
                     fill="black"
                     align="center"
                   />
@@ -1331,7 +1335,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     y={yOffset + 18}
                     fontSize={10}
                     fontStyle="400"
-                    fontFamily="NotoSansTC"
+                    fontFamily={CHINESE_STATION_NAME_FONT_FAMILY}
                     fill="black"
                     align="center"
                   />

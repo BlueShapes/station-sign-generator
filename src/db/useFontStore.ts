@@ -25,6 +25,17 @@ export interface UserFontEntry {
 
 export const BUILTIN_FONTS: BuiltinFontDef[] = [
   { id: 'noto-sans-jp', name: 'Noto Sans JP', family: 'NotoSansJP', spec: '900 1em NotoSansJP', sizeApprox: 9_600_000 },
+  {
+    id: 'noto-sans-sc',
+    name: 'Noto Sans SC',
+    family: 'NotoSansSC',
+    spec: '400 1em NotoSansSC',
+    sizeApprox: 17_772_300,
+    license: {
+      name: 'SIL Open Font License 1.1',
+      url: new URL('../fonts/NotoSansSC-OFL.txt', import.meta.url).href,
+    },
+  },
   { id: 'noto-sans-tc', name: 'Noto Sans TC', family: 'NotoSansTC', spec: '1em NotoSansTC', sizeApprox: 11_900_000 },
   { id: 'noto-sans-kr', name: 'Noto Sans KR', family: 'NotoSansKR', spec: '1em NotoSansKR', sizeApprox: 10_400_000 },
   {

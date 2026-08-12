@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import {
   CANVAS_FONT_SPECS,
+  CHINESE_STATION_NAME_FONT_FAMILY,
   JR_CENTRAL_BADGE_FONT_SPECS,
   JR_CENTRAL_FONT_SPECS,
   JR_EAST_FONT_SPECS,
@@ -41,6 +42,21 @@ describe("canvas font loading", () => {
     expect(font?.license?.url).toContain("ZenMaruGothic-OFL.txt");
   });
 
+  test("uses Simplified Chinese before Traditional Chinese as fallback", () => {
+    expect(CHINESE_STATION_NAME_FONT_FAMILY).toBe(
+      "NotoSansSC, NotoSansTC, sans-serif",
+    );
+    expect(JR_EAST_FONT_SPECS.indexOf("400 1em NotoSansSC")).toBeLessThan(
+      JR_EAST_FONT_SPECS.indexOf("400 1em NotoSansTC"),
+    );
+    expect(BUILTIN_FONTS.find((font) => font.id === "noto-sans-sc"))
+      .toMatchObject({
+        family: "NotoSansSC",
+        spec: "400 1em NotoSansSC",
+        license: { name: "SIL Open Font License 1.1" },
+      });
+  });
+
   test("preloads every font family used by sign renderers", () => {
     expect(CANVAS_FONT_SPECS).toContain("500 1em Jost");
     expect(CANVAS_FONT_SPECS).toContain("600 1em Jost");
@@ -63,6 +79,7 @@ describe("canvas font loading", () => {
       JR_CENTRAL_FONT_SPECS,
     );
     expect(CANVAS_FONT_SPECS).not.toContain("700 1em ZenMaruGothic");
+    expect(JR_EAST_FONT_SPECS).toContain("400 1em NotoSansSC");
     expect(JR_EAST_FONT_SPECS).toContain("400 1em NotoSansTC");
     expect(JR_EAST_FONT_SPECS).toContain("400 1em NotoSansKR");
     expect(JR_EAST_FONT_SPECS).toContain("700 1em PublicSans");

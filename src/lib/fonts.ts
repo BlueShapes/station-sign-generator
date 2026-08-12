@@ -9,10 +9,15 @@ const NOTO_SANS_JP_FONT_SPECS = [
 
 const CJK_FONT_SPECS = [
   ...NOTO_SANS_JP_FONT_SPECS,
+  "400 1em NotoSansSC",
   "400 1em NotoSansTC",
   "400 1em NotoSansKR",
   "400 1em OverusedGrotesk",
 ] as const;
+
+/** Simplified Chinese first, then Traditional Chinese, then system sans-serif. */
+export const CHINESE_STATION_NAME_FONT_FAMILY =
+  "NotoSansSC, NotoSansTC, sans-serif";
 
 const HIND_BADGE_FONT_SPECS = ["600 1em HindSemiBold"] as const;
 const METRO_BADGE_FONT_SPECS = [
