@@ -337,6 +337,7 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
     note: "optional",
     numberPrimary: "optional",
     numberSecondary: "optional",
+    numberTertiary: "optional",
     threeLetterCode: "optional",
     stationAreas: "optional",
     // Adjacent stations
@@ -346,6 +347,7 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
       secondaryName: "required",
       numberPrimary: "optional",
       numberSecondary: "optional",
+      numberTertiary: "optional",
     },
     right: {
       primaryName: "required",
@@ -353,6 +355,7 @@ export const SIGN_STYLE_FIELDS: Record<string, SignStyleFieldSpec> = {
       secondaryName: "required",
       numberPrimary: "optional",
       numberSecondary: "optional",
+      numberTertiary: "optional",
     },
     // Sign config
     maxAdjacentCount: 2,

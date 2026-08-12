@@ -513,6 +513,60 @@ const V_TRACK_X = 50;
 const SVC_DOT_R = 5; // dot radius on a service track
 const V_RIGHT_MARGIN = 30;
 
+/**
+ * Keep conditional stops visible even when the route is wider than the old
+ * solid-circle marker. The outlined diamond also matches the editor's ◇
+ * control, while ordinary stops retain their outlined circle.
+ */
+function ServiceStopMarker({
+  x,
+  y,
+  radius,
+  color,
+  status,
+  strokeWidth = 2,
+}: {
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+  status: "stop" | "special";
+  strokeWidth?: number;
+}) {
+  if (status === "special") {
+    return (
+      <KonvaLine
+        points={[
+          x,
+          y - radius,
+          x + radius,
+          y,
+          x,
+          y + radius,
+          x - radius,
+          y,
+        ]}
+        closed
+        fill="white"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        lineJoin="round"
+      />
+    );
+  }
+
+  return (
+    <Circle
+      x={x}
+      y={y}
+      radius={radius}
+      fill="white"
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+  );
+}
+
 // Station number badge — all proportions derived from the JR East reference.
 // Reference coordinate system: inner badge = 30×30 sign units.
 // Every measurement below is (reference sign-unit value) × SN_S.
@@ -1908,6 +1962,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             {/* Station dots */}
             {stationData.map((sd, i) => {
               const snNum = stationNumbers[stations[i].id];
+              const singleServiceStatus =
+                services?.length === 1
+                  ? serviceStops[stations[i].id]?.[services[0].id]
+                  : undefined;
               const showSnDot = stationNumberMode === "dot" && !!snNum?.value;
               const snDotDims = showSnDot
                 ? snBadgeDims(!!snNum!.threeLetterCode, snNum!.style)
@@ -1924,13 +1982,17 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   strokeWidthAdjust={1}
                 />
               ) : (
-                <Circle
+                <ServiceStopMarker
                   key={`dot-${i}`}
                   x={sd.dotX}
                   y={sd.dotY}
                   radius={sd.r}
-                  fill="white"
-                  stroke={lc}
+                  color={
+                    singleServiceStatus === "special"
+                      ? services![0].color
+                      : lc
+                  }
+                  status={singleServiceStatus ?? "stop"}
                   strokeWidth={sd.isXchg ? 3 : 2}
                 />
               );
@@ -2440,23 +2502,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     const status = serviceStops[station.id]?.[svc.id];
                     if (!status) return null;
                     const ty = trackYs[si];
-                    return status === "special" ? (
-                      <Circle
+                    return (
+                      <ServiceStopMarker
                         key={`dot-${svc.id}`}
                         x={x}
                         y={ty}
                         radius={SVC_DOT_R}
-                        fill={svc.color}
-                      />
-                    ) : (
-                      <Circle
-                        key={`dot-${svc.id}`}
-                        x={x}
-                        y={ty}
-                        radius={SVC_DOT_R}
-                        fill="white"
-                        stroke={svc.color}
-                        strokeWidth={2}
+                        color={svc.color}
+                        status={status}
                       />
                     );
                   })}
@@ -2847,6 +2900,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const isPassed =
                 (services?.length ?? 0) > 0 &&
                 !services!.some((svc) => !!serviceStops[station.id]?.[svc.id]);
+              const singleServiceStatus =
+                services?.length === 1
+                  ? serviceStops[station.id]?.[services[0].id]
+                  : undefined;
               if (!showPassedStations && isPassed) return null;
 
               const stationNumberGroup = getStationNumbers(station.id);
@@ -2996,12 +3053,16 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           strokeWidthAdjust={1}
                         />
                       ) : (
-                        <Circle
+                        <ServiceStopMarker
                           x={x}
                           y={vnTrackY}
                           radius={r}
-                          fill="white"
-                          stroke={stationColor}
+                          color={
+                            singleServiceStatus === "special"
+                              ? services![0].color
+                              : stationColor
+                          }
+                          status={singleServiceStatus ?? "stop"}
                           strokeWidth={isXchg ? 3 : 2}
                         />
                       ))}
@@ -3325,6 +3386,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               const isPassed =
                 (services?.length ?? 0) > 0 &&
                 !services!.some((svc) => !!serviceStops[station.id]?.[svc.id]);
+              const singleServiceStatus =
+                services?.length === 1
+                  ? serviceStops[station.id]?.[services[0].id]
+                  : undefined;
               if (!showPassedStations && isPassed) return null;
 
               const stationNumberGroup = getStationNumbers(station.id);
@@ -3475,12 +3540,16 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           strokeWidthAdjust={1}
                         />
                       ) : (
-                        <Circle
+                        <ServiceStopMarker
                           x={x}
                           y={H_TRACK_Y}
                           radius={r}
-                          fill="white"
-                          stroke={stationColor}
+                          color={
+                            singleServiceStatus === "special"
+                              ? services![0].color
+                              : stationColor
+                          }
+                          status={singleServiceStatus ?? "stop"}
                           strokeWidth={isXchg ? 3 : 2}
                         />
                       ))}
@@ -3859,23 +3928,14 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     const status = serviceStops[station.id]?.[svc.id];
                     if (!status) return null;
                     const tx = trackXs[si];
-                    return status === "special" ? (
-                      <Circle
+                    return (
+                      <ServiceStopMarker
                         key={`dot-${svc.id}`}
                         x={tx}
                         y={y}
                         radius={SVC_DOT_R}
-                        fill={svc.color}
-                      />
-                    ) : (
-                      <Circle
-                        key={`dot-${svc.id}`}
-                        x={tx}
-                        y={y}
-                        radius={SVC_DOT_R}
-                        fill="white"
-                        stroke={svc.color}
-                        strokeWidth={2}
+                        color={svc.color}
+                        status={status}
                       />
                     );
                   })}
@@ -4132,6 +4192,10 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             const isPassed =
               (services?.length ?? 0) > 0 &&
               !services!.some((svc) => !!serviceStops[station.id]?.[svc.id]);
+            const singleServiceStatus =
+              services?.length === 1
+                ? serviceStops[station.id]?.[services[0].id]
+                : undefined;
             if (!showPassedStations && isPassed) return null;
 
             const stationNumberGroup = getStationNumbers(station.id);
@@ -4260,12 +4324,16 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         strokeWidthAdjust={1}
                       />
                     ) : (
-                      <Circle
+                      <ServiceStopMarker
                         x={trackX}
                         y={y}
                         radius={r}
-                        fill="white"
-                        stroke={stationColor}
+                        color={
+                          singleServiceStatus === "special"
+                            ? services![0].color
+                            : stationColor
+                        }
+                        status={singleServiceStatus ?? "stop"}
                         strokeWidth={isXchg ? 3 : 2}
                       />
                     ))}

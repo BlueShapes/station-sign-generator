@@ -7,8 +7,8 @@
  * DB source columns are noted in JSDoc comments.
  */
 
-/** Max number of station number badges per station position (primary + secondary) */
-export const JREAST_MAX_NUMBERS = 2;
+/** Max number of station number badges per station position. */
+export const JREAST_MAX_NUMBERS = 3;
 
 /** Max number of 特定都区市内 (fare area) badges on the sign */
 export const JREAST_MAX_AREAS = 5;

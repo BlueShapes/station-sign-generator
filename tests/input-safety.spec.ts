@@ -41,4 +41,38 @@ test.describe("Text input safety", () => {
     expect(dropWasPrevented).toBe(true);
     await expect(stationInput).toHaveValue(oversized.slice(0, 100));
   });
+
+  test("allows IME composition in a special-zone abbreviation", async ({
+    page,
+  }) => {
+    await page.getByRole("tab").nth(2).click();
+
+    const specialZonesHeading = page.locator("h3").first();
+    await specialZonesHeading.locator("..").getByRole("button").click();
+
+    const abbreviationInput = page
+      .getByRole("dialog")
+      .getByRole("textbox")
+      .nth(1);
+    await abbreviationInput.dispatchEvent("compositionstart");
+    await abbreviationInput.fill("とうきょう");
+    await expect(abbreviationInput).toHaveValue("とうきょう");
+
+    await abbreviationInput.evaluate((input) => {
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      if (!setter) throw new Error("HTMLInputElement.value setter missing");
+      setter.call(input, "東京");
+      input.dispatchEvent(
+        new CompositionEvent("compositionend", {
+          bubbles: true,
+          data: "東京",
+        }),
+      );
+    });
+
+    await expect(abbreviationInput).toHaveValue("東");
+  });
 });

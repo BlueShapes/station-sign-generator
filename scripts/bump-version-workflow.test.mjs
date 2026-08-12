@@ -8,13 +8,24 @@ const workflow = YAML.parse(
 );
 
 describe("bump version workflow", () => {
-  test("runs for main pushes while ignoring automation-only files", () => {
+  test("runs for every main push so dev is always synchronized", () => {
     expect(workflow.on.push.branches).toEqual(["main"]);
-    expect(workflow.on.push["paths-ignore"]).toEqual([
-      "*.md",
-      ".github/workflows/bump-version.yml",
-      "scripts/bump-version*.test.mjs",
-    ]);
+    expect(workflow.on.push["paths-ignore"]).toBeUndefined();
+  });
+
+  test("skips the version bump for automation-only files", () => {
+    const changesStep = workflow.jobs["bump-version"].steps.find(
+      (step) => step.name === "Determine whether to bump version",
+    );
+    const incrementStep = workflow.jobs["bump-version"].steps.find(
+      (step) => step.name === "Increment version",
+    );
+
+    expect(changesStep.run).toContain("*.md|.github/workflows/bump-version.yml");
+    expect(changesStep.run).toContain("scripts/bump-version*.test.mjs");
+    expect(incrementStep.if).toBe(
+      "steps.changes.outputs.should-bump == 'true'",
+    );
   });
 
   test("updates only the application version source", () => {
@@ -23,6 +34,9 @@ describe("bump version workflow", () => {
     );
 
     expect(commitStep.run).toContain("git add src/config.ts");
+    expect(commitStep.if).toBe(
+      "steps.changes.outputs.should-bump == 'true'",
+    );
   });
 
   test("fast-forwards dev after committing the main version", () => {
@@ -33,5 +47,6 @@ describe("bump version workflow", () => {
     expect(syncStep.run).toContain("git fetch origin dev");
     expect(syncStep.run).toContain("git merge-base --is-ancestor origin/dev HEAD");
     expect(syncStep.run).toContain("git push origin HEAD:dev");
+    expect(syncStep.if).toBeUndefined();
   });
 });
