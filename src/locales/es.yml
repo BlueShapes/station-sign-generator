@@ -216,7 +216,7 @@ route:
     guide-intro: No se comprueban los servicios reales. Puede guardar cualquier ruta que forme un único camino continuo y sin ramificaciones en los datos registrados.
     guide-section: En cada tramo, elija como entrada y salida dos estaciones distintas de la misma línea.
     guide-direction: La dirección normal sigue el orden registrado de las estaciones; la inversa va en sentido contrario. En una línea circular, la dirección determina el lado del anillo.
-    guide-connection: Cada tramo siguiente debe entrar con el mismo registro de estación donde sale el tramo anterior. No basta con que el nombre de la estación coincida.
+    guide-connection: Cada tramo siguiente debe entrar en el mismo registro donde sale el anterior o en una estación vinculada mediante un transbordo explícito.
     delete-confirm: ¿Eliminar esta ruta directa?
     error-incomplete: Seleccione una línea y ambas estaciones terminales para cada tramo.
     error-empty: Añada al menos un tramo de línea.
@@ -225,7 +225,7 @@ route:
     error-disconnected: Los tramos contiguos no comparten la misma estación de enlace.
     error-same-station: Elija estaciones distintas para la entrada y la salida.
     error-invalid-direction-detail: 'Para ir de «{entry}» a «{exit}», seleccione «{direction}».'
-    error-disconnected-detail: 'La entrada del tramo {current} debe usar el mismo registro que «{station}», la salida del tramo {previous}.'
+    error-disconnected-detail: 'Para el tramo {current}, use el mismo registro que «{station}», la salida del tramo {previous}, o añada un transbordo explícito entre ambos.'
   service:
     title: Servicios
     local: locales
@@ -260,13 +260,14 @@ route:
     select: Seleccione una estación
     transfer-title: "Información de transbordos — {name}"
     transfer-manage: Ver y gestionar transbordos
+    transfer-line-select: Línea de transbordo
     transfer-select: Estación de transbordo
     transfer-empty: No hay conexiones de transbordo
     same-id-lines: Líneas con el mismo ID de estación
     same-id-lines-help: Estas líneas comparten el mismo registro de estación y se consideran transbordos automáticamente. Aquí son de solo lectura.
     same-id-lines-empty: Ninguna otra línea comparte este ID de estación
     explicit-transfers: Transbordos explícitos entre estaciones
-    explicit-transfers-help: Añada o elimine transbordos entre distintos ID de estación.
+    explicit-transfers-help: Añada o elimine conexiones entre registros de estación distintos. Las estaciones añadidas pasan a la lista inferior y también conectan rutas directas.
   sign:
     style: Estilo
     direction: Dirección

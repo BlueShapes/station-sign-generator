@@ -216,7 +216,7 @@ route:
     guide-intro: Perkhidmatan sebenar tidak disemak. Anda boleh menyimpan mana-mana laluan yang membentuk satu perjalanan berterusan tanpa cabang dalam data berdaftar.
     guide-section: Dalam setiap segmen, pilih dua stesen berbeza pada laluan yang sama sebagai stesen masuk dan keluar.
     guide-direction: Ke hadapan mengikut susunan stesen yang didaftarkan; terbalik bergerak melawannya. Pada laluan gelung, arah menentukan bahagian gelung yang digunakan.
-    guide-connection: Setiap segmen berikutnya mesti bermula pada rekod stesen yang sama tempat segmen sebelumnya berakhir. Nama stesen yang sama sahaja tidak mencukupi.
+    guide-connection: Setiap segmen berikutnya mesti bermula pada rekod stesen yang sama tempat segmen sebelumnya berakhir, atau pada stesen yang dihubungkan oleh pertukaran nyata.
     delete-confirm: Padam laluan terus ini?
     error-incomplete: Pilih laluan dan kedua-dua stesen hujung bagi setiap segmen.
     error-empty: Tambah sekurang-kurangnya satu segmen laluan.
@@ -225,7 +225,7 @@ route:
     error-disconnected: Segmen bersebelahan tidak berkongsi stesen sambungan yang sama.
     error-same-station: Pilih stesen yang berbeza untuk masuk dan keluar.
     error-invalid-direction-detail: 'Untuk bergerak dari “{entry}” ke “{exit}”, pilih “{direction}”.'
-    error-disconnected-detail: 'Stesen masuk segmen {current} mesti menggunakan rekod yang sama dengan “{station}”, stesen keluar segmen {previous}.'
+    error-disconnected-detail: 'Untuk segmen {current}, pilih rekod yang sama dengan “{station}”, stesen keluar segmen {previous}, atau tambah pertukaran nyata antara kedua-duanya.'
   service:
     title: Perkhidmatan
     local: Tempatan
@@ -260,13 +260,14 @@ route:
     select: Pilih stesen
     transfer-title: "Maklumat pertukaran — {name}"
     transfer-manage: Lihat dan urus maklumat pertukaran
+    transfer-line-select: Laluan pertukaran
     transfer-select: Stesen pertukaran
     transfer-empty: Tiada hubungan pertukaran
     same-id-lines: Laluan dengan ID stesen yang sama
     same-id-lines-help: Laluan ini berkongsi rekod stesen dan dianggap sebagai pertukaran secara automatik. Ia hanya boleh dibaca di sini.
     same-id-lines-empty: Tiada laluan lain berkongsi ID stesen ini
     explicit-transfers: Pertukaran nyata antara stesen
-    explicit-transfers-help: Tambah atau padam pertukaran antara ID stesen yang berbeza.
+    explicit-transfers-help: Tambah atau padam sambungan antara rekod stesen berbeza. Stesen yang ditambah muncul di bawah dan juga boleh menyambungkan laluan terus.
   sign:
     style: Gaya
     direction: Arah

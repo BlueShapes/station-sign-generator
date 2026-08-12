@@ -38,11 +38,18 @@ beforeEach(() => {
       line_id TEXT NOT NULL,
       sort_order INTEGER NOT NULL
     );
+    CREATE TABLE station_transfers (
+      id TEXT PRIMARY KEY,
+      station_a_id TEXT NOT NULL,
+      station_b_id TEXT NOT NULL,
+      UNIQUE (station_a_id, station_b_id)
+    );
   `);
   for (const id of [
     "a",
     "shared",
     "b",
+    "c",
     "loop-1",
     "loop-2",
     "loop-3",
@@ -53,6 +60,7 @@ beforeEach(() => {
   for (const [id, isLoop] of [
     ["line-a", 0],
     ["line-b", 0],
+    ["line-transfer", 0],
     ["line-loop", 1],
   ]) {
     db.run("INSERT INTO lines (id, is_loop) VALUES (?, ?)", [id, isLoop]);
@@ -63,6 +71,9 @@ beforeEach(() => {
       ('sl-a-2', 'shared', 'line-a', 2),
       ('sl-b-1', 'b', 'line-b', 1),
       ('sl-b-2', 'shared', 'line-b', 2),
+      ('sl-b-3', 'c', 'line-b', 3),
+      ('sl-transfer-1', 'b', 'line-transfer', 1),
+      ('sl-transfer-2', 'c', 'line-transfer', 2),
       ('sl-loop-1', 'loop-1', 'line-loop', 1),
       ('sl-loop-2', 'loop-2', 'line-loop', 2),
       ('sl-loop-3', 'loop-3', 'line-loop', 3),
@@ -280,6 +291,76 @@ describe("through route repository", () => {
         previousSegmentIndex: 0,
       },
     ]);
+  });
+
+  test("connects distinct station records linked by an explicit transfer", () => {
+    db.run(
+      "INSERT INTO station_transfers VALUES ('transfer-1', 'b', 'shared')",
+    );
+    upsertThroughRoute(db, route);
+    const transferred = {
+      ...reverse,
+      line_id: "line-transfer",
+      entry_station_id: "b",
+      exit_station_id: "c",
+      direction: "forward",
+    };
+
+    expect(validateThroughRouteSegments(db, [forward, transferred])).toBeNull();
+    replaceThroughRouteSegments(db, route.id, [forward, transferred]);
+    expect(getThroughRoutePath(db, route.id)).toEqual({
+      stationIds: ["a", "shared", "c"],
+      stationIdGroups: [["a"], ["shared", "b"], ["c"]],
+      edgeLineIds: ["line-a", "line-transfer"],
+      lineIds: ["line-a", "line-transfer"],
+    });
+  });
+
+  test("connects Marunouchi and Yamanote Ikebukuro in the sample data", () => {
+    const sampleDb = new SQL.Database(readFileSync("public/sample.sqlite"));
+    try {
+      const sampleRoute = {
+        id: "sample-ikebukuro-route",
+        name: "Ikebukuro boundary",
+        sort_order: 999,
+      };
+      const sampleSegments = [
+        {
+          id: "sample-m",
+          through_route_id: sampleRoute.id,
+          line_id: "line-marunouchi",
+          entry_station_id: "station-m24",
+          exit_station_id: "station-m25",
+          direction: "forward",
+          sort_order: 0,
+        },
+        {
+          id: "sample-jy",
+          through_route_id: sampleRoute.id,
+          line_id: "line-yamanote",
+          entry_station_id: "station-jy13",
+          exit_station_id: "station-jy14",
+          direction: "forward",
+          sort_order: 1,
+        },
+      ];
+
+      expect(validateThroughRouteSegments(sampleDb, sampleSegments)).toBeNull();
+      upsertThroughRoute(sampleDb, sampleRoute);
+      replaceThroughRouteSegments(sampleDb, sampleRoute.id, sampleSegments);
+      expect(getThroughRoutePath(sampleDb, sampleRoute.id)).toEqual({
+        stationIds: ["station-m24", "station-m25", "station-jy14"],
+        stationIdGroups: [
+          ["station-m24"],
+          ["station-m25", "station-jy13"],
+          ["station-jy14"],
+        ],
+        edgeLineIds: ["line-marunouchi", "line-yamanote"],
+        lineIds: ["line-marunouchi", "line-yamanote"],
+      });
+    } finally {
+      sampleDb.close();
+    }
   });
 
   test("wraps across a loop boundary and direction selects the arc", () => {

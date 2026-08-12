@@ -3,6 +3,7 @@ import type {
   ThroughRoute,
   ThroughRouteSegment,
 } from "@/db/types";
+import { hasStationTransfer } from "@/db/repositories/station-transfers";
 
 export type ThroughRouteValidationError =
   | "empty"
@@ -294,6 +295,8 @@ export interface ThroughRoutePath {
   /** Line ID for each gap between adjacent station IDs. */
   edgeLineIds: string[];
   lineIds: string[];
+  /** Station records collapsed into each displayed station at transfer boundaries. */
+  stationIdGroups?: string[][];
 }
 
 /** Resolve all segments of a named through route into one branch-free path. */
@@ -302,25 +305,39 @@ export function getThroughRoutePath(
   throughRouteId: string,
 ): ThroughRoutePath {
   const stationIds: string[] = [];
+  const stationIdGroups: string[][] = [];
   const edgeLineIds: string[] = [];
   const lineIds: string[] = [];
 
   for (const segment of getThroughRouteSegments(db, throughRouteId)) {
     const segmentStationIds = getThroughRouteSegmentStationIds(db, segment);
     const previousStationId = stationIds[stationIds.length - 1];
-    if (
+    const segmentEntryStationId = segmentStationIds[0];
+    const sharesBoundary =
       previousStationId !== undefined &&
-      previousStationId !== segmentStationIds[0]
-    ) {
+      segmentEntryStationId !== undefined &&
+      hasStationTransfer(db, previousStationId, segmentEntryStationId);
+    if (previousStationId !== undefined && !sharesBoundary) {
       throw new Error("Invalid through route: disconnected");
     }
 
     if (!lineIds.includes(segment.line_id)) lineIds.push(segment.line_id);
-    stationIds.push(
-      ...(stationIds.length === 0
-        ? segmentStationIds
-        : segmentStationIds.slice(1)),
-    );
+    if (stationIds.length === 0) {
+      stationIds.push(...segmentStationIds);
+      stationIdGroups.push(...segmentStationIds.map((stationId) => [stationId]));
+    } else {
+      if (
+        segmentEntryStationId !== undefined &&
+        segmentEntryStationId !== previousStationId
+      ) {
+        stationIdGroups.at(-1)?.push(segmentEntryStationId);
+      }
+      const remainingStationIds = segmentStationIds.slice(1);
+      stationIds.push(...remainingStationIds);
+      stationIdGroups.push(
+        ...remainingStationIds.map((stationId) => [stationId]),
+      );
+    }
     edgeLineIds.push(
       ...Array.from(
         { length: Math.max(0, segmentStationIds.length - 1) },
@@ -329,7 +346,14 @@ export function getThroughRoutePath(
     );
   }
 
-  return { stationIds, edgeLineIds, lineIds };
+  return {
+    stationIds,
+    edgeLineIds,
+    lineIds,
+    ...(stationIdGroups.some((group) => group.length > 1)
+      ? { stationIdGroups }
+      : {}),
+  };
 }
 
 export function getThroughRouteValidationIssues(
@@ -361,7 +385,11 @@ export function getThroughRouteValidationIssues(
     }
     if (
       previousExitStationId !== null &&
-      previousExitStationId !== segment.entry_station_id
+      !hasStationTransfer(
+        db,
+        previousExitStationId,
+        segment.entry_station_id,
+      )
     ) {
       issues.push({
         error: "disconnected",

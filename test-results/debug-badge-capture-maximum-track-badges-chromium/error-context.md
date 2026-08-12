@@ -1,0 +1,196 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - img [ref=e6]
+          - heading "Station Sign & Line Map Generator" [level=1] [ref=e10]
+          - paragraph [ref=e11]: v2026.8.0-beta8
+        - generic [ref=e12]:
+          - button "Switch to dark mode" [ref=e13] [cursor=pointer]:
+            - img [ref=e15]
+          - button "Change Locale" [ref=e17] [cursor=pointer]:
+            - img [ref=e19]
+          - button "Share This Tool" [ref=e27] [cursor=pointer]:
+            - img [ref=e29]
+    - generic [ref=e37]:
+      - tablist [ref=e38]:
+        - tab "Simple Input" [ref=e39] [cursor=pointer]:
+          - img [ref=e41]
+          - generic [ref=e44]: Simple Input
+        - tab "From Route" [selected] [ref=e45] [cursor=pointer]:
+          - img [ref=e47]
+          - generic [ref=e51]: From Route
+        - tab "Edit Routes" [ref=e52] [cursor=pointer]:
+          - img [ref=e54]
+          - generic [ref=e57]: Edit Routes
+        - tab "Settings" [ref=e58] [cursor=pointer]:
+          - img [ref=e60]
+          - generic [ref=e63]: Settings
+      - tabpanel "From Route" [ref=e64]:
+        - generic [ref=e66]:
+          - radiogroup [ref=e68]:
+            - generic [ref=e70]:
+              - radio "Station Sign"
+              - generic [ref=e73] [cursor=pointer]:
+                - img [ref=e74]
+                - text: Station Sign
+            - generic [ref=e76]:
+              - radio "Line Map (Single/Through)" [checked] [active]
+              - generic [ref=e79] [cursor=pointer]:
+                - img [ref=e80]
+                - text: Line Map (Single/Through)
+            - generic [ref=e82]:
+              - radio "Line Map (Multiple Lines)"
+              - generic [ref=e85] [cursor=pointer]:
+                - img [ref=e86]
+                - text: Line Map (Multiple Lines)
+          - generic [ref=e88]:
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - img [ref=e92]
+                - heading "Route and Range" [level=2] [ref=e94]
+              - generic [ref=e96]:
+                - generic [ref=e98]:
+                  - generic [ref=e99]: Lines
+                  - generic [ref=e100]:
+                    - textbox "Lines" [ref=e101] [cursor=pointer]:
+                      - /placeholder: Select a line
+                      - text: "[JY] 山手線"
+                    - button [ref=e103] [cursor=pointer]:
+                      - img [ref=e104]
+                - generic [ref=e107]:
+                  - generic [ref=e108]: From
+                  - generic [ref=e109]:
+                    - textbox "From" [ref=e110] [cursor=pointer]:
+                      - /placeholder: Select a station
+                      - text: "[JY01] 東京"
+                    - generic:
+                      - img
+                - button "Swap start and end" [ref=e112] [cursor=pointer]:
+                  - img [ref=e115]
+                - generic [ref=e119]:
+                  - generic [ref=e120]: To
+                  - generic [ref=e121]:
+                    - textbox "To" [ref=e122] [cursor=pointer]:
+                      - /placeholder: Select a station
+                      - text: "[JY30] 有楽町"
+                    - generic:
+                      - img
+            - generic [ref=e123]:
+              - generic [ref=e124]:
+                - generic [ref=e125]:
+                  - img [ref=e127]
+                  - heading "Layout" [level=2] [ref=e129]
+                - generic [ref=e131]:
+                  - generic [ref=e132]:
+                    - paragraph [ref=e133]: Loop Display Mode
+                    - generic [ref=e135]:
+                      - switch "Show as linear route"
+                      - generic [ref=e140]: Show as linear route
+                  - generic [ref=e141]:
+                    - paragraph [ref=e142]: Station Name Font Size
+                    - generic [ref=e143]:
+                      - img [ref=e144]
+                      - slider [ref=e150] [cursor=pointer]:
+                        - generic: 9px
+                  - generic [ref=e151]:
+                    - paragraph [ref=e152]: Line Thickness
+                    - generic [ref=e153]:
+                      - img [ref=e154]
+                      - generic [ref=e158] [cursor=pointer]:
+                        - slider [ref=e160]:
+                          - generic: "6"
+                        - generic:
+                          - generic:
+                            - generic: "6"
+                          - generic:
+                            - generic: "18"
+                          - generic:
+                            - generic: "30"
+              - generic [ref=e161]:
+                - generic [ref=e162]:
+                  - img [ref=e164]
+                  - heading "Display Content" [level=2] [ref=e167]
+                - generic [ref=e169]:
+                  - generic [ref=e170]:
+                    - generic [ref=e171]:
+                      - generic [ref=e172]: Primary Language
+                      - generic [ref=e173]:
+                        - textbox "Primary Language" [ref=e174] [cursor=pointer]: 1st name (日本語)
+                        - generic:
+                          - img
+                    - paragraph [ref=e175]: 東京 · 神田 · 秋葉原
+                  - generic [ref=e176]:
+                    - generic [ref=e177]:
+                      - generic [ref=e178]: Secondary Language
+                      - generic [ref=e179]:
+                        - textbox "Secondary Language" [ref=e180] [cursor=pointer]: 2nd name (English)
+                        - generic:
+                          - img
+                    - generic [ref=e183]:
+                      - switch "Show" [checked]
+                      - generic [ref=e188]: Show
+                    - paragraph [ref=e189]: Tōkyō · Kanda · Akihabara
+                  - generic [ref=e190]:
+                    - paragraph [ref=e191]: Station Number Display
+                    - radiogroup [ref=e192]:
+                      - generic [ref=e194]:
+                        - radio "None" [checked]
+                        - generic [ref=e195] [cursor=pointer]: None
+                      - generic [ref=e196]:
+                        - radio "Badge"
+                        - generic [ref=e197] [cursor=pointer]: Badge
+                      - generic [ref=e198]:
+                        - radio "Replace Dot"
+                        - generic [ref=e199] [cursor=pointer]: Replace Dot
+                  - generic [ref=e200]:
+                    - generic [ref=e201]:
+                      - generic [ref=e202]: Show Transit Lines
+                      - generic [ref=e203]:
+                        - generic [ref=e204] [cursor=pointer]:
+                          - generic:
+                            - textbox "Show Transit Lines"
+                        - generic:
+                          - img
+                    - generic [ref=e206]:
+                      - switch "Show transfer line names" [checked] [disabled]
+                      - generic [ref=e211]: Show transfer line names
+            - generic [ref=e212]:
+              - heading "Preview" [level=2] [ref=e214]:
+                - img [ref=e215]
+                - text: Preview
+              - generic [ref=e223]:
+                - generic [ref=e225]:
+                  - generic [ref=e226]: Export Format
+                  - generic [ref=e227]:
+                    - textbox "Export Format" [ref=e228] [cursor=pointer]: PNG (Image)
+                    - generic:
+                      - img
+                - generic [ref=e230]:
+                  - generic [ref=e231]: Image Size
+                  - generic [ref=e232]:
+                    - textbox "Image Size" [ref=e233] [cursor=pointer]: 1520 × 1520 (S)
+                    - generic:
+                      - img
+                - button "Save as Image" [ref=e235] [cursor=pointer]:
+                  - generic [ref=e236]:
+                    - img [ref=e238]
+                    - generic [ref=e241]: Save as Image
+  - generic [ref=e244]:
+    - button "Menu" [ref=e245]:
+      - img [ref=e247]
+      - generic: Menu
+    - button "Inspect" [ref=e251]:
+      - img [ref=e253]
+      - generic: Inspect
+    - button "Audit" [ref=e255]:
+      - img [ref=e257]
+      - generic: Audit
+    - button "Settings" [ref=e260]:
+      - img [ref=e262]
+      - generic: Settings
+```

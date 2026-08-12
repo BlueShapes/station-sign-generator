@@ -204,6 +204,20 @@ const LANGUAGE_SLOT_LABEL_KEYS = [
   "route.linemap.lang-4th",
 ] as const;
 
+function getStationIdForLine(
+  db: Database,
+  stationIds: string[],
+  lineId: string,
+): string {
+  return (
+    stationIds.find((stationId) =>
+      getStationLines(db, stationId).some(
+        (stationLine) => stationLine.line_id === lineId,
+      ),
+    ) ?? stationIds[0] ?? ""
+  );
+}
+
 type AdjacentCandidate = AdjacentStationProps & {
   optionValue: string;
   lineId: string;
@@ -591,7 +605,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         stationId: station.id,
         stationLines: getStationLines(db, station.id),
       })),
-    ];
+];
 
     for (const stationContext of stationContexts) {
       for (const stationLine of stationContext.stationLines) {
@@ -941,13 +955,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         stations: [] as Station[],
         edgeLineIds: [] as string[],
         lineIds: [] as string[],
+        stationIdGroups: [] as string[][],
       };
     }
 
     const stationById = new Map(
       getAllStations(db).map((station) => [station.id, station]),
     );
-    const { stationIds, edgeLineIds, lineIds } = getThroughRoutePath(
+    const { stationIds, edgeLineIds, lineIds, stationIdGroups } = getThroughRoutePath(
       db,
       selectedThroughRouteId,
     );
@@ -958,12 +973,21 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         .filter((station): station is Station => !!station),
       edgeLineIds,
       lineIds,
+      stationIdGroups:
+        stationIdGroups ?? stationIds.map((stationId) => [stationId]),
     };
   }, [db, selectedThroughRouteId]);
 
   const mapSourceStations = selectedThroughRouteId
     ? throughRoutePath.stations
     : stations;
+  const mapSourceStationIdGroups = useMemo(
+    () =>
+      selectedThroughRouteId
+        ? throughRoutePath.stationIdGroups
+        : stations.map((station) => [station.id]),
+    [selectedThroughRouteId, throughRoutePath.stationIdGroups, stations],
+  );
   const mapSourceEdgeLineIds = useMemo(
     () =>
       selectedThroughRouteId
@@ -998,9 +1022,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     }
     const result: Record<string, Line[]> = {};
     const routeLineIdSet = new Set(mapRouteLineIds);
-    for (const station of mapSourceStations) {
-      const transferLineIds = new Set(getTransferLineIds(db, station.id));
-      const stationLineRecords = getStationLines(db, station.id);
+    for (const [index, station] of mapSourceStations.entries()) {
+      const stationIds = mapSourceStationIdGroups[index] ?? [station.id];
+      const transferLineIds = new Set(
+        stationIds.flatMap((stationId) => getTransferLineIds(db, stationId)),
+      );
+      const stationLineRecords = stationIds.flatMap((stationId) =>
+        getStationLines(db, stationId),
+      );
       const otherLines = lines.filter(
         (l) =>
           !routeLineIdSet.has(l.id) &&
@@ -1012,12 +1041,19 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       if (otherLines.length > 0) result[station.id] = otherLines;
     }
     setMapTransits(result);
-  }, [db, mapRouteLineIds, mapSourceStations, lines]);
+  }, [
+    db,
+    mapRouteLineIds,
+    mapSourceStations,
+    mapSourceStationIdGroups,
+    lines,
+  ]);
 
   // ── Derived: stations in selected map range (respects direction) ─────────
   const {
     mapStations,
     mapEdgeLineIds,
+    mapStationIdGroups,
     mapHasMoreBefore,
     mapHasMoreAfter,
   } = useMemo(() => {
@@ -1025,6 +1061,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       return {
         mapStations: [],
         mapEdgeLineIds: [] as string[],
+        mapStationIdGroups: [] as string[][],
         mapHasMoreBefore: false,
         mapHasMoreAfter: false,
       };
@@ -1043,6 +1080,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     const slicedEdgeLineIds = reversed
       ? mapSourceEdgeLineIds.slice(ei, si).reverse()
       : mapSourceEdgeLineIds.slice(si, ei);
+    const slicedStationIdGroups = reversed
+      ? mapSourceStationIdGroups.slice(ei, si + 1).reverse()
+      : mapSourceStationIdGroups.slice(si, ei + 1);
     // "More before/after" tracks whether the route continues beyond each
     // displayed end in the direction of travel.
     const hasMoreBefore = reversed
@@ -1054,10 +1094,17 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     return {
       mapStations: sliced,
       mapEdgeLineIds: slicedEdgeLineIds,
+      mapStationIdGroups: slicedStationIdGroups,
       mapHasMoreBefore: hasMoreBefore,
       mapHasMoreAfter: hasMoreAfter,
     };
-  }, [mapSourceStations, mapSourceEdgeLineIds, mapStartId, mapEndId]);
+  }, [
+    mapSourceStations,
+    mapSourceStationIdGroups,
+    mapSourceEdgeLineIds,
+    mapStartId,
+    mapEndId,
+  ]);
 
   const selectedBaseLine = lines.find((l) => l.id === selectedLineId) ?? null;
   const firstThroughLine = selectedThroughRouteId
@@ -1354,7 +1401,16 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       const edgeIndex = Math.min(index, mapSourceEdgeLineIds.length - 1);
       const lineId =
         mapSourceEdgeLineIds[edgeIndex] ?? mapRouteLineIds[0] ?? selectedLineId;
-      const num = lineId ? getResolvedStationNumber(db, s.id, lineId) : null;
+      const stationId = lineId
+        ? getStationIdForLine(
+            db,
+            mapSourceStationIdGroups[index] ?? [s.id],
+            lineId,
+          )
+        : s.id;
+      const num = lineId
+        ? getResolvedStationNumber(db, stationId, lineId)
+        : null;
       const badge = num?.prefix ? `[${num.prefix}${num.value}] ` : "";
       result[s.id] = `${badge}${s.primary_name}`;
     }
@@ -1362,6 +1418,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   }, [
     db,
     mapSourceStations,
+    mapSourceStationIdGroups,
     mapSourceEdgeLineIds,
     mapRouteLineIds,
     selectedLineId,
@@ -1394,7 +1451,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     for (const [index, station] of mapStations.entries()) {
       const lineId = mapStationLineIds[index];
       if (!lineId) continue;
-      const displayNumber = toStationNumberInfo(lineId, station);
+      const stationIds = mapStationIdGroups[index] ?? [station.id];
+      const displayStationId = getStationIdForLine(db, stationIds, lineId);
+      const displayNumber = toStationNumberInfo(lineId, {
+        ...station,
+        id: displayStationId,
+      });
       if (displayNumber) result[station.id] = displayNumber;
 
       const incomingLineId = mapEdgeLineIds[index - 1];
@@ -1409,12 +1471,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       }
       const incomingResolved = getResolvedStationNumber(
         db,
-        station.id,
+        getStationIdForLine(db, stationIds, incomingLineId),
         incomingLineId,
       );
       const outgoingResolved = getResolvedStationNumber(
         db,
-        station.id,
+        getStationIdForLine(db, stationIds, outgoingLineId),
         outgoingLineId,
       );
       if (
@@ -1446,6 +1508,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   }, [
     db,
     mapStations,
+    mapStationIdGroups,
     mapStationLineIds,
     mapEdgeLineIds,
     selectedThroughRouteId,

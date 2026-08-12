@@ -216,7 +216,7 @@ route:
     guide-intro: 不會核對現實中的營運路線。只要在已登記資料中形成一條連續而無分支的路徑，便可儲存。
     guide-section: 每個區段的入口站和出口站必須是同一路線上的兩個不同車站。
     guide-direction: 順向按已登記的車站次序前進，逆向則按相反次序。環狀線會按方向選擇環路的一邊。
-    guide-connection: 下一區段的入口站必須與上一區段的出口站使用完全相同的車站資料。只有車站名稱相同並不算接駁。
+    guide-connection: 下一區段的入口站必須與上一區段的出口站使用相同車站資料，或使用已建立明確轉乘關係的車站。
     delete-confirm: 刪除此直通路徑？
     error-incomplete: 請為每個區段選擇路線及兩個端點車站。
     error-empty: 請至少新增一個路線區段。
@@ -225,7 +225,7 @@ route:
     error-disconnected: 相鄰路線區段的接駁站不一致。
     error-same-station: 入口站和出口站請選擇不同車站。
     error-invalid-direction-detail: '由「{entry}」前往「{exit}」時，請選擇「{direction}」。'
-    error-disconnected-detail: '區段 {current} 的入口站必須與區段 {previous} 的出口站「{station}」使用相同的車站資料。'
+    error-disconnected-detail: '區段 {current} 請選擇與區段 {previous} 的出口站「{station}」相同的車站資料，或在兩站之間新增明確轉乘關係。'
   service:
     title: 服務
     local: 本地
@@ -260,13 +260,14 @@ route:
     select: 選擇電台
     transfer-title: "轉乘資料 — {name}"
     transfer-manage: 查看及編輯轉乘資料
+    transfer-line-select: 轉乘路線
     transfer-select: 轉乘車站
     transfer-empty: 尚未設定轉乘關係
     same-id-lines: 使用相同車站ID的路線
     same-id-lines-help: 這些路線共用同一車站記錄，並會自動視為轉乘路線。此處只供查看。
     same-id-lines-empty: 沒有其他路線使用此車站ID
     explicit-transfers: 不同車站之間的明確轉乘關係
-    explicit-transfers-help: 新增或刪除不同車站ID之間的轉乘關係。
+    explicit-transfers-help: 新增或刪除不同車站資料之間的轉乘關係。已新增車站會顯示在下方，也可用於連接直通路徑。
   sign:
     style: 風格
     direction: 方向

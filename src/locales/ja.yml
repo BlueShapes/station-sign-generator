@@ -224,7 +224,7 @@ route:
     guide-intro: 実在する運行経路かどうかは判定しません。登録データ上で、枝分かれのない1本の経路になる場合に保存できます。
     guide-section: 各区間では、同じ路線上にある異なる2駅を入口駅と出口駅にします。
     guide-direction: 順方向は登録された駅順、逆方向はその反対に進みます。環状線では向きによって通る側が変わります。
-    guide-connection: 次の区間の入口駅は、直前の区間の出口駅と同じ駅データにします。同じ駅名でも、別に登録された駅は接続とみなしません。
+    guide-connection: 次の区間の入口駅は、直前の出口駅と同じ駅データ、または「別駅間の乗換関係」で結ばれた駅にします。
     delete-confirm: この直通経路を削除しますか？
     error-incomplete: すべての区間で路線と両端駅を選択してください。
     error-empty: 路線区間を1件以上追加してください。
@@ -233,7 +233,7 @@ route:
     error-disconnected: 隣り合う路線区間の接続駅が一致していません。
     error-same-station: 入口駅と出口駅には異なる駅を選択してください。
     error-invalid-direction-detail: "「{entry}」から「{exit}」へ進むには「{direction}」を選択してください。"
-    error-disconnected-detail: "区間 {current} の入口駅は、区間 {previous} の出口「{station}」と同じ駅データにしてください。"
+    error-disconnected-detail: "区間 {current} の入口駅は、区間 {previous} の出口「{station}」と同じ駅データを選ぶか、両駅を「別駅間の乗換関係」に追加してください。"
   service:
     title: 種別
     local: 各駅停車
@@ -268,13 +268,14 @@ route:
     select: 駅を選択してください
     transfer-title: "乗換情報 — {name}"
     transfer-manage: 乗換情報を確認・編集
+    transfer-line-select: 乗換先の路線
     transfer-select: 乗換先の駅
     transfer-empty: 乗換関係はありません
     same-id-lines: 同一駅IDで所属する他路線
     same-id-lines-help: 同じ駅データを共有する路線です。乗換候補に自動で含まれ、この画面からは変更できません。
     same-id-lines-empty: 同一駅IDを共有する他路線はありません
     explicit-transfers: 別駅間の乗換関係
-    explicit-transfers-help: 異なる駅ID同士を乗換可能として追加・削除します。
+    explicit-transfers-help: 異なる駅データ同士を乗換可能として追加・削除します。追加済みの駅は候補から除かれて下に表示され、直通経路の接続にも使用できます。
   sign:
     style: スタイル
     direction: 表示方向

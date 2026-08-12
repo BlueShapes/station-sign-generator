@@ -44,6 +44,12 @@ test("adds and removes an explicit connection between distinct stations", async 
   );
   await expect(transferDialog).toContainText("No transfer connections");
   await transferDialog
+    .getByRole("textbox", { name: "Connecting line" })
+    .click();
+  const targetLineOption = page.getByRole("option").first();
+  await expect(targetLineOption).toBeVisible();
+  await targetLineOption.click();
+  await transferDialog
     .getByRole("textbox", { name: "Connecting station" })
     .click();
   const targetOption = page.getByRole("option").first();

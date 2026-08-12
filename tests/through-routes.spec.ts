@@ -39,9 +39,9 @@ test("shows canonical through routes from the sample database", async ({
   await tsudanumaRouteRow.getByRole("button").first().click();
   const editDialog = page.getByRole("dialog");
   await expect(editDialog).toContainText(/edit through route|直通経路を編集/i);
-  await expect(editDialog.getByText("三鷹 → 中野")).toBeVisible();
-  await expect(editDialog.getByText("中野 → 西船橋")).toBeVisible();
-  await expect(editDialog.getByText("西船橋 → 津田沼")).toBeVisible();
+  await expect(editDialog.getByText(/三鷹.*→.*中野/)).toBeVisible();
+  await expect(editDialog.getByText(/中野.*→.*西船橋/)).toBeVisible();
+  await expect(editDialog.getByText(/西船橋.*→.*津田沼/)).toBeVisible();
 });
 
 test("aligns reversed adjacent lines in route input", async ({ page }) => {

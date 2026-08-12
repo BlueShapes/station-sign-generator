@@ -216,7 +216,7 @@ route:
     guide-intro: Os serviços reais não são verificados. Pode guardar qualquer rota que forme um único caminho contínuo e sem ramificações nos dados registados.
     guide-section: Em cada troço, escolha como entrada e saída duas estações diferentes da mesma linha.
     guide-direction: A direção direta segue a ordem registada das estações; a inversa segue o sentido contrário. Numa linha circular, a direção escolhe o lado do circuito.
-    guide-connection: Cada troço seguinte deve entrar exatamente no mesmo registo de estação em que o troço anterior sai. Apenas o mesmo nome de estação não é suficiente.
+    guide-connection: Cada troço seguinte deve entrar no mesmo registo em que o anterior sai ou numa estação ligada por um transbordo explícito.
     delete-confirm: Eliminar esta rota direta?
     error-incomplete: Selecione uma linha e as duas estações terminais de cada troço.
     error-empty: Adicione pelo menos um troço de linha.
@@ -225,7 +225,7 @@ route:
     error-disconnected: Troços adjacentes não partilham a mesma estação de ligação.
     error-same-station: Escolha estações diferentes para a entrada e a saída.
     error-invalid-direction-detail: 'Para ir de “{entry}” a “{exit}”, selecione “{direction}”.'
-    error-disconnected-detail: 'A entrada do troço {current} deve usar o mesmo registo de “{station}”, a saída do troço {previous}.'
+    error-disconnected-detail: 'No troço {current}, use o mesmo registo de “{station}”, a saída do troço {previous}, ou adicione um transbordo explícito entre ambos.'
   service:
     title: Serviços
     local: locais
@@ -260,13 +260,14 @@ route:
     select: Selecione uma estação
     transfer-title: "Informações de transbordo — {name}"
     transfer-manage: Ver e gerir transbordos
+    transfer-line-select: Linha de transbordo
     transfer-select: Estação de transbordo
     transfer-empty: Sem ligações de transbordo
     same-id-lines: Linhas com o mesmo ID de estação
     same-id-lines-help: Estas linhas partilham o registo da estação e são tratadas automaticamente como transbordos. Aqui são apenas de leitura.
     same-id-lines-empty: Nenhuma outra linha partilha este ID de estação
     explicit-transfers: Transbordos explícitos entre estações
-    explicit-transfers-help: Adicione ou remova transbordos entre IDs de estação diferentes.
+    explicit-transfers-help: Adicione ou remova ligações entre registos de estação diferentes. As estações adicionadas aparecem abaixo e também ligam rotas diretas.
   sign:
     style: Estilo
     direction: Direção

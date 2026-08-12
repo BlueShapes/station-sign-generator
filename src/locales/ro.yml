@@ -216,7 +216,7 @@ route:
     guide-intro: Serviciile reale nu sunt verificate. Puteți salva orice rută care formează în datele înregistrate o singură cale continuă, fără ramificații.
     guide-section: În fiecare segment, alegeți ca intrare și ieșire două stații diferite de pe aceeași linie.
     guide-direction: Direcția înainte urmează ordinea înregistrată a stațiilor, iar cea inversă merge în sens opus. Pe o linie circulară, direcția alege partea buclei.
-    guide-connection: Fiecare segment următor trebuie să înceapă cu exact aceeași înregistrare de stație la care se termină segmentul anterior. Același nume de stație nu este suficient.
+    guide-connection: Fiecare segment următor trebuie să înceapă cu aceeași înregistrare la care se termină cel anterior sau cu o stație legată printr-un transfer explicit.
     delete-confirm: Ștergeți această rută directă?
     error-incomplete: Selectați linia și ambele stații terminale pentru fiecare segment.
     error-empty: Adăugați cel puțin un segment de linie.
@@ -225,7 +225,7 @@ route:
     error-disconnected: Segmentele adiacente nu au aceeași stație de legătură.
     error-same-station: Alegeți stații diferite pentru intrare și ieșire.
     error-invalid-direction-detail: 'Pentru a merge de la „{entry}” la „{exit}”, selectați „{direction}”.'
-    error-disconnected-detail: 'Intrarea segmentului {current} trebuie să folosească aceeași înregistrare ca „{station}”, ieșirea segmentului {previous}.'
+    error-disconnected-detail: 'Pentru segmentul {current}, folosiți aceeași înregistrare ca „{station}”, ieșirea segmentului {previous}, sau adăugați un transfer explicit între ele.'
   service:
     title: Servicii
     local: Local
@@ -260,13 +260,14 @@ route:
     select: Selectați o stație
     transfer-title: "Informații despre transfer — {name}"
     transfer-manage: Vezi și gestionează transferurile
+    transfer-line-select: Linie de transfer
     transfer-select: Stație de transfer
     transfer-empty: Nu există legături de transfer
     same-id-lines: Linii cu același ID de stație
     same-id-lines-help: Aceste linii folosesc aceeași înregistrare de stație și sunt considerate automat transferuri. Aici sunt doar pentru citire.
     same-id-lines-empty: Nicio altă linie nu folosește acest ID de stație
     explicit-transfers: Transferuri explicite între stații
-    explicit-transfers-help: Adăugați sau eliminați transferuri între ID-uri de stație diferite.
+    explicit-transfers-help: Adăugați sau eliminați legături între înregistrări de stație diferite. Stațiile adăugate apar mai jos și pot lega și rute directe.
   sign:
     style: Stil
     direction: Direcția

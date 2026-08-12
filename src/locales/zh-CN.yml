@@ -216,7 +216,7 @@ route:
     guide-intro: 不会核对现实中的运营路线。只要在已登记的数据中形成一条连续且无分支的路径，即可保存。
     guide-section: 每个区间的入口站和出口站必须是同一线路上的两个不同车站。
     guide-direction: 正向按已登记的车站顺序行进，反向则按相反顺序。环线会根据方向选择环路的一侧。
-    guide-connection: 后一区间的入口站必须与前一区间的出口站使用完全相同的车站数据。仅车站名称相同并不算连接。
+    guide-connection: 后一区间的入口站必须与前一区间的出口站使用相同的车站数据，或使用已建立明确换乘关系的车站。
     delete-confirm: 删除此直通路径？
     error-incomplete: 请为每个区间选择线路和两个端点站。
     error-empty: 请至少添加一个线路区间。
@@ -225,7 +225,7 @@ route:
     error-disconnected: 相邻线路区间的连接站不一致。
     error-same-station: 入口站和出口站请选择不同的车站。
     error-invalid-direction-detail: '从“{entry}”前往“{exit}”时，请选择“{direction}”。'
-    error-disconnected-detail: '区间 {current} 的入口站必须与区间 {previous} 的出口站“{station}”使用相同的车站数据。'
+    error-disconnected-detail: '区间 {current} 请选择与区间 {previous} 的出口站“{station}”相同的车站数据，或在两站之间添加明确的换乘关系。'
   service:
     title: 服务
     local: 本地
@@ -260,13 +260,14 @@ route:
     select: 选择电台
     transfer-title: "换乘信息 — {name}"
     transfer-manage: 查看和编辑换乘信息
+    transfer-line-select: 换乘线路
     transfer-select: 换乘车站
     transfer-empty: 暂无换乘关系
     same-id-lines: 使用相同车站ID的线路
     same-id-lines-help: 这些线路共享同一车站记录，并会自动视为换乘线路。此处仅供查看。
     same-id-lines-empty: 没有其他线路使用此车站ID
     explicit-transfers: 不同车站间的明确换乘关系
-    explicit-transfers-help: 添加或删除不同车站ID之间的换乘关系。
+    explicit-transfers-help: 添加或删除不同车站数据之间的换乘关系。已添加的车站会显示在下方，也可用于连接直通路径。
   sign:
     style: 风格
     direction: 方向

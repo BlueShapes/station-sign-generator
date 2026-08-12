@@ -216,7 +216,7 @@ route:
     guide-intro: Rzeczywiste połączenia nie są sprawdzane. Można zapisać każdą trasę, która w zarejestrowanych danych tworzy jedną ciągłą ścieżkę bez rozgałęzień.
     guide-section: W każdym odcinku wybierz jako wjazd i wyjazd dwie różne stacje tej samej linii.
     guide-direction: Kierunek do przodu odpowiada zapisanej kolejności stacji, a odwrotny biegnie przeciwnie. Na linii okrężnej kierunek wybiera stronę pętli.
-    guide-connection: Każdy następny odcinek musi zaczynać się dokładnie tym samym rekordem stacji, na którym kończy się poprzedni. Sama zgodność nazwy stacji nie wystarcza.
+    guide-connection: Każdy następny odcinek musi zaczynać się tym samym rekordem stacji, na którym kończy się poprzedni, albo stacją połączoną jawną przesiadką.
     delete-confirm: Usunąć tę trasę bezpośrednią?
     error-incomplete: Wybierz linię i obie stacje końcowe każdego odcinka.
     error-empty: Dodaj co najmniej jeden odcinek linii.
@@ -225,7 +225,7 @@ route:
     error-disconnected: Sąsiednie odcinki nie mają wspólnej stacji połączenia.
     error-same-station: Wybierz różne stacje wjazdową i wyjazdową.
     error-invalid-direction-detail: 'Aby przejechać z „{entry}” do „{exit}”, wybierz „{direction}”.'
-    error-disconnected-detail: 'Wjazd odcinka {current} musi używać tego samego rekordu co „{station}”, wyjazd odcinka {previous}.'
+    error-disconnected-detail: 'Dla odcinka {current} wybierz ten sam rekord co „{station}”, wyjazd odcinka {previous}, albo dodaj między nimi jawną przesiadkę.'
   service:
     title: Usługi
     local: Lokalny
@@ -260,13 +260,14 @@ route:
     select: Wybierz stację
     transfer-title: "Informacje o przesiadkach — {name}"
     transfer-manage: Wyświetl i edytuj informacje o przesiadkach
+    transfer-line-select: Linia przesiadkowa
     transfer-select: Stacja przesiadkowa
     transfer-empty: Brak połączeń przesiadkowych
     same-id-lines: Linie z tym samym ID stacji
     same-id-lines-help: Te linie współdzielą rekord stacji i są automatycznie traktowane jako przesiadki. Tutaj są tylko do odczytu.
     same-id-lines-empty: Żadna inna linia nie współdzieli tego ID stacji
     explicit-transfers: Jawne przesiadki między stacjami
-    explicit-transfers-help: Dodawaj lub usuwaj przesiadki między różnymi ID stacji.
+    explicit-transfers-help: Dodawaj lub usuwaj połączenia między różnymi rekordami stacji. Dodane stacje są pokazane poniżej i mogą też łączyć trasy bezpośrednie.
   sign:
     style: Styl
     direction: Kierunek

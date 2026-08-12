@@ -216,7 +216,7 @@ route:
     guide-intro: Skutečný provoz se neověřuje. Uložit lze trasu, která v zadaných datech tvoří jednu souvislou cestu bez odboček.
     guide-section: V každém úseku vyberte jako vstup a výstup dvě různé stanice stejné linky.
     guide-direction: Směr vpřed odpovídá uloženému pořadí stanic, obrácený směr vede proti němu. U okružní linky směr určuje použitou stranu okruhu.
-    guide-connection: Každý další úsek musí začínat přesně stejným záznamem stanice, kde předchozí úsek končí. Shodný název stanice nestačí.
+    guide-connection: Každý další úsek musí začínat stejným záznamem stanice, kde předchozí končí, nebo stanicí propojenou výslovným přestupem.
     delete-confirm: Smazat tuto průjezdnou trasu?
     error-incomplete: Pro každý úsek vyberte linku a obě koncové stanice.
     error-empty: Přidejte alespoň jeden úsek linky.
@@ -225,7 +225,7 @@ route:
     error-disconnected: Sousední úseky nemají stejnou přestupní stanici.
     error-same-station: Pro vstup a výstup vyberte různé stanice.
     error-invalid-direction-detail: 'Pro cestu ze stanice „{entry}“ do „{exit}“ vyberte směr „{direction}“.'
-    error-disconnected-detail: 'Vstup úseku {current} musí používat stejný záznam jako „{station}“, výstup úseku {previous}.'
+    error-disconnected-detail: 'Pro úsek {current} vyberte stejný záznam jako „{station}“, výstup úseku {previous}, nebo mezi stanicemi přidejte výslovný přestup.'
   service:
     title: Služby
     local: Místní
@@ -260,13 +260,14 @@ route:
     select: Vyberte stanici
     transfer-title: "Informace o přestupech — {name}"
     transfer-manage: Zobrazit a upravit přestupy
+    transfer-line-select: Přestupní linka
     transfer-select: Přestupní stanice
     transfer-empty: Žádné přestupní vazby
     same-id-lines: Linky se stejným ID stanice
     same-id-lines-help: Tyto linky sdílejí stejný záznam stanice a automaticky se považují za přestupní. Zde je nelze upravit.
     same-id-lines-empty: Stejné ID stanice nesdílí žádná další linka
     explicit-transfers: Výslovné přestupy mezi stanicemi
-    explicit-transfers-help: Přidejte nebo odeberte přestupy mezi různými ID stanic.
+    explicit-transfers-help: Přidávejte či odebírejte spojení mezi různými záznamy stanic. Přidané stanice se zobrazí dole a mohou spojovat i průjezdné trasy.
   sign:
     style: styl
     direction: Směr

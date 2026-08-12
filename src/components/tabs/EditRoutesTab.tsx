@@ -21,6 +21,7 @@ import {
   Table,
   Alert,
   ScrollArea,
+  SimpleGrid,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -40,6 +41,7 @@ import {
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
 import { formatStationOptionLabel } from "@/components/tabs/stationOptionLabel";
+import { sortStationTransferCandidates } from "@/components/tabs/stationTransferCandidateOrder";
 import { getStationNumberFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import { getJrCentralStationNumberBadgeMetrics } from "@/components/signs/jrCentralStationNumberBadgeMetrics";
 import {
@@ -1883,6 +1885,9 @@ function StationTransferForm({
   const [selectedStationId, setSelectedStationId] = useState<string | null>(
     null,
   );
+  const [selectedTransferLineId, setSelectedTransferLineId] = useState<
+    string | null
+  >(null);
 
   const getStationLineNames = (stationId: string): string => {
     const stationLineIds = new Set(
@@ -1898,6 +1903,55 @@ function StationTransferForm({
     (candidate) =>
       candidate.id !== station.id && !connectedStationIds.has(candidate.id),
   );
+  const availableStationIds = new Set(
+    availableStations.map((candidate) => candidate.id),
+  );
+  const stationsByTransferLine = new Map(
+    allLines.map((line) => [
+      line.id,
+      getStationsByLine(db, line.id).filter((candidate) =>
+        availableStationIds.has(candidate.id),
+      ),
+    ]),
+  );
+  const transferLineOptions = allLines
+    .filter((line) => (stationsByTransferLine.get(line.id)?.length ?? 0) > 0)
+    .map((line) => ({
+      value: line.id,
+      label: line.prefix ? `[${line.prefix}] ${line.name}` : line.name,
+    }));
+  const selectedTransferLineStations = selectedTransferLineId
+    ? (stationsByTransferLine.get(selectedTransferLineId) ?? [])
+    : [];
+  const sortedTransferCandidates = selectedTransferLineId
+    ? sortStationTransferCandidates(
+        station.primary_name,
+        selectedTransferLineStations.map((candidate, routeOrder) => {
+          const stationNumber = getResolvedStationNumber(
+            db,
+            candidate.id,
+            selectedTransferLineId,
+          );
+          return {
+            id: candidate.id,
+            name: candidate.primary_name,
+            stationNumber: stationNumber?.value ?? null,
+            routeOrder,
+          };
+        }),
+      )
+    : [];
+  const transferStationOptions = sortedTransferCandidates.map((candidate) => {
+    const stationNumber = getResolvedStationNumber(
+      db,
+      candidate.id,
+      selectedTransferLineId!,
+    );
+    return {
+      value: candidate.id,
+      label: formatStationOptionLabel(candidate.name, stationNumber),
+    };
+  });
 
   const handleAdd = () => {
     if (!selectedStationId) return;
@@ -1941,24 +1995,29 @@ function StationTransferForm({
       <Text size="sm" c="dimmed">
         {t("route.station.explicit-transfers-help")}
       </Text>
-      <Group align="flex-end" wrap="nowrap">
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         <Select
-          style={{ flex: 1 }}
-          label={t("route.station.transfer-select")}
-          value={selectedStationId}
-          onChange={setSelectedStationId}
-          data={availableStations.map((candidate) => {
-            const lineNames = getStationLineNames(candidate.id);
-            return {
-              value: candidate.id,
-              label: lineNames
-                ? `${candidate.primary_name} (${lineNames})`
-                : candidate.primary_name,
-            };
-          })}
+          label={t("route.station.transfer-line-select")}
+          value={selectedTransferLineId}
+          onChange={(value) => {
+            setSelectedTransferLineId(value);
+            setSelectedStationId(null);
+          }}
+          data={transferLineOptions}
           searchable
           clearable
         />
+        <Select
+          label={t("route.station.transfer-select")}
+          value={selectedStationId}
+          onChange={setSelectedStationId}
+          data={transferStationOptions}
+          searchable
+          clearable
+          disabled={!selectedTransferLineId}
+        />
+      </SimpleGrid>
+      <Group justify="flex-end">
         <Button onClick={handleAdd} disabled={!selectedStationId}>
           {t("common.add")}
         </Button>

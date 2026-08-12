@@ -224,7 +224,7 @@ route:
     guide-intro: Der reale Betrieb wird nicht geprüft. Speichern lassen sich Routen, die in den erfassten Daten einen einzigen durchgehenden Weg ohne Verzweigung bilden.
     guide-section: Wählen Sie je Abschnitt zwei verschiedene Bahnhöfe derselben Linie als Ein- und Ausfahrt.
     guide-direction: Vorwärts folgt der erfassten Bahnhofsreihenfolge, rückwärts verläuft entgegengesetzt. Bei einer Ringlinie bestimmt die Richtung die Seite des Rings.
-    guide-connection: Jeder folgende Abschnitt muss am exakt gleichen Bahnhofseintrag beginnen, an dem der vorherige endet. Ein gleicher Bahnhofsname allein genügt nicht.
+    guide-connection: Jeder folgende Abschnitt muss am gleichen Bahnhofseintrag beginnen, an dem der vorherige endet, oder an einem durch einen expliziten Umstieg verbundenen Bahnhof.
     delete-confirm: Diese durchgehende Route löschen?
     error-incomplete: Wählen Sie für jeden Abschnitt eine Linie und beide Endbahnhöfe aus.
     error-empty: Fügen Sie mindestens einen Linienabschnitt hinzu.
@@ -233,7 +233,7 @@ route:
     error-disconnected: Benachbarte Linienabschnitte haben keinen gemeinsamen Anschlussbahnhof.
     error-same-station: Wählen Sie für Ein- und Ausfahrt unterschiedliche Bahnhöfe.
     error-invalid-direction-detail: 'Um von „{entry}“ nach „{exit}“ zu fahren, wählen Sie „{direction}“.'
-    error-disconnected-detail: 'Die Einfahrt von Abschnitt {current} muss denselben Bahnhofseintrag wie „{station}“, die Ausfahrt von Abschnitt {previous}, verwenden.'
+    error-disconnected-detail: 'Wählen Sie für Abschnitt {current} denselben Bahnhofseintrag wie „{station}“, die Ausfahrt von Abschnitt {previous}, oder fügen Sie einen expliziten Umstieg hinzu.'
   service:
     title: Zugarten
     local: Nahverkehr
@@ -268,13 +268,14 @@ route:
     select: Station auswählen
     transfer-title: "Umsteigeinformationen — {name}"
     transfer-manage: Umsteigeinformationen anzeigen und bearbeiten
+    transfer-line-select: Anschlusslinie
     transfer-select: Umsteigebahnhof
     transfer-empty: Keine Umsteigebeziehungen
     same-id-lines: Linien mit derselben Bahnhofs-ID
     same-id-lines-help: Diese Linien teilen denselben Bahnhofseintrag und gelten automatisch als Umstieg. Sie sind hier schreibgeschützt.
     same-id-lines-empty: Keine andere Linie teilt diese Bahnhofs-ID
     explicit-transfers: Explizite Umstiege zwischen Bahnhöfen
-    explicit-transfers-help: Umstiege zwischen unterschiedlichen Bahnhofs-IDs hinzufügen oder entfernen.
+    explicit-transfers-help: Verbindungen zwischen verschiedenen Bahnhofseinträgen hinzufügen oder entfernen. Bereits hinzugefügte Bahnhöfe stehen unten und können auch Durchgangsrouten verbinden.
   sign:
     style: Stil
     direction: Richtung

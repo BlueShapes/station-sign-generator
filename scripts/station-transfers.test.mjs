@@ -9,6 +9,7 @@ import {
   deleteStationTransfer,
   getAllStationTransfers,
   getConnectingStations,
+  hasStationTransfer,
   getTransferLineIds,
   upsertStationTransfer,
 } from "../src/db/repositories/station-transfers.ts";
@@ -101,6 +102,10 @@ describe("station transfer repository", () => {
     ).toEqual(["tsudanuma"]);
     expect(getTransferLineIds(db, "tsudanuma")).toEqual(["keisei"]);
     expect(getTransferLineIds(db, "keisei-tsudanuma")).toEqual(["sobu"]);
+    expect(
+      hasStationTransfer(db, "tsudanuma", "keisei-tsudanuma"),
+    ).toBeTrue();
+    expect(hasStationTransfer(db, "tsudanuma", "other")).toBeFalse();
   });
 
   test("does not infer transfers without an explicit relation", () => {
@@ -132,6 +137,7 @@ describe("station transfer translations", () => {
     const expectedKeys = [
       "transfer-title",
       "transfer-manage",
+      "transfer-line-select",
       "transfer-select",
       "transfer-empty",
       "same-id-lines",
