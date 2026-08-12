@@ -56,9 +56,19 @@ test("configures and selects a rapid service on a through route", async ({
   await page.keyboard.press("Escape");
   await serviceSelect.click();
   await page.getByRole("option", { name: "Local", exact: true }).click();
+
+  const canvas = page.locator(".map-preview canvas").first();
+  const widthBeforeBadges = await canvas.evaluate(
+    (element) => (element as HTMLCanvasElement).width,
+  );
   await page
     .getByRole("radio", { name: "Badge", exact: true })
     .evaluate((element) => (element as HTMLInputElement).click());
+  await expect
+    .poll(() =>
+      canvas.evaluate((element) => (element as HTMLCanvasElement).width),
+    )
+    .toBeGreaterThan(widthBeforeBadges);
 
   const stationNumberColors = await page
     .locator(".map-preview canvas")

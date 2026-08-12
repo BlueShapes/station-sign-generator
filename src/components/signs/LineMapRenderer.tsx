@@ -2196,7 +2196,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const rawCanvasW = Math.max(
         300,
         tL +
-          (n - 1) * hSpacing +
+          horizontalStationLayout.extent +
           Math.max(PADDING, maxTransitWidth + 5) +
           vnExtraR,
       );
@@ -2259,8 +2259,11 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             {services.map((svc, si) => {
               const ty = trackYs[si];
               const labelFont = svcLabelFontSize;
-              // right edge must clear the dot: tL - SVC_DOT_R - 6 gap
-              const labelW = Math.max(20, tL - SVC_DOT_R - 10);
+              // The right edge must clear the first station marker.
+              const labelW = Math.max(
+                20,
+                tL + horizontalFirstPosition - SVC_DOT_R - 10,
+              );
               return (
                 <Text
                   key={`svclab-${svc.id}`}
@@ -2282,7 +2285,12 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
               return (
                 <Fragment key={`svctrack-${svc.id}`}>
                   <KonvaLine
-                    points={[tL, ty, tL + (n - 1) * hSpacing, ty]}
+                    points={[
+                      tL + horizontalFirstPosition,
+                      ty,
+                      tL + horizontalLastPosition,
+                      ty,
+                    ]}
                     stroke={svc.color}
                     strokeWidth={serviceTrackWidth}
                     lineCap="round"
@@ -2290,7 +2298,12 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   {hasMoreBefore && (
                     <Fragment>
                       <KonvaLine
-                        points={[tL, ty, tL - vnFadeLen, ty]}
+                        points={[
+                          tL + horizontalFirstPosition,
+                          ty,
+                          tL + horizontalFirstPosition - vnFadeLen,
+                          ty,
+                        ]}
                         stroke={svc.color}
                         strokeWidth={serviceTrackWidth}
                         lineCap="round"
@@ -2299,7 +2312,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                         <Circle
                           key={`fb-${si}-${idx}`}
                           x={
-                            tL -
+                            tL +
+                            horizontalFirstPosition -
                             vnFadeLen -
                             serviceFadeDotSpacing * (idx + 1)
                           }
@@ -2315,9 +2329,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                     <Fragment>
                       <KonvaLine
                         points={[
-                          tL + (n - 1) * hSpacing,
+                          tL + horizontalLastPosition,
                           ty,
-                          tL + (n - 1) * hSpacing + vnFadeLen,
+                          tL + horizontalLastPosition + vnFadeLen,
                           ty,
                         ]}
                         stroke={svc.color}
@@ -2329,7 +2343,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           key={`fa-${si}-${idx}`}
                           x={
                             tL +
-                            (n - 1) * hSpacing +
+                            horizontalLastPosition +
                             vnFadeLen +
                             serviceFadeDotSpacing * (idx + 1)
                           }
@@ -2347,7 +2361,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
             {/* Station labels + per-service dots */}
             {stations.map((station, i) => {
-              const x = tL + i * hSpacing;
+              const x = tL + horizontalPositions[i];
               const stopsHere = services.some(
                 (svc) => !!serviceStops[station.id]?.[svc.id],
               );
@@ -3517,7 +3531,11 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
       const vExtraB = hasMoreAfter ? vFadeExtra : 0;
       const rawCanvasH = Math.max(
         200,
-        PADDING + vExtraT + (n - 1) * vSpacing + PADDING + vExtraB,
+        PADDING +
+          vExtraT +
+          verticalStationLayout.extent +
+          PADDING +
+          vExtraB,
       );
       const { w: canvasW, h: canvasH } = ceilCanvasDimensions(
         rawCanvasW,
@@ -3580,7 +3598,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
             {/* Service labels at track start — 縦書き, above first dot */}
             {services.map((svc, si) => {
               const tx = trackXs[si];
-              const topY = PADDING + vExtraT;
+              const topY = PADDING + vExtraT + verticalFirstPosition;
               const labelFont = 9;
               const charH = labelFont + 1;
               const chars = [...svc.name];
@@ -3648,9 +3666,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   <KonvaLine
                     points={[
                       tx,
-                      PADDING + vExtraT,
+                      PADDING + vExtraT + verticalFirstPosition,
                       tx,
-                      PADDING + vExtraT + (n - 1) * vSpacing,
+                      PADDING + vExtraT + verticalLastPosition,
                     ]}
                     stroke={svc.color}
                     strokeWidth={serviceTrackWidth}
@@ -3661,9 +3679,9 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       <KonvaLine
                         points={[
                           tx,
-                          PADDING + vExtraT,
+                          PADDING + vExtraT + verticalFirstPosition,
                           tx,
-                          PADDING + vExtraT - vFadeLen,
+                          PADDING + vExtraT + verticalFirstPosition - vFadeLen,
                         ]}
                         stroke={svc.color}
                         strokeWidth={serviceTrackWidth}
@@ -3675,7 +3693,8 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           x={tx}
                           y={
                             PADDING +
-                            vExtraT -
+                            vExtraT +
+                            verticalFirstPosition -
                             vFadeLen -
                             serviceFadeDotSpacing * (idx + 1)
                           }
@@ -3691,9 +3710,12 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       <KonvaLine
                         points={[
                           tx,
-                          PADDING + vExtraT + (n - 1) * vSpacing,
+                          PADDING + vExtraT + verticalLastPosition,
                           tx,
-                          PADDING + vExtraT + (n - 1) * vSpacing + vFadeLen,
+                          PADDING +
+                            vExtraT +
+                            verticalLastPosition +
+                            vFadeLen,
                         ]}
                         stroke={svc.color}
                         strokeWidth={serviceTrackWidth}
@@ -3706,7 +3728,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                           y={
                             PADDING +
                             vExtraT +
-                            (n - 1) * vSpacing +
+                            verticalLastPosition +
                             vFadeLen +
                             serviceFadeDotSpacing * (idx + 1)
                           }
@@ -3723,7 +3745,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
 
             {/* Stations */}
             {stations.map((station, i) => {
-              const y = PADDING + vExtraT + i * vSpacing;
+              const y = PADDING + vExtraT + verticalPositions[i];
               const stopsHere = services.some(
                 (svc) => !!serviceStops[station.id]?.[svc.id],
               );
