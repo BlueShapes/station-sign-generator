@@ -218,6 +218,8 @@ route:
     guide-direction: 正向按已登记的车站顺序行进，反向则按相反顺序。环线会根据方向选择环路的一侧。
     guide-connection: 后一区间的入口站必须与前一区间的出口站使用相同的车站数据，或使用已建立明确换乘关系的车站。
     delete-confirm: 删除此直通路径？
+    service-help: 设置此直通路径全程使用的服务类型。保存后，可在下方的线路编辑器中设置停靠站。
+    service-editor-help: 正在编辑“{name}”的服务类型和停靠站。请在直通路径编辑器中更改区间或顺序。
     error-incomplete: 请为每个区间选择线路和两个端点站。
     error-empty: 请至少添加一个线路区间。
     error-station-not-on-line: 所选车站不属于对应线路。

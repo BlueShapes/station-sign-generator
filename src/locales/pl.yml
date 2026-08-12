@@ -218,6 +218,8 @@ route:
     guide-direction: Kierunek do przodu odpowiada zapisanej kolejności stacji, a odwrotny biegnie przeciwnie. Na linii okrężnej kierunek wybiera stronę pętli.
     guide-connection: Każdy następny odcinek musi zaczynać się tym samym rekordem stacji, na którym kończy się poprzedni, albo stacją połączoną jawną przesiadką.
     delete-confirm: Usunąć tę trasę bezpośrednią?
+    service-help: Skonfiguruj rodzaje usług dla całej trasy bezpośredniej. Po zapisaniu ustaw postoje w edytorze trasy poniżej.
+    service-editor-help: Edytujesz rodzaje usług i postoje dla „{name}”. Odcinki lub kolejność zmień w edytorze tras bezpośrednich.
     error-incomplete: Wybierz linię i obie stacje końcowe każdego odcinka.
     error-empty: Dodaj co najmniej jeden odcinek linii.
     error-station-not-on-line: Wybrana stacja nie należy do tej linii.

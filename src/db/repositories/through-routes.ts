@@ -60,6 +60,14 @@ export function upsertThroughRoute(db: Database, route: ThroughRoute): void {
 }
 
 export function deleteThroughRoute(db: Database, id: string): void {
+  db.run(
+    `DELETE FROM station_service_stops
+      WHERE service_id IN (
+        SELECT id FROM services WHERE through_route_id = ?
+      )`,
+    [id],
+  );
+  db.run(`DELETE FROM services WHERE through_route_id = ?`, [id]);
   db.run(`DELETE FROM through_route_segments WHERE through_route_id = ?`, [id]);
   db.run(`DELETE FROM through_routes WHERE id = ?`, [id]);
 }

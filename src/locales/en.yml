@@ -226,6 +226,8 @@ route:
     guide-direction: Forward follows the registered station order; reverse goes against it. On a loop line, the direction chooses which side of the loop is used.
     guide-connection: Each following section must enter at the same station record where the previous section exits, or at a station linked by an explicit transfer.
     delete-confirm: Delete this through route?
+    service-help: Configure service types for this entire through route. After saving, set their stops in the route editor below.
+    service-editor-help: Editing service types and stops for “{name}”. Change its sections or order in the through-route editor.
     error-incomplete: Select a line and both endpoint stations for every section.
     error-empty: Add at least one line section.
     error-station-not-on-line: A selected station does not belong to its line.

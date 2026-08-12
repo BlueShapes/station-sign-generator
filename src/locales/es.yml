@@ -218,6 +218,8 @@ route:
     guide-direction: La dirección normal sigue el orden registrado de las estaciones; la inversa va en sentido contrario. En una línea circular, la dirección determina el lado del anillo.
     guide-connection: Cada tramo siguiente debe entrar en el mismo registro donde sale el anterior o en una estación vinculada mediante un transbordo explícito.
     delete-confirm: ¿Eliminar esta ruta directa?
+    service-help: Configure los servicios para toda esta ruta directa. Después de guardar, defina sus paradas en el editor de rutas inferior.
+    service-editor-help: Editando servicios y paradas de «{name}». Cambie sus tramos o el orden en el editor de rutas directas.
     error-incomplete: Seleccione una línea y ambas estaciones terminales para cada tramo.
     error-empty: Añada al menos un tramo de línea.
     error-station-not-on-line: Una estación seleccionada no pertenece a su línea.

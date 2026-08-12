@@ -164,6 +164,8 @@ describe("through route translations", () => {
       "guide-direction",
       "guide-connection",
       "delete-confirm",
+      "service-help",
+      "service-editor-help",
       "error-incomplete",
       "error-empty",
       "error-station-not-on-line",
@@ -179,6 +181,7 @@ describe("through route translations", () => {
       ).route?.["through-route"];
       expect(Object.keys(messages ?? {}).sort()).toEqual([...expectedKeys].sort());
       expect(messages["segment-number"]).toContain("{number}");
+      expect(messages["service-editor-help"]).toContain("{name}");
     }
   });
 });

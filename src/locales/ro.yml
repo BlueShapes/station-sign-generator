@@ -218,6 +218,8 @@ route:
     guide-direction: Direcția înainte urmează ordinea înregistrată a stațiilor, iar cea inversă merge în sens opus. Pe o linie circulară, direcția alege partea buclei.
     guide-connection: Fiecare segment următor trebuie să înceapă cu aceeași înregistrare la care se termină cel anterior sau cu o stație legată printr-un transfer explicit.
     delete-confirm: Ștergeți această rută directă?
+    service-help: Configurați serviciile pentru întreaga rută directă. După salvare, setați opririle în editorul de rute de mai jos.
+    service-editor-help: Editați serviciile și opririle pentru „{name}”. Schimbați segmentele sau ordinea în editorul rutelor directe.
     error-incomplete: Selectați linia și ambele stații terminale pentru fiecare segment.
     error-empty: Adăugați cel puțin un segment de linie.
     error-station-not-on-line: O stație selectată nu aparține liniei.

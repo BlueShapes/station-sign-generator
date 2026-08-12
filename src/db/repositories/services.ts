@@ -3,34 +3,71 @@ import type { Service, StationServiceStop, ServiceStopStatus } from "@/db/types"
 
 export function getServicesByLine(db: Database, lineId: string): Service[] {
   const stmt = db.prepare(
-    `SELECT id, line_id, name, color, sort_order FROM services WHERE line_id = ? ORDER BY sort_order ASC, name ASC`,
+    `SELECT id, line_id, through_route_id, name, color, sort_order
+       FROM services
+      WHERE line_id = ?
+      ORDER BY sort_order ASC, name ASC`,
   );
   stmt.bind([lineId]);
   const results: Service[] = [];
   while (stmt.step()) {
-    const row = stmt.getAsObject() as {
-      id: string;
-      line_id: string;
-      name: string;
-      color: string;
-      sort_order: number;
-    };
-    results.push({
-      id: row.id,
-      line_id: row.line_id,
-      name: row.name,
-      color: row.color ?? "#8cc800",
-      sort_order: row.sort_order ?? 0,
-    });
+    results.push(mapService(stmt.getAsObject()));
   }
   stmt.free();
   return results;
 }
 
+export function getServicesByThroughRoute(
+  db: Database,
+  throughRouteId: string,
+): Service[] {
+  const stmt = db.prepare(
+    `SELECT id, line_id, through_route_id, name, color, sort_order
+       FROM services
+      WHERE through_route_id = ?
+      ORDER BY sort_order ASC, name ASC`,
+  );
+  stmt.bind([throughRouteId]);
+  const results: Service[] = [];
+  while (stmt.step()) {
+    results.push(mapService(stmt.getAsObject()));
+  }
+  stmt.free();
+  return results;
+}
+
+function mapService(value: Record<string, unknown>): Service {
+  const row = value as {
+    id: string;
+    line_id: string | null;
+    through_route_id: string | null;
+    name: string;
+    color: string;
+    sort_order: number;
+  };
+  return {
+    id: row.id,
+    line_id: row.line_id ?? null,
+    through_route_id: row.through_route_id ?? null,
+    name: row.name,
+    color: row.color ?? "#8cc800",
+    sort_order: row.sort_order ?? 0,
+  };
+}
+
 export function upsertService(db: Database, service: Service): void {
   db.run(
-    `INSERT OR REPLACE INTO services (id, line_id, name, color, sort_order) VALUES (?, ?, ?, ?, ?)`,
-    [service.id, service.line_id, service.name, service.color, service.sort_order],
+    `INSERT OR REPLACE INTO services
+      (id, line_id, through_route_id, name, color, sort_order)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      service.id,
+      service.line_id,
+      service.through_route_id,
+      service.name,
+      service.color,
+      service.sort_order,
+    ],
   );
 }
 
@@ -50,6 +87,44 @@ export function getServiceStopsByLine(
     WHERE s.line_id = ?
   `);
   stmt.bind([lineId]);
+  const results: StationServiceStop[] = [];
+  while (stmt.step()) {
+    const row = stmt.getAsObject() as {
+      id: string;
+      station_id: string;
+      service_id: string;
+      status: string;
+    };
+    results.push({
+      id: row.id,
+      station_id: row.station_id,
+      service_id: row.service_id,
+      status: row.status === "special" ? "special" : "stop",
+    });
+  }
+  stmt.free();
+  return results;
+}
+
+export function getServiceStopsByThroughRoute(
+  db: Database,
+  throughRouteId: string,
+): StationServiceStop[] {
+  return getServiceStopsByOwner(db, "through_route_id", throughRouteId);
+}
+
+function getServiceStopsByOwner(
+  db: Database,
+  ownerColumn: "line_id" | "through_route_id",
+  ownerId: string,
+): StationServiceStop[] {
+  const stmt = db.prepare(`
+    SELECT sss.id, sss.station_id, sss.service_id, sss.status
+    FROM station_service_stops sss
+    JOIN services s ON sss.service_id = s.id
+    WHERE s.${ownerColumn} = ?
+  `);
+  stmt.bind([ownerId]);
   const results: StationServiceStop[] = [];
   while (stmt.step()) {
     const row = stmt.getAsObject() as {

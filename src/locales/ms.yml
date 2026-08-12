@@ -218,6 +218,8 @@ route:
     guide-direction: Ke hadapan mengikut susunan stesen yang didaftarkan; terbalik bergerak melawannya. Pada laluan gelung, arah menentukan bahagian gelung yang digunakan.
     guide-connection: Setiap segmen berikutnya mesti bermula pada rekod stesen yang sama tempat segmen sebelumnya berakhir, atau pada stesen yang dihubungkan oleh pertukaran nyata.
     delete-confirm: Padam laluan terus ini?
+    service-help: Tetapkan jenis perkhidmatan untuk keseluruhan laluan terus ini. Selepas menyimpan, tetapkan hentian dalam editor laluan di bawah.
+    service-editor-help: Mengedit jenis perkhidmatan dan hentian untuk “{name}”. Ubah segmen atau susunan dalam editor laluan terus.
     error-incomplete: Pilih laluan dan kedua-dua stesen hujung bagi setiap segmen.
     error-empty: Tambah sekurang-kurangnya satu segmen laluan.
     error-station-not-on-line: Stesen yang dipilih bukan dalam laluan tersebut.

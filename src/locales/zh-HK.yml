@@ -218,6 +218,8 @@ route:
     guide-direction: 順向按已登記的車站次序前進，逆向則按相反次序。環狀線會按方向選擇環路的一邊。
     guide-connection: 下一區段的入口站必須與上一區段的出口站使用相同車站資料，或使用已建立明確轉乘關係的車站。
     delete-confirm: 刪除此直通路徑？
+    service-help: 設定此直通路徑全程使用的服務類型。儲存後，可在下方的路線編輯器設定停靠站。
+    service-editor-help: 正在編輯「{name}」的服務類型及停靠站。請在直通路徑編輯器更改區間或次序。
     error-incomplete: 請為每個區段選擇路線及兩個端點車站。
     error-empty: 請至少新增一個路線區段。
     error-station-not-on-line: 所選車站不屬於相關路線。

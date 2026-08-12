@@ -70,6 +70,7 @@ import {
 import {
   deleteThroughRoute,
   getAllThroughRoutes,
+  getThroughRoutePath,
   getThroughRouteValidationIssues,
   getThroughRouteSegments,
   replaceThroughRouteSegments,
@@ -79,9 +80,11 @@ import {
 } from "@/db/repositories/through-routes";
 import {
   getServicesByLine,
+  getServicesByThroughRoute,
   upsertService,
   deleteService,
   getServiceStopsByLine,
+  getServiceStopsByThroughRoute,
   upsertStationServiceStop,
   setStationServiceStop,
 } from "@/db/repositories/services";
@@ -787,6 +790,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
       upsertService(db, {
         id: svcId,
         line_id: lineId,
+        through_route_id: null,
         name: svc.name.trim() || t("route.service.local"),
         color: svc.color,
         sort_order: i,
@@ -1003,6 +1007,54 @@ function ThroughRouteForm({
       },
     ];
   });
+  const defaultServiceColor =
+    lines.find((line) => line.id === segments[0]?.lineId)?.line_color ??
+    "#8cc800";
+  const [draftServices, setDraftServices] = useState<
+    { id: string | null; name: string; color: string }[]
+  >(() => {
+    const existing = route ? getServicesByThroughRoute(db, route.id) : [];
+    return existing.length > 0
+      ? existing.map((service) => ({
+          id: service.id,
+          name: service.name,
+          color: service.color,
+        }))
+      : [
+          {
+            id: null,
+            name: t("route.service.local"),
+            color: defaultServiceColor,
+          },
+        ];
+  });
+  const [deletedServiceIds, setDeletedServiceIds] = useState<string[]>([]);
+  const [newServiceName, setNewServiceName] = useState("");
+
+  const handleAddService = () => {
+    if (!newServiceName.trim()) return;
+    setDraftServices((current) => [
+      ...current,
+      {
+        id: null,
+        name: newServiceName.trim(),
+        color:
+          lines.find((line) => line.id === segments[0]?.lineId)?.line_color ??
+          defaultServiceColor,
+      },
+    ]);
+    setNewServiceName("");
+  };
+
+  const handleRemoveService = (index: number) => {
+    const service = draftServices[index];
+    if (service?.id) {
+      setDeletedServiceIds((current) => [...current, service.id!]);
+    }
+    setDraftServices((current) =>
+      current.filter((_, currentIndex) => currentIndex !== index),
+    );
+  };
 
   const routeId = route?.id ?? "draft-through-route";
   const complete = segments.every(
@@ -1094,6 +1146,31 @@ function ThroughRouteForm({
       sort_order: route?.sort_order ?? nextSortOrder,
     });
     replaceThroughRouteSegments(db, id, finalSegments);
+    for (const serviceId of deletedServiceIds) {
+      deleteService(db, serviceId);
+    }
+    const routeStationIds = getThroughRoutePath(db, id).stationIds;
+    draftServices.forEach((service, index) => {
+      const serviceId = service.id ?? uuidv7();
+      upsertService(db, {
+        id: serviceId,
+        line_id: null,
+        through_route_id: id,
+        name: service.name.trim() || t("route.service.local"),
+        color: service.color,
+        sort_order: index,
+      });
+      if (!service.id) {
+        for (const stationId of routeStationIds) {
+          upsertStationServiceStop(db, {
+            id: uuidv7(),
+            station_id: stationId,
+            service_id: serviceId,
+            status: "stop",
+          });
+        }
+      }
+    });
     onSave();
     onClose();
   };
@@ -1106,6 +1183,77 @@ function ThroughRouteForm({
         onChange={(event) => setName(event.currentTarget.value)}
         required
       />
+
+      <Divider label={t("route.service.title")} labelPosition="left" />
+      <Text size="sm" c="dimmed">
+        {t("route.through-route.service-help")}
+      </Text>
+      <Stack gap="xs">
+        {draftServices.map((service, index) => (
+          <Group key={service.id ?? `new-${index}`} gap="xs" align="center">
+            <ColorInput
+              size="xs"
+              value={service.color}
+              onChange={(color) => {
+                setDraftServices((current) =>
+                  current.map((candidate, currentIndex) =>
+                    currentIndex === index
+                      ? { ...candidate, color }
+                      : candidate,
+                  ),
+                );
+              }}
+              format="hex"
+              withEyeDropper={false}
+              style={{ width: 100 }}
+            />
+            <TextInput
+              size="xs"
+              value={service.name}
+              onChange={(event) => {
+                const serviceName = event.currentTarget.value;
+                setDraftServices((current) =>
+                  current.map((candidate, currentIndex) =>
+                    currentIndex === index
+                      ? { ...candidate, name: serviceName }
+                      : candidate,
+                  ),
+                );
+              }}
+              style={{ flex: 1 }}
+            />
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="red"
+              onClick={() => handleRemoveService(index)}
+              aria-label={t("common.delete")}
+            >
+              <IconX size={14} />
+            </ActionIcon>
+          </Group>
+        ))}
+        <Group gap="xs">
+          <TextInput
+            size="xs"
+            placeholder={t("route.service.add-placeholder")}
+            value={newServiceName}
+            onChange={(event) => setNewServiceName(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") handleAddService();
+            }}
+            style={{ flex: 1 }}
+          />
+          <ActionIcon
+            size="sm"
+            onClick={handleAddService}
+            disabled={!newServiceName.trim()}
+            aria-label={t("common.add")}
+          >
+            <IconPlus size={12} />
+          </ActionIcon>
+        </Group>
+      </Stack>
 
       <Alert
         icon={<IconInfoCircle size={18} />}
@@ -2206,6 +2354,8 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   ] = useDisclosure(false);
   const [transferStation, setTransferStation] = useState<Station | null>(null);
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const [selectedStationThroughRouteId, setSelectedStationThroughRouteId] =
+    useState<string | null>(null);
   const [newServiceName, setNewServiceName] = useState("");
 
   // Shared confirm modal
@@ -2261,6 +2411,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const unassignedLines = allLines.filter(
     (line) => !line.company_id || !knownCompanyIds.has(line.company_id),
   );
+  const throughRoutes = getAllThroughRoutes(db);
   const lineSelectData = [
     ...companies.flatMap((company) => {
       const companyLines = allLines.filter(
@@ -2270,7 +2421,10 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
         ? [
             {
               group: company.name,
-              items: companyLines.map(toLineSelectItem),
+              items: companyLines.map(toLineSelectItem).map((item) => ({
+                ...item,
+                value: `line:${item.value}`,
+              })),
             },
           ]
         : [];
@@ -2279,28 +2433,71 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
       ? [
           {
             group: t("route.line.unassigned-company"),
-            items: unassignedLines.map(toLineSelectItem),
+            items: unassignedLines.map(toLineSelectItem).map((item) => ({
+              ...item,
+              value: `line:${item.value}`,
+            })),
+          },
+        ]
+      : []),
+    ...(throughRoutes.length > 0
+      ? [
+          {
+            group: t("route.through-route.title"),
+            items: throughRoutes.map((route) => ({
+              value: `through:${route.id}`,
+              label: route.name,
+            })),
           },
         ]
       : []),
   ];
-  const throughRoutes = getAllThroughRoutes(db);
   const filteredLines = lineCompanyFilter
     ? allLines.filter((l) => l.company_id === lineCompanyFilter)
     : allLines;
-  const stationsInLine = selectedLineId
-    ? getStationsByLine(db, selectedLineId)
-    : [];
+  const selectedStationThroughRoute = throughRoutes.find(
+    (route) => route.id === selectedStationThroughRouteId,
+  );
+  const selectedThroughRoutePath = selectedStationThroughRouteId
+    ? getThroughRoutePath(db, selectedStationThroughRouteId)
+    : null;
+  const allStationsById = new Map(
+    getAllStations(db).map((station) => [station.id, station]),
+  );
+  const stationsInLine = selectedStationThroughRouteId
+    ? (selectedThroughRoutePath?.stationIds ?? [])
+        .map((stationId) => allStationsById.get(stationId))
+        .filter((station): station is Station => !!station)
+    : selectedLineId
+      ? getStationsByLine(db, selectedLineId)
+      : [];
   const alreadyOnLineIds = new Set(stationsInLine.map((s) => s.id));
   const selectedLine = allLines.find((l) => l.id === selectedLineId);
-  const lineServices: Service[] = selectedLineId
-    ? getServicesByLine(db, selectedLineId)
-    : [];
+  const selectedThroughRouteFirstLine = selectedThroughRoutePath?.lineIds[0]
+    ? allLines.find((line) => line.id === selectedThroughRoutePath.lineIds[0])
+    : undefined;
+  const selectedServiceOwnerColor =
+    selectedLine?.line_color ?? selectedThroughRouteFirstLine?.line_color ?? "#8cc800";
+  const lineServices: Service[] = selectedStationThroughRouteId
+    ? getServicesByThroughRoute(db, selectedStationThroughRouteId)
+    : selectedLineId
+      ? getServicesByLine(db, selectedLineId)
+      : [];
   const serviceStopMap = new Map<string, ServiceStopStatus>(
-    (selectedLineId ? getServiceStopsByLine(db, selectedLineId) : []).map(
+    (selectedStationThroughRouteId
+      ? getServiceStopsByThroughRoute(db, selectedStationThroughRouteId)
+      : selectedLineId
+        ? getServiceStopsByLine(db, selectedLineId)
+        : []
+    ).map(
       (s) => [`${s.station_id}:${s.service_id}`, s.status],
     ),
   );
+  const selectedStationRouteValue = selectedStationThroughRouteId
+    ? `through:${selectedStationThroughRouteId}`
+    : selectedLineId
+      ? `line:${selectedLineId}`
+      : null;
 
   const handleDeleteZone = (id: string) => {
     openConfirmModal(t("route.special-zone.delete-confirm"), () => {
@@ -2319,6 +2516,14 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
           setSelectedLineId(null);
           setNewServiceName("");
         }
+        if (
+          selectedThroughRoutePath?.lineIds.some((lineId) =>
+            affectedLines.some((line) => line.id === lineId),
+          )
+        ) {
+          setSelectedStationThroughRouteId(null);
+          setNewServiceName("");
+        }
         refresh();
       },
       affectedLines,
@@ -2335,6 +2540,10 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
           setSelectedLineId(null);
           setNewServiceName("");
         }
+        if (selectedThroughRoutePath?.lineIds.includes(id)) {
+          setSelectedStationThroughRouteId(null);
+          setNewServiceName("");
+        }
         refresh();
       },
       affectedLines,
@@ -2347,6 +2556,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
       () => {
         deleteAllLines(db);
         setSelectedLineId(null);
+        setSelectedStationThroughRouteId(null);
         setNewServiceName("");
         refresh();
       },
@@ -2357,6 +2567,10 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   const handleDeleteThroughRoute = (id: string) => {
     openConfirmModal(t("route.through-route.delete-confirm"), () => {
       deleteThroughRoute(db, id);
+      if (selectedStationThroughRouteId === id) {
+        setSelectedStationThroughRouteId(null);
+        setNewServiceName("");
+      }
       refresh();
     });
   };
@@ -2370,13 +2584,19 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   };
 
   const handleAddService = () => {
-    if (!selectedLineId || !newServiceName.trim()) return;
+    if (
+      (!selectedLineId && !selectedStationThroughRouteId) ||
+      !newServiceName.trim()
+    ) {
+      return;
+    }
     const serviceId = uuidv7();
     upsertService(db, {
       id: serviceId,
       line_id: selectedLineId,
+      through_route_id: selectedStationThroughRouteId,
       name: newServiceName.trim(),
-      color: selectedLine?.line_color ?? "#8cc800",
+      color: selectedServiceOwnerColor,
       sort_order: lineServices.length,
     });
     for (const station of stationsInLine) {
@@ -2904,7 +3124,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                 size="sm"
                 variant="outline"
                 leftSection={<IconLink size={16} />}
-                disabled={!selectedLineId}
+                disabled={!selectedLineId || !!selectedStationThroughRouteId}
                 onClick={openLinkStationModal}
               >
                 {t("route.station.add-existing")}
@@ -2912,7 +3132,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
               <Button
                 size="sm"
                 leftSection={<IconPlus size={16} />}
-                disabled={!selectedLineId}
+                disabled={!selectedLineId || !!selectedStationThroughRouteId}
                 onClick={() => {
                   setEditingStation(undefined);
                   openStationModal();
@@ -2925,16 +3145,37 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
 
           <Select
             label={t("route.line.title")}
-            value={selectedLineId}
-            onChange={setSelectedLineId}
+            value={selectedStationRouteValue}
+            onChange={(value) => {
+              if (value?.startsWith("line:")) {
+                setSelectedLineId(value.slice("line:".length));
+                setSelectedStationThroughRouteId(null);
+              } else if (value?.startsWith("through:")) {
+                setSelectedLineId(null);
+                setSelectedStationThroughRouteId(
+                  value.slice("through:".length),
+                );
+              } else {
+                setSelectedLineId(null);
+                setSelectedStationThroughRouteId(null);
+              }
+              setNewServiceName("");
+            }}
             data={lineSelectData}
             placeholder={t("route.line.select")}
             mb="md"
             clearable
           />
 
-          {selectedLineId && (
+          {(selectedLineId || selectedStationThroughRouteId) && (
             <Box mb="md">
+              {selectedStationThroughRoute && (
+                <Alert color="blue" variant="light" mb="sm">
+                  {t("route.through-route.service-editor-help", {
+                    name: selectedStationThroughRoute.name,
+                  })}
+                </Alert>
+              )}
               <Group gap="xs" align="center" wrap="wrap">
                 <Text size="sm" fw={600}>
                   {t("route.service.title")}:
@@ -2993,7 +3234,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             </Box>
           )}
 
-          {!selectedLineId ? (
+          {!selectedLineId && !selectedStationThroughRouteId ? (
             <Text c="dimmed" size="sm">
               {t("route.station.empty")}
             </Text>
@@ -3005,7 +3246,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
             (() => {
               const stationsWithNums = stationsInLine.map((station) => ({
                 station,
-                nums: getStationNumbers(db, station.id, selectedLineId!),
+                nums: selectedLineId
+                  ? getStationNumbers(db, station.id, selectedLineId)
+                  : [],
               }));
               const seen = new Set<string>();
               const duplicateNumbers = new Set<string>();
@@ -3223,7 +3466,9 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                 <Group gap="xs">
                                   <ActionIcon
                                     variant="subtle"
-                                    disabled={idx === 0}
+                                    disabled={
+                                      !!selectedStationThroughRouteId || idx === 0
+                                    }
                                     onClick={() =>
                                       handleReorderStation(station.id, "up")
                                     }
@@ -3232,7 +3477,10 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   </ActionIcon>
                                   <ActionIcon
                                     variant="subtle"
-                                    disabled={idx === stationsInLine.length - 1}
+                                    disabled={
+                                      !!selectedStationThroughRouteId ||
+                                      idx === stationsInLine.length - 1
+                                    }
                                     onClick={() =>
                                       handleReorderStation(station.id, "down")
                                     }
@@ -3254,6 +3502,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   </ActionIcon>
                                   <ActionIcon
                                     variant="subtle"
+                                    disabled={!!selectedStationThroughRouteId}
                                     onClick={() => {
                                       setEditingStation(station);
                                       openStationModal();
@@ -3264,6 +3513,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                                   <ActionIcon
                                     variant="subtle"
                                     color="red"
+                                    disabled={!!selectedStationThroughRouteId}
                                     onClick={() =>
                                       handleDeleteStation(station.id)
                                     }

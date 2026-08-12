@@ -72,7 +72,8 @@ export interface StationArea {
 
 export interface Service {
   id: string;
-  line_id: string;
+  line_id: string | null;
+  through_route_id: string | null;
   name: string;
   color: string;
   sort_order: number;

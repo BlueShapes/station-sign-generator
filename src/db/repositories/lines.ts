@@ -143,6 +143,21 @@ export function deleteLines(db: Database, ids: string[]): void {
        )
     `);
     db.run(`
+      DELETE FROM station_service_stops
+       WHERE service_id IN (
+         SELECT id FROM services
+          WHERE through_route_id IN (
+            SELECT id FROM through_routes_pending_deletion
+          )
+       )
+    `);
+    db.run(`
+      DELETE FROM services
+       WHERE through_route_id IN (
+         SELECT id FROM through_routes_pending_deletion
+       )
+    `);
+    db.run(`
       DELETE FROM through_routes
        WHERE id IN (SELECT id FROM through_routes_pending_deletion)
     `);
@@ -196,6 +211,13 @@ export function deleteAllLines(db: Database): void {
   try {
     deleteLines(db, ids);
     // Also remove any empty through routes left by older database versions.
+    db.run(`
+      DELETE FROM station_service_stops
+       WHERE service_id IN (
+         SELECT id FROM services WHERE through_route_id IS NOT NULL
+       )
+    `);
+    db.run(`DELETE FROM services WHERE through_route_id IS NOT NULL`);
     db.run(`DELETE FROM through_route_segments`);
     db.run(`DELETE FROM through_routes`);
     db.run("RELEASE SAVEPOINT delete_all_lines");

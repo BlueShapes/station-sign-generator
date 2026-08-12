@@ -11,6 +11,7 @@ import migrateV051toV052 from "./migrations/v0.5.1_to_v0.5.2";
 import migrateV054toV060 from "./migrations/v0.5.4_to_v0.6.0";
 import migrateV060toV070 from "./migrations/v0.6.0_to_v0.7.0";
 import migrateV071toV080 from "./migrations/v0.7.1_to_v0.8.0";
+import migrateV080toV090 from "./migrations/v0.8.0_to_v0.9.0";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -95,11 +96,13 @@ CREATE TABLE IF NOT EXISTS current_sign_configurations (
 );
 
 CREATE TABLE IF NOT EXISTS services (
-  id         TEXT PRIMARY KEY,
-  line_id    TEXT NOT NULL REFERENCES lines(id) ON DELETE CASCADE,
-  name       TEXT NOT NULL,
-  color      TEXT NOT NULL DEFAULT '#8cc800',
-  sort_order INTEGER DEFAULT 0
+  id               TEXT PRIMARY KEY,
+  line_id          TEXT REFERENCES lines(id) ON DELETE CASCADE,
+  through_route_id TEXT REFERENCES through_routes(id) ON DELETE CASCADE,
+  name             TEXT NOT NULL,
+  color            TEXT NOT NULL DEFAULT '#8cc800',
+  sort_order       INTEGER DEFAULT 0,
+  CHECK ((line_id IS NOT NULL) <> (through_route_id IS NOT NULL))
 );
 
 CREATE TABLE IF NOT EXISTS station_service_stops (
@@ -160,6 +163,7 @@ function migrateDatabase(database: Database): void {
     migrateV054toV060,
     migrateV060toV070,
     migrateV071toV080,
+    migrateV080toV090,
   ];
 
   for (const migrate of migrations) {
@@ -244,7 +248,14 @@ const REQUIRED_SCHEMA: Record<string, string[]> = {
   station_numbers: ["id", "station_id", "line_id", "value"],
   special_zones: ["id", "name", "abbreviation", "is_black"],
   station_areas: ["id", "station_id", "zone_id", "sort_order"],
-  services: ["id", "line_id", "name", "color", "sort_order"],
+  services: [
+    "id",
+    "line_id",
+    "through_route_id",
+    "name",
+    "color",
+    "sort_order",
+  ],
   station_service_stops: ["id", "station_id", "service_id", "status"],
   through_routes: ["id", "name", "sort_order"],
   through_route_segments: [
@@ -349,9 +360,9 @@ const MERGE_TABLES = [
   "station_numbers",
   "special_zones",
   "station_areas",
+  "through_routes",
   "services",
   "station_service_stops",
-  "through_routes",
   "through_route_segments",
 ] as const;
 

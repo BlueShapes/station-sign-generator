@@ -45,7 +45,8 @@ beforeEach(() => {
     );
     CREATE TABLE services (
       id TEXT PRIMARY KEY,
-      line_id TEXT NOT NULL
+      line_id TEXT,
+      through_route_id TEXT
     );
     CREATE TABLE station_service_stops (
       id TEXT PRIMARY KEY,
@@ -72,11 +73,13 @@ beforeEach(() => {
       ('sn-a', 'station-a', 'line-a'),
       ('sn-b', 'station-b', 'line-b');
     INSERT INTO services VALUES
-      ('service-a', 'line-a'),
-      ('service-b', 'line-b');
+      ('service-a', 'line-a', NULL),
+      ('service-b', 'line-b', NULL),
+      ('service-through', NULL, 'through-shared');
     INSERT INTO station_service_stops VALUES
       ('stop-a', 'station-a', 'service-a'),
-      ('stop-b', 'station-b', 'service-b');
+      ('stop-b', 'station-b', 'service-b'),
+      ('stop-through', 'station-a', 'service-through');
     INSERT INTO through_routes VALUES
       ('through-b'),
       ('through-empty'),

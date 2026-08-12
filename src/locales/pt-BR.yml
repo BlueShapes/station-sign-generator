@@ -218,6 +218,8 @@ route:
     guide-direction: A direção direta segue a ordem cadastrada das estações; a inversa segue o sentido contrário. Em uma linha circular, a direção escolhe o lado do circuito.
     guide-connection: Cada trecho seguinte deve entrar no mesmo registro em que o anterior sai ou em uma estação ligada por uma transferência explícita.
     delete-confirm: Excluir esta rota direta?
+    service-help: Configure os serviços para toda esta rota direta. Depois de salvar, defina as paradas no editor de rotas abaixo.
+    service-editor-help: Editando serviços e paradas de “{name}”. Altere os trechos ou a ordem no editor de rotas diretas.
     error-incomplete: Selecione uma linha e as duas estações de ponta de cada trecho.
     error-empty: Adicione pelo menos um trecho de linha.
     error-station-not-on-line: Uma estação selecionada não pertence à linha.

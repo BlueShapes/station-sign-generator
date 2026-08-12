@@ -226,6 +226,8 @@ route:
     guide-direction: Vorwärts folgt der erfassten Bahnhofsreihenfolge, rückwärts verläuft entgegengesetzt. Bei einer Ringlinie bestimmt die Richtung die Seite des Rings.
     guide-connection: Jeder folgende Abschnitt muss am gleichen Bahnhofseintrag beginnen, an dem der vorherige endet, oder an einem durch einen expliziten Umstieg verbundenen Bahnhof.
     delete-confirm: Diese durchgehende Route löschen?
+    service-help: Legen Sie die Zugarten für diese gesamte durchgehende Route fest. Halte können nach dem Speichern unten im Routeneditor festgelegt werden.
+    service-editor-help: Zugarten und Halte für „{name}“ werden bearbeitet. Abschnitte oder Reihenfolge können im Editor für durchgehende Routen geändert werden.
     error-incomplete: Wählen Sie für jeden Abschnitt eine Linie und beide Endbahnhöfe aus.
     error-empty: Fügen Sie mindestens einen Linienabschnitt hinzu.
     error-station-not-on-line: Ein ausgewählter Bahnhof gehört nicht zur Linie.

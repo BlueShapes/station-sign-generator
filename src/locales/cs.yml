@@ -218,6 +218,8 @@ route:
     guide-direction: Směr vpřed odpovídá uloženému pořadí stanic, obrácený směr vede proti němu. U okružní linky směr určuje použitou stranu okruhu.
     guide-connection: Každý další úsek musí začínat stejným záznamem stanice, kde předchozí končí, nebo stanicí propojenou výslovným přestupem.
     delete-confirm: Smazat tuto průjezdnou trasu?
+    service-help: Nastavte spoje pro celou tuto průjezdnou trasu. Po uložení určete zastávky v editoru tras níže.
+    service-editor-help: Upravujete spoje a zastávky pro „{name}“. Úseky nebo jejich pořadí změňte v editoru průjezdných tras.
     error-incomplete: Pro každý úsek vyberte linku a obě koncové stanice.
     error-empty: Přidejte alespoň jeden úsek linky.
     error-station-not-on-line: Vybraná stanice nepatří k dané lince.

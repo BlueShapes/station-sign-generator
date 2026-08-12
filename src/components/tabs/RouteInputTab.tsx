@@ -90,7 +90,9 @@ import {
 } from "@/db/repositories/station-transfers";
 import {
   getServicesByLine,
+  getServicesByThroughRoute,
   getServiceStopsByLine,
+  getServiceStopsByThroughRoute,
 } from "@/db/repositories/services";
 import {
   getAllThroughRoutes,
@@ -553,26 +555,30 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setMapTransitFilter([]);
   }, [db, selectedLineId]);
 
-  // Load services and service stops when line changes
+  // Load services and service stops when the selected line/through route changes.
   useEffect(() => {
-    if (!db || !selectedLineId) {
+    if (!db || (!selectedLineId && !selectedThroughRouteId)) {
       setMapServices([]);
       setMapSelectedServiceIds([]);
       setMapServiceStops({});
       return;
     }
-    const svcs = getServicesByLine(db, selectedLineId);
+    const svcs = selectedThroughRouteId
+      ? getServicesByThroughRoute(db, selectedThroughRouteId)
+      : getServicesByLine(db, selectedLineId!);
     setMapServices(svcs);
     setMapSelectedServiceIds([]);
     // Build serviceStops map: stationId → serviceId → status
-    const rawStops = getServiceStopsByLine(db, selectedLineId);
+    const rawStops = selectedThroughRouteId
+      ? getServiceStopsByThroughRoute(db, selectedThroughRouteId)
+      : getServiceStopsByLine(db, selectedLineId!);
     const stopMap: ServiceStopMap = {};
     for (const s of rawStops) {
       if (!stopMap[s.station_id]) stopMap[s.station_id] = {};
       stopMap[s.station_id][s.service_id] = s.status;
     }
     setMapServiceStops(stopMap);
-  }, [db, selectedLineId]);
+  }, [db, selectedLineId, selectedThroughRouteId]);
 
   // Reset center square line selection when station or primary line changes
   useEffect(() => {
@@ -721,30 +727,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
 
   const orderedLeftAdjacentIds = selectedLeftAdjacentIds;
   const orderedRightAdjacentIds = selectedRightAdjacentIds;
-
-  // Enforce constraints when services have passed stations
-  useEffect(() => {
-    if (mapSelectedServiceIds.length === 0) return;
-    const startIdx = mapStartId
-      ? stations.findIndex((s) => s.id === mapStartId)
-      : 0;
-    const endIdx = mapEndId
-      ? stations.findIndex((s) => s.id === mapEndId)
-      : stations.length - 1;
-    const lo = Math.min(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
-    const hi = Math.max(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
-    const rangeStations = stations.slice(lo, hi + 1);
-    const hasPassedStations =
-      mapSelectedServiceIds.length >= 2 ||
-      rangeStations.some(
-        (s) =>
-          !mapSelectedServiceIds.some((id) => !!mapServiceStops[s.id]?.[id]),
-      );
-    if (hasPassedStations)
-      setMapNameStyle((s) => (s === "normal" ? "above" : s));
-    if (mapSelectedServiceIds.length >= 2)
-      setMapStationNumberMode((s) => (s === "dot" ? "none" : s));
-  }, [mapSelectedServiceIds, stations, mapStartId, mapEndId, mapServiceStops]);
 
   // Build sign data when station changes
   useEffect(() => {
@@ -1014,6 +996,41 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     setMapEndId(mapSourceStations[mapSourceStations.length - 1]?.id ?? null);
     setMapTransitFilter([]);
   }, [selectedLineId, selectedThroughRouteId, mapSourceStations]);
+
+  // Express services on both ordinary lines and through routes share the same
+  // route-map rendering constraints.
+  useEffect(() => {
+    if (mapSelectedServiceIds.length === 0) return;
+    const startIdx = mapStartId
+      ? mapSourceStations.findIndex((station) => station.id === mapStartId)
+      : 0;
+    const endIdx = mapEndId
+      ? mapSourceStations.findIndex((station) => station.id === mapEndId)
+      : mapSourceStations.length - 1;
+    const lo = Math.min(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
+    const hi = Math.max(startIdx < 0 ? 0 : startIdx, endIdx < 0 ? 0 : endIdx);
+    const rangeStations = mapSourceStations.slice(lo, hi + 1);
+    const hasPassedStations =
+      mapSelectedServiceIds.length >= 2 ||
+      rangeStations.some(
+        (station) =>
+          !mapSelectedServiceIds.some(
+            (id) => !!mapServiceStops[station.id]?.[id],
+          ),
+      );
+    if (hasPassedStations) {
+      setMapNameStyle((style) => (style === "normal" ? "above" : style));
+    }
+    if (mapSelectedServiceIds.length >= 2) {
+      setMapStationNumberMode((mode) => (mode === "dot" ? "none" : mode));
+    }
+  }, [
+    mapSelectedServiceIds,
+    mapSourceStations,
+    mapStartId,
+    mapEndId,
+    mapServiceStops,
+  ]);
 
   // Compute transit lines for all stations when in line map mode
   useEffect(() => {
@@ -2299,7 +2316,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
             </Paper>
 
             {/* ── Services ── */}
-            {mapServices.length >= 2 && (
+            {(mapServices.length >= 2 ||
+              (!!selectedThroughRouteId && mapServices.length >= 1)) && (
               <Paper withBorder radius="lg" className={styles.mapSettingsPanel}>
                 <Group className={styles.mapSectionHeader} gap="sm">
                   <Box className={styles.mapSectionIndex} aria-hidden="true">
