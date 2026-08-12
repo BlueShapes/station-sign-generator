@@ -4,6 +4,7 @@ import { parse } from "yaml";
 import { SUPPORTED_LOCALE_CODES } from "../src/i18n/locales";
 import {
   TRANSIT_GROUP_GAP,
+  TRANSIT_DIAGONAL_TEXT_GAP,
   TRANSIT_ICON_SIZE,
   TRANSIT_ITEM_GAP,
   TRANSIT_SECONDARY_NAME_FONT,
@@ -271,6 +272,22 @@ describe("transit line layout", () => {
     ]);
     expect(above.width).toBeGreaterThan(TRANSIT_ICON_SIZE);
     expect(above.height).toBeGreaterThan(4 * TRANSIT_ICON_SIZE);
+  });
+
+  test("adds diagonal clearance between bilingual transfer names", () => {
+    const bilingualNameHeight = 9;
+    const layout = layoutDiagonalTransitLines(
+      [40, 50, 60],
+      "below",
+      [bilingualNameHeight, bilingualNameHeight, bilingualNameHeight],
+    );
+    const itemStep = layout.items[1].y - layout.items[0].y;
+
+    expect(itemStep).toBe(16);
+    expect(layout.items.map((item) => item.y)).toEqual([0, 16, 32]);
+    expect(itemStep * Math.SQRT1_2).toBeGreaterThanOrEqual(
+      bilingualNameHeight + TRANSIT_DIAGONAL_TEXT_GAP,
+    );
   });
 
   test("places vertical-writing transfers opposite the station names", () => {
