@@ -45,6 +45,7 @@ import {
   getSegmentedTrackRuns,
   getTrackEdgeRadius,
   layoutConnectedMarkers,
+  layoutConnectedMarkersInsideFrame,
   layoutExpandedLinearStations,
   normalizeTrackWidth,
   shouldExpandStationNumberGroups,
@@ -942,15 +943,18 @@ function stationNumberGroupLayout(
     // visible around and between the rounded route frames.
     const sharedDivider = _snStroke * badgeScale;
     if (orientation === "horizontal") {
+      const framed = layoutConnectedMarkersInsideFrame(
+        axisExtents,
+        visualOutsets,
+        sharedDivider,
+      );
       return {
-        w: connected.extent + sharedDivider,
+        w: framed.extent,
         h:
           sharedHeaderHeight +
           Math.max(...dimensions.map((dims) => dims.h)) +
           sharedDivider * 1.5,
-        positions: connected.positions.map(
-          (position) => position + sharedDivider / 2,
-        ),
+        positions: framed.positions,
       };
     }
     const positions: number[] = [];

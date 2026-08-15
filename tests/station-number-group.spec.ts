@@ -128,25 +128,55 @@ test("shares one three-letter-code header across connected JR East badges", asyn
   await preview.screenshot({
     path: testInfo.outputPath("shared-station-number-group.png"),
   });
-  const longestBlackRun = await preview.locator("canvas").evaluate((element) => {
+  const sharedFrame = await preview.locator("canvas").evaluate((element) => {
     const canvas = element as HTMLCanvasElement;
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) throw new Error("Canvas context is unavailable");
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    const isBlack = (x: number, y: number) => {
+      const index = (y * canvas.width + x) * 4;
+      return (
+        pixels[index] < 20 &&
+        pixels[index + 1] < 20 &&
+        pixels[index + 2] < 20
+      );
+    };
     let longest = 0;
+    let longestStart = 0;
+    let longestEnd = 0;
+    let longestY = 0;
     for (let y = 0; y < canvas.height; y += 1) {
       let current = 0;
       for (let x = 0; x < canvas.width; x += 1) {
-        const index = (y * canvas.width + x) * 4;
-        const isBlack =
-          pixels[index] < 20 &&
-          pixels[index + 1] < 20 &&
-          pixels[index + 2] < 20;
-        current = isBlack ? current + 1 : 0;
-        longest = Math.max(longest, current);
+        current = isBlack(x, y) ? current + 1 : 0;
+        if (current > longest) {
+          longest = current;
+          longestStart = x - current + 1;
+          longestEnd = x;
+          longestY = y;
+        }
       }
     }
-    return longest;
+
+    const longestVerticalRun = (x: number) => {
+      let current = 0;
+      let result = 0;
+      const startY = Math.max(0, longestY - 8);
+      const endY = Math.min(canvas.height, longestY + 90);
+      for (let y = startY; y < endY; y += 1) {
+        current = isBlack(x, y) ? current + 1 : 0;
+        result = Math.max(result, current);
+      }
+      return result;
+    };
+
+    return {
+      longest,
+      leftBorderHeight: longestVerticalRun(longestStart + 1),
+      rightBorderHeight: longestVerticalRun(longestEnd - 1),
+    };
   });
-  expect(longestBlackRun).toBeGreaterThan(70);
+  expect(sharedFrame.longest).toBeGreaterThan(70);
+  expect(sharedFrame.leftBorderHeight).toBeGreaterThan(40);
+  expect(sharedFrame.rightBorderHeight).toBeGreaterThan(40);
 });
