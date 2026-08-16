@@ -75,4 +75,74 @@ test.describe("Text input safety", () => {
 
     await expect(abbreviationInput).toHaveValue("東");
   });
+
+  test("does not add a service while IME composition is being confirmed", async ({
+    page,
+  }) => {
+    await page.getByRole("tab").nth(2).click();
+    await page.getByRole("button", { name: "路線を追加", exact: true }).click();
+
+    const dialog = page.getByRole("dialog");
+    const serviceNameInput = dialog.getByPlaceholder("種別名");
+
+    await serviceNameInput.dispatchEvent("compositionstart");
+    await serviceNameInput.fill("かいそく");
+    await serviceNameInput.dispatchEvent("keydown", {
+      key: "Enter",
+      code: "Enter",
+      isComposing: true,
+    });
+
+    await expect(serviceNameInput).toHaveValue("かいそく");
+
+    await serviceNameInput.evaluate((input) => {
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      if (!setter) throw new Error("HTMLInputElement.value setter missing");
+      setter.call(input, "快速");
+      input.dispatchEvent(
+        new CompositionEvent("compositionend", {
+          bubbles: true,
+          data: "快速",
+        }),
+      );
+      input.dispatchEvent(
+        new Event("input", {
+          bubbles: true,
+        }),
+      );
+    });
+    await serviceNameInput.press("Enter");
+
+    await expect(serviceNameInput).toHaveValue("");
+    await expect(dialog.locator('input[value="快速"]')).toBeVisible();
+  });
+
+  test("keeps the color palette but disables the Windows screen eyedropper", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "platform", {
+        configurable: true,
+        get: () => "Win32",
+      });
+    });
+    await page.reload();
+    await page.waitForSelector('[role="tab"]', { timeout: 50_000 });
+    await page.getByRole("tab").nth(2).click();
+    await page.getByRole("button", { name: "路線を追加", exact: true }).click();
+
+    const lineColorInput = page
+      .getByRole("dialog")
+      .getByRole("textbox", { name: "路線カラー" });
+    await expect(lineColorInput).toHaveAttribute(
+      "data-screen-eyedropper-enabled",
+      "false",
+    );
+
+    await lineColorInput.click();
+    await expect(page.getByRole("slider").first()).toBeVisible();
+  });
 });

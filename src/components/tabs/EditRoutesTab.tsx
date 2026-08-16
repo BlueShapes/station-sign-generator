@@ -10,7 +10,6 @@ import {
   Select,
   TextInput,
   NumberInput,
-  ColorInput,
   Modal,
   Badge,
   ActionIcon,
@@ -40,8 +39,10 @@ import {
 } from "@tabler/icons-react";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
+import { PlatformColorInput as ColorInput } from "@/components/inputs/PlatformColorInput";
 import { formatStationOptionLabel } from "@/components/tabs/stationOptionLabel";
 import { sortStationTransferCandidates } from "@/components/tabs/stationTransferCandidateOrder";
+import { shouldSubmitTextInput } from "@/components/tabs/imeSubmit";
 import { getStationNumberFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import { getJrCentralStationNumberBadgeMetrics } from "@/components/signs/jrCentralStationNumberBadgeMetrics";
 import {
@@ -945,7 +946,7 @@ function LineForm({ db, line, companies, onSave, onClose }: LineFormProps) {
             value={newSvcName}
             onChange={(e) => setNewSvcName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddSvc();
+              if (shouldSubmitTextInput(e)) handleAddSvc();
             }}
             style={{ flex: 1 }}
           />
@@ -1252,7 +1253,7 @@ function ThroughRouteForm({
             value={newServiceName}
             onChange={(event) => setNewServiceName(event.currentTarget.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") handleAddService();
+              if (shouldSubmitTextInput(event)) handleAddService();
             }}
             style={{ flex: 1 }}
           />
@@ -3230,7 +3231,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                     value={newServiceName}
                     onChange={(e) => setNewServiceName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddService();
+                      if (shouldSubmitTextInput(e)) handleAddService();
                     }}
                     style={{ width: 120 }}
                   />
