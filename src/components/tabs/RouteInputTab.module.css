@@ -210,6 +210,26 @@
   font-weight: 700;
 }
 
+.selectionOrder {
+  margin-top: 2px;
+}
+
+.selectionOrderRow {
+  min-width: 0;
+  min-height: 32px;
+  padding: 3px 5px 3px 7px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  background: color-mix(in srgb, var(--mantine-color-body) 88%, var(--mantine-color-default));
+}
+
+.selectionOrderSwatch {
+  width: 7px;
+  height: 22px;
+  flex: 0 0 7px;
+  border-radius: var(--mantine-radius-xs);
+}
+
 .downloadControls {
   margin-top: 12px;
   padding-top: 14px;

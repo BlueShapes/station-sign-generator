@@ -248,6 +248,83 @@ type AdjacentOrderControlsProps = {
   t: (key: string) => string;
 };
 
+type SelectedLineOrderItem = {
+  id: string;
+  label: string;
+  color: string;
+};
+
+type SelectedLineOrderControlsProps = {
+  items: SelectedLineOrderItem[];
+  orderedIds: string[];
+  onMove: (fromIndex: number, toIndex: number) => void;
+  testId: string;
+  t: (key: string) => string;
+};
+
+function SelectedLineOrderControls({
+  items,
+  orderedIds,
+  onMove,
+  testId,
+  t,
+}: SelectedLineOrderControlsProps) {
+  return (
+    <Stack gap={4} className={styles.selectionOrder} data-testid={testId}>
+      <Text size="xs" c="dimmed" fw={600}>
+        {t("route.sign.adjacent-order")}
+      </Text>
+      {orderedIds.map((lineId, index) => {
+        const item = items.find(({ id }) => id === lineId);
+        if (!item) return null;
+        const moveUpLabel = `${t("route.sign.adjacent-move-up")}: ${item.label}`;
+        const moveDownLabel = `${t("route.sign.adjacent-move-down")}: ${item.label}`;
+
+        return (
+          <Group
+            key={lineId}
+            gap={6}
+            wrap="nowrap"
+            className={styles.selectionOrderRow}
+            data-line-id={lineId}
+          >
+            <Box
+              className={styles.selectionOrderSwatch}
+              style={{ backgroundColor: item.color }}
+              aria-hidden="true"
+            />
+            <Text size="xs" truncate style={{ flex: 1 }}>
+              {index + 1}. {item.label}
+            </Text>
+            <Tooltip label={moveUpLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveUpLabel}
+                disabled={index === 0}
+                onClick={() => onMove(index, index - 1)}
+              >
+                <IconArrowUp size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={moveDownLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveDownLabel}
+                disabled={index === orderedIds.length - 1}
+                onClick={() => onMove(index, index + 1)}
+              >
+                <IconArrowDown size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        );
+      })}
+    </Stack>
+  );
+}
+
 function AdjacentOrderControls({
   candidates,
   orderedIds,
@@ -2082,43 +2159,86 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     clearable
                   />
                   {stationNumberSelectionLimit > 0 && (
-                    <MultiSelect
-                      label={t("route.sign.station-number-badges")}
-                      value={selectedStationNumberLineIds}
-                      onChange={(value) =>
-                        setSelectedStationNumberLineIds(
-                          value.slice(0, stationNumberSelectionLimit),
-                        )
-                      }
-                      data={stationNumberCandidates.map(({ line, number }) => ({
-                        value: line.id,
-                        label: `[${number.prefix}${number.value}] ${line.name}`,
-                      }))}
-                      disabled={!selectedStationId}
-                      maxValues={stationNumberSelectionLimit}
-                      clearable
-                      searchable
-                    />
+                    <Stack gap={4}>
+                      <MultiSelect
+                        label={t("route.sign.station-number-badges")}
+                        value={selectedStationNumberLineIds}
+                        onChange={(value) =>
+                          setSelectedStationNumberLineIds(
+                            value.slice(0, stationNumberSelectionLimit),
+                          )
+                        }
+                        data={stationNumberCandidates.map(
+                          ({ line, number }) => ({
+                            value: line.id,
+                            label: `[${number.prefix}${number.value}] ${line.name}`,
+                          }),
+                        )}
+                        disabled={!selectedStationId}
+                        maxValues={stationNumberSelectionLimit}
+                        clearable
+                        searchable
+                      />
+                      {selectedStationNumberLineIds.length >= 2 && (
+                        <SelectedLineOrderControls
+                          items={stationNumberCandidates.map(
+                            ({ line, number }) => ({
+                              id: line.id,
+                              label: `[${number.prefix}${number.value}] ${line.name}`,
+                              color: number.line_color,
+                            }),
+                          )}
+                          orderedIds={selectedStationNumberLineIds}
+                          onMove={(fromIndex, toIndex) =>
+                            setSelectedStationNumberLineIds((lineIds) =>
+                              moveOrderedId(lineIds, fromIndex, toIndex),
+                            )
+                          }
+                          testId="station-number-order"
+                          t={t}
+                        />
+                      )}
+                    </Stack>
                   )}
                   {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
                     "hidden" && (
-                    <MultiSelect
-                      label={t("route.sign.center-colors")}
-                      value={centerSquareLineIds}
-                      onChange={(value) =>
-                        setCenterSquareLineIds(
-                          value.length > 0
-                            ? value.slice(0, 4)
-                            : centerSquareLineIds,
-                        )
-                      }
-                      data={stationLines.map((line) => ({
-                        value: line.id,
-                        label: `[${line.prefix}] ${line.name}`,
-                      }))}
-                      disabled={!selectedStationId}
-                      maxValues={4}
-                    />
+                    <Stack gap={4}>
+                      <MultiSelect
+                        label={t("route.sign.center-colors")}
+                        value={centerSquareLineIds}
+                        onChange={(value) =>
+                          setCenterSquareLineIds(
+                            value.length > 0
+                              ? value.slice(0, 4)
+                              : centerSquareLineIds,
+                          )
+                        }
+                        data={stationLines.map((line) => ({
+                          value: line.id,
+                          label: `[${line.prefix}] ${line.name}`,
+                        }))}
+                        disabled={!selectedStationId}
+                        maxValues={4}
+                        searchable
+                      />
+                      {centerSquareLineIds.length >= 2 && (
+                        <SelectedLineOrderControls
+                          items={stationLines.map((line) => ({
+                            id: line.id,
+                            label: `[${line.prefix}] ${line.name}`,
+                            color: line.line_color,
+                          }))}
+                          orderedIds={centerSquareLineIds}
+                          onMove={(fromIndex, toIndex) =>
+                            setCenterSquareLineIds((lineIds) =>
+                              moveOrderedId(lineIds, fromIndex, toIndex),
+                            )
+                          }
+                          testId="center-color-order"
+                          t={t}
+                        />
+                      )}
+                    </Stack>
                   )}
                 </Stack>
               </Paper>

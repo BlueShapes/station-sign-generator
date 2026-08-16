@@ -100,6 +100,49 @@ test.describe("Tokyo Metro branch numbering", () => {
         .getByText("[T01] 東西線", { exact: true }),
     ).toBeVisible();
 
+    const stationNumberOrder = page.getByTestId("station-number-order");
+    await expect(stationNumberOrder).toBeVisible();
+    await stationNumberOrder
+      .getByRole("button", { name: /上へ移動: \[T01\] 東西線/ })
+      .click();
+    await expect
+      .poll(() =>
+        stationNumberOrder.locator("[data-line-id]").evaluateAll((rows) =>
+          rows.map((row) => row.getAttribute("data-line-id")),
+        ),
+      )
+      .toEqual(["line-tozai", "line-chuo-rapid"]);
+
+    const centerColorSelect = page.getByRole("textbox", {
+      name: /center square colors|中央四角の色/i,
+    });
+    await centerColorSelect.click();
+    await page
+      .getByRole("option", { name: /\[T\].*東西線/i })
+      .click();
+    await page.keyboard.press("Escape");
+
+    const centerColorOrder = page.getByTestId("center-color-order");
+    await expect(centerColorOrder).toBeVisible();
+    await centerColorOrder
+      .getByRole("button", { name: /上へ移動: \[T\] 東西線/ })
+      .click();
+    await expect
+      .poll(() =>
+        centerColorOrder.locator("[data-line-id]").evaluateAll((rows) =>
+          rows.map((row) => row.getAttribute("data-line-id")),
+        ),
+      )
+      .toEqual(["line-tozai", "line-chuo-rapid"]);
+
+    const styleSelect = page.getByRole("textbox", { name: /style|スタイル/i });
+    await styleSelect.click();
+    await page
+      .getByRole("option", { name: /JR East Style \(Branching\)|JR東日本風（分岐対応）/i })
+      .click();
+    await expect(page.getByTestId("station-number-order")).toBeVisible();
+    await expect(page.getByTestId("center-color-order")).toBeVisible();
+
     await page.getByRole("textbox", { name: /^station$|^駅$/i }).click();
     await page.getByRole("option", { name: /\[JC05\] 新宿/ }).click();
     await badgeSelect.click();
