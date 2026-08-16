@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   getStationNumberSelectionLimit,
   getDefaultStationNumberLineIds,
+  getSelectedStationNumberThreeLetterCode,
   resolveSelectedStationNumbers,
 } from "../src/components/tabs/routeStationNumberSelection.ts";
 
@@ -43,5 +44,29 @@ describe("route-input station-number selection", () => {
         ({ lineId }) => lineId,
       ),
     ).toEqual(["t", "jc"]);
+  });
+
+  test("uses the code from a selected JR East badge's connected station", () => {
+    expect(
+      getSelectedStationNumberThreeLetterCode([
+        {
+          stationNumberStyle: "tokyometro",
+          threeLetterCode: null,
+        },
+        {
+          stationNumberStyle: "jreast",
+          threeLetterCode: "SJK",
+        },
+      ]),
+    ).toBe("SJK");
+  });
+
+  test("keeps the current station code as a fallback", () => {
+    expect(
+      getSelectedStationNumberThreeLetterCode(
+        [{ stationNumberStyle: "jreast", threeLetterCode: null }],
+        "KTR",
+      ),
+    ).toBe("KTR");
   });
 });

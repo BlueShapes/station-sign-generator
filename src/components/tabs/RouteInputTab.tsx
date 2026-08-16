@@ -110,6 +110,7 @@ import { moveAdjacentStationId } from "./adjacentStationOrder";
 import { moveOrderedId } from "./orderedIds";
 import {
   getDefaultStationNumberLineIds,
+  getSelectedStationNumberThreeLetterCode,
   getStationNumberSelectionLimit,
   resolveSelectedStationNumbers,
 } from "./routeStationNumberSelection";
@@ -239,6 +240,7 @@ type StationNumberCandidate = {
   lineId: string;
   line: Line;
   number: NonNullable<ReturnType<typeof getResolvedStationNumber>>;
+  threeLetterCode?: string;
 };
 
 type AdjacentOrderControlsProps = {
@@ -706,12 +708,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         ({ id }) => id !== selectedLineId && availableLineIds.has(id),
       ),
     ];
+    const stationById = new Map(
+      getAllStations(db).map((station) => [station.id, station]),
+    );
 
     return orderedLines.flatMap((candidateLine) => {
       const stationId = getStationIdForLine(db, stationIds, candidateLine.id);
       const number = getResolvedStationNumber(db, stationId, candidateLine.id);
       return number
-        ? [{ lineId: candidateLine.id, line: candidateLine, number }]
+        ? [
+            {
+              lineId: candidateLine.id,
+              line: candidateLine,
+              number,
+              threeLetterCode:
+                stationById.get(stationId)?.three_letter_code ?? undefined,
+            },
+          ]
         : [];
     });
   }, [db, lines, selectedLineId, selectedStationId]);
@@ -924,11 +937,19 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     );
     setStationLines(allStationLines);
 
-    const currentNumbers = resolveSelectedStationNumbers(
+    const selectedNumberCandidates = resolveSelectedStationNumbers(
       selectedStationNumberLineIds,
       stationNumberCandidates,
       stationNumberSelectionLimit,
-    ).map(({ number }) => number);
+    );
+    const currentNumbers = selectedNumberCandidates.map(({ number }) => number);
+    const threeLetterCode = getSelectedStationNumberThreeLetterCode(
+      selectedNumberCandidates.map(({ number, threeLetterCode }) => ({
+        stationNumberStyle: number.station_number_style,
+        threeLetterCode,
+      })),
+      currentStation.three_letter_code,
+    );
     stationNumberStyle =
       currentNumbers[0]?.station_number_style ?? stationNumberStyle;
 
@@ -962,7 +983,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       tertiaryName: currentStation.tertiary_name ?? undefined,
       quaternaryName: currentStation.quaternary_name ?? undefined,
       note: currentStation.note ?? "",
-      threeLetterCode: currentStation.three_letter_code ?? undefined,
+      threeLetterCode,
       numberPrimaryPrefix: currentNumbers[0]?.prefix ?? "",
       numberPrimaryValue: currentNumbers[0]?.value ?? "",
       numberPrimaryColor: currentNumbers[0]?.line_color,

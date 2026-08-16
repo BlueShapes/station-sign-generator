@@ -10,6 +10,11 @@ export type RouteStationNumberCandidate = {
   lineId: string;
 };
 
+type StationNumberThreeLetterCodeCandidate = {
+  stationNumberStyle: string;
+  threeLetterCode?: string | null;
+};
+
 const STATION_NUMBER_FIELDS = [
   "numberPrimary",
   "numberSecondary",
@@ -62,4 +67,17 @@ export function resolveSelectedStationNumbers<
     })
     .slice(0, limit)
     .map((lineId) => candidatesByLineId.get(lineId)!);
+}
+
+export function getSelectedStationNumberThreeLetterCode(
+  candidates: readonly StationNumberThreeLetterCodeCandidate[],
+  fallbackCode?: string | null,
+): string | undefined {
+  const selectedCode = candidates
+    .find(
+      ({ stationNumberStyle, threeLetterCode }) =>
+        stationNumberStyle === "jreast" && !!threeLetterCode?.trim(),
+    )
+    ?.threeLetterCode?.trim();
+  return selectedCode || fallbackCode?.trim() || undefined;
 }
