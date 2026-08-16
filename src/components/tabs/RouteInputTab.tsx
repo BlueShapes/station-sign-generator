@@ -108,6 +108,12 @@ import type {
 import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
 import { moveAdjacentStationId } from "./adjacentStationOrder";
 import { moveOrderedId } from "./orderedIds";
+import {
+  getDefaultStationNumberLineIds,
+  getSelectedStationNumberThreeLetterCode,
+  getStationNumberSelectionLimit,
+  resolveSelectedStationNumbers,
+} from "./routeStationNumberSelection";
 
 import JrEastSign, {
   height as JrEastSignHeight,
@@ -230,12 +236,96 @@ type AdjacentCandidate = AdjacentStationProps & {
   side: AdjacentSide;
 };
 
+type StationNumberCandidate = {
+  lineId: string;
+  line: Line;
+  number: NonNullable<ReturnType<typeof getResolvedStationNumber>>;
+  threeLetterCode?: string;
+};
+
 type AdjacentOrderControlsProps = {
   candidates: AdjacentCandidate[];
   orderedIds: string[];
   onMove: (fromIndex: number, toIndex: number) => void;
   t: (key: string) => string;
 };
+
+type SelectedLineOrderItem = {
+  id: string;
+  label: string;
+  color: string;
+};
+
+type SelectedLineOrderControlsProps = {
+  items: SelectedLineOrderItem[];
+  orderedIds: string[];
+  onMove: (fromIndex: number, toIndex: number) => void;
+  testId: string;
+  t: (key: string) => string;
+};
+
+function SelectedLineOrderControls({
+  items,
+  orderedIds,
+  onMove,
+  testId,
+  t,
+}: SelectedLineOrderControlsProps) {
+  return (
+    <Stack gap={4} className={styles.selectionOrder} data-testid={testId}>
+      <Text size="xs" c="dimmed" fw={600}>
+        {t("route.sign.adjacent-order")}
+      </Text>
+      {orderedIds.map((lineId, index) => {
+        const item = items.find(({ id }) => id === lineId);
+        if (!item) return null;
+        const moveUpLabel = `${t("route.sign.adjacent-move-up")}: ${item.label}`;
+        const moveDownLabel = `${t("route.sign.adjacent-move-down")}: ${item.label}`;
+
+        return (
+          <Group
+            key={lineId}
+            gap={6}
+            wrap="nowrap"
+            className={styles.selectionOrderRow}
+            data-line-id={lineId}
+          >
+            <Box
+              className={styles.selectionOrderSwatch}
+              style={{ backgroundColor: item.color }}
+              aria-hidden="true"
+            />
+            <Text size="xs" truncate style={{ flex: 1 }}>
+              {index + 1}. {item.label}
+            </Text>
+            <Tooltip label={moveUpLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveUpLabel}
+                disabled={index === 0}
+                onClick={() => onMove(index, index - 1)}
+              >
+                <IconArrowUp size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={moveDownLabel}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={moveDownLabel}
+                disabled={index === orderedIds.length - 1}
+                onClick={() => onMove(index, index + 1)}
+              >
+                <IconArrowDown size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        );
+      })}
+    </Stack>
+  );
+}
 
 function AdjacentOrderControls({
   candidates,
@@ -458,7 +548,12 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   );
   const [centerSquareLineIds, setCenterSquareLineIds] = useState<string[]>([]);
   const [stationLines, setStationLines] = useState<Line[]>([]);
+  const [selectedStationNumberLineIds, setSelectedStationNumberLineIds] =
+    useState<string[]>([]);
   const [signStyle, setSignStyle] = useState<SignStyle>("jreast");
+  const stationNumberSelectionLimit = getStationNumberSelectionLimit(
+    SIGN_STYLE_FIELDS[signStyle],
+  );
   const adjacentSelectionLimit =
     SIGN_STYLE_FIELDS[signStyle]?.maxAdjacentCount ?? 2;
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
@@ -594,6 +689,66 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       selectedLineId && selectedStationId ? [selectedLineId] : [],
     );
   }, [selectedStationId, selectedLineId]);
+
+  const stationNumberCandidates = useMemo((): StationNumberCandidate[] => {
+    if (!db || !selectedLineId || !selectedStationId) return [];
+
+    const stationIds = [
+      selectedStationId,
+      ...getConnectingStations(db, selectedStationId).map(({ id }) => id),
+    ];
+    const availableLineIds = new Set(
+      stationIds.flatMap((stationId) =>
+        getStationLines(db, stationId).map(({ line_id }) => line_id),
+      ),
+    );
+    const orderedLines = [
+      ...lines.filter(({ id }) => id === selectedLineId),
+      ...lines.filter(
+        ({ id }) => id !== selectedLineId && availableLineIds.has(id),
+      ),
+    ];
+    const stationById = new Map(
+      getAllStations(db).map((station) => [station.id, station]),
+    );
+
+    return orderedLines.flatMap((candidateLine) => {
+      const stationId = getStationIdForLine(db, stationIds, candidateLine.id);
+      const number = getResolvedStationNumber(db, stationId, candidateLine.id);
+      return number
+        ? [
+            {
+              lineId: candidateLine.id,
+              line: candidateLine,
+              number,
+              threeLetterCode:
+                stationById.get(stationId)?.three_letter_code ?? undefined,
+            },
+          ]
+        : [];
+    });
+  }, [db, lines, selectedLineId, selectedStationId]);
+
+  useEffect(() => {
+    if (!selectedLineId) {
+      setSelectedStationNumberLineIds([]);
+      return;
+    }
+    setSelectedStationNumberLineIds(
+      getDefaultStationNumberLineIds(
+        selectedLineId,
+        stationNumberCandidates,
+        stationNumberSelectionLimit,
+        signStyle === "jreastbranch",
+      ),
+    );
+  }, [
+    selectedLineId,
+    selectedStationId,
+    signStyle,
+    stationNumberCandidates,
+    stationNumberSelectionLimit,
+  ]);
 
   const adjacentOptions = useMemo(() => {
     if (!db || !selectedLineId || !selectedStationId) {
@@ -753,13 +908,6 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     const currentStation = stations[idx];
     const line = lines.find((l) => l.id === selectedLineId);
 
-    // Get station numbers
-    const currentNum = getResolvedStationNumber(
-      db,
-      currentStation.id,
-      selectedLineId,
-    );
-
     // Get station areas with zone details
     const areas = getStationAreasWithZones(db, currentStation.id);
 
@@ -789,27 +937,19 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     );
     setStationLines(allStationLines);
 
-    const currentNumbers = signStyle === "jreastbranch"
-      ? [
-          selectedLineId,
-          ...allStationLines
-            .map((stationLine) => stationLine.id)
-            .filter((lineId) => lineId !== selectedLineId),
-        ]
-          .map((lineId) =>
-            getResolvedStationNumber(db, currentStation.id, lineId),
-          )
-          .filter((number): number is NonNullable<typeof number> => !!number)
-          .filter(
-            (number, index, numbers) =>
-              numbers.findIndex(
-                (candidate) => candidate.line_id === number.line_id,
-              ) === index,
-          )
-          .slice(0, 3)
-      : currentNum
-        ? [currentNum]
-        : [];
+    const selectedNumberCandidates = resolveSelectedStationNumbers(
+      selectedStationNumberLineIds,
+      stationNumberCandidates,
+      stationNumberSelectionLimit,
+    );
+    const currentNumbers = selectedNumberCandidates.map(({ number }) => number);
+    const threeLetterCode = getSelectedStationNumberThreeLetterCode(
+      selectedNumberCandidates.map(({ number, threeLetterCode }) => ({
+        stationNumberStyle: number.station_number_style,
+        threeLetterCode,
+      })),
+      currentStation.three_letter_code,
+    );
     stationNumberStyle =
       currentNumbers[0]?.station_number_style ?? stationNumberStyle;
 
@@ -843,7 +983,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       tertiaryName: currentStation.tertiary_name ?? undefined,
       quaternaryName: currentStation.quaternary_name ?? undefined,
       note: currentStation.note ?? "",
-      threeLetterCode: currentStation.three_letter_code ?? undefined,
+      threeLetterCode,
       numberPrimaryPrefix: currentNumbers[0]?.prefix ?? "",
       numberPrimaryValue: currentNumbers[0]?.value ?? "",
       numberPrimaryColor: currentNumbers[0]?.line_color,
@@ -921,6 +1061,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     orderedLeftAdjacentIds,
     orderedRightAdjacentIds,
     signStyle,
+    selectedStationNumberLineIds,
+    stationNumberCandidates,
+    stationNumberSelectionLimit,
   ]);
 
   // Update canvas size list
@@ -2036,25 +2179,87 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     disabled={!selectedLineId}
                     clearable
                   />
+                  {stationNumberSelectionLimit > 0 && (
+                    <Stack gap={4}>
+                      <MultiSelect
+                        label={t("route.sign.station-number-badges")}
+                        value={selectedStationNumberLineIds}
+                        onChange={(value) =>
+                          setSelectedStationNumberLineIds(
+                            value.slice(0, stationNumberSelectionLimit),
+                          )
+                        }
+                        data={stationNumberCandidates.map(
+                          ({ line, number }) => ({
+                            value: line.id,
+                            label: `[${number.prefix}${number.value}] ${line.name}`,
+                          }),
+                        )}
+                        disabled={!selectedStationId}
+                        maxValues={stationNumberSelectionLimit}
+                        clearable
+                        searchable
+                      />
+                      {selectedStationNumberLineIds.length >= 2 && (
+                        <SelectedLineOrderControls
+                          items={stationNumberCandidates.map(
+                            ({ line, number }) => ({
+                              id: line.id,
+                              label: `[${number.prefix}${number.value}] ${line.name}`,
+                              color: number.line_color,
+                            }),
+                          )}
+                          orderedIds={selectedStationNumberLineIds}
+                          onMove={(fromIndex, toIndex) =>
+                            setSelectedStationNumberLineIds((lineIds) =>
+                              moveOrderedId(lineIds, fromIndex, toIndex),
+                            )
+                          }
+                          testId="station-number-order"
+                          t={t}
+                        />
+                      )}
+                    </Stack>
+                  )}
                   {SIGN_STYLE_FIELDS[signStyle]?.centerSquareColors !==
                     "hidden" && (
-                    <MultiSelect
-                      label={t("route.sign.center-colors")}
-                      value={centerSquareLineIds}
-                      onChange={(value) =>
-                        setCenterSquareLineIds(
-                          value.length > 0
-                            ? value.slice(0, 4)
-                            : centerSquareLineIds,
-                        )
-                      }
-                      data={stationLines.map((line) => ({
-                        value: line.id,
-                        label: `[${line.prefix}] ${line.name}`,
-                      }))}
-                      disabled={!selectedStationId}
-                      maxValues={4}
-                    />
+                    <Stack gap={4}>
+                      <MultiSelect
+                        label={t("route.sign.center-colors")}
+                        value={centerSquareLineIds}
+                        onChange={(value) =>
+                          setCenterSquareLineIds(
+                            value.length > 0
+                              ? value.slice(0, 4)
+                              : centerSquareLineIds,
+                          )
+                        }
+                        data={stationLines.map((line) => ({
+                          value: line.id,
+                          label: `[${line.prefix}] ${line.name}`,
+                        }))}
+                        disabled={!selectedStationId}
+                        maxValues={4}
+                        searchable
+                      />
+                      {centerSquareLineIds.length >= 2 && (
+                        <SelectedLineOrderControls
+                          items={stationLines.map((line) => ({
+                            id: line.id,
+                            label: `[${line.prefix}] ${line.name}`,
+                            color: line.line_color,
+                          }))}
+                          orderedIds={centerSquareLineIds}
+                          onMove={(fromIndex, toIndex) =>
+                            setCenterSquareLineIds((lineIds) =>
+                              moveOrderedId(lineIds, fromIndex, toIndex),
+                            )
+                          }
+                          testId="center-color-order"
+                          t={t}
+                        />
+                      )}
+                    </Stack>
                   )}
                 </Stack>
               </Paper>

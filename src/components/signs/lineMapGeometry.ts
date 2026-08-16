@@ -173,6 +173,46 @@ export function layoutConnectedMarkers(
   };
 }
 
+/**
+ * Place stroked markers inside a shared frame. The returned positions reserve
+ * the requested visible frame width outside both end strokes and between
+ * neighbouring strokes.
+ */
+export function layoutConnectedMarkersInsideFrame(
+  markerExtents: number[],
+  visualOutsets: number[],
+  frameWidth: number,
+): ConnectedMarkerLayout {
+  if (markerExtents.length === 0) return { positions: [], extent: 0 };
+
+  const extents = markerExtents.map((extent) => Math.max(0, extent));
+  const outsets = markerExtents.map((_, index) =>
+    Math.max(0, visualOutsets[index] ?? 0),
+  );
+  const frame = Number.isFinite(frameWidth) ? Math.max(0, frameWidth) : 0;
+  const positions = [frame + outsets[0]];
+
+  for (let index = 1; index < extents.length; index += 1) {
+    positions.push(
+      positions[index - 1] +
+        extents[index - 1] +
+        outsets[index - 1] +
+        frame +
+        outsets[index],
+    );
+  }
+
+  const lastIndex = extents.length - 1;
+  return {
+    positions,
+    extent:
+      positions[lastIndex] +
+      extents[lastIndex] +
+      outsets[lastIndex] +
+      frame,
+  };
+}
+
 export function getConnectedMarkerExtraExtent(markerExtents: number[]): number {
   if (markerExtents.length < 2) return 0;
   const validExtents = markerExtents.map((extent) =>

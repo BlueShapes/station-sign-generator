@@ -295,6 +295,7 @@ route:
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Sekundární jazyk
     center-colors: Barvy středového čtverce
+    station-number-badges: Odznaky čísel stanic
   mode:
     sign: Znamení stanice
     linemap: Linková mapa (jedna linka / přímý spoj)

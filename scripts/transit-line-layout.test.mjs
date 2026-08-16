@@ -23,6 +23,9 @@ import {
   shouldShowLineIndicatorBadge,
 } from "../src/components/signs/lineIndicatorStyle";
 import {
+  getJrEastStationNumberBadgeFrameMetrics,
+} from "../src/components/signs/stationNumberBadgeFrame";
+import {
   ceilCanvasDimensions,
   CONNECTED_STATION_NAME_SCALE,
   DEFAULT_TRACK_WIDTH,
@@ -35,6 +38,7 @@ import {
   getSegmentedTrackRuns,
   getConnectedMarkerExtraExtent,
   getConnectedStationNameScale,
+  layoutConnectedMarkersInsideFrame,
   layoutConnectedMarkers,
   layoutExpandedLinearStations,
   normalizeTrackWidth,
@@ -176,6 +180,27 @@ describe("transit line layout", () => {
     const firstOuterEdge = layout.positions[0] + 23 + 1;
     const secondOuterEdge = layout.positions[1] - 1.5;
     expect(firstOuterEdge).toBe(secondOuterEdge);
+  });
+
+  test("keeps a visible frame around and between connected stroked badges", () => {
+    const stationSignFrame = getJrEastStationNumberBadgeFrameMetrics(20);
+    const layout = layoutConnectedMarkersInsideFrame(
+      [20, 20],
+      [1, 1],
+      2,
+    );
+    const stationSignVisibleWidth =
+      stationSignFrame.connectedBadgeStep +
+      20 +
+      stationSignFrame.outerPaddingX * 2 +
+      stationSignFrame.strokeWidth;
+
+    expect(layout).toEqual({ positions: [3, 27], extent: 50 });
+    expect(layout.extent).toBe(stationSignVisibleWidth);
+    expect(layout.positions[0] - 1).toBe(2);
+    expect(layout.extent - (layout.positions[1] + 20 + 1)).toBe(2);
+    expect(layout.positions[1] - 1 - (layout.positions[0] + 20 + 1))
+      .toBe(2);
   });
 
   test("uses company-specific badge shapes with a safe fallback", () => {

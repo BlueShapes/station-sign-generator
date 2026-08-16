@@ -303,6 +303,7 @@ route:
     metrolong-subtext-furigana: ふりがな
     metrolong-subtext-secondary: 第二言語
     center-colors: 中央四角の色
+    station-number-badges: 駅番号バッジ
   mode:
     sign: 駅名標
     linemap: 路線図（単線・直通）

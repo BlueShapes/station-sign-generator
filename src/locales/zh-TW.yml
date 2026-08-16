@@ -295,6 +295,7 @@ route:
     metrolong-subtext-furigana: 漢字註假名
     metrolong-subtext-secondary: 第二語言
     center-colors: 中心方形顏色
+    station-number-badges: 站號徽章
   mode:
     sign: 車站標誌
     linemap: 路線圖（單線／直通）

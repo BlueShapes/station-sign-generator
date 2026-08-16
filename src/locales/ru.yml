@@ -295,6 +295,7 @@ route:
     metrolong-subtext-furigana: Фуригана
     metrolong-subtext-secondary: Второй язык
     center-colors: Цвета центральной площади
+    station-number-badges: Значки номеров станций
   mode:
     sign: Знак станции
     linemap: Схема линии (одна/сквозная)

@@ -295,6 +295,7 @@ route:
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Limba secundară
     center-colors: Culori Piața Centrală
+    station-number-badges: Insigne cu numărul stației
   mode:
     sign: Semnul stației
     linemap: Harta liniilor (o linie/direct)

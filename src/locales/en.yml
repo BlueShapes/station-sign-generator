@@ -303,6 +303,7 @@ route:
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Secondary language
     center-colors: Center Square Colors
+    station-number-badges: Station number badges
   mode:
     sign: Station Sign
     linemap: Line Map (Single/Through)

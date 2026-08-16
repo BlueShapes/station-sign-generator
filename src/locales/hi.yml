@@ -295,6 +295,7 @@ route:
     metrolong-subtext-furigana: फुरिगाना
     metrolong-subtext-secondary: द्वितीयक भाषा
     center-colors: केंद्र चौकोर रंग
+    station-number-badges: स्टेशन संख्या बैज
   mode:
     sign: स्टेशन चिन्ह
     linemap: लाइन मानचित्र (एकल/सीधी)
