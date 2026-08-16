@@ -238,6 +238,7 @@ route:
     add: 添加车站
     add-existing: 从现有车站添加
     link-title: 将现有车站添加到线路中
+    source-line: 来源线路
     select-existing: 选择要添加的电台
     inherited-info: 继承信息（只读）
     edit: 编辑站

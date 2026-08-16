@@ -246,6 +246,7 @@ route:
     add: Add Station
     add-existing: Add from Existing Station
     link-title: Add Existing Station to Line
+    source-line: Source line
     select-existing: Select a station to add
     inherited-info: Inherited info (read-only)
     edit: Edit Station

@@ -238,6 +238,7 @@ route:
     add: Tambah Stesen
     add-existing: Tambah dari Stesen Sedia Ada
     link-title: Tambahkan Stesen Sedia Ada pada Laluan
+    source-line: Laluan sumber
     select-existing: Pilih stesen untuk ditambah
     inherited-info: Maklumat yang diwarisi (baca sahaja)
     edit: Edit Stesen

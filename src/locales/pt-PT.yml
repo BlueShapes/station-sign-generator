@@ -238,6 +238,7 @@ route:
     add: Adicionar estação
     add-existing: Adicionar da estação existente
     link-title: Adicionar estação existente à linha
+    source-line: Linha de origem
     select-existing: Selecione uma estação para adicionar
     inherited-info: Informações herdadas (somente leitura)
     edit: Editar estação

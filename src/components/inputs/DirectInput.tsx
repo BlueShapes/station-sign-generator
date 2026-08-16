@@ -11,12 +11,12 @@ import {
   SegmentedControl,
   Group,
   Text,
-  ColorInput,
   ColorSwatch,
   Select,
   Modal,
   Divider,
 } from "@mantine/core";
+import { PlatformColorInput as ColorInput } from "@/components/inputs/PlatformColorInput";
 import {
   IconTrash,
   IconRefresh,

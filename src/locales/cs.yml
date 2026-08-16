@@ -238,6 +238,7 @@ route:
     add: Přidat stanici
     add-existing: Přidat ze stávající stanice
     link-title: Přidat stávající stanici k lince
+    source-line: Zdrojová linka
     select-existing: Vyberte stanici, kterou chcete přidat
     inherited-info: Zděděné informace (pouze pro čtení)
     edit: Upravit stanici
