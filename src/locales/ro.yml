@@ -238,6 +238,7 @@ route:
     add: Adăugați stație
     add-existing: Adăugați din stația existentă
     link-title: Adăugați stația existentă la linie
+    source-line: Linie sursă
     select-existing: Selectați o stație de adăugat
     inherited-info: Informații moștenite (numai citire)
     edit: Editați stația

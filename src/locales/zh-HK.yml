@@ -238,6 +238,7 @@ route:
     add: 添加車站
     add-existing: 從現有車站添加
     link-title: 將現有車站添加到線路中
+    source-line: 來源路線
     select-existing: 選擇要新增的電台
     inherited-info: 繼承資訊（唯讀）
     edit: 編輯站

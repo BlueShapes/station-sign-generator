@@ -1848,15 +1848,26 @@ function LinkExistingStationForm({
   const parentLine = currentLine?.parent_line_id
     ? allLines.find((l) => l.id === currentLine.parent_line_id)
     : undefined;
-  const allStations = getAllStations(db);
-  const available = allStations.filter((s) => !alreadyOnLineIds.has(s.id));
-
+  const [selectedSourceLineId, setSelectedSourceLineId] = useState<
+    string | null
+  >(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [stationNumber, setStationNumber] = useState("");
   const [stationNumberSourceLineId, setStationNumberSourceLineId] = useState(
     currentLine?.id ?? lineId,
   );
 
+  const sourceLineOptions = allLines
+    .map((line) => ({
+      line,
+      stations: getStationsByLine(db, line.id).filter(
+        (station) => !alreadyOnLineIds.has(station.id),
+      ),
+    }))
+    .filter(({ stations }) => stations.length > 0);
+  const available =
+    sourceLineOptions.find(({ line }) => line.id === selectedSourceLineId)
+      ?.stations ?? [];
   const selectedStation = available.find((s) => s.id === selectedId) ?? null;
   const selectedAreas = selectedStation
     ? getStationAreas(db, selectedStation.id)
@@ -1915,6 +1926,21 @@ function LinkExistingStationForm({
   return (
     <Stack gap="md">
       <Select
+        label={t("route.station.source-line")}
+        data={sourceLineOptions.map(({ line }) => ({
+          value: line.id,
+          label: line.prefix ? `[${line.prefix}] ${line.name}` : line.name,
+        }))}
+        value={selectedSourceLineId}
+        onChange={(value) => {
+          setSelectedSourceLineId(value);
+          setSelectedId(null);
+        }}
+        searchable
+        required
+        placeholder="—"
+      />
+      <Select
         label={t("route.station.select-existing")}
         data={available.map((s) => ({
           value: s.id,
@@ -1926,6 +1952,7 @@ function LinkExistingStationForm({
         onChange={setSelectedId}
         searchable
         required
+        disabled={!selectedSourceLineId}
         placeholder="—"
       />
 
