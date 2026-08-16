@@ -10,9 +10,11 @@ function loadLocale(locale) {
 describe("route mode tabs", () => {
   test("defines both line-map labels in every locale", () => {
     for (const locale of SUPPORTED_LOCALE_CODES) {
-      const mode = loadLocale(locale).route?.mode;
+      const route = loadLocale(locale).route;
+      const mode = route?.mode;
       expect(mode?.linemap).toBeTruthy();
       expect(mode?.["multiline-linemap"]).toBeTruthy();
+      expect(route?.sign?.["station-number-badges"]).toBeTruthy();
     }
   });
 

@@ -295,6 +295,7 @@ route:
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Język wtórny
     center-colors: Kolory kwadratu centralnego
+    station-number-badges: Identyfikatory numerów stacji
   mode:
     sign: Znak stacji
     linemap: Mapa linii (pojedyncza/bezpośrednia)

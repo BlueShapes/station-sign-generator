@@ -295,6 +295,7 @@ route:
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: bahasa sekunder
     center-colors: Warna Segi Empat Tengah
+    station-number-badges: Lencana nombor stesen
   mode:
     sign: Tanda Stesen
     linemap: Peta Garisan (Tunggal/Terus)

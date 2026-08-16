@@ -303,6 +303,7 @@ route:
     metrolong-subtext-furigana: Furigana
     metrolong-subtext-secondary: Zweitsprache
     center-colors: Farben der mittleren Quadrate
+    station-number-badges: Stationsnummernplaketten
   mode:
     sign: Bahnhofsschild
     linemap: Linienplan (Einzellinie/Durchbindung)
