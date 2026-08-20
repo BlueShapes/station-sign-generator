@@ -105,7 +105,11 @@ import type {
   AdjacentStationProps,
   Direction,
 } from "@/components/signs/DirectInputStationProps";
-import { SIGN_STYLE_FIELDS } from "@/components/signs/signStyles";
+import {
+  JR_EAST_STANDARD_SIGN_RATIO,
+  JR_EAST_STANDARD_SIGN_RATIO_MARKS,
+  SIGN_STYLE_FIELDS,
+} from "@/components/signs/signStyles";
 import { moveAdjacentStationId } from "./adjacentStationOrder";
 import { moveOrderedId } from "./orderedIds";
 import {
@@ -542,7 +546,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   );
   const [direction, setDirection] = useState<Direction>("left");
   const [flipped, setFlipped] = useState(false);
-  const [ratio, setRatio] = useState(4.5);
+  const [ratio, setRatio] = useState(JR_EAST_STANDARD_SIGN_RATIO);
   const [signData, setSignData] = useState<DirectInputStationProps | null>(
     null,
   );
@@ -2379,6 +2383,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     step={0.5}
                     min={2.5}
                     max={8}
+                    marks={JR_EAST_STANDARD_SIGN_RATIO_MARKS}
                     className={styles.ratioSlider}
                     onChange={setRatio}
                   />

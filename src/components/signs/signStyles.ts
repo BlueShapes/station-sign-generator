@@ -6,6 +6,11 @@
 import { METRO_MEDIUM_DIMENSIONS } from "./subwaySignGeometry";
 import { JR_CENTRAL_SIGN_RATIO } from "./jrCentralSignLayout";
 
+export const JR_EAST_STANDARD_SIGN_RATIO = 4.5;
+export const JR_EAST_STANDARD_SIGN_RATIO_MARKS = [
+  { value: JR_EAST_STANDARD_SIGN_RATIO },
+];
+
 type FieldRequirement = "required" | "optional" | "hidden";
 
 type AdjacentFieldSpec = {

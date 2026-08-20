@@ -32,7 +32,11 @@ import {
 } from "@tabler/icons-react";
 import type DirectInputStationProps from "../signs/DirectInputStationProps";
 import type { LocalLine } from "../signs/DirectInputStationProps";
-import { SIGN_STYLE_FIELDS } from "../signs/signStyles";
+import {
+  JR_EAST_STANDARD_SIGN_RATIO,
+  JR_EAST_STANDARD_SIGN_RATIO_MARKS,
+  SIGN_STYLE_FIELDS,
+} from "../signs/signStyles";
 import type {
   SignStyleFieldSpec,
   AdjacentFieldSpec,
@@ -195,12 +199,13 @@ const DirectInput = memo(function DirectInput({
             >
               <IconRuler size={20} style={{ flexShrink: 0 }} />
               <Slider
-                value={formData.ratio ?? 4.5}
+                value={formData.ratio ?? JR_EAST_STANDARD_SIGN_RATIO}
                 label={(v) => v}
                 labelAlwaysOn
                 step={0.5}
                 min={2.5}
                 max={8}
+                marks={JR_EAST_STANDARD_SIGN_RATIO_MARKS}
                 style={{ width: "100%" }}
                 onChange={(v) => updateField("ratio", v)}
               />
