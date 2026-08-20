@@ -33,6 +33,9 @@ import {
   shouldShowLineIndicatorBadge,
 } from "@/components/signs/lineIndicatorStyle";
 import { isJrEastStationNumber } from "@/components/signs/stationNumberGroup";
+import {
+  getStationNumberBadgeThreeLetterCode,
+} from "@/components/signs/subwayStationNumberAppearance";
 import { getLineMapFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
 import {
   ceilCanvasDimensions,
@@ -623,7 +626,11 @@ export function snBadgeDims(
     const metrics = getJrCentralStationNumberBadgeMetrics(SN_INNER);
     return { w: metrics.width, h: metrics.height };
   }
-  if (hasTrc) {
+  const hasVisibleTrc = !!getStationNumberBadgeThreeLetterCode(
+    style,
+    hasTrc ? "TRC" : undefined,
+  );
+  if (hasVisibleTrc) {
     return {
       w: SN_INNER + _snOuterPadX * 2, // 36 ref units
       h: _snTrcH + SN_INNER + _snOuterPadBot, // 45 ref units
@@ -674,7 +681,11 @@ function SnBadge({
       />
     );
   }
-  const hasTrc = !!trc;
+  const visibleTrc = getStationNumberBadgeThreeLetterCode(
+    badgeStyle,
+    trc ?? undefined,
+  );
+  const hasTrc = !!visibleTrc;
   const outerW = (SN_INNER + _snOuterPadX * 2) * s;
   const outerH = (_snTrcH + SN_INNER + _snOuterPadBot) * s;
   // Inner square top-left
@@ -773,7 +784,7 @@ function SnBadge({
             x={ix}
             y={y + _snTrcY * s}
             width={SN_INNER * s}
-            text={trc!}
+            text={visibleTrc!}
             fontSize={_snTrcFont * s}
             fontFamily={font}
             fontStyle="bold"
@@ -877,12 +888,16 @@ function stationNumberBadgeVisualOutset(
   forceFullRender: boolean,
   strokeWidthAdjust: number,
 ): number {
-  if (number.threeLetterCode) {
+  const badgeStyle = number.style ?? _snBadgeStyle;
+  const threeLetterCode = getStationNumberBadgeThreeLetterCode(
+    badgeStyle,
+    number.threeLetterCode ?? undefined,
+  );
+  if (threeLetterCode) {
     return badgeScale < 1 && !forceFullRender
       ? 0
       : (_snStroke * badgeScale) / 2;
   }
-  const badgeStyle = number.style ?? _snBadgeStyle;
   if (badgeStyle === "jrcentral") {
     return (
       getJrCentralStationNumberBadgeMetrics(SN_INNER * badgeScale)
@@ -933,10 +948,11 @@ function stationNumberGroupLayout(
   );
   const connected = layoutConnectedMarkers(axisExtents, visualOutsets);
   const sharedHeaderHeight = hasSharedThreeLetterCode
-    ? (snBadgeDims(true).h - snBadgeDims(false).h) * badgeScale
+    ? (snBadgeDims(true, "jreast").h - snBadgeDims(false, "jreast").h) *
+      badgeScale
     : 0;
   const sharedHeaderWidth = hasSharedThreeLetterCode
-    ? snBadgeDims(true).w * badgeScale
+    ? snBadgeDims(true, "jreast").w * badgeScale
     : 0;
   if (hasSharedThreeLetterCode) {
     // JR East connected badges sit on one black plate. Keep one stroke-width
@@ -1124,7 +1140,9 @@ export function StationNumberBadgeGroup({
           orientation === "horizontal"
             ? hasSharedThreeLetterCode
               ? y +
-                (snBadgeDims(true).h - snBadgeDims(false).h) * badgeScale
+                (snBadgeDims(true, "jreast").h -
+                  snBadgeDims(false, "jreast").h) *
+                  badgeScale
               : y + (group.h - dims.h) / 2
             : y + group.positions[index];
         return (
@@ -1983,6 +2001,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                   prefix={snNum!.prefix}
                   value={snNum!.value}
                   trc={snNum!.threeLetterCode}
+                  style={snNum!.style}
                   strokeWidthAdjust={1}
                 />
               ) : (
@@ -2142,6 +2161,7 @@ const LineMapRenderer = forwardRef<Konva.Stage, LineMapRendererProps>(
                       prefix={snNum.prefix}
                       value={snNum.value}
                       trc={snNum.threeLetterCode}
+                      style={snNum.style}
                     />
                   )}
                   <Text
