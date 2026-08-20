@@ -45,6 +45,7 @@ import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
 import { sanitizeDirectInputData } from "@/lib/textInputSafety";
+import { DEFAULT_DIRECTION } from "@/db/seed";
 
 const DEBOUNCE_MS = 400;
 
@@ -168,7 +169,7 @@ const DirectInput = memo(function DirectInput({
             }}
           >
             <SegmentedControl
-              value={formData.direction ?? "left"}
+              value={formData.direction ?? DEFAULT_DIRECTION}
               onChange={updateDirection}
               data={[
                 { value: "left", label: <IconArrowLeft size={16} /> },

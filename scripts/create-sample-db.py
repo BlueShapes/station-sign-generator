@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS current_sign_configurations (
   id         TEXT PRIMARY KEY,
   station_id TEXT REFERENCES stations(id) ON DELETE CASCADE,
   ratio      REAL DEFAULT 4.5,
-  direction  TEXT DEFAULT 'left',
+  direction  TEXT DEFAULT 'right',
   sign_style TEXT
 );
 
@@ -593,7 +593,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.9.0')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.10.0')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -984,7 +984,7 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.9.0")
+    print(f"  - version: 0.10.0")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
     print(f"  - 3 companies (JR東日本, 東京メトロ, 東葉高速鉄道)")
     print(f"  - 10 lines:")

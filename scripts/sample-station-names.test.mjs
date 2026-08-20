@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import initSqlJs from "sql.js";
+import { DB_VERSION } from "../src/config.ts";
 import migrateV051toV052 from "../src/db/migrations/v0.5.1_to_v0.5.2.ts";
 
 const wasmPath = fileURLToPath(
@@ -33,7 +34,7 @@ describe("sample station names", () => {
     const result = db.exec(
       "SELECT value FROM db_metadata WHERE key = 'version'",
     );
-    expect(result[0]?.values[0]?.[0]).toBe("0.9.0");
+    expect(result[0]?.values[0]?.[0]).toBe(DB_VERSION);
   });
 
   test("uses the verified JR East multilingual spellings", () => {

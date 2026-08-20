@@ -100,6 +100,7 @@ import {
   getThroughRoutePath,
 } from "@/db/repositories/through-routes";
 import type { Line, Station, Service, ThroughRoute } from "@/db/types";
+import { DEFAULT_DIRECTION } from "@/db/seed";
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 import type {
   AdjacentStationProps,
@@ -544,7 +545,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [selectedStationId, setSelectedStationId] = useState<string | null>(
     null,
   );
-  const [direction, setDirection] = useState<Direction>("left");
+  const [direction, setDirection] = useState<Direction>(DEFAULT_DIRECTION);
   const [flipped, setFlipped] = useState(false);
   const [ratio, setRatio] = useState(JR_EAST_STANDARD_SIGN_RATIO);
   const [signData, setSignData] = useState<DirectInputStationProps | null>(

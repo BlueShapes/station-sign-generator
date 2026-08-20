@@ -12,6 +12,8 @@ import migrateV054toV060 from "./migrations/v0.5.4_to_v0.6.0";
 import migrateV060toV070 from "./migrations/v0.6.0_to_v0.7.0";
 import migrateV071toV080 from "./migrations/v0.7.1_to_v0.8.0";
 import migrateV080toV090 from "./migrations/v0.8.0_to_v0.9.0";
+import migrateV090toV0100 from "./migrations/v0.9.0_to_v0.10.0";
+import { DEFAULT_DIRECTION } from "./seed";
 
 const STORAGE_KEY = "station-sign-db-v2";
 
@@ -91,7 +93,7 @@ CREATE TABLE IF NOT EXISTS current_sign_configurations (
   id         TEXT PRIMARY KEY,
   station_id TEXT REFERENCES stations(id) ON DELETE CASCADE,
   ratio      REAL DEFAULT 4.5,
-  direction  TEXT DEFAULT 'left',
+  direction  TEXT DEFAULT '${DEFAULT_DIRECTION}',
   sign_style TEXT
 );
 
@@ -164,6 +166,7 @@ function migrateDatabase(database: Database): void {
     migrateV060toV070,
     migrateV071toV080,
     migrateV080toV090,
+    migrateV090toV0100,
   ];
 
   for (const migrate of migrations) {

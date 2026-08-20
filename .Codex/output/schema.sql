@@ -1,4 +1,4 @@
--- Station Sign Generator — SQLite Schema (v0.9.0)
+-- Station Sign Generator — SQLite Schema (v0.10.0)
 
 CREATE TABLE IF NOT EXISTS db_metadata (
   key   TEXT PRIMARY KEY,
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS current_sign_configurations (
   id         TEXT PRIMARY KEY,
   station_id TEXT REFERENCES stations(id) ON DELETE CASCADE,
   ratio      REAL DEFAULT 4.5,
-  direction  TEXT DEFAULT 'left',
+  direction  TEXT DEFAULT 'right',
   sign_style TEXT
 );
 
