@@ -274,6 +274,9 @@ route:
   sign:
     style: अंदाज
     direction: दिशा
+    filename-direction-left: बाईं ओर
+    filename-direction-both: दोनों दिशाएँ
+    filename-direction-right: दाईं ओर
     flip: दिशा पलटें
     prev-station: पिछला स्टेशन
     next-station: अगला स्टेशन

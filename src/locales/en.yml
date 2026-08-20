@@ -282,6 +282,9 @@ route:
   sign:
     style: Style
     direction: Direction
+    filename-direction-left: Left-facing
+    filename-direction-both: Both directions
+    filename-direction-right: Right-facing
     flip: Flip direction
     prev-station: Previous station
     next-station: Next station

@@ -274,6 +274,9 @@ route:
   sign:
     style: Styl
     direction: Kierunek
+    filename-direction-left: W lewo
+    filename-direction-both: Oba kierunki
+    filename-direction-right: W prawo
     flip: Odwróć kierunek
     prev-station: Poprzednia stacja
     next-station: Następna stacja

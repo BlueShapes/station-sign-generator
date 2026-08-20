@@ -64,7 +64,10 @@ import {
   waitForCanvasFonts,
 } from "@/lib/fonts";
 import { useCanvasFonts } from "@/lib/useCanvasFonts";
-import { getLocalizedRailwayName } from "@/lib/localizedRailwayName";
+import {
+  getLocalizedRailwayName,
+  getRouteSignFilename,
+} from "@/lib/localizedRailwayName";
 import {
   createLineMapExportBlob,
   downloadBlob,
@@ -1858,7 +1861,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     : null;
 
   const handleSaveSign = async () => {
-    if (!signData) return;
+    if (!signData || !selectedBaseLine) return;
     if (signRef.current) {
       await waitForCanvasFonts(signFontSpecs).catch(() => undefined);
       const { scale: baseScale } = SIGN_STYLES[signStyle];
@@ -1866,17 +1869,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
         pixelRatio: saveSize / baseScale,
       });
       const link = document.createElement("a");
-      const filename = getLocalizedRailwayName(
+      const filename = getRouteSignFilename({
         locale,
-        getCompanyLanguages(mapCompany),
-        [
+        languages: getCompanyLanguages(mapCompany),
+        lineNames: [
+          selectedBaseLine.name,
+          selectedBaseLine.secondary_name,
+          selectedBaseLine.tertiary_name,
+          selectedBaseLine.quaternary_name,
+        ],
+        stationNames: [
           signData.primaryName,
           signData.secondaryName,
           signData.tertiaryName,
           signData.quaternaryName,
         ],
-        "station",
-      );
+        directionLabel: t(`route.sign.filename-direction-${direction}`),
+      });
       link.download = `${filename}.png`;
       link.href = uri;
       document.body.appendChild(link);

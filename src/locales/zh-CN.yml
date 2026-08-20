@@ -274,6 +274,9 @@ route:
   sign:
     style: 风格
     direction: 方向
+    filename-direction-left: 向左
+    filename-direction-both: 双向
+    filename-direction-right: 向右
     flip: 翻转方向
     prev-station: 上一站
     next-station: 下一站

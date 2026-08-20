@@ -282,6 +282,9 @@ route:
   sign:
     style: Stil
     direction: Richtung
+    filename-direction-left: Nach links
+    filename-direction-both: Beide Richtungen
+    filename-direction-right: Nach rechts
     flip: Richtung umkehren
     prev-station: Vorherige Station
     next-station: Nächste Station

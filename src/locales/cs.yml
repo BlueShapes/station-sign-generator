@@ -274,6 +274,9 @@ route:
   sign:
     style: styl
     direction: Směr
+    filename-direction-left: Doleva
+    filename-direction-both: Oba směry
+    filename-direction-right: Doprava
     flip: Směr převrácení
     prev-station: Předchozí stanice
     next-station: Další stanice

@@ -17,3 +17,34 @@ export function getLocalizedRailwayName(
 
   return names.find((name) => name?.trim())?.trim() ?? fallback;
 }
+
+interface RouteSignFilenameOptions {
+  locale: string;
+  languages: readonly string[];
+  lineNames: readonly (string | null | undefined)[];
+  stationNames: readonly (string | null | undefined)[];
+  directionLabel: string;
+}
+
+/** Build a route-input station-sign filename in the active railway language. */
+export function getRouteSignFilename({
+  locale,
+  languages,
+  lineNames,
+  stationNames,
+  directionLabel,
+}: RouteSignFilenameOptions): string {
+  const lineName = getLocalizedRailwayName(
+    locale,
+    languages,
+    lineNames,
+    "line",
+  );
+  const stationName = getLocalizedRailwayName(
+    locale,
+    languages,
+    stationNames,
+    "station",
+  );
+  return `${lineName}_${stationName}_${directionLabel}`;
+}

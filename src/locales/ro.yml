@@ -274,6 +274,9 @@ route:
   sign:
     style: Stil
     direction: Direcția
+    filename-direction-left: Spre stânga
+    filename-direction-both: Ambele direcții
+    filename-direction-right: Spre dreapta
     flip: Întoarceți direcția
     prev-station: Stația anterioară
     next-station: Următoarea stație

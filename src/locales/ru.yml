@@ -274,6 +274,9 @@ route:
   sign:
     style: Стиль
     direction: Направление
+    filename-direction-left: Влево
+    filename-direction-both: В обоих направлениях
+    filename-direction-right: Вправо
     flip: Изменить направление
     prev-station: Предыдущая станция
     next-station: Следующая станция

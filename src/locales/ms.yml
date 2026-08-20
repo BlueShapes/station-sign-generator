@@ -274,6 +274,9 @@ route:
   sign:
     style: Gaya
     direction: Arah
+    filename-direction-left: Menghadap kiri
+    filename-direction-both: Kedua-dua arah
+    filename-direction-right: Menghadap kanan
     flip: Balik arah
     prev-station: Stesen sebelumnya
     next-station: Stesen seterusnya

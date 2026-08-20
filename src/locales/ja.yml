@@ -282,6 +282,9 @@ route:
   sign:
     style: スタイル
     direction: 表示方向
+    filename-direction-left: 左向き
+    filename-direction-both: 両方向
+    filename-direction-right: 右向き
     flip: 方向を反転
     prev-station: 前の駅
     next-station: 次の駅
