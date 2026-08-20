@@ -3157,7 +3157,11 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
 
         {/* ── Stations section ── */}
         <Box>
-          <Group justify="space-between" mb="md">
+          <Group
+            className="route-station-toolbar"
+            justify="space-between"
+            mb="md"
+          >
             <Title order={3}>{t("route.station.title")}</Title>
             <Group gap="sm">
               <Button

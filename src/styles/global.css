@@ -26,6 +26,15 @@ body {
   overflow-x: hidden;
 }
 
+.route-station-toolbar {
+  position: sticky;
+  top: 64px;
+  z-index: 100;
+  padding-block: 12px;
+  background-color: var(--mantine-color-body);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
 /* Theme transition — applied only after initial load via .theme-ready class */
 html.theme-ready,
 html.theme-ready *,
