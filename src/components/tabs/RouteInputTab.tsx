@@ -74,10 +74,7 @@ import {
   type LineMapExportFormat,
 } from "@/lib/lineMapExport";
 import { getLineMapPngSizeOptions } from "@/lib/streamingPngExport";
-import {
-  getCompanyLanguages,
-  getRailwayLanguageLabel,
-} from "@/lib/railwayLanguages";
+import { getCompanyLanguages } from "@/lib/railwayLanguages";
 import { getAllLines } from "@/db/repositories/lines";
 import { getAllCompanies } from "@/db/repositories/companies";
 import {
@@ -116,6 +113,7 @@ import {
 } from "@/components/signs/signStyles";
 import { moveAdjacentStationId } from "./adjacentStationOrder";
 import { moveOrderedId } from "./orderedIds";
+import { getRouteMapLanguageOptions } from "./routeMapLanguageOptions";
 import {
   getDefaultStationNumberLineIds,
   getSelectedStationNumberThreeLetterCode,
@@ -208,13 +206,6 @@ type SignStyle =
 type TabMode = "sign" | "linemap" | "multiline-linemap";
 type MapOrientation = "horizontal" | "vertical";
 type AdjacentSide = "left" | "right";
-
-const STATION_NAME_FIELDS: StationNameField[] = [
-  "primary_name",
-  "secondary_name",
-  "tertiary_name",
-  "quaternary_name",
-];
 
 const LANGUAGE_SLOT_LABEL_KEYS = [
   "route.linemap.lang-1st",
@@ -1375,11 +1366,11 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     mapFontSpecs,
     tabMode === "linemap" || tabMode === "multiline-linemap",
   );
-  const mapLanguageOptions = getCompanyLanguages(mapCompany).map(
-    (language, index) => ({
-      value: STATION_NAME_FIELDS[index],
-      label: `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
-    }),
+  const languageSlotLabels = LANGUAGE_SLOT_LABEL_KEYS.map((key) => t(key));
+  const mapLanguageOptions = getRouteMapLanguageOptions(
+    getCompanyLanguages(mapCompany),
+    languageSlotLabels,
+    t("route.station.furigana"),
   );
   const multiSelectedLines = useMemo(
     () =>
@@ -1394,11 +1385,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const multiCompany = routeCompanies.find(
     (company) => company.id === multiRootLine?.company_id,
   );
-  const multiLanguageOptions = getCompanyLanguages(multiCompany).map(
-    (language, index) => ({
-      value: STATION_NAME_FIELDS[index],
-      label: `${t(LANGUAGE_SLOT_LABEL_KEYS[index])} (${getRailwayLanguageLabel(language)})`,
-    }),
+  const multiLanguageOptions = getRouteMapLanguageOptions(
+    getCompanyLanguages(multiCompany),
+    languageSlotLabels,
+    t("route.station.furigana"),
   );
   const multiLineRoutes = useMemo((): MultiLineRouteData[] => {
     if (!db || !multiRootLine) return [];

@@ -10,12 +10,39 @@ import {
   orderParallelRouteIdsByVerticalPosition,
 } from "../src/components/signs/multiLineMapLayout";
 import { moveOrderedId } from "../src/components/tabs/orderedIds";
+import { getRouteMapLanguageOptions } from "../src/components/tabs/routeMapLanguageOptions";
 
 const mainStations = Array.from({ length: 25 }, (_, index) =>
   `station-m${String(index + 1).padStart(2, "0")}`
 );
 
 describe("multiple-line route map layout", () => {
+  test("offers hiragana after the primary language for route-map station names", () => {
+    expect(
+      getRouteMapLanguageOptions(
+        ["ja", "en", "ko", "zh-CN"],
+        ["1st", "2nd", "3rd", "4th"],
+        "Reading (Hiragana)",
+      ),
+    ).toEqual([
+      { value: "primary_name", label: "1st (日本語)" },
+      { value: "primary_name_furigana", label: "Reading (Hiragana)" },
+      { value: "secondary_name", label: "2nd (English)" },
+      { value: "tertiary_name", label: "3rd (한국어)" },
+      { value: "quaternary_name", label: "4th (简体中文)" },
+    ]);
+
+    const routeInput = readFileSync(
+      "src/components/tabs/RouteInputTab.tsx",
+      "utf8",
+    );
+    expect(
+      routeInput.match(
+        /const (?:mapLanguageOptions|multiLanguageOptions) = getRouteMapLanguageOptions/g,
+      ),
+    ).toHaveLength(2);
+  });
+
   test("attaches the Marunouchi branch to shared M06 and grows it left", () => {
     const layout = layoutMultiLineMap(
       [

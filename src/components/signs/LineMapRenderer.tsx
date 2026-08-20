@@ -58,6 +58,7 @@ export const scale = 2;
 
 export type StationNameField =
   | "primary_name"
+  | "primary_name_furigana"
   | "secondary_name"
   | "tertiary_name"
   | "quaternary_name";
