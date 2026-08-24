@@ -78,6 +78,24 @@ export const JR_CENTRAL_LAYOUT = {
   },
 } as const;
 
+export function getJrCentralAdjacentTextLayout(
+  signWidth: number,
+  side: "left" | "right",
+): {
+  x: number;
+  width: number;
+  align: "left" | "right";
+  wrap: "none";
+} {
+  const { sidePadding, width } = JR_CENTRAL_LAYOUT.adjacent;
+  return {
+    x: side === "left" ? sidePadding : signWidth - sidePadding - width,
+    width,
+    align: side,
+    wrap: "none",
+  };
+}
+
 export function formatJrCentralJapaneseName(name: string): string {
   const characters = [...name];
   if (characters.length === 2) return characters.join("　　");

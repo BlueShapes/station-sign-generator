@@ -147,6 +147,54 @@ settings:
     remove-all: すべて削除
     remove-all-confirm: アップロードした画像をすべて削除しますか？IndexedDBからも削除され、元に戻せません。
 
+  custom:
+    title: カスタムスタイル
+    description: カスタム定義は、会社・路線・駅データとは独立して保存されます。
+    option-prefix: カスタム
+    duplicate: 複製
+    copy-name: "{name} のコピー"
+    empty: カスタム定義はまだありません。
+    template-font: テンプレートのフォント
+    font-embedded: フォントバイナリを内包
+    name: 名前
+    template-label: 元にするテンプレート
+    font: フォント
+    font-help: アップロードしたフォントはカスタム定義内へ複製されます。
+    sign:
+      title: 駅名標スタイル
+      create: カスタムスタイルを作成
+      edit: カスタムスタイルを編集
+    station-badge:
+      title: 駅番号バッジ
+      create: カスタム駅番号バッジを作成
+    route-badge:
+      title: 路線バッジ
+      create: カスタム路線バッジを作成
+    advanced:
+      title: 上級レイアウト設定
+      description: 駅番号以外の各文字パーツを上書きします。空欄はテンプレート既定値を使用します。
+      font-size: フォントサイズ
+      letter-spacing: 字間
+      y-offset: Y座標オフセット
+    parts:
+      main-primary: メイン駅名
+      main-furigana: メイン駅名のよみ
+      main-secondary: メイン駅名の第2言語
+      main-tertiary: メイン駅名の第3言語
+      main-quaternary: メイン駅名の第4言語
+      main-note: 駅情報
+      main-area: 特定都区市内
+      adjacent-primary: 前後の駅名
+      adjacent-furigana: 前後の駅名のよみ
+      adjacent-secondary: 前後の駅名の第2言語
+    template:
+      station-badge:
+        jreast: JR東日本風
+        jrcentral: JR東海風
+        tokyometro: 東京メトロ・都営地下鉄風
+      route-badge:
+        rounded-square: 角丸四角
+        circle: 円
 route:
   download-sqlite: SQLiteをダウンロード
   import-sqlite: SQLiteをインポート
@@ -164,6 +212,8 @@ route:
     merge: マージ
   no-routes: 路線がありません。「路線を編集」タブで路線を作成してください。
   company:
+    route-badge-style: 路線バッジスタイル
+    route-badge-style-preview: 路線バッジのプレビュー
     title: 会社
     add: 会社を追加
     edit: 会社を編集

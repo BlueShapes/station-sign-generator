@@ -14,7 +14,8 @@ export function isJrEastStationNumber(
   number: ConnectedStationNumber,
   fallbackStyle = "jreast",
 ): boolean {
-  return (number.style ?? fallbackStyle) === "jreast";
+  const style = number.style ?? fallbackStyle;
+  return (getCustomStationNumberBadgeVisualStyle(style)?.templateId ?? style) === "jreast";
 }
 
 /**
@@ -101,3 +102,4 @@ export function resolveConnectedStationNumbers<
     sharedThreeLetterCode: sharesCode ? code : null,
   };
 }
+import { getCustomStationNumberBadgeVisualStyle } from "@/customization/registry";

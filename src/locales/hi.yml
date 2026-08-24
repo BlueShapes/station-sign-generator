@@ -139,6 +139,54 @@ settings:
     empty: अभी तक कोई चित्र अपलोड नहीं किया गया.
     remove-all: सभी हटाएँ
     remove-all-confirm: अपलोड की गई सभी छवियां हटाएं? इससे वे IndexedDB से भी साफ़ हो जाते हैं और इन्हें पूर्ववत नहीं किया जा सकता।
+  custom:
+    title: Custom styles
+    description: Custom definitions are stored independently from railway and station data.
+    option-prefix: Custom
+    duplicate: Duplicate
+    copy-name: "{name} copy"
+    empty: No custom definitions yet.
+    template-font: Template font
+    font-embedded: Font binary embedded
+    name: Name
+    template-label: Base template
+    font: Font
+    font-help: Uploaded fonts are copied into the custom definition.
+    sign:
+      title: Station sign styles
+      create: Create custom style
+      edit: Edit custom style
+    station-badge:
+      title: Station number badges
+      create: Create custom station number badge
+    route-badge:
+      title: Route badges
+      create: Create custom route badge
+    advanced:
+      title: Advanced layout
+      description: Override typography for each non-number text part. Empty values keep the template default.
+      font-size: Font size
+      letter-spacing: Letter spacing
+      y-offset: Y offset
+    parts:
+      main-primary: Main station name
+      main-furigana: Main reading
+      main-secondary: Main secondary name
+      main-tertiary: Main tertiary name
+      main-quaternary: Main quaternary name
+      main-note: Station note
+      main-area: Fare area
+      adjacent-primary: Adjacent station name
+      adjacent-furigana: Adjacent station reading
+      adjacent-secondary: Adjacent secondary name
+    template:
+      station-badge:
+        jreast: JR East style
+        jrcentral: JR Central style
+        tokyometro: Tokyo Metro / Toei style
+      route-badge:
+        rounded-square: Rounded square
+        circle: Circle
 route:
   download-sqlite: SQLite डाउनलोड करें
   import-sqlite: SQLite आयात करें
@@ -156,6 +204,8 @@ route:
     merge: विलय
   no-routes: कोई मार्ग नहीं मिला. कृपया "मार्ग संपादित करें" टैब में मार्ग बनाएं।
   company:
+    route-badge-style: Route badge style
+    route-badge-style-preview: Route badge preview
     title: कंपनियाँ
     add: कंपनी जोड़ें
     edit: कंपनी संपादित करें

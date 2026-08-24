@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS companies (
   name                 TEXT NOT NULL,
   company_color        TEXT NOT NULL DEFAULT '#3a9200',
   station_number_style TEXT NOT NULL DEFAULT 'jreast',
+  route_badge_style    TEXT NOT NULL DEFAULT 'jreast',
   primary_language     TEXT NOT NULL DEFAULT 'ja',
   secondary_language   TEXT NOT NULL DEFAULT 'en',
   tertiary_language    TEXT NOT NULL DEFAULT 'ko',
@@ -593,7 +594,7 @@ def main():
     c.executescript(SCHEMA_SQL)
 
     # Metadata
-    c.execute("INSERT INTO db_metadata VALUES ('version', '0.10.0')")
+    c.execute("INSERT INTO db_metadata VALUES ('version', '0.11.0')")
 
     # Special zones
     for (zone_id, name, abbreviation, is_black) in SPECIAL_ZONES:
@@ -605,9 +606,9 @@ def main():
     # Company — color matches default #3a9200, station_number_style = jreast
     company_id = "company-jreast"
     c.execute(
-        "INSERT INTO companies (id, name, company_color, station_number_style, primary_language, secondary_language)"
-        " VALUES (?, ?, ?, ?, ?, ?)",
-        (company_id, "JR東日本", "#3a9200", "jreast", "ja", "en"),
+        "INSERT INTO companies (id, name, company_color, station_number_style, route_badge_style, primary_language, secondary_language)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (company_id, "JR東日本", "#3a9200", "jreast", "jreast", "ja", "en"),
     )
 
     # ── Yamanote Line ─────────────────────────────────────────────────────────
@@ -807,9 +808,9 @@ def main():
     # ── Tokyo Metro (東京メトロ) ───────────────────────────────────────────────
     company_metro_id = "company-tokyometro"
     c.execute(
-        "INSERT INTO companies (id, name, company_color, station_number_style, primary_language, secondary_language)"
-        " VALUES (?, ?, ?, ?, ?, ?)",
-        (company_metro_id, "東京メトロ", "#00a3d9", "tokyometro", "ja", "en"),
+        "INSERT INTO companies (id, name, company_color, station_number_style, route_badge_style, primary_language, secondary_language)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (company_metro_id, "東京メトロ", "#00a3d9", "tokyometro", "tokyometro", "ja", "en"),
     )
 
     # ── Marunouchi Line (丸ノ内線) ────────────────────────────────────────────
@@ -922,9 +923,9 @@ def main():
     # ── Toyo Rapid Line ───────────────────────────────────────────────────────
     company_toyo_id = "company-toyo-rapid"
     c.execute(
-        "INSERT INTO companies (id, name, company_color, station_number_style, primary_language, secondary_language)"
-        " VALUES (?, ?, ?, ?, ?, ?)",
-        (company_toyo_id, "東葉高速鉄道", "#e95513", "tokyometro", "ja", "en"),
+        "INSERT INTO companies (id, name, company_color, station_number_style, route_badge_style, primary_language, secondary_language)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (company_toyo_id, "東葉高速鉄道", "#e95513", "tokyometro", "tokyometro", "ja", "en"),
     )
     tr_line_id = "line-toyo-rapid"
     c.execute(
@@ -984,7 +985,7 @@ def main():
     mb_new = sum(1 for s in MARUNOUCHI_BRANCH_STATIONS if s[4] is None)
 
     print(f"Created: {out_path}")
-    print(f"  - version: 0.10.0")
+    print(f"  - version: 0.11.0")
     print(f"  - 3 special zones (山手線内, 東京23区内, 横浜市内)")
     print(f"  - 3 companies (JR東日本, 東京メトロ, 東葉高速鉄道)")
     print(f"  - 10 lines:")

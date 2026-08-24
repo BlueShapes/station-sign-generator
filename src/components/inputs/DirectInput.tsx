@@ -46,6 +46,7 @@ import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
 import { sanitizeDirectInputData } from "@/lib/textInputSafety";
 import { DEFAULT_DIRECTION } from "@/db/seed";
+import { useCustomizations } from "@/customization/store";
 
 const DEBOUNCE_MS = 400;
 
@@ -63,6 +64,10 @@ const DirectInput = memo(function DirectInput({
   signStyle,
 }: DirectInputProps) {
   const t = useTranslations();
+  const { definitions } = useCustomizations();
+  const customStationBadges = definitions.filter(
+    (definition) => definition.kind === "station-number-badge",
+  );
   const fields: SignStyleFieldSpec =
     SIGN_STYLE_FIELDS[signStyle ?? "jreast"] ?? SIGN_STYLE_FIELDS["jreast"];
   const show = (f: keyof Omit<SignStyleFieldSpec, "left" | "right">) =>
@@ -1082,6 +1087,10 @@ const DirectInput = memo(function DirectInput({
                               "route.company.station-number-style-jrcentral",
                             ),
                           },
+                          ...customStationBadges.map((definition) => ({
+                            value: definition.id,
+                            label: `${t("settings.custom.option-prefix")}: ${definition.name}`,
+                          })),
                         ]}
                         onChange={(style) =>
                           updateField(

@@ -1,5 +1,6 @@
 import { Fragment } from "react";
-import { Line, Rect, Text } from "react-konva";
+import { Line, Rect } from "react-konva";
+import CustomSignText from "./CustomSignText";
 import type StationProps from "./DirectInputStationProps";
 import JrEastAdjacentNumberBadge from "./JrEastAdjacentNumberBadge";
 import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
@@ -156,7 +157,7 @@ export default function JrEastBranchArrows({
           )}
           {station && (
             <>
-              <Text
+              <CustomSignText part="adjacent-primary"
                 text={
                   station.primaryName.length <= 2
                     ? station.primaryName.split("").join(" ")
@@ -171,7 +172,7 @@ export default function JrEastBranchArrows({
                 fill="white"
                 align={align}
               />
-              <Text
+              <CustomSignText part="adjacent-secondary"
                 text={station.secondaryName}
                 width={width}
                 x={secondaryX}
@@ -383,7 +384,7 @@ export default function JrEastBranchArrows({
               )}
               {station && (
                 <>
-                  <Text
+                  <CustomSignText part="adjacent-primary"
                     text={primaryText}
                     width={width}
                     x={primaryX}
@@ -394,7 +395,7 @@ export default function JrEastBranchArrows({
                     fill="white"
                     align={align}
                   />
-                  <Text
+                  <CustomSignText part="adjacent-secondary"
                     text={station.secondaryName}
                     width={width}
                     x={secondaryX}

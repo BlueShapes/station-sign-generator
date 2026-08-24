@@ -32,6 +32,7 @@ import {
 import { useFontStore, type FontStatus } from '@/db/useFontStore';
 import { useImageStore } from '@/db/useImageStore';
 import { useTranslations } from '@/i18n/useTranslation';
+import CustomStyleSettings from '@/components/settings/CustomStyleSettings';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -243,6 +244,8 @@ export default function SettingsTab() {
       </Stack>
 
       <Divider />
+
+      <CustomStyleSettings builtinFonts={builtinFonts} userFonts={userFonts} />
 
       {/* ── Images ── */}
       <Stack gap="sm">

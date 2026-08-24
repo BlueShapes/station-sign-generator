@@ -139,6 +139,54 @@ settings:
     empty: 尚未上传图片。
     remove-all: 全部删除
     remove-all-confirm: 删除所有上传的图片？这也会将它们从 IndexedDB 中清除，并且无法撤消。
+  custom:
+    title: 自定义样式
+    description: 自定义定义与公司、线路和车站数据分开保存。
+    option-prefix: 自定义
+    duplicate: 复制
+    copy-name: "{name} 副本"
+    empty: 尚无自定义定义。
+    template-font: 模板字体
+    font-embedded: 已嵌入字体二进制
+    name: 名称
+    template-label: 基础模板
+    font: 字体
+    font-help: 上传的字体会复制到自定义定义中。
+    sign:
+      title: 站名牌样式
+      create: 创建自定义样式
+      edit: 编辑自定义样式
+    station-badge:
+      title: 车站编号徽章
+      create: 创建自定义车站编号徽章
+    route-badge:
+      title: 线路徽章
+      create: 创建自定义线路徽章
+    advanced:
+      title: 高级布局设置
+      description: 覆盖编号以外各文字部分的排版。留空时使用模板默认值。
+      font-size: 字体大小
+      letter-spacing: 字间距
+      y-offset: Y坐标偏移
+    parts:
+      main-primary: 主车站名
+      main-furigana: 主车站名读音
+      main-secondary: 主车站名第二语言
+      main-tertiary: 主车站名第三语言
+      main-quaternary: 主车站名第四语言
+      main-note: 车站信息
+      main-area: 票价区域
+      adjacent-primary: 相邻车站名
+      adjacent-furigana: 相邻车站名读音
+      adjacent-secondary: 相邻车站名第二语言
+    template:
+      station-badge:
+        jreast: JR东日本风格
+        jrcentral: JR东海风格
+        tokyometro: 东京地铁／都营地铁风格
+      route-badge:
+        rounded-square: 圆角方形
+        circle: 圆形
 route:
   download-sqlite: 下载SQLite
   import-sqlite: 导入SQLite
@@ -156,6 +204,8 @@ route:
     merge: 合并
   no-routes: 没有找到路线。请在“编辑路线”选项卡中创建路线。
   company:
+    route-badge-style: 线路徽章样式
+    route-badge-style-preview: 线路徽章预览
     title: 公司
     add: 添加公司
     edit: 编辑公司

@@ -124,6 +124,13 @@ import type {
   ThroughRouteDirection,
   ThroughRouteSegment,
 } from "@/db/types";
+import { useCustomizations } from "@/customization/store";
+import type {
+  CustomRouteBadgeDefinition,
+  CustomStationNumberBadgeDefinition,
+} from "@/customization/model";
+import { getCustomStationNumberBadgeVisualStyle } from "@/customization/registry";
+import { getLineIndicatorVisualStyle } from "@/components/signs/lineIndicatorStyle";
 
 const TOKYO_METRO_COLOR = "#00a3d9";
 const LINE_FORM_STATION_NUMBER_PREVIEW = "01";
@@ -274,9 +281,11 @@ function StationNumberBadgePreview({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const customStyle = getCustomStationNumberBadgeVisualStyle(style);
+    const resolvedStyle = customStyle?.templateId ?? style;
 
     const dpr = window.devicePixelRatio || 1;
-    const isMetroCompact = compact && style === "tokyometro";
+    const isMetroCompact = compact && resolvedStyle === "tokyometro";
     const scale = isMetroCompact ? 1.45 : compact ? 1.125 : 1.5;
     const badgeSize = 30 * scale; // inner badge = 30×30 sign units
     // With TRC: outer frame adds 12 above + 3 below the inner badge (sign units)
@@ -284,7 +293,7 @@ function StationNumberBadgePreview({
     const outerPadX = 3 * scale;
     const outerPadBot = 3 * scale;
     const trcExtension =
-      threeLetterCode && style === "jreast"
+      threeLetterCode && resolvedStyle === "jreast"
         ? Math.ceil(trcH + outerPadBot)
         : 0;
     const cssW = isMetroCompact ? 94 : compact ? 75 : 120;
@@ -301,13 +310,13 @@ function StationNumberBadgePreview({
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, cssW, cssH);
       const badgeFont =
-        style === "tokyometro"
+        customStyle?.fontFamily ?? (resolvedStyle === "tokyometro"
           ? '"JostTrispaceHybrid", Arial, sans-serif'
-          : style === "jrcentral"
+          : resolvedStyle === "jrcentral"
             ? '"PublicSans", Arial, sans-serif'
-          : '"HindSemiBold", Arial, sans-serif';
+          : '"HindSemiBold", Arial, sans-serif');
 
-      if (style === "tokyometro") {
+      if (resolvedStyle === "tokyometro") {
         const radius = badgeSize / 2;
         const cx = cssW / 2;
         const cy = isMetroCompact ? cssH / 2 - 1.5 : cssH / 2;
@@ -340,7 +349,7 @@ function StationNumberBadgePreview({
           // Number text below prefix
           ctx.font = `700 ${metroValueTextSize}px ${badgeFont}`;
           ctx.fillText(value, cx, cy - radius + 14 * scale + metroTextOffsetY);
-      } else if (style === "jrcentral") {
+      } else if (resolvedStyle === "jrcentral") {
         const metrics = getJrCentralStationNumberBadgeMetrics(badgeSize);
         const bx = (cssW - metrics.width) / 2;
         const by = (cssH - metrics.height) / 2;
@@ -362,7 +371,7 @@ function StationNumberBadgePreview({
         ctx.strokeStyle = color;
         ctx.lineWidth = metrics.strokeWidth;
         ctx.strokeRect(bx, by, metrics.width, metrics.height);
-      } else if (style === "jreast") {
+      } else if (resolvedStyle === "jreast") {
         if (threeLetterCode) {
           // Outer frame: 36×45 sign units → (badgeSize + 2*outerPadX) × (trcH + badgeSize + outerPadBot)
           const outerW = badgeSize + 2 * outerPadX;
@@ -454,7 +463,10 @@ function StationNumberBadgePreview({
     const drawWhenReady = () => {
       if (!cancelled) draw();
     };
-    waitForCanvasFonts(getStationNumberFontSpecs(style)).then(
+    waitForCanvasFonts([
+      ...getStationNumberFontSpecs(resolvedStyle),
+      ...(customStyle?.fontFamily ? [`400 1em ${customStyle.fontFamily}`] : []),
+    ]).then(
       drawWhenReady,
       drawWhenReady,
     );
@@ -484,9 +496,10 @@ function LineIndicatorBadgePreview({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const visualStyle = getLineIndicatorVisualStyle(style);
 
     const dpr = window.devicePixelRatio || 1;
-    const isMetroCompact = compact && style === "tokyometro";
+    const isMetroCompact = compact && visualStyle.shape === "circle";
     const scale = isMetroCompact ? 1.25 : compact ? 1.125 : 1.5;
     const badgeSize = 30 * scale;
     const cssSize = isMetroCompact ? 46 : compact ? 48 : 64;
@@ -506,7 +519,7 @@ function LineIndicatorBadgePreview({
       const by = (cssSize - badgeSize) / 2;
       const strokeWidth = 3 * scale;
 
-      if (style === "tokyometro") {
+      if (visualStyle.shape === "circle") {
         const radius = badgeSize / 2;
         const cx = cssSize / 2;
         const cy = cssSize / 2;
@@ -559,7 +572,7 @@ function LineIndicatorBadgePreview({
       ctx.fillStyle = "#000000";
       ctx.textAlign = "center";
       ctx.textBaseline = "alphabetic";
-      ctx.font = `${style === "tokyometro" ? 700 : 600} ${style === "tokyometro" ? 13.6 * scale : 21 * scale}px ${style === "tokyometro" ? '"JostTrispaceHybrid", Arial, sans-serif' : '"HindSemiBold", Arial, sans-serif'}`;
+      ctx.font = `${visualStyle.fontWeight === "bold" ? 700 : 400} ${visualStyle.shape === "circle" ? 13.6 * scale : 21 * scale}px ${visualStyle.fontFamily}`;
       const m = ctx.measureText(prefix);
       const textH = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
       ctx.fillText(
@@ -575,7 +588,7 @@ function LineIndicatorBadgePreview({
     const drawWhenReady = () => {
       if (!cancelled) draw();
     };
-    waitForCanvasFonts(getStationNumberFontSpecs(style)).then(
+    waitForCanvasFonts([`400 1em ${visualStyle.fontFamily}`]).then(
       drawWhenReady,
       drawWhenReady,
     );
@@ -598,6 +611,15 @@ interface CompanyFormProps {
 
 function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
   const t = useTranslations();
+  const { definitions } = useCustomizations();
+  const customStationBadges = definitions.filter(
+    (definition): definition is CustomStationNumberBadgeDefinition =>
+      definition.kind === "station-number-badge",
+  );
+  const customRouteBadges = definitions.filter(
+    (definition): definition is CustomRouteBadgeDefinition =>
+      definition.kind === "route-badge",
+  );
   const [name, setName] = useState(company?.name ?? "");
   const [color, setColor] = useState(
     company?.company_color ??
@@ -606,6 +628,9 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
   const [colorDirty, setColorDirty] = useState(false);
   const [stationNumberStyle, setStationNumberStyle] = useState(
     company?.station_number_style ?? "jreast",
+  );
+  const [routeBadgeStyle, setRouteBadgeStyle] = useState(
+    company?.route_badge_style ?? company?.station_number_style ?? "jreast",
   );
   const [languages, setLanguages] = useState<string[]>(() =>
     company ? getCompanyLanguages(company) : [...DEFAULT_COMPANY_LANGUAGES],
@@ -623,6 +648,7 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
       name: name.trim(),
       company_color: color,
       station_number_style: stationNumberStyle,
+      route_badge_style: routeBadgeStyle,
       primary_language: languages[0],
       secondary_language: languages[1],
       tertiary_language: languages[2],
@@ -693,12 +719,41 @@ function CompanyForm({ db, company, onSave, onClose }: CompanyFormProps) {
             value: "tokyometro",
             label: t("route.company.station-number-style-tokyometro"),
           },
+          ...customStationBadges.map((definition) => ({
+            value: definition.id,
+            label: `${t("settings.custom.option-prefix")}: ${definition.name}`,
+          })),
         ]}
       />
       <Group align="center" gap="md">
         <StationNumberBadgePreview color={color} style={stationNumberStyle} />
         <Text size="xs" c="dimmed">
           {t("route.company.station-number-style-preview")}
+        </Text>
+      </Group>
+      <Select
+        label={t("route.company.route-badge-style")}
+        value={routeBadgeStyle}
+        onChange={(value) => setRouteBadgeStyle(value ?? "jreast")}
+        data={[
+          {
+            value: "jreast",
+            label: t("settings.custom.template.route-badge.rounded-square"),
+          },
+          {
+            value: "tokyometro",
+            label: t("settings.custom.template.route-badge.circle"),
+          },
+          ...customRouteBadges.map((definition) => ({
+            value: definition.id,
+            label: `${t("settings.custom.option-prefix")}: ${definition.name}`,
+          })),
+        ]}
+      />
+      <Group align="center" gap="md">
+        <LineIndicatorBadgePreview color={color} prefix="SS" style={routeBadgeStyle} />
+        <Text size="xs" c="dimmed">
+          {t("route.company.route-badge-style-preview")}
         </Text>
       </Group>
       <Group justify="flex-end" mt="md">
@@ -2992,7 +3047,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
                             <LineIndicatorBadgePreview
                               color={line.line_color}
                               prefix={line.prefix}
-                              style={company.station_number_style}
+                              style={company.route_badge_style}
                               compact
                             />
                           ) : (

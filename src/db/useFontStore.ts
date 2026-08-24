@@ -21,6 +21,9 @@ export interface UserFontEntry {
   family: string;
   size: number;
   addedAt: Date;
+  /** Kept in memory so a custom style can embed an independent font copy. */
+  data: ArrayBuffer;
+  mimeType: string;
 }
 
 export const BUILTIN_FONTS: BuiltinFontDef[] = [
@@ -68,6 +71,7 @@ interface StoredFontRecord {
   data: ArrayBuffer;
   size: number;
   addedAt: number;
+  mimeType?: string;
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -165,6 +169,8 @@ export function useFontStore() {
           family: r.family,
           size: r.size,
           addedAt: new Date(r.addedAt),
+          data: r.data,
+          mimeType: r.mimeType ?? 'font/ttf',
         }));
 
         setUserFonts(entries);
@@ -205,7 +211,15 @@ export function useFontStore() {
   const uploadFont = useCallback(async (file: File, name: string, family: string) => {
     const id = `user-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const data = await file.arrayBuffer();
-    const entry: UserFontEntry = { id, name, family, size: file.size, addedAt: new Date() };
+    const entry: UserFontEntry = {
+      id,
+      name,
+      family,
+      size: file.size,
+      addedAt: new Date(),
+      data,
+      mimeType: file.type || 'font/ttf',
+    };
 
     setUserFonts((p) => [...p, entry]);
     setUserFontStatus((p) => ({ ...p, [id]: 'loading' }));
@@ -216,7 +230,15 @@ export function useFontStore() {
 
       if (storageMode === 'indexeddb') {
         if (!dbRef.current) dbRef.current = await openDB();
-        await idbPut(dbRef.current, { id, name, family, data, size: file.size, addedAt: Date.now() });
+        await idbPut(dbRef.current, {
+          id,
+          name,
+          family,
+          data,
+          size: file.size,
+          addedAt: Date.now(),
+          mimeType: file.type || 'font/ttf',
+        });
       }
     } catch {
       setUserFontStatus((p) => ({ ...p, [id]: 'error' }));

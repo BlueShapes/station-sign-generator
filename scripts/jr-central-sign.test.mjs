@@ -4,6 +4,7 @@ import { getJrCentralStationNumberBadgeMetrics } from "../src/components/signs/j
 import {
   formatJrCentralJapaneseName,
   getJrCentralAdjacentLabels,
+  getJrCentralAdjacentTextLayout,
   getJrCentralHiraganaScaleX,
   getJrCentralMainReadingTransform,
   getJrCentralMainNameLayout,
@@ -128,6 +129,27 @@ describe("JR Central sign layout", () => {
     ).toEqual({
       japanese: "ふじえだ・焼　　津",
       english: "Fujieda / Yaizu",
+    });
+  });
+
+  test("keeps both adjacent station names in a fixed single-line text box", () => {
+    const left = getJrCentralAdjacentTextLayout(JR_CENTRAL_SIGN_WIDTH, "left");
+    const right = getJrCentralAdjacentTextLayout(JR_CENTRAL_SIGN_WIDTH, "right");
+
+    expect(left).toEqual({
+      x: JR_CENTRAL_LAYOUT.adjacent.sidePadding,
+      width: JR_CENTRAL_LAYOUT.adjacent.width,
+      align: "left",
+      wrap: "none",
+    });
+    expect(right).toEqual({
+      x:
+        JR_CENTRAL_SIGN_WIDTH -
+        JR_CENTRAL_LAYOUT.adjacent.sidePadding -
+        JR_CENTRAL_LAYOUT.adjacent.width,
+      width: JR_CENTRAL_LAYOUT.adjacent.width,
+      align: "right",
+      wrap: "none",
     });
   });
 

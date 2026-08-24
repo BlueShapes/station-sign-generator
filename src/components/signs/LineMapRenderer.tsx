@@ -37,6 +37,7 @@ import {
   getStationNumberBadgeThreeLetterCode,
 } from "@/components/signs/subwayStationNumberAppearance";
 import { getLineMapFontSpecs, waitForCanvasFonts } from "@/lib/fonts";
+import { getCustomStationNumberBadgeVisualStyle } from "@/customization/registry";
 import {
   ceilCanvasDimensions,
   DEFAULT_TRACK_WIDTH,
@@ -53,6 +54,7 @@ import {
   normalizeTrackWidth,
   shouldExpandStationNumberGroups,
 } from "@/components/signs/lineMapGeometry";
+import type { CustomDefinition } from "@/customization/model";
 
 export const scale = 2;
 
@@ -623,7 +625,8 @@ export function snBadgeDims(
   hasTrc: boolean,
   style: string = _snBadgeStyle,
 ): { w: number; h: number } {
-  if (style === "jrcentral") {
+  const resolvedStyle = getCustomStationNumberBadgeVisualStyle(style)?.templateId ?? style;
+  if (resolvedStyle === "jrcentral") {
     const metrics = getJrCentralStationNumberBadgeMetrics(SN_INNER);
     return { w: metrics.width, h: metrics.height };
   }
@@ -669,7 +672,9 @@ function SnBadge({
   strokeWidthAdjust?: number;
 }) {
   const s = scale;
-  const badgeStyle = style ?? _snBadgeStyle;
+  const requestedStyle = style ?? _snBadgeStyle;
+  const customStyle = getCustomStationNumberBadgeVisualStyle(requestedStyle);
+  const badgeStyle = customStyle?.templateId ?? requestedStyle;
   if (badgeStyle === "jrcentral") {
     return (
       <JrCentralStationNumberBadge
@@ -679,6 +684,7 @@ function SnBadge({
         color={color}
         prefix={prefix}
         value={value}
+        fontFamily={customStyle?.fontFamily}
       />
     );
   }
@@ -693,10 +699,11 @@ function SnBadge({
   const ix = hasTrc ? x + _snOuterPadX * s : x;
   const iy = hasTrc ? y + _snTrcH * s : y;
   const metroMetrics = getTokyoMetroStationNumberMetrics(SN_INNER * s);
-  const font =
+  const font = customStyle?.fontFamily ?? (
     badgeStyle === "tokyometro"
       ? '"JostTrispaceHybrid", Arial, sans-serif'
-      : '"HindSemiBold", Arial, sans-serif';
+      : '"HindSemiBold", Arial, sans-serif'
+  );
   const strokeWidth =
     (badgeStyle === "tokyometro"
       ? metroMetrics.strokeWidth
@@ -1225,6 +1232,7 @@ export function LineIndicatorBadge({
   style = "jreast",
   size = LI_SIZE,
   strokeWidth = LI_STROKE,
+  customDefinitions,
 }: {
   x: number;
   y: number;
@@ -1233,8 +1241,10 @@ export function LineIndicatorBadge({
   style?: string;
   size?: number;
   strokeWidth?: number;
+  /** Unsaved custom definitions used only by draft previews. */
+  customDefinitions?: readonly CustomDefinition[];
 }) {
-  const visualStyle = getLineIndicatorVisualStyle(style);
+  const visualStyle = getLineIndicatorVisualStyle(style, customDefinitions);
   const fontFamily = visualStyle.fontFamily;
   const baseFontSize = LI_FONT * (size / LI_SIZE);
   const effectiveStrokeWidth = strokeWidth * visualStyle.strokeScale;

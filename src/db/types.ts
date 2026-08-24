@@ -3,6 +3,7 @@ export interface Company {
   name: string;
   company_color: string;
   station_number_style: string;
+  route_badge_style: string;
   primary_language: string;
   secondary_language: string;
   tertiary_language: string;

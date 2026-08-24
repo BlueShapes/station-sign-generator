@@ -42,11 +42,11 @@ describe("default sign direction", () => {
   });
 
   test("updates the database version and schema snapshot", () => {
-    expect(DB_VERSION).toBe("0.10.0");
+    expect(DB_VERSION).toBe("0.11.0");
 
     const schemaSnapshot = readFileSync(".Codex/output/schema.sql", "utf8");
     expect(schemaSnapshot).toStartWith(
-      "-- Station Sign Generator — SQLite Schema (v0.10.0)",
+      "-- Station Sign Generator — SQLite Schema (v0.11.0)",
     );
     expect(schemaSnapshot).toContain("direction  TEXT DEFAULT 'right'");
 
@@ -56,7 +56,7 @@ describe("default sign direction", () => {
     );
     expect(sampleDatabaseBuilder).toContain("direction  TEXT DEFAULT 'right'");
     expect(sampleDatabaseBuilder).toContain(
-      "INSERT INTO db_metadata VALUES ('version', '0.10.0')",
+      "INSERT INTO db_metadata VALUES ('version', '0.11.0')",
     );
   });
 

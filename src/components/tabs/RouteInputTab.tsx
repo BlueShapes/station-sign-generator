@@ -191,6 +191,9 @@ import {
 } from "@/components/signs/transitLineLayout";
 import CanvasFontLoading from "@/components/CanvasFontLoading";
 import styles from "./RouteInputTab.module.css";
+import { getCustomDefinitionFontSpecs, resolveCustomSelection, type CustomSignDefinition } from "@/customization/model";
+import { useCustomizations } from "@/customization/store";
+import { SignTextCustomizationProvider } from "@/components/signs/CustomSignText";
 
 type SignStyle =
   | "jreast"
@@ -521,6 +524,10 @@ interface RouteInputTabProps {
 }
 
 export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
+  const { definitions } = useCustomizations();
+  const customSignDefinitions = definitions.filter(
+    (definition): definition is CustomSignDefinition => definition.kind === "sign",
+  );
   const t = useTranslations();
   const locale = useLocale();
   const signRef = useRef<Konva.Stage>(null);
@@ -549,7 +556,14 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [stationLines, setStationLines] = useState<Line[]>([]);
   const [selectedStationNumberLineIds, setSelectedStationNumberLineIds] =
     useState<string[]>([]);
-  const [signStyle, setSignStyle] = useState<SignStyle>("jreast");
+  const [signStyleSelection, setSignStyleSelection] = useState<string>("jreast");
+  const resolvedSignStyle = resolveCustomSelection(
+    signStyleSelection,
+    customSignDefinitions,
+  );
+  const signStyle = (SIGN_STYLES[resolvedSignStyle.templateId as SignStyle]
+    ? resolvedSignStyle.templateId
+    : "jreast") as SignStyle;
   const stationNumberSelectionLimit = getStationNumberSelectionLimit(
     SIGN_STYLE_FIELDS[signStyle],
   );
@@ -1336,13 +1350,17 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     (company) => company.id === selectedLine?.company_id,
   );
   const mapCompanyStyle = mapCompany?.station_number_style;
-  const signFontSpecs = getStationSignFontSpecs(signStyle, mapCompanyStyle);
+  const mapRouteBadgeStyle = mapCompany?.route_badge_style ?? "jreast";
+  const signFontSpecs = [
+    ...getStationSignFontSpecs(signStyle, mapCompanyStyle),
+    ...getCustomDefinitionFontSpecs(resolvedSignStyle.definition),
+  ];
   const signFonts = useCanvasFonts(signFontSpecs, tabMode === "sign");
   const mapLineIndicatorStyles = useMemo(() => {
     const styleByCompanyId = new Map(
       routeCompanies.map((company) => [
         company.id,
-        company.station_number_style,
+        company.route_badge_style,
       ]),
     );
     return Object.fromEntries(
@@ -1354,14 +1372,23 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
       ]),
     );
   }, [lines, routeCompanies]);
-  const mapFontSpecs = getLineMapFontSpecs([
-    mapCompanyStyle,
+  const mapStyleIds = [
+    mapRouteBadgeStyle,
     ...multiSelectedLineIds.map((lineId) => mapLineIndicatorStyles[lineId]),
     ...Object.values(mapStationNumbers).map((number) => number.style),
     ...Object.values(mapStationNumberGroups)
       .flat()
       .map((number) => number.style),
-  ]);
+  ];
+  const resolvedMapStyleIds = mapStyleIds.map((style) =>
+    definitions.find((definition) => definition.id === style)?.templateId ?? style,
+  );
+  const mapFontSpecs = [
+    ...getLineMapFontSpecs(resolvedMapStyleIds),
+    ...definitions
+      .filter((definition) => mapStyleIds.includes(definition.id))
+      .flatMap(getCustomDefinitionFontSpecs),
+  ];
   const mapFonts = useCanvasFonts(
     mapFontSpecs,
     tabMode === "linemap" || tabMode === "multiline-linemap",
@@ -2032,8 +2059,8 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
               <Select
                 className={styles.formatControl}
                 label={t("route.sign.style")}
-                value={signStyle}
-                onChange={(value) => value && setSignStyle(value as SignStyle)}
+                value={signStyleSelection}
+                onChange={(value) => value && setSignStyleSelection(value)}
                 data={[
                   { value: "jreast", label: t("route.sign.jreast") },
                   {
@@ -2060,6 +2087,10 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                     label: t("route.sign.toeimedium"),
                   },
                   { value: "toeilarge", label: t("route.sign.toeilarge") },
+                  ...customSignDefinitions.map((definition) => ({
+                    value: definition.id,
+                    label: `${t("settings.custom.option-prefix")}: ${definition.name}`,
+                  })),
                 ]}
               />
               <Box className={styles.directionControl}>
@@ -2412,11 +2443,13 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   (() => {
                     const { Component: SignComponent } = SIGN_STYLES[signStyle];
                     return (
-                      <SignComponent
-                        {...signData}
-                        direction={direction}
-                        ref={signRef}
-                      />
+                      <SignTextCustomizationProvider definition={resolvedSignStyle.definition}>
+                        <SignComponent
+                          {...signData}
+                          direction={direction}
+                          ref={signRef}
+                        />
+                      </SignTextCustomizationProvider>
                     );
                   })()
                 ) : (
@@ -3071,7 +3104,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                           ? true
                           : mapHasMoreAfter && mapShowFadeAfter
                       }
-                      companyStyle={mapCompanyStyle}
+                      companyStyle={mapRouteBadgeStyle}
                       services={
                         mapServiceInfos.length >= 1
                           ? mapServiceInfos

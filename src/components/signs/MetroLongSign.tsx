@@ -18,6 +18,7 @@ import {
 import { getMetroSmallArrowPoints } from "./arrowGeometry";
 import JrCentralStationNumberBadge from "./JrCentralStationNumberBadge";
 import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
+import CustomSignText from "./CustomSignText";
 
 export const height = 105;
 export const scale = 3;
@@ -141,6 +142,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
             color={appearance.color}
             prefix={prefix}
             value={value}
+            fontFamily={appearance.fontFamily}
           />
         );
       }
@@ -164,7 +166,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
               y={top + (innerSize * 4) / 30}
               width={innerSize}
               fontSize={(innerSize * 11) / 30}
-              fontFamily="HindSemiBold"
+              fontFamily={appearance.fontFamily ?? "HindSemiBold"}
               fontStyle="600"
               fill="#1f2230"
               align="center"
@@ -175,7 +177,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
               y={top + (innerSize * 14) / 30}
               width={innerSize}
               fontSize={(innerSize * 17) / 30}
-              fontFamily="HindSemiBold"
+              fontFamily={appearance.fontFamily ?? "HindSemiBold"}
               fontStyle="600"
               fill="#1f2230"
               align="center"
@@ -200,7 +202,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
             y={cy - innerSize / 2 + metrics.prefixYOffset - 1 + prefixYOffsetDelta}
             width={innerSize}
             fontSize={metrics.prefixFontSize + prefixFontSizeDelta}
-            fontFamily="JostTrispaceHybrid"
+            fontFamily={appearance.fontFamily ?? "JostTrispaceHybrid"}
             fontStyle={metrics.prefixFontWeight}
             fill="#1f2230"
             align="center"
@@ -211,7 +213,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
             y={cy - innerSize / 2 + metrics.valueYOffset - 1 + valueYOffsetDelta}
             width={innerSize}
             fontSize={metrics.valueFontSize + valueFontSizeDelta}
-            fontFamily="JostTrispaceHybrid"
+            fontFamily={appearance.fontFamily ?? "JostTrispaceHybrid"}
             fontStyle={metrics.valueFontWeight}
             letterSpacing={2}
             stroke="#1f2230"
@@ -346,7 +348,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
 
       return (
         <>
-          <Text
+          <CustomSignText part="adjacent-primary"
             text={station.primaryName}
             x={textX}
             y={24}
@@ -357,7 +359,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
             fill={isActiveSide ? "#202126" : "#b7b7b7"}
             align={align}
           />
-          <Text
+          <CustomSignText part={useSecondary ? "adjacent-secondary" : "adjacent-furigana"}
             text={subText}
             x={textX}
             y={47}
@@ -413,7 +415,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
             const rowY = 8 + idx * 42;
             return (
               <Fragment key={station.id}>
-                <Text
+                <CustomSignText part="adjacent-primary"
                   text={station.primaryName}
                   x={textX}
                   y={rowY + 6}
@@ -424,7 +426,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
                   fill={isActiveSide ? "#202126" : "#b7b7b7"}
                   align={align}
                 />
-                <Text
+                <CustomSignText part={effectiveSubTextMode === "secondary" ? "adjacent-secondary" : "adjacent-furigana"}
                   text={getStationSubText(station)}
                   x={textX}
                   y={rowY + 26}
@@ -531,7 +533,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
                   numberPrimaryColor,
                   numberPrimaryStyle,
                 )}
-                <Text
+                <CustomSignText part="main-primary"
                   text={displayPrimaryName}
                   x={mainNameX}
                   y={3}
@@ -544,7 +546,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
                   wrap="none"
                 />
                 {centerSubText && (
-                  <Text
+                  <CustomSignText part={effectiveSubTextMode === "secondary" ? "main-secondary" : "main-furigana"}
                     text={centerSubText}
                     x={centerSubX}
                     y={50}
