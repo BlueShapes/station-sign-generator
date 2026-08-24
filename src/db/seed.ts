@@ -1,5 +1,9 @@
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
 
+export const DEFAULT_DIRECTION: NonNullable<
+  DirectInputStationProps["direction"]
+> = "right";
+
 export const DEFAULT_DATA: DirectInputStationProps = {
   left: [
     {
@@ -35,7 +39,7 @@ export const DEFAULT_DATA: DirectInputStationProps = {
     },
   ],
   ratio: 4.5,
-  direction: "left",
+  direction: DEFAULT_DIRECTION,
   baseColor: "#3a9200",
   centerSquareColors: ["#8cc800"],
   localLines: [{ id: "seed-localline-1", prefix: "JY", color: "#8cc800" }],

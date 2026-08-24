@@ -11,6 +11,7 @@ export type JrCentralStationNumberBadgeProps = {
   color: string;
   prefix: string;
   value: string;
+  fontFamily?: string;
 };
 
 /** Shared Konva renderer used by both JR Central station signs and route maps. */
@@ -21,6 +22,7 @@ export default function JrCentralStationNumberBadge({
   color,
   prefix,
   value,
+  fontFamily = JR_CENTRAL_STATION_NUMBER_FONT_FAMILY,
 }: JrCentralStationNumberBadgeProps) {
   const metrics = getJrCentralStationNumberBadgeMetrics(size);
 
@@ -47,7 +49,7 @@ export default function JrCentralStationNumberBadge({
         width={metrics.width}
         align="center"
         fontSize={metrics.prefixFontSize}
-        fontFamily={JR_CENTRAL_STATION_NUMBER_FONT_FAMILY}
+        fontFamily={fontFamily}
         fontStyle="700"
         fill="white"
       />
@@ -58,7 +60,7 @@ export default function JrCentralStationNumberBadge({
         width={metrics.width}
         align="center"
         fontSize={metrics.valueFontSize}
-        fontFamily={JR_CENTRAL_STATION_NUMBER_FONT_FAMILY}
+        fontFamily={fontFamily}
         fontStyle="700"
         fill="#111923"
       />

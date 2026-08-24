@@ -2,9 +2,18 @@ import type { Database } from "sql.js";
 import type { Company } from "@/db/types";
 import { deleteLines } from "@/db/repositories/lines";
 
+function hasRouteBadgeStyle(db: Database): boolean {
+  return (db.exec("PRAGMA table_info(companies)")[0]?.values ?? []).some(
+    (row) => row[1] === "route_badge_style",
+  );
+}
+
 export function getAllCompanies(db: Database): Company[] {
+  const routeBadgeSelection = hasRouteBadgeStyle(db)
+    ? "route_badge_style"
+    : "station_number_style AS route_badge_style";
   const stmt = db.prepare(
-    `SELECT id, name, company_color, station_number_style,
+    `SELECT id, name, company_color, station_number_style, ${routeBadgeSelection},
             primary_language, secondary_language, tertiary_language,
             quaternary_language
        FROM companies
@@ -17,6 +26,7 @@ export function getAllCompanies(db: Database): Company[] {
       name: string;
       company_color: string;
       station_number_style: string;
+      route_badge_style: string;
       primary_language: string;
       secondary_language: string;
       tertiary_language: string;
@@ -27,6 +37,7 @@ export function getAllCompanies(db: Database): Company[] {
       name: row.name,
       company_color: row.company_color,
       station_number_style: row.station_number_style,
+      route_badge_style: row.route_badge_style,
       primary_language: row.primary_language,
       secondary_language: row.secondary_language,
       tertiary_language: row.tertiary_language,
@@ -38,16 +49,36 @@ export function getAllCompanies(db: Database): Company[] {
 }
 
 export function upsertCompany(db: Database, company: Company): void {
+  if (!hasRouteBadgeStyle(db)) {
+    db.run(
+      `INSERT OR REPLACE INTO companies
+        (id, name, company_color, station_number_style, primary_language,
+         secondary_language, tertiary_language, quaternary_language)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        company.id,
+        company.name,
+        company.company_color,
+        company.station_number_style,
+        company.primary_language,
+        company.secondary_language,
+        company.tertiary_language,
+        company.quaternary_language,
+      ],
+    );
+    return;
+  }
   db.run(
     `INSERT OR REPLACE INTO companies
-      (id, name, company_color, station_number_style, primary_language,
+      (id, name, company_color, station_number_style, route_badge_style, primary_language,
        secondary_language, tertiary_language, quaternary_language)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       company.id,
       company.name,
       company.company_color,
       company.station_number_style,
+      company.route_badge_style,
       company.primary_language,
       company.secondary_language,
       company.tertiary_language,

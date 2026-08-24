@@ -34,6 +34,7 @@ import {
 } from "./subwaySignGeometry";
 import { getSubwayMediumArrowPoints } from "./arrowGeometry";
 import JrCentralStationNumberBadge from "./JrCentralStationNumberBadge";
+import CustomSignText from "./CustomSignText";
 import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
 
 export type SubwaySignVariant = "metroMedium" | "toeiMedium" | "toeiLarge";
@@ -210,6 +211,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               color={appearance.color}
               prefix={prefix}
               value={value}
+              fontFamily={appearance.fontFamily}
             />
           </Group>
         );
@@ -244,7 +246,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               y={top + (diameter * 4) / 30}
               width={diameter}
               fontSize={(diameter * 11) / 30}
-              fontFamily="HindSemiBold"
+              fontFamily={appearance.fontFamily ?? "HindSemiBold"}
               fontStyle="600"
               align="center"
               fill="#202126"
@@ -255,7 +257,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               y={top + (diameter * 14) / 30}
               width={diameter}
               fontSize={(diameter * 17) / 30}
-              fontFamily="HindSemiBold"
+              fontFamily={appearance.fontFamily ?? "HindSemiBold"}
               fontStyle="600"
               align="center"
               fill="#202126"
@@ -297,7 +299,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             fontSize={
               metrics.prefixFontSize + textAdjustments.prefixFontSizeDelta
             }
-            fontFamily="JostTrispaceHybrid"
+            fontFamily={appearance.fontFamily ?? "JostTrispaceHybrid"}
             fontStyle={metrics.prefixFontWeight}
             align="center"
             fill="#202126"
@@ -318,7 +320,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               textAdjustments.valueFontSizeDelta +
               valueFontSizeDelta
             }
-            fontFamily="JostTrispaceHybrid"
+            fontFamily={appearance.fontFamily ?? "JostTrispaceHybrid"}
             fontStyle={textAdjustments.valueFontStyle}
             letterSpacing={textAdjustments.valueLetterSpacing}
             stroke={valueStrokeWidth > 0 ? "#202126" : undefined}
@@ -415,7 +417,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
         <Group>
           {active &&
             renderArrow(side, isLeft ? x : x + blockWidth - 40, 7, 40, 25)}
-          <Text
+          <CustomSignText part="adjacent-primary"
             text={displaySideName}
             x={nameX}
             y={35}
@@ -428,7 +430,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             wrap="none"
             fill={active ? "#202126" : INACTIVE_COLOR}
           />
-          <Text
+          <CustomSignText part="adjacent-furigana"
             text={displayFurigana}
             x={x}
             y={59}
@@ -439,7 +441,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             align={align}
             fill={active ? "#202126" : INACTIVE_COLOR}
           />
-          <Text
+          <CustomSignText part="adjacent-secondary"
             text={displaySecondary}
             x={x}
             y={72}
@@ -509,7 +511,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
           <Rect fill={lineColor} x={0} y={bandTop} width={width} height={height - bandTop} />
           {renderMetroSide(left, "left")}
           {renderMetroSide(right, "right")}
-          <Text
+          <CustomSignText part="main-primary"
             text={displayName}
             x={134 + (centerWidth - renderedMainNameWidth) / 2}
             y={4}
@@ -522,7 +524,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             wrap="none"
             fill="#202126"
           />
-          <Text
+          <CustomSignText part="main-furigana"
             text={primaryNameFurigana}
             x={134}
             y={47}
@@ -534,7 +536,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             wrap="none"
             fill="#202126"
           />
-          <Text
+          <CustomSignText part="main-secondary"
             text={secondaryName}
             x={134}
             y={69}
@@ -653,7 +655,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
                 })}
               </Group>
             ))}
-          <Text
+          <CustomSignText part="adjacent-primary"
             text={displaySideName}
             x={nameX}
             y={nameY}
@@ -667,7 +669,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
             wrap="none"
             fill={active ? "#202126" : INACTIVE_COLOR}
           />
-          <Text
+          <CustomSignText part="adjacent-secondary"
             text={displaySecondary}
             x={secondaryFit.x}
             y={secondaryY}
@@ -774,7 +776,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               color: numberPrimaryColor,
               style: numberPrimaryStyle,
             })}
-            <Text
+            <CustomSignText part="main-primary"
               text={displayName}
               x={mainLayout.textCenterX - renderedMainNameWidth / 2}
               y={mainTop}
@@ -788,7 +790,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               wrap="none"
               fill="#202126"
             />
-            <Text
+            <CustomSignText part="main-furigana"
               text={primaryNameFurigana}
               x={textX}
               y={mainTop + TOEI_SHARED_LAYOUT.mainFuriganaYOffset}
@@ -801,7 +803,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
               wrap="none"
               fill="#202126"
             />
-            <Text
+            <CustomSignText part="main-secondary"
               text={secondaryName}
               x={textX}
               y={mainTop + TOEI_SHARED_LAYOUT.mainSecondaryYOffset}

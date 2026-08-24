@@ -24,6 +24,7 @@ import {
   hasActiveJrEastBranches,
   JR_EAST_BRANCH_LAYOUT,
 } from "./jrEastBranchLayout";
+import CustomSignText from "./CustomSignText";
 
 export const height = 140;
 export const scale = 3;
@@ -440,7 +441,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     strokeWidth={1}
                     stroke={baseColor}
                   />
-                  <Text
+                  <CustomSignText part="adjacent-primary"
                     text={autoSpace(rightPrimaryName)}
                     width={width}
                     x={-30}
@@ -451,7 +452,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="white"
                     align="right"
                   />
-                  <Text
+                  <CustomSignText part="adjacent-secondary"
                     text={rightSecondaryName}
                     width={width}
                     x={-30}
@@ -474,7 +475,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     strokeWidth={1}
                     stroke={baseColor}
                   />
-                  <Text
+                  <CustomSignText part="adjacent-primary"
                     text={autoSpace(leftPrimaryName)}
                     width={width}
                     x={30}
@@ -485,7 +486,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="white"
                     align="left"
                   />
-                  <Text
+                  <CustomSignText part="adjacent-secondary"
                     text={leftSecondaryName}
                     width={width}
                     x={30}
@@ -499,7 +500,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               )}
               {(direction == "left" || direction == "both") && (
                 <>
-                  <Text
+                  <CustomSignText part="adjacent-secondary"
                     text={leftSecondaryName}
                     width={width}
                     x={64}
@@ -509,7 +510,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="black"
                     align="left"
                   />
-                  <Text
+                  <CustomSignText part="adjacent-primary"
                     text={autoSpace(leftPrimaryName)}
                     width={width}
                     x={60}
@@ -527,7 +528,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={leftNumberPrimaryPrefix}
                       value={leftNumberPrimaryValue}
                       color={leftNumberPrimaryAppearance.color}
-                      stationNumberStyle={leftNumberPrimaryAppearance.style}
+                      stationNumberStyle={leftNumberPrimaryAppearance.requestedStyle}
                     />
                   )}
                   {leftNumberSecondaryValue && (
@@ -537,7 +538,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={leftNumberSecondaryPrefix}
                       value={leftNumberSecondaryValue}
                       color={leftNumberSecondaryAppearance.color}
-                      stationNumberStyle={leftNumberSecondaryAppearance.style}
+                      stationNumberStyle={leftNumberSecondaryAppearance.requestedStyle}
                     />
                   )}
                   {leftNumberTertiaryValue && (
@@ -547,14 +548,14 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={leftNumberTertiaryPrefix}
                       value={leftNumberTertiaryValue}
                       color={leftNumberTertiaryAppearance.color}
-                      stationNumberStyle={leftNumberTertiaryAppearance.style}
+                      stationNumberStyle={leftNumberTertiaryAppearance.requestedStyle}
                     />
                   )}
                 </>
               )}
               {(direction == "both" || direction == "right") && (
                 <>
-                  <Text
+                  <CustomSignText part="adjacent-primary"
                     text={autoSpace(rightPrimaryName)}
                     width={width}
                     x={-60}
@@ -565,7 +566,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="white"
                     align="right"
                   />
-                  <Text
+                  <CustomSignText part="adjacent-secondary"
                     text={rightSecondaryName}
                     width={width}
                     x={-66}
@@ -582,7 +583,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={rightNumberPrimaryPrefix}
                       value={rightNumberPrimaryValue}
                       color={rightNumberPrimaryAppearance.color}
-                      stationNumberStyle={rightNumberPrimaryAppearance.style}
+                      stationNumberStyle={rightNumberPrimaryAppearance.requestedStyle}
                     />
                   )}
                   {rightNumberSecondaryValue && (
@@ -592,7 +593,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={rightNumberSecondaryPrefix}
                       value={rightNumberSecondaryValue}
                       color={rightNumberSecondaryAppearance.color}
-                      stationNumberStyle={rightNumberSecondaryAppearance.style}
+                      stationNumberStyle={rightNumberSecondaryAppearance.requestedStyle}
                     />
                   )}
                   {rightNumberTertiaryValue && (
@@ -602,7 +603,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={rightNumberTertiaryPrefix}
                       value={rightNumberTertiaryValue}
                       color={rightNumberTertiaryAppearance.color}
-                      stationNumberStyle={rightNumberTertiaryAppearance.style}
+                      stationNumberStyle={rightNumberTertiaryAppearance.requestedStyle}
                     />
                   )}
                 </>
@@ -642,7 +643,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               {note ? (
                 <>
                   {/* With note (smaller station name, medium station note) */}
-                  <Text
+                  <CustomSignText part="main-note"
                     text={note}
                     width={width}
                     x={0}
@@ -653,7 +654,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="black"
                     align="center"
                   />
-                  <Text
+                  <CustomSignText part="main-primary"
                     text={spacedStationName}
                     width={width}
                     x={0}
@@ -666,7 +667,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               ) : (
                 <>
                   {/* Without note (large station name, small furigana) */}
-                  <Text
+                  <CustomSignText part="main-furigana"
                     text={primaryNameFurigana}
                     width={width}
                     x={0}
@@ -681,7 +682,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="black"
                     align="center"
                   />
-                  <Text
+                  <CustomSignText part="main-primary"
                     text={spacedStationName}
                     width={width}
                     x={0}
@@ -1333,7 +1334,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           prefix: numberTertiaryPrefixForRender,
                           value: numberTertiaryValueForRender,
                           color: tertiaryNumberAppearance.color,
-                          style: tertiaryNumberAppearance.style,
+                          style: tertiaryNumberAppearance.requestedStyle,
                         }]
                       : []),
                     ...(numberSecondaryPrefix
@@ -1345,7 +1346,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           prefix: numberSecondaryPrefix,
                           value: numberSecondaryValue,
                           color: secondaryNumberAppearance.color,
-                          style: secondaryNumberAppearance.style,
+                          style: secondaryNumberAppearance.requestedStyle,
                         }]
                       : []),
                     ...(numberPrimaryPrefix
@@ -1356,7 +1357,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           prefix: numberPrimaryPrefix,
                           value: numberPrimaryValue,
                           color: primaryNumberAppearance.color,
-                          style: primaryNumberAppearance.style,
+                          style: primaryNumberAppearance.requestedStyle,
                         }]
                       : []),
                   ]}
@@ -1365,7 +1366,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
               <Group y={branchCenterTextYOffset}>
                 {note ? (
                   <>
-                  <Text
+                  <CustomSignText part="main-quaternary"
                     text={quaternaryName}
                     x={8 + (width + smallStationNameWidth) / 2}
                     y={yOffset + 18 - 8}
@@ -1375,7 +1376,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="black"
                     align="center"
                   />
-                  <Text
+                  <CustomSignText part="main-tertiary"
                     text={tertiaryName}
                     x={8 + (width + smallStationNameWidth) / 2}
                     y={yOffset + 35 - 9}
@@ -1388,7 +1389,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   </>
                 ) : (
                   <>
-                  <Text
+                  <CustomSignText part="main-quaternary"
                     text={quaternaryName}
                     x={8 + (width + stationNameWidth) / 2}
                     y={yOffset + 18}
@@ -1398,7 +1399,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                     fill="black"
                     align="center"
                   />
-                  <Text
+                  <CustomSignText part="main-tertiary"
                     text={tertiaryName}
                     x={8 + (width + stationNameWidth) / 2}
                     y={yOffset + 35}
@@ -1411,7 +1412,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                   </>
                 )}
               </Group>
-              <Text
+              <CustomSignText part="main-secondary"
                 text={secondaryName}
                 width={width}
                 x={0}
@@ -1434,7 +1435,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       stroke="black"
                       strokeWidth={1}
                     />
-                    <Text
+                    <CustomSignText part="main-area"
                       text={e.name}
                       x={width - 39.5 + i * -22}
                       y={yOffset + 14.5}

@@ -39,6 +39,7 @@ import {
   installTextInputSafety,
   TEXT_INPUT_MAX_LENGTH,
 } from "@/lib/textInputSafety";
+import { CustomizationProvider } from "@/customization/store";
 
 const theme = createTheme({
   components: {
@@ -99,6 +100,7 @@ function AppContent({
       <Header locale={locale} onSwitchLocale={onSwitchLocale} />
       {/* Toolbar spacer */}
       <div style={{ height: "64px" }} />
+      <CustomizationProvider>
       <Box style={{ width: "100%" }}>
         <Tabs defaultValue="simple" keepMounted={false} className="ssg-tabs">
           <Tabs.List>
@@ -133,6 +135,7 @@ function AppContent({
           </Tabs.Panel>
         </Tabs>
       </Box>
+      </CustomizationProvider>
     </>
   );
 }

@@ -1,15 +1,21 @@
 import type { LocalLine } from "./DirectInputStationProps";
+import { getCustomStationNumberBadgeVisualStyle } from "@/customization/registry";
 
 export type SubwayStationNumberAppearance = {
   color: string;
+  /** Selected built-in style or custom definition ID used by badge renderers. */
+  requestedStyle: string;
+  /** Resolved built-in geometry used for style-specific layout decisions. */
   style: string;
+  fontFamily?: string;
 };
 
 export function getStationNumberBadgeThreeLetterCode(
   style: string | undefined,
   threeLetterCode: string | undefined,
 ): string | undefined {
-  return !style || style === "jreast" ? threeLetterCode : undefined;
+  const resolvedStyle = getCustomStationNumberBadgeVisualStyle(style)?.templateId ?? style;
+  return !resolvedStyle || resolvedStyle === "jreast" ? threeLetterCode : undefined;
 }
 
 /**
@@ -35,9 +41,12 @@ export function resolveSubwayStationNumberAppearance({
   fallbackStyle?: string;
 }): SubwayStationNumberAppearance {
   const matchingLine = localLines?.find((line) => line.prefix === prefix);
+  const requestedStyle = style ?? matchingLine?.stationNumberStyle ?? fallbackStyle;
+  const customStyle = getCustomStationNumberBadgeVisualStyle(requestedStyle);
   return {
     color: color ?? matchingLine?.color ?? fallbackColor,
-    style:
-      style ?? matchingLine?.stationNumberStyle ?? fallbackStyle,
+    requestedStyle,
+    style: customStyle?.templateId ?? requestedStyle,
+    fontFamily: customStyle?.fontFamily,
   };
 }

@@ -78,6 +78,9 @@ import {
   subwaySignDimensions,
 } from "@/components/signs/SubwaySign";
 import CanvasFontLoading from "@/components/CanvasFontLoading";
+import { getCustomDefinitionFontSpecs, resolveCustomSelection, type CustomSignDefinition } from "@/customization/model";
+import { useCustomizations } from "@/customization/store";
+import { SignTextCustomizationProvider } from "@/components/signs/CustomSignText";
 
 type SignStyle =
   | "jreast"
@@ -93,11 +96,11 @@ type SignStyle =
 
 type HeldPreview = {
   src: string;
-  sourceStyle: SignStyle;
-  targetStyle: SignStyle;
+  sourceStyle: string;
+  targetStyle: string;
 };
 
-function getHeldPreviewStyle(style: SignStyle): React.CSSProperties {
+function getHeldPreviewStyle(style: string): React.CSSProperties {
   const isSubwayStyle =
     style === "metrolong" ||
     style === "metroforeign" ||
@@ -207,6 +210,10 @@ export default function SimpleInputTab() {
   const ref = useRef<Konva.Stage>(null);
   const t = useTranslations();
   const locale = useLocale();
+  const { definitions } = useCustomizations();
+  const customSignDefinitions = definitions.filter(
+    (definition): definition is CustomSignDefinition => definition.kind === "sign",
+  );
 
   const {
     data: savedData,
@@ -307,9 +314,13 @@ export default function SimpleInputTab() {
 
   type ImageSize = { label: string; value: number };
 
-  const [currentStyle, setCurrentStyle] = useState<SignStyle>(
-    () => (sessionStorage.getItem("sign-style-v1") as SignStyle) ?? "jreast",
+  const [currentStyle, setCurrentStyle] = useState<string>(
+    () => sessionStorage.getItem("sign-style-v1") ?? "jreast",
   );
+  const resolvedStyle = resolveCustomSelection(currentStyle, customSignDefinitions);
+  const baseStyle = (SIGN_STYLES[resolvedStyle.templateId as SignStyle]
+    ? resolvedStyle.templateId
+    : "jreast") as SignStyle;
   const [heldPreview, setHeldPreview] = useState<HeldPreview | null>(null);
   const heldPreviewRef = useRef<HeldPreview | null>(null);
 
@@ -317,7 +328,7 @@ export default function SimpleInputTab() {
     (value: string | null) => {
       if (!value || value === currentStyle) return;
 
-      const nextStyle = value as SignStyle;
+      const nextStyle = value;
       let preview = heldPreviewRef.current;
       if (!preview && ref.current) {
         preview = {
@@ -348,20 +359,23 @@ export default function SimpleInputTab() {
     sessionStorage.setItem("sign-style-v1", currentStyle);
   }, [currentStyle]);
 
-  const signFontSpecs = getStationSignFontSpecs(
-    currentStyle,
-    currentStyle === "jreast" || currentStyle === "jreastbranch"
-      ? "jreast"
-      : undefined,
-  );
+  const signFontSpecs = [
+    ...getStationSignFontSpecs(
+      baseStyle,
+      baseStyle === "jreast" || baseStyle === "jreastbranch"
+        ? "jreast"
+        : undefined,
+    ),
+    ...getCustomDefinitionFontSpecs(resolvedStyle.definition),
+  ];
   const signFonts = useCanvasFonts(signFontSpecs);
 
   const { height: currentCanvasHeight, scale: currentBaseScale } =
-    SIGN_STYLES[currentStyle];
+    SIGN_STYLES[baseStyle];
 
   const currentCanvasWidth =
     currentCanvasHeight *
-    (SIGN_STYLE_FIELDS[currentStyle]?.fixedRatio ?? previewData.ratio ?? 4.5);
+    (SIGN_STYLE_FIELDS[baseStyle]?.fixedRatio ?? previewData.ratio ?? 4.5);
   const [saveSize, setSaveSize] = useState(JrEastSignBaseScale);
   const [saveSizeList, setSaveSizeList] = useState<ImageSize[]>([]);
 
@@ -403,7 +417,7 @@ export default function SimpleInputTab() {
     }
   };
 
-  const { Component: SignComponent } = SIGN_STYLES[currentStyle];
+  const { Component: SignComponent } = SIGN_STYLES[baseStyle];
 
   return (
     <>
@@ -501,6 +515,10 @@ export default function SimpleInputTab() {
             { value: "metromedium", label: t("route.sign.metromedium") },
             { value: "toeimedium", label: t("route.sign.toeimedium") },
             { value: "toeilarge", label: t("route.sign.toeilarge") },
+            ...customSignDefinitions.map((definition) => ({
+              value: definition.id,
+              label: `${t("settings.custom.option-prefix")}: ${definition.name}`,
+            })),
           ]}
           style={{ maxWidth: 240 }}
         />
@@ -542,7 +560,9 @@ export default function SimpleInputTab() {
           }
         >
           {signFonts.ready ? (
-            <SignComponent {...previewData} ref={ref} />
+            <SignTextCustomizationProvider definition={resolvedStyle.definition}>
+              <SignComponent {...previewData} ref={ref} />
+            </SignTextCustomizationProvider>
           ) : (
             <CanvasFontLoading show={!heldPreview && signFonts.showLoader} />
           )}
@@ -589,7 +609,7 @@ export default function SimpleInputTab() {
         initialData={directInputInitialData}
         onUpdate={handleUpdate}
         onReset={handleReset}
-        signStyle={currentStyle}
+        signStyle={baseStyle}
       />
       <Box style={{ width: "100%", padding: "25px" }}>
         <Group gap="sm" wrap="wrap">

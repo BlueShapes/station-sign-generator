@@ -4,6 +4,8 @@ import { getTokyoMetroStationNumberMetrics } from "./stationNumberBadgeMetrics";
 import { getStationNumberBadgeThreeLetterCode } from "./subwayStationNumberAppearance";
 import { resolveConnectedStationNumberRuns } from "./stationNumberGroup";
 import { getJrEastStationNumberBadgeFrameMetrics } from "./stationNumberBadgeFrame";
+import { getCustomStationNumberBadgeVisualStyle } from "@/customization/registry";
+import type { CustomDefinition } from "@/customization/model";
 
 export type StationNumberBadgeStyle = "jreast" | "tokyometro" | "jrcentral";
 
@@ -19,6 +21,8 @@ type StationNumberBadgeProps = {
   threeLetterCode?: string;
   /** Use the framed JR East corner geometry without drawing another header. */
   insideThreeLetterCodeFrame?: boolean;
+  /** Unsaved custom definitions used only by draft previews. */
+  customDefinitions?: readonly CustomDefinition[];
 };
 
 export type StationNumberBadgeRowItem = Omit<
@@ -37,10 +41,17 @@ export default function StationNumberBadge({
   style = "jreast",
   threeLetterCode,
   insideThreeLetterCodeFrame = false,
+  customDefinitions,
 }: StationNumberBadgeProps) {
   if (!prefix && !value) return null;
+  const customStyle = getCustomStationNumberBadgeVisualStyle(
+    style,
+    customDefinitions,
+  );
+  const resolvedStyle = customStyle?.templateId ?? style;
+  const customFontFamily = customStyle?.fontFamily;
 
-  if (style === "jrcentral") {
+  if (resolvedStyle === "jrcentral") {
     return (
       <JrCentralStationNumberBadge
         x={x}
@@ -49,13 +60,14 @@ export default function StationNumberBadge({
         color={color}
         prefix={prefix}
         value={value}
+        fontFamily={customFontFamily}
       />
     );
   }
 
   const scale = size / 30;
 
-  if (style === "tokyometro") {
+  if (resolvedStyle === "tokyometro") {
     const metrics = getTokyoMetroStationNumberMetrics(size);
     return (
       <Group x={x} y={y}>
@@ -74,7 +86,7 @@ export default function StationNumberBadge({
           width={size}
           align="center"
           fontSize={metrics.prefixFontSize}
-          fontFamily="JostTrispaceHybrid"
+          fontFamily={customFontFamily ?? "JostTrispaceHybrid"}
           fontStyle={metrics.prefixFontWeight}
           fill="black"
         />
@@ -85,7 +97,7 @@ export default function StationNumberBadge({
           width={size}
           align="center"
           fontSize={metrics.valueFontSize}
-          fontFamily="JostTrispaceHybrid"
+          fontFamily={customFontFamily ?? "JostTrispaceHybrid"}
           fontStyle={metrics.valueFontWeight}
           fill="black"
         />
@@ -94,13 +106,13 @@ export default function StationNumberBadge({
   }
 
   const jrEastThreeLetterCode = getStationNumberBadgeThreeLetterCode(
-    style,
+    resolvedStyle,
     threeLetterCode,
   );
   const hasHeader = Boolean(jrEastThreeLetterCode);
   const frame = getJrEastStationNumberBadgeFrameMetrics(size);
   const badgeY = hasHeader ? frame.innerYOffset : 0;
-  const fontFamily = "HindSemiBold";
+  const fontFamily = customFontFamily ?? "HindSemiBold";
 
   return (
     <Group x={x} y={y}>

@@ -15,7 +15,7 @@ test("keeps the current preview until the next style is ready", async ({
 
   try {
     await page.goto("/ja/");
-    const previewImage = page.locator('img[src^="data:image/"]');
+    const previewImage = page.locator('img[src^="data:image/"]').first();
     await expect(previewImage).toBeVisible({ timeout: 50_000 });
     const initialPreview = await previewImage.getAttribute("src");
     expect(initialPreview).not.toBeNull();

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { areCanvasFontsLoaded, waitForCanvasFonts } from "./fonts";
 
 const LOADER_DELAY_MS = 180;
@@ -14,14 +14,15 @@ export function useCanvasFonts(
   enabled = true,
 ): { ready: boolean; showLoader: boolean } {
   const specsKey = specs.join("|");
+  const stableSpecs = useMemo(() => specs, [specsKey]);
   const requestKey = `${enabled ? "enabled" : "disabled"}:${specsKey}`;
   const [state, setState] = useState<FontLoadState>(() => ({
     requestKey,
-    ready: !enabled || areCanvasFontsLoaded(specs),
+    ready: !enabled || areCanvasFontsLoaded(stableSpecs),
     showLoader: false,
   }));
 
-  const alreadyLoaded = areCanvasFontsLoaded(specs);
+  const alreadyLoaded = areCanvasFontsLoaded(stableSpecs);
   const ready =
     !enabled ||
     alreadyLoaded ||
@@ -35,7 +36,7 @@ export function useCanvasFonts(
   useEffect(() => {
     let cancelled = false;
 
-    if (!enabled || areCanvasFontsLoaded(specs)) {
+    if (!enabled || areCanvasFontsLoaded(stableSpecs)) {
       setState({ requestKey, ready: true, showLoader: false });
       return () => {
         cancelled = true;
@@ -49,7 +50,7 @@ export function useCanvasFonts(
       }
     }, LOADER_DELAY_MS);
 
-    waitForCanvasFonts(specs).then(
+    waitForCanvasFonts(stableSpecs).then(
       () => {
         if (!cancelled) {
           setState({ requestKey, ready: true, showLoader: false });
@@ -69,7 +70,7 @@ export function useCanvasFonts(
       cancelled = true;
       window.clearTimeout(loaderTimer);
     };
-  }, [enabled, requestKey, specs]);
+  }, [enabled, requestKey, stableSpecs]);
 
   return { ready, showLoader };
 }

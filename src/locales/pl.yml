@@ -139,6 +139,54 @@ settings:
     empty: Nie przesłano jeszcze żadnych zdjęć.
     remove-all: Usuń wszystko
     remove-all-confirm: Usunąć wszystkie przesłane obrazy? Spowoduje to również usunięcie ich z IndexedDB i nie będzie można tego cofnąć.
+  custom:
+    title: Custom styles
+    description: Custom definitions are stored independently from railway and station data.
+    option-prefix: Custom
+    duplicate: Duplicate
+    copy-name: "{name} copy"
+    empty: No custom definitions yet.
+    template-font: Template font
+    font-embedded: Font binary embedded
+    name: Name
+    template-label: Base template
+    font: Font
+    font-help: Uploaded fonts are copied into the custom definition.
+    sign:
+      title: Station sign styles
+      create: Create custom style
+      edit: Edit custom style
+    station-badge:
+      title: Station number badges
+      create: Create custom station number badge
+    route-badge:
+      title: Route badges
+      create: Create custom route badge
+    advanced:
+      title: Advanced layout
+      description: Override typography for each non-number text part. Empty values keep the template default.
+      font-size: Font size
+      letter-spacing: Letter spacing
+      y-offset: Y offset
+    parts:
+      main-primary: Main station name
+      main-furigana: Main reading
+      main-secondary: Main secondary name
+      main-tertiary: Main tertiary name
+      main-quaternary: Main quaternary name
+      main-note: Station note
+      main-area: Fare area
+      adjacent-primary: Adjacent station name
+      adjacent-furigana: Adjacent station reading
+      adjacent-secondary: Adjacent secondary name
+    template:
+      station-badge:
+        jreast: JR East style
+        jrcentral: JR Central style
+        tokyometro: Tokyo Metro / Toei style
+      route-badge:
+        rounded-square: Rounded square
+        circle: Circle
 route:
   download-sqlite: Pobierz SQLite
   import-sqlite: Importuj SQLite
@@ -156,6 +204,8 @@ route:
     merge: Połącz
   no-routes: Nie znaleziono żadnych tras. Proszę utworzyć trasy w zakładce „Edytuj trasy”.
   company:
+    route-badge-style: Route badge style
+    route-badge-style-preview: Route badge preview
     title: Firmy
     add: Dodaj firmę
     edit: Edytuj firmę
@@ -274,6 +324,9 @@ route:
   sign:
     style: Styl
     direction: Kierunek
+    filename-direction-left: W lewo
+    filename-direction-both: Oba kierunki
+    filename-direction-right: W prawo
     flip: Odwróć kierunek
     prev-station: Poprzednia stacja
     next-station: Następna stacja

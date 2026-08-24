@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useState } from "react";
 import Konva from "konva";
-import { Group, Layer, Rect, Stage, Text } from "react-konva";
+import { Group, Layer, Rect, Stage } from "react-konva";
 import styled from "styled-components";
 import {
   JR_CENTRAL_FONT_SPECS,
@@ -14,6 +14,7 @@ import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppea
 import {
   formatJrCentralJapaneseName,
   getJrCentralAdjacentLabels,
+  getJrCentralAdjacentTextLayout,
   getJrCentralHiraganaScaleX,
   getJrCentralMainReadingTransform,
   getJrCentralMainNameLayout,
@@ -23,6 +24,7 @@ import {
   JR_CENTRAL_SIGN_RATIO,
   resolveJrCentralColors,
 } from "./jrCentralSignLayout";
+import CustomSignText from "./CustomSignText";
 
 export const height = JR_CENTRAL_SIGN_HEIGHT;
 export const scale = 3;
@@ -200,7 +202,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
       labels: { japanese: string; english: string },
       side: "left" | "right",
     ) => {
-      const { sidePadding, width: blockWidth, japaneseY, englishY } =
+      const { width: blockWidth, japaneseY, englishY } =
         JR_CENTRAL_LAYOUT.adjacent;
       const japaneseScaleX = getJrCentralHiraganaScaleX(labels.japanese);
       const japaneseFontSize = fittedFontSize({
@@ -219,48 +221,30 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
         fontFamily: JR_CENTRAL_STATION_NUMBER_FONT_FAMILY,
         fontStyle: JR_CENTRAL_LAYOUT.adjacent.englishFontStyle,
       });
-      const japaneseWidth = Math.min(
-        blockWidth,
-        measuredTextWidth({
-          text: labels.japanese,
-          fontSize: japaneseFontSize,
-          fontFamily: JR_CENTRAL_STATION_NAME_FONT_FAMILY,
-          fontStyle: "700",
-        }) * japaneseScaleX,
-      );
-      const englishWidth = Math.min(
-        blockWidth,
-        measuredTextWidth({
-          text: labels.english,
-          fontSize: englishFontSize,
-          fontFamily: JR_CENTRAL_STATION_NUMBER_FONT_FAMILY,
-          fontStyle: JR_CENTRAL_LAYOUT.adjacent.englishFontStyle,
-        }),
-      );
-      const contentWidth = Math.max(japaneseWidth, englishWidth);
-      const x =
-        side === "left" ? sidePadding : width - sidePadding - contentWidth;
+      const textLayout = getJrCentralAdjacentTextLayout(width, side);
 
       return (
         <>
-          <Text
+          <CustomSignText part="adjacent-furigana"
             text={labels.japanese}
-            x={x}
+            x={textLayout.x}
             y={japaneseY}
-            width={contentWidth / japaneseScaleX}
-            align="left"
+            width={textLayout.width / japaneseScaleX}
+            align={textLayout.align}
+            wrap={textLayout.wrap}
             scaleX={japaneseScaleX}
             fontSize={japaneseFontSize}
             fontFamily={JR_CENTRAL_STATION_NAME_FONT_FAMILY}
             fontStyle="700"
             fill="#111923"
           />
-          <Text
+          <CustomSignText part="adjacent-secondary"
             text={labels.english}
-            x={x}
+            x={textLayout.x}
             y={englishY}
-            width={contentWidth}
-            align="left"
+            width={textLayout.width}
+            align={textLayout.align}
+            wrap={textLayout.wrap}
             fontSize={englishFontSize}
             fontFamily={JR_CENTRAL_STATION_NUMBER_FONT_FAMILY}
             fontStyle={JR_CENTRAL_LAYOUT.adjacent.englishFontStyle}
@@ -292,7 +276,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
             <Layer>
               <Rect x={0} y={0} width={width} height={height} fill="#f8faf9" />
 
-              <Text
+              <CustomSignText part="main-furigana"
                 text={reading}
                 x={titleLayout.x + titleLayout.width / 2}
                 y={7}
@@ -306,7 +290,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
                 fontStyle="700"
                 fill="#111923"
               />
-              <Text
+              <CustomSignText part="main-primary"
                 text={kanjiName}
                 x={titleLayout.x + titleLayout.width / 2}
                 y={JR_CENTRAL_LAYOUT.mainKanji.y}
@@ -326,7 +310,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
                   y={JR_CENTRAL_LAYOUT.badge.y}
                   size={JR_CENTRAL_LAYOUT.badge.width}
                   color={badgeAppearance.color}
-                  style={badgeAppearance.style}
+                  style={badgeAppearance.requestedStyle}
                   prefix={badgePrefix}
                   value={badgeValue}
                 />
@@ -350,7 +334,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
                       stroke="black"
                       strokeWidth={1}
                     />
-                    <Text
+                    <CustomSignText part="main-area"
                       text={area.name}
                       x={x}
                       y={areaLayout.y + 0.5}
@@ -372,7 +356,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
                 height={JR_CENTRAL_LAYOUT.bandHeight}
                 fill={bandColor}
               />
-              <Text
+              <CustomSignText part="main-secondary"
                 text={secondaryName}
                 x={12}
                 y={
@@ -389,7 +373,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
 
               {renderAdjacentStation(leftLabels, "left")}
               {renderAdjacentStation(rightLabels, "right")}
-              <Text
+              <CustomSignText part="main-note"
                 text={note ?? ""}
                 x={width / 2}
                 y={JR_CENTRAL_LAYOUT.note.y}

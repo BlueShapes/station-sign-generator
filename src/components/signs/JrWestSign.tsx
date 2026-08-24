@@ -1,13 +1,14 @@
 import { useState, useEffect, forwardRef, Fragment } from "react";
 import type StationProps from "./DirectInputStationProps";
 import type { AdjacentStationProps } from "./DirectInputStationProps";
-import { Rect, Layer, Stage, Text, Line } from "react-konva";
+import { Rect, Layer, Stage, Line } from "react-konva";
 import Konva from "konva";
 import { isMobile } from "react-device-detect";
 import { JR_WEST_FONT_SPECS, waitForCanvasFonts } from "@/lib/fonts";
 import styled from "styled-components";
 import spacedStationName from "@/functions/spaceStationName";
 import { getJrWestArrowPoints } from "./arrowGeometry";
+import CustomSignText from "./CustomSignText";
 
 export const height = 140;
 export const scale = 3;
@@ -95,7 +96,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
 
       return (
         <>
-          <Text
+          <CustomSignText part="adjacent-furigana"
             text={s.primaryNameFurigana ?? ""}
             x={secX + pad}
             y={topBarH + 86}
@@ -106,7 +107,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
             fill="white"
             align="left"
           />
-          <Text
+          <CustomSignText part="adjacent-secondary"
             text={s.secondaryName}
             x={secX + pad}
             y={topBarH + 102}
@@ -203,7 +204,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
                     stroke={e.isWhite ? "black" : "#462cb9"}
                     strokeWidth={1}
                   />
-                  <Text
+                  <CustomSignText part="main-area"
                     text={e.name}
                     x={width - 43 + 5 + i * -32}
                     y={10.5}
@@ -238,7 +239,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
                 const nameScaleX = Math.min(1, maxNameWidth / naturalNameWidth);
                 const nameX = (width - naturalNameWidth * nameScaleX) / 2;
                 return (
-                  <Text
+                  <CustomSignText part="main-primary"
                     text={stationNameText}
                     x={nameX}
                     y={topBarH - 8}
@@ -252,16 +253,27 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
                   />
                 );
               })()}
-              <Text
-                text={`${primaryNameFurigana}  ${secondaryName}`}
+              <CustomSignText part="main-furigana"
+                text={primaryNameFurigana}
                 x={0}
                 y={topBarH + 50}
-                width={width}
+                width={width / 2 - 4}
                 fontSize={18}
                 fontFamily="NotoSansJP"
                 fontStyle="800"
                 fill="black"
-                align="center"
+                align="right"
+              />
+              <CustomSignText part="main-secondary"
+                text={secondaryName}
+                x={width / 2 + 4}
+                y={topBarH + 50}
+                width={width / 2 - 4}
+                fontSize={18}
+                fontFamily="NotoSansJP"
+                fontStyle="800"
+                fill="black"
+                align="left"
               />
 
               {/* Adjacent stations */}

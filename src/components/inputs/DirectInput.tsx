@@ -32,7 +32,11 @@ import {
 } from "@tabler/icons-react";
 import type DirectInputStationProps from "../signs/DirectInputStationProps";
 import type { LocalLine } from "../signs/DirectInputStationProps";
-import { SIGN_STYLE_FIELDS } from "../signs/signStyles";
+import {
+  JR_EAST_STANDARD_SIGN_RATIO,
+  JR_EAST_STANDARD_SIGN_RATIO_MARKS,
+  SIGN_STYLE_FIELDS,
+} from "../signs/signStyles";
 import type {
   SignStyleFieldSpec,
   AdjacentFieldSpec,
@@ -41,6 +45,8 @@ import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
 import { useTranslations } from "@/i18n/useTranslation";
 import { sanitizeDirectInputData } from "@/lib/textInputSafety";
+import { DEFAULT_DIRECTION } from "@/db/seed";
+import { useCustomizations } from "@/customization/store";
 
 const DEBOUNCE_MS = 400;
 
@@ -58,6 +64,10 @@ const DirectInput = memo(function DirectInput({
   signStyle,
 }: DirectInputProps) {
   const t = useTranslations();
+  const { definitions } = useCustomizations();
+  const customStationBadges = definitions.filter(
+    (definition) => definition.kind === "station-number-badge",
+  );
   const fields: SignStyleFieldSpec =
     SIGN_STYLE_FIELDS[signStyle ?? "jreast"] ?? SIGN_STYLE_FIELDS["jreast"];
   const show = (f: keyof Omit<SignStyleFieldSpec, "left" | "right">) =>
@@ -164,7 +174,7 @@ const DirectInput = memo(function DirectInput({
             }}
           >
             <SegmentedControl
-              value={formData.direction ?? "left"}
+              value={formData.direction ?? DEFAULT_DIRECTION}
               onChange={updateDirection}
               data={[
                 { value: "left", label: <IconArrowLeft size={16} /> },
@@ -195,12 +205,13 @@ const DirectInput = memo(function DirectInput({
             >
               <IconRuler size={20} style={{ flexShrink: 0 }} />
               <Slider
-                value={formData.ratio ?? 4.5}
+                value={formData.ratio ?? JR_EAST_STANDARD_SIGN_RATIO}
                 label={(v) => v}
                 labelAlwaysOn
                 step={0.5}
                 min={2.5}
                 max={8}
+                marks={JR_EAST_STANDARD_SIGN_RATIO_MARKS}
                 style={{ width: "100%" }}
                 onChange={(v) => updateField("ratio", v)}
               />
@@ -1076,6 +1087,10 @@ const DirectInput = memo(function DirectInput({
                               "route.company.station-number-style-jrcentral",
                             ),
                           },
+                          ...customStationBadges.map((definition) => ({
+                            value: definition.id,
+                            label: `${t("settings.custom.option-prefix")}: ${definition.name}`,
+                          })),
                         ]}
                         onChange={(style) =>
                           updateField(
