@@ -528,7 +528,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={leftNumberPrimaryPrefix}
                       value={leftNumberPrimaryValue}
                       color={leftNumberPrimaryAppearance.color}
-                      stationNumberStyle={leftNumberPrimaryAppearance.style}
+                      stationNumberStyle={leftNumberPrimaryAppearance.requestedStyle}
                     />
                   )}
                   {leftNumberSecondaryValue && (
@@ -538,7 +538,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={leftNumberSecondaryPrefix}
                       value={leftNumberSecondaryValue}
                       color={leftNumberSecondaryAppearance.color}
-                      stationNumberStyle={leftNumberSecondaryAppearance.style}
+                      stationNumberStyle={leftNumberSecondaryAppearance.requestedStyle}
                     />
                   )}
                   {leftNumberTertiaryValue && (
@@ -548,7 +548,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={leftNumberTertiaryPrefix}
                       value={leftNumberTertiaryValue}
                       color={leftNumberTertiaryAppearance.color}
-                      stationNumberStyle={leftNumberTertiaryAppearance.style}
+                      stationNumberStyle={leftNumberTertiaryAppearance.requestedStyle}
                     />
                   )}
                 </>
@@ -583,7 +583,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={rightNumberPrimaryPrefix}
                       value={rightNumberPrimaryValue}
                       color={rightNumberPrimaryAppearance.color}
-                      stationNumberStyle={rightNumberPrimaryAppearance.style}
+                      stationNumberStyle={rightNumberPrimaryAppearance.requestedStyle}
                     />
                   )}
                   {rightNumberSecondaryValue && (
@@ -593,7 +593,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={rightNumberSecondaryPrefix}
                       value={rightNumberSecondaryValue}
                       color={rightNumberSecondaryAppearance.color}
-                      stationNumberStyle={rightNumberSecondaryAppearance.style}
+                      stationNumberStyle={rightNumberSecondaryAppearance.requestedStyle}
                     />
                   )}
                   {rightNumberTertiaryValue && (
@@ -603,7 +603,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                       prefix={rightNumberTertiaryPrefix}
                       value={rightNumberTertiaryValue}
                       color={rightNumberTertiaryAppearance.color}
-                      stationNumberStyle={rightNumberTertiaryAppearance.style}
+                      stationNumberStyle={rightNumberTertiaryAppearance.requestedStyle}
                     />
                   )}
                 </>
@@ -1334,7 +1334,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           prefix: numberTertiaryPrefixForRender,
                           value: numberTertiaryValueForRender,
                           color: tertiaryNumberAppearance.color,
-                          style: tertiaryNumberAppearance.style,
+                          style: tertiaryNumberAppearance.requestedStyle,
                         }]
                       : []),
                     ...(numberSecondaryPrefix
@@ -1346,7 +1346,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           prefix: numberSecondaryPrefix,
                           value: numberSecondaryValue,
                           color: secondaryNumberAppearance.color,
-                          style: secondaryNumberAppearance.style,
+                          style: secondaryNumberAppearance.requestedStyle,
                         }]
                       : []),
                     ...(numberPrimaryPrefix
@@ -1357,7 +1357,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                           prefix: numberPrimaryPrefix,
                           value: numberPrimaryValue,
                           color: primaryNumberAppearance.color,
-                          style: primaryNumberAppearance.style,
+                          style: primaryNumberAppearance.requestedStyle,
                         }]
                       : []),
                   ]}

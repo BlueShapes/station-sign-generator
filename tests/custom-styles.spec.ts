@@ -171,3 +171,56 @@ test("renders every station-sign template with a width-changing custom font", as
     }
   }
 });
+
+test("applies a custom station-number badge in simple input", async ({
+  page,
+}, testInfo) => {
+  testInfo.setTimeout(120_000);
+  await page.goto("/ja/");
+  await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("ssg-customization-store", 1);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains("definitions")) {
+          request.result.createObjectStore("definitions", { keyPath: "id" });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction("definitions", "readwrite");
+      transaction.objectStore("definitions").put({
+        id: "e2e-simple-station-badge",
+        kind: "station-number-badge",
+        name: "E2E シンプル駅番号",
+        templateId: "jreast",
+        fontFamily: "NotoSansJP",
+        layout: {},
+        createdAt: 1,
+        updatedAt: 1,
+      });
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+  });
+  await page.reload();
+
+  const previewImage = page.locator('img[src^="data:image/"]').first();
+  await expect(previewImage).toBeVisible({ timeout: 50_000 });
+  const initialPreview = await previewImage.getAttribute("src");
+  expect(initialPreview).not.toBeNull();
+
+  const badgeStyle = page
+    .getByRole("textbox", { name: "駅番号スタイル" })
+    .first();
+  await badgeStyle.click();
+  await page
+    .getByRole("option", { name: "カスタム: E2E シンプル駅番号" })
+    .click();
+  await expect(badgeStyle).toHaveValue("カスタム: E2E シンプル駅番号");
+  await expect
+    .poll(() => previewImage.getAttribute("src"), { timeout: 50_000 })
+    .not.toBe(initialPreview);
+});

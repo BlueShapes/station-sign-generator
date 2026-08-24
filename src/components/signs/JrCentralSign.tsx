@@ -310,7 +310,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
                   y={JR_CENTRAL_LAYOUT.badge.y}
                   size={JR_CENTRAL_LAYOUT.badge.width}
                   color={badgeAppearance.color}
-                  style={badgeAppearance.style}
+                  style={badgeAppearance.requestedStyle}
                   prefix={badgePrefix}
                   value={badgeValue}
                 />

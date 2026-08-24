@@ -190,7 +190,7 @@ export default function JrEastBranchArrows({
                     prefix={station.numberPrimaryPrefix}
                     value={station.numberPrimaryValue}
                     color={getNumberAppearance(station, "Primary").color}
-                    stationNumberStyle={getNumberAppearance(station, "Primary").style}
+                    stationNumberStyle={getNumberAppearance(station, "Primary").requestedStyle}
                   />
                   <JrEastAdjacentNumberBadge
                     x={tertiaryBadgeX}
@@ -198,7 +198,7 @@ export default function JrEastBranchArrows({
                     prefix={station.numberTertiaryPrefix}
                     value={station.numberTertiaryValue}
                     color={getNumberAppearance(station, "Tertiary").color}
-                    stationNumberStyle={getNumberAppearance(station, "Tertiary").style}
+                    stationNumberStyle={getNumberAppearance(station, "Tertiary").requestedStyle}
                   />
                   <JrEastAdjacentNumberBadge
                     x={secondaryBadgeX}
@@ -206,7 +206,7 @@ export default function JrEastBranchArrows({
                     prefix={station.numberSecondaryPrefix}
                     value={station.numberSecondaryValue}
                     color={getNumberAppearance(station, "Secondary").color}
-                    stationNumberStyle={getNumberAppearance(station, "Secondary").style}
+                    stationNumberStyle={getNumberAppearance(station, "Secondary").requestedStyle}
                   />
                 </>
               )}
@@ -417,7 +417,7 @@ export default function JrEastBranchArrows({
                         prefix={station.numberPrimaryPrefix}
                         value={station.numberPrimaryValue}
                         color={getNumberAppearance(station, "Primary").color}
-                        stationNumberStyle={getNumberAppearance(station, "Primary").style}
+                        stationNumberStyle={getNumberAppearance(station, "Primary").requestedStyle}
                       />
                       <JrEastAdjacentNumberBadge
                         x={tertiaryBadgeX}
@@ -425,7 +425,7 @@ export default function JrEastBranchArrows({
                         prefix={station.numberTertiaryPrefix}
                         value={station.numberTertiaryValue}
                         color={getNumberAppearance(station, "Tertiary").color}
-                        stationNumberStyle={getNumberAppearance(station, "Tertiary").style}
+                        stationNumberStyle={getNumberAppearance(station, "Tertiary").requestedStyle}
                       />
                       <JrEastAdjacentNumberBadge
                         x={secondaryBadgeX}
@@ -433,7 +433,7 @@ export default function JrEastBranchArrows({
                         prefix={station.numberSecondaryPrefix}
                         value={station.numberSecondaryValue}
                         color={getNumberAppearance(station, "Secondary").color}
-                        stationNumberStyle={getNumberAppearance(station, "Secondary").style}
+                        stationNumberStyle={getNumberAppearance(station, "Secondary").requestedStyle}
                       />
                     </>
                   )}

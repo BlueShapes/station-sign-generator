@@ -3,6 +3,9 @@ import { getCustomStationNumberBadgeVisualStyle } from "@/customization/registry
 
 export type SubwayStationNumberAppearance = {
   color: string;
+  /** Selected built-in style or custom definition ID used by badge renderers. */
+  requestedStyle: string;
+  /** Resolved built-in geometry used for style-specific layout decisions. */
   style: string;
   fontFamily?: string;
 };
@@ -42,6 +45,7 @@ export function resolveSubwayStationNumberAppearance({
   const customStyle = getCustomStationNumberBadgeVisualStyle(requestedStyle);
   return {
     color: color ?? matchingLine?.color ?? fallbackColor,
+    requestedStyle,
     style: customStyle?.templateId ?? requestedStyle,
     fontFamily: customStyle?.fontFamily,
   };

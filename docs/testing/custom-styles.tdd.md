@@ -13,6 +13,7 @@ The journeys were derived from the feature request in this task; no external pla
 - A user can edit a custom station-sign style while preserving its existing identity and creation time.
 - JR Central adjacent station readings remain on one line when a custom font is wider than the template font.
 - Every station-sign template keeps non-number text on one line and fits wider custom fonts into the template text box unless an advanced font size was explicitly selected.
+- A custom station-number badge selected in simple input keeps its custom identity and font through the renderer, including current and adjacent JR East/JR Central badges.
 - Existing railway databases migrate without losing their prior route-badge appearance.
 
 ## RED / GREEN evidence
@@ -27,6 +28,7 @@ The journeys were derived from the feature request in this task; no external pla
 | Live draft previews | `bun test scripts/custom-styles.test.mjs` failed because `CustomStylePreview.tsx` did not exist; the first browser run then showed that the station-sign Stage ref was missing | Unit target: 10 passing tests; `bun run test:e2e -- tests/custom-styles.spec.ts`: 1 passed | All three creators render the unsaved draft, use the high-Takanawa simple-input defaults, and refresh the station-sign image after font changes |
 | JR Central custom-font wrapping | `bun test scripts/jr-central-sign.test.mjs scripts/custom-styles.test.mjs` failed because `getJrCentralAdjacentTextLayout` was not exported | Same target: 22 passing tests; DotGothic16 browser journey: 1 passed | Left and right adjacent readings use fixed, single-line text boxes with side-specific alignment instead of widths measured using the template font |
 | All-template custom-font wrapping | `bun test scripts/custom-styles.test.mjs` failed because the common fit helpers were not exported | Same target: 15 passing tests; DotGothic16 browser journey: 2 passed | All ten station-sign templates use the common one-line renderer, which measures the resolved custom font and shrinks only when a width-affecting override would overflow |
+| Simple-input custom station-number badge | `bun test scripts/subway-station-number-appearance.test.mjs` failed because the resolved appearance discarded the selected custom definition ID | Focused unit targets: 27 passing tests; focused Playwright journey: 3 passed | Simple input preserves the custom badge ID while separately resolving template geometry, so the custom font reaches main and adjacent badge renderers |
 | Duplicate and edit station-sign styles | The updated Playwright journey timed out waiting for the missing `複製: E2E カスタム駅名標` button | Focused Playwright journey: 1 passed; full suite with four workers: 42 passed | Duplication creates a separately persisted record and editing updates the original record, including embedded fonts and advanced layout values |
 
 ## Test specification
@@ -46,9 +48,10 @@ The journeys were derived from the feature request in this task; no external pla
 | 11 | Editing preserves the sign ID and creation time while updating its editable fields | `scripts/custom-styles.test.mjs` | unit | PASS |
 | 12 | Create, duplicate, edit, reload, and select work as one browser journey | `tests/custom-styles.spec.ts` | E2E | PASS |
 | 13 | Every sign template renders a width-changing custom font without automatic line wrapping | `scripts/custom-styles.test.mjs`, `tests/custom-styles.spec.ts` | unit + E2E | PASS |
+| 14 | Selecting a custom station-number badge in simple input changes the generated preview and retains its custom font | `scripts/subway-station-number-appearance.test.mjs`, `tests/custom-styles.spec.ts` | unit + E2E | PASS |
 
 ## Coverage and remaining gaps
 
-The focused command `bun test --coverage scripts/custom-styles.test.mjs scripts/jr-central-sign.test.mjs` reports 96.73% functions and 98.10% lines, with 100% function and line coverage for the common text-layout helper. The full unit suite has 263 passing tests. The full Chromium suite completed 42 tests before one transient development-server `ERR_CONNECTION_FAILED`; the affected two-test file then passed independently, as did the three focused font-loading/performance tests. DotGothic16 was supplied through `CUSTOM_STYLE_FONT_FIXTURE` and visually verified in all ten station-sign template previews. Pixel-by-pixel baselines for every custom value are not included; the renderers retain their existing geometry tests and the shared one-line fitting path is unit-tested.
+The focused station-number command reports 96.72% functions and 99.43% lines, with 100% function and line coverage for `subwayStationNumberAppearance.ts`. The full unit suite has 264 passing tests, and the full Chromium suite has 44 passing tests. DotGothic16 was supplied through `CUSTOM_STYLE_FONT_FIXTURE` and visually verified in all ten station-sign template previews. Pixel-by-pixel baselines for every custom value are not included; the renderers retain their existing geometry tests, the shared one-line fitting path is unit-tested, and simple-input custom badge application is covered in Chromium.
 
 No checkpoint commits were created because this repository requires the user to perform GPG-authenticated commits.
