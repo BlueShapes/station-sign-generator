@@ -19,7 +19,7 @@
     "@mantine/core": "^7.0.0",
     "@mantine/hooks": "^7.0.0",
     "@tabler/icons-react": "^3.0.0",
-    "astro": "7.1.6",
+    "astro": "7.2.8",
     "country-flag-icons": "^1.5.18",
     "jspdf": "^4.2.1",
     "konva": "^9.3.20",
