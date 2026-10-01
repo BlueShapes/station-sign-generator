@@ -131,6 +131,7 @@ import type {
 } from "@/customization/model";
 import { getCustomStationNumberBadgeVisualStyle } from "@/customization/registry";
 import { getLineIndicatorVisualStyle } from "@/components/signs/lineIndicatorStyle";
+import { MtrImportModal } from "@/components/tabs/MtrImportModal";
 
 const TOKYO_METRO_COLOR = "#00a3d9";
 const LINE_FORM_STATION_NUMBER_PREVIEW = "01";
@@ -2323,6 +2324,8 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
     setRefreshKey((k) => k + 1);
   };
 
+  const refreshAfterMtrImport = () => setRefreshKey((k) => k + 1);
+
   // Import state
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImportBinary, setPendingImportBinary] =
@@ -2333,6 +2336,7 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
   ] = useDisclosure(false);
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [mtrImportOpened, setMtrImportOpened] = useState(false);
 
   const handleImportFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -2774,6 +2778,13 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
 
       {/* Toolbar: Import / Download */}
       <Group justify="flex-end" mb={importError ? "xs" : "lg"} gap="sm">
+        <Button
+          variant="outline"
+          leftSection={<IconLink size={16} />}
+          onClick={() => setMtrImportOpened(true)}
+        >
+          {t("mtr-import.title")}
+        </Button>
         <Button
           variant="outline"
           leftSection={<IconDatabaseImport size={16} />}
@@ -3635,6 +3646,14 @@ export default function EditRoutesTab({ db, persist }: EditRoutesTabProps) {
       </Stack>
 
       {/* ── Import confirmation modal ── */}
+      <MtrImportModal
+        opened={mtrImportOpened}
+        onClose={() => setMtrImportOpened(false)}
+        db={db}
+        companies={companies}
+        onImported={refreshAfterMtrImport}
+      />
+
       <Modal
         opened={importModalOpened}
         onClose={() => {

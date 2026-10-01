@@ -428,3 +428,36 @@ footer:
     issues: Isu
     issues-description: Laporan pepijat dan permintaan ciri
   notice: Ini adalah laman web buatan peminat. Semua tanda dagangan adalah hak milik syarikat kereta api masing-masing. Laman web ini tidak bergabung dengan atau disokong oleh mana-mana syarikat kereta api. Data sampel dan nilai awal mungkin mengandungi nilai palsu.
+
+mtr-import:
+  title: "Import daripada MTR"
+  description: "Muatkan URL peta atau tampal JSON yang dikembalikan oleh API, kemudian pilih laluan untuk ditambah."
+  version: "Versi MTR"
+  source-url: "URL peta"
+  source-json: "Tampal JSON"
+  url: "URL peta atau API"
+  dimension: "Indeks dimensi"
+  endpoint: "Buka JSON API"
+  fetch: "Muatkan laluan"
+  json: "JSON API"
+  parse: "Baca JSON"
+  routes: "Pilih laluan"
+  stations-count: "{count} stesen"
+  select-all: "Pilih semua"
+  select-none: "Nyahpilih semua"
+  company: "Syarikat destinasi"
+  no-company: "Tiada syarikat"
+  import: "Import {count} laluan"
+  success: "{routes} laluan dan {stations} stesen telah ditambah."
+  note: "Laluan ditambah secara berasingan, termasuk laluan arah bertentangan. Stesen MTR yang dikongsi kekal dipautkan dalam import ini. Data sedia ada dikekalkan. Nombor stesen dan sebutan boleh disunting kemudian."
+  manual-help: "Jika pemuatan disekat oleh CORS atau sekatan HTTPS/HTTP, buka pautan API dan tampal JSON di sini."
+  skipped: "{count} laluan tanpa hentian atau dengan stesen perantaraan berulang telah dikecualikan kerana aplikasi ini tidak dapat mewakilinya."
+  error:
+    invalid-json: "JSON tidak sah. Tampal respons API yang lengkap."
+    invalid-data: "JSON ini tidak sepadan dengan format API peta MTR yang dipilih."
+    no-routes: "Tiada laluan yang boleh diimport ditemukan."
+    too-large: "Data melebihi had import (10 MB)."
+    invalid-url: "Masukkan URL peta/API HTTP atau HTTPS tanpa nama pengguna atau kata laluan serta indeks dimensi yang lebih besar atau sama dengan 0."
+    fetch-failed: "API tidak dapat dimuatkan. Semak URL, dimensi dan ketersediaan pelayan atau gunakan tampalan JSON."
+    timeout: "Permintaan API tamat masa. Cuba lagi atau tampal JSON."
+    import-failed: "Laluan tidak dapat diimport. Tiada laluan ditambah."

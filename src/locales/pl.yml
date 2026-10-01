@@ -428,3 +428,36 @@ footer:
     issues: Problemy
     issues-description: Raporty o błędach i prośby o nowe funkcje
   notice: To jest strona stworzona przez fanów. Wszystkie znaki towarowe są własnością odpowiednich przedsiębiorstw kolejowych. Niniejsza witryna nie jest powiązana z żadną firmą kolejową ani przez nią nie wspierana. Przykładowe dane i wartości początkowe mogą zawierać wartości fałszywe.
+
+mtr-import:
+  title: "Importuj z MTR"
+  description: "Wczytaj adres URL mapy lub wklej JSON zwrócony przez jej API, a następnie wybierz trasy do dodania."
+  version: "Wersja MTR"
+  source-url: "Adres URL mapy"
+  source-json: "Wklej JSON"
+  url: "Adres URL mapy lub API"
+  dimension: "Indeks wymiaru"
+  endpoint: "Otwórz JSON z API"
+  fetch: "Wczytaj trasy"
+  json: "JSON z API"
+  parse: "Odczytaj JSON"
+  routes: "Wybierz trasy"
+  stations-count: "Liczba stacji: {count}"
+  select-all: "Zaznacz wszystkie"
+  select-none: "Odznacz wszystkie"
+  company: "Firma docelowa"
+  no-company: "Bez firmy"
+  import: "Importuj trasy ({count})"
+  success: "Dodano trasy: {routes}; stacje: {stations}."
+  note: "Trasy są dodawane osobno, również te w przeciwnym kierunku. Wspólne stacje MTR pozostają powiązane w ramach tego importu. Istniejące dane zostają zachowane. Numery stacji i wymowę nazw można później edytować."
+  manual-help: "Jeśli ograniczenia CORS lub HTTPS/HTTP blokują wczytywanie, otwórz link do API i wklej tutaj jego JSON."
+  skipped: "Wykluczono trasy bez przystanków lub z powtarzającymi się stacjami pośrednimi, których ta aplikacja nie może przedstawić. Liczba wykluczonych tras: {count}."
+  error:
+    invalid-json: "Nieprawidłowy JSON. Wklej pełną odpowiedź API."
+    invalid-data: "Ten JSON nie pasuje do wybranego formatu API mapy MTR."
+    no-routes: "Nie znaleziono tras, które można zaimportować."
+    too-large: "Dane przekraczają limit importu (10 MB)."
+    invalid-url: "Wprowadź adres URL mapy/API w protokole HTTP lub HTTPS bez nazwy użytkownika i hasła oraz indeks wymiaru większy lub równy 0."
+    fetch-failed: "Nie udało się wczytać API. Sprawdź adres URL, wymiar i dostępność serwera lub wklej JSON."
+    timeout: "Upłynął limit czasu żądania do API. Spróbuj ponownie lub wklej JSON."
+    import-failed: "Nie udało się zaimportować tras. Nie dodano żadnych tras."

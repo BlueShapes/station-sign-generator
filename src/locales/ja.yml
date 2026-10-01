@@ -437,3 +437,36 @@ footer:
     issues: Issues
     issues-description: バグ報告と機能リクエスト
   notice: このサイトはファンサイトです。商標は各鉄道会社に帰属します。当サイトは各鉄道会社とは一切関係ありません。また、開発者は鉄道オタクではなく、サンプルデータや初期値は誤りを含む場合があります。
+
+mtr-import:
+  title: "MTRからインポート"
+  description: "マップURLから取得するか、APIが返したJSONを貼り付けて、追加する路線を選択します。"
+  version: "MTRのバージョン"
+  source-url: "マップURL"
+  source-json: "JSON貼り付け"
+  url: "マップまたはAPIのURL"
+  dimension: "ディメンション番号"
+  endpoint: "APIのJSONを開く"
+  fetch: "路線を取得"
+  json: "APIのJSON"
+  parse: "JSONを読み込む"
+  routes: "路線を選択"
+  stations-count: "{count}駅"
+  select-all: "すべて選択"
+  select-none: "すべて解除"
+  company: "追加先の会社"
+  no-company: "会社なし"
+  import: "{count}路線をインポート"
+  success: "{routes}路線と{stations}駅を追加しました。"
+  note: "上下方向を含め、各路線を個別に追加します。今回のインポート内で共通するMTRの駅は同じ駅として扱います。既存のデータは保持されます。駅番号や読みは取り込み後に編集できます。"
+  manual-help: "CORSやHTTPS/HTTPの制限で取得できない場合は、APIのリンクを開き、JSONをここに貼り付けてください。"
+  skipped: "停車駅がない路線や途中駅が重複する路線はこのアプリで表現できないため、{count}路線を除外しました。"
+  error:
+    invalid-json: "JSONが正しくありません。APIの応答全体を貼り付けてください。"
+    invalid-data: "このJSONは選択したMTRマップAPIの形式と一致しません。"
+    no-routes: "インポートできる路線が見つかりませんでした。"
+    too-large: "データがインポートの上限（10 MB）を超えています。"
+    invalid-url: "ユーザー名やパスワードを含まないHTTPまたはHTTPSのマップ／APIのURLと、0以上のディメンション番号を入力してください。"
+    fetch-failed: "APIから取得できませんでした。URL、ディメンション、サーバーの稼働状況を確認するか、JSON貼り付けを使用してください。"
+    timeout: "APIへのリクエストがタイムアウトしました。再試行するか、JSONを貼り付けてください。"
+    import-failed: "路線をインポートできませんでした。路線は追加されていません。"

@@ -428,3 +428,36 @@ footer:
     issues: Probleme
     issues-description: Rapoarte de erori și solicitări de funcții
   notice: Acesta este un site web creat de fani. Toate mărcile comerciale sunt proprietatea companiilor feroviare respective. Acest site nu este afiliat sau susținut de nicio companie feroviară. Datele eșantioane și valorile inițiale pot conține valori false.
+
+mtr-import:
+  title: "Importă din MTR"
+  description: "Încarcă URL-ul unei hărți sau lipește JSON-ul returnat de API, apoi selectează rutele de adăugat."
+  version: "Versiune MTR"
+  source-url: "URL-ul hărții"
+  source-json: "Lipește JSON"
+  url: "URL-ul hărții sau al API-ului"
+  dimension: "Indicele dimensiunii"
+  endpoint: "Deschide JSON-ul API-ului"
+  fetch: "Încarcă rutele"
+  json: "JSON-ul API-ului"
+  parse: "Citește JSON"
+  routes: "Selectează rutele"
+  stations-count: "Număr de stații: {count}"
+  select-all: "Selectează toate"
+  select-none: "Deselectează toate"
+  company: "Compania de destinație"
+  no-company: "Fără companie"
+  import: "Importă rute ({count})"
+  success: "Rute adăugate: {routes}; stații adăugate: {stations}."
+  note: "Rutele sunt adăugate separat, inclusiv cele în sens opus. Stațiile MTR comune rămân asociate în cadrul acestui import. Datele existente sunt păstrate. Numerele stațiilor și pronunțiile pot fi editate ulterior."
+  manual-help: "Dacă încărcarea este blocată de restricții CORS sau HTTPS/HTTP, deschide linkul API-ului și lipește JSON-ul aici."
+  skipped: "Au fost excluse rutele fără opriri sau cu stații intermediare repetate, pe care această aplicație nu le poate reprezenta. Număr de rute excluse: {count}."
+  error:
+    invalid-json: "JSON invalid. Lipește răspunsul complet al API-ului."
+    invalid-data: "Acest JSON nu corespunde formatului selectat al API-ului hărții MTR."
+    no-routes: "Nu s-au găsit rute care pot fi importate."
+    too-large: "Datele depășesc limita de import (10 MB)."
+    invalid-url: "Introdu un URL de hartă/API HTTP sau HTTPS fără nume de utilizator sau parolă și un indice de dimensiune mai mare sau egal cu 0."
+    fetch-failed: "API-ul nu a putut fi încărcat. Verifică URL-ul, dimensiunea și disponibilitatea serverului sau lipește JSON-ul."
+    timeout: "Cererea către API a expirat. Încearcă din nou sau lipește JSON-ul."
+    import-failed: "Rutele nu au putut fi importate. Nu a fost adăugată nicio rută."
