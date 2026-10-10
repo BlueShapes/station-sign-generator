@@ -1,0 +1,472 @@
+$site-name: "Generatore di cartelli di stazione e mappe delle linee"
+$og-image-path: "/ogp.png"
+
+meta:
+  title: Generatore di cartelli ferroviari | Edizione Triangolo Blu (stile JR East/West)
+  description: Uno strumento gratuito e pratico per creare cartelli con i nomi delle stazioni ferroviarie.
+  og-image-alt: Esempio di cartello di stazione (stile JR East)
+  pwa:
+    name: Generatore di cartelli di stazione e mappe delle linee – Edizione Triangolo Blu
+    short-name: Cartelli e mappe
+
+header:
+  title: Generatore di cartelli di stazione e mappe delle linee
+  edition: Edizione Triangolo Blu
+  tooltip:
+    lang: Cambia lingua
+    share: Condividi questo strumento
+    share-options:
+      twitter: "Twitter (ex X)"
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
+      copy: Copia URL
+    copy: URL copiato negli appunti.
+    share-message: Crea cartelli di stazione e mappe delle linee con {name}!
+
+input:
+  save: Salva come immagine
+  image-size: Dimensioni immagine
+  direct:
+    swaplr: "Inverti sinistra e destra"
+    reset: "Reimposta i campi"
+    reset-title: "Reimposta tutti i campi"
+    reset-confirm: "Vuoi davvero reimpostare tutti i campi? Questa azione non può essere annullata."
+    base-color: "Colore della compagnia"
+    arrow-color: "Colore della freccia (colore della compagnia)"
+    line-color: "Colore della linea"
+    local-lines: "Linee"
+    local-lines-prefix: "Abbreviazione del nome della linea"
+    local-lines-add: "Aggiungi linea"
+    local-lines-empty: "Aggiungi le linee qui sopra per scegliere un’abbreviazione"
+    lstation: "Nome della stazione a sinistra"
+    lread: "Testo secondario della stazione a sinistra"
+    len: "Nome alternativo della stazione a sinistra"
+    lnum: "Numero della stazione a sinistra (primario)"
+    lnum2: "Numero della stazione a sinistra (secondario)"
+    lnum3: "Numero della stazione a sinistra (terziario)"
+    station: "Nome della stazione"
+    read: "Testo secondario della stazione"
+    en: "Nome della stazione nella seconda lingua (inglese)"
+    ch: "Nome della stazione nella terza lingua (cinese)"
+    kp: "Nome della stazione nella quarta lingua (coreano)"
+    num: "Numero della stazione (primario)"
+    num2: "Numero della stazione (secondario)"
+    num3: "Numero della stazione (terziario)"
+    trc: "Codice della stazione"
+    note: "Nota sulla stazione (testo più grande sotto il nome)"
+    rstation: "Nome della stazione a destra"
+    rread: "Testo secondario della stazione a destra"
+    ren: "Nome alternativo della stazione a destra"
+    rnum: "Numero della stazione a destra (primario)"
+    rnum2: "Numero della stazione a destra (secondario)"
+    rnum3: "Numero della stazione a destra (terziario)"
+    input-left: "Informazioni sulla stazione a sinistra"
+    input-current: "Informazioni sulla stazione corrente"
+    input-right: "Informazioni sulla stazione a destra"
+    area: Zona tariffaria della stazione
+    area-name: Nome della zona
+    center-colors: Colori dei quadrati centrali
+    export-copy: Copia JSON
+    export-copy-done: Copiato!
+    export-download: Scarica JSON
+    import: Importa JSON
+    import-modal-title: Importa dati JSON
+    import-paste-label: Incolla JSON
+    import-paste-placeholder: "Incolla qui il JSON esportato..."
+    import-file-label: Carica file JSON
+    import-submit: Importa
+    import-error: "Dati non validi: {detail}"
+
+common:
+  preview: Anteprima
+  add: Aggiungi
+  cancel: Annulla
+  confirm: Reimposta
+  confirm-title: Conferma
+  theme-dark: Passa alla modalità scura
+  theme-light: Passa alla modalità chiara
+  loading: Caricamento...
+  loading-fonts: Caricamento dei caratteri...
+  edit: Modifica
+  delete: Elimina
+  save: Salva
+  close: Chiudi
+
+error:
+  on-save: "La funzione handleSave non è riuscita. È un comportamento del tutto inaspettato, perché il canvas viene sempre renderizzato."
+  corrupted-cache: "I dati salvati erano danneggiati e sono stati reimpostati ai valori predefiniti. Puoi continuare a usare l’app normalmente."
+
+tabs:
+  simple: Inserimento semplice
+  route-input: Da una linea
+  route-edit: Modifica linee
+  settings: Impostazioni
+
+settings:
+  storage:
+    title: Archiviazione dei caratteri
+    indexeddb: IndexedDB (permanente)
+    memory: Solo memoria (sessione)
+    memory-warning: I caratteri personalizzati caricati in questa sessione andranno persi quando chiudi la pagina.
+  fonts:
+    builtin-title: Caratteri preinstallati
+    builtin-desc: Caratteri necessari per i cartelli di stazione. Non possono essere rimossi.
+    preload: Precarica
+    user-title: Caratteri personalizzati
+    upload: Carica carattere
+    upload-modal-title: Carica carattere
+    select-file: Seleziona file di carattere (.ttf, .otf, .woff, .woff2)
+    display-name: Nome visualizzato
+    family-name: Nome della famiglia di caratteri CSS
+    family-hint: "Usato nella configurazione dello stile. Non sono ammessi spazi."
+    upload-submit: Carica
+    empty: Non hai ancora caricato caratteri personalizzati.
+    remove-all: Rimuovi tutti
+    remove-all-confirm: Rimuovere tutti i caratteri personalizzati? Verranno eliminati anche da IndexedDB e l’azione non può essere annullata.
+    status:
+      idle: Non caricato
+      loading: Caricamento...
+      loaded: Caricato
+      error: Errore
+  images:
+    title: Immagini
+    upload: Carica immagine
+    upload-modal-title: Carica immagine
+    select-file: Seleziona file immagine
+    display-name: Nome immagine
+    upload-submit: Carica
+    empty: Non hai ancora caricato immagini.
+    remove-all: Rimuovi tutte
+    remove-all-confirm: Rimuovere tutte le immagini caricate? Verranno eliminate anche da IndexedDB e l’azione non può essere annullata.
+
+  custom:
+    title: Stili personalizzati
+    description: Le definizioni personalizzate vengono archiviate separatamente dai dati di compagnie, linee e stazioni.
+    option-prefix: Personalizzato
+    duplicate: Duplica
+    copy-name: "Copia di {name}"
+    empty: Non ci sono ancora definizioni personalizzate.
+    template-font: Carattere del modello
+    font-embedded: File del carattere incorporato
+    name: Nome
+    template-label: Modello di base
+    font: Carattere
+    font-help: I caratteri caricati vengono copiati nella definizione personalizzata.
+    sign:
+      title: Stili dei cartelli di stazione
+      create: Crea stile personalizzato
+      edit: Modifica stile personalizzato
+    station-badge:
+      title: Indicatori del numero di stazione
+      create: Crea indicatore personalizzato per il numero di stazione
+    route-badge:
+      title: Indicatori di linea
+      create: Crea indicatore di linea personalizzato
+    advanced:
+      title: Layout avanzato
+      description: Sostituisci la tipografia di ogni parte di testo che non sia un numero. I campi vuoti mantengono i valori predefiniti del modello.
+      font-size: Dimensione del carattere
+      letter-spacing: Spaziatura tra lettere
+      y-offset: Scostamento verticale
+    parts:
+      main-primary: Nome principale della stazione
+      main-furigana: Lettura principale
+      main-secondary: Nome secondario principale
+      main-tertiary: Nome terziario principale
+      main-quaternary: Nome quaternario principale
+      main-note: Nota sulla stazione
+      main-area: Zona tariffaria
+      adjacent-primary: Nome della stazione adiacente
+      adjacent-furigana: Lettura del nome della stazione adiacente
+      adjacent-secondary: Nome secondario della stazione adiacente
+    template:
+      station-badge:
+        jreast: Stile JR East
+        jrcentral: Stile JR Central
+        tokyometro: Stile Tokyo Metro / Toei
+      route-badge:
+        rounded-square: Quadrato arrotondato
+        circle: Cerchio
+route:
+  download-sqlite: Scarica SQLite
+  import-sqlite: Importa SQLite
+  import-sample: Carica dati di esempio
+  import-error:
+    invalid-file: "Il file selezionato non è un database SQLite valido."
+    missing-table: "Nel database manca una tabella obbligatoria: {detail}"
+    missing-column: "Nel database manca una colonna obbligatoria: {detail}"
+  import-modal:
+    title: Importa database
+    description: È già presente un database. Come vuoi importare i dati?
+    overwrite-desc: "Sovrascrivi: sostituisce tutti i dati esistenti con quelli importati."
+    merge-desc: "Unisci: aggiunge i dati importati al database esistente. I record in conflitto verranno aggiornati."
+    overwrite: Sovrascrivi
+    merge: Unisci
+  no-routes: Non ci sono linee. Crea delle linee nella scheda «Modifica linee».
+  company:
+    route-badge-style: Stile dell’indicatore di linea
+    route-badge-style-preview: Anteprima dell’indicatore di linea
+    title: Compagnie
+    add: Aggiungi compagnia
+    edit: Modifica compagnia
+    name: Nome della compagnia
+    color: Colore della compagnia
+    station-number-style: Stile del numero di stazione
+    station-number-style-jreast: Stile JR East
+    station-number-style-jrcentral: Stile JR Central
+    station-number-style-tokyometro: Stile Tokyo Metro / metropolitana Toei
+    station-number-style-preview: Indicatore di esempio (usa il colore della compagnia come colore della linea)
+    empty: Non ci sono ancora compagnie
+    delete-confirm: Eliminare questa compagnia? Verranno eliminate anche le sue linee e le tratte dirette che le includono.
+  special-zone:
+    title: Zone speciali
+    add: Aggiungi zona
+    edit: Modifica zona
+    name: Nome della zona
+    abbreviation: Abbreviazione (1 carattere)
+    is-black: Sfondo nero
+    empty: Non ci sono ancora zone
+    delete-confirm: Eliminare questa zona? Tutte le stazioni che la usano perderanno questo indicatore.
+  line:
+    title: Linee
+    add: Aggiungi linea
+    edit: Modifica linea
+    name: Nome della linea
+    color: Colore della linea
+    prefix: Abbreviazione del nome della linea
+    priority: Priorità
+    company: Compagnia
+    is-loop: Linea circolare
+    empty: Non ci sono ancora linee
+    select: Seleziona una linea
+    all: Tutte le compagnie
+    unassigned-company: Compagnia non assegnata
+    delete-confirm: Eliminare questa linea? Verranno eliminate anche le tratte dirette che la includono.
+    delete-all: Elimina tutte le linee
+    delete-all-confirm: Eliminare tutte le linee? Verranno eliminate anche le assegnazioni delle stazioni, i numeri di stazione, i servizi e tutte le tratte dirette associati. L’azione non può essere annullata.
+    delete-targets: Linee da eliminare
+    prefix-preview: Anteprima dell’indicatore della linea
+    station-number-preview: Anteprima del numero di stazione (01)
+  through-route:
+    title: Tratte dirette
+    add: Aggiungi tratta diretta
+    edit: Modifica tratta diretta
+    name: Nome della tratta
+    empty: Non ci sono ancora tratte dirette
+    segments: Tratti di linea
+    segment-number: "Tratto {number}"
+    add-segment: Aggiungi tratto di linea
+    line: Linea
+    entry-station: Stazione di partenza
+    exit-station: Stazione di arrivo
+    direction: Direzione del tratto
+    forward: Avanti (ordine delle stazioni)
+    reverse: Indietro (ordine inverso delle stazioni)
+    guide-title: Regole per una tratta valida
+    guide-intro: Non viene verificata la corrispondenza con i servizi reali. Puoi salvare qualsiasi tratta che formi un percorso continuo e senza diramazioni nei dati registrati.
+    guide-section: Per ogni tratto, scegli due stazioni diverse della stessa linea come partenza e arrivo.
+    guide-direction: La direzione in avanti segue l’ordine registrato delle stazioni; quella inversa lo percorre al contrario. Su una linea circolare, la direzione determina quale lato viene percorso.
+    guide-connection: Ogni tratto successivo deve partire dalla stessa stazione in cui termina il precedente oppure da una stazione collegata da un interscambio esplicito.
+    delete-confirm: Eliminare questa tratta diretta?
+    service-help: Configura i tipi di servizio per l’intera tratta diretta. Dopo il salvataggio, imposta le fermate nell’editor della linea qui sotto.
+    service-editor-help: Modifica dei tipi di servizio e delle fermate per «{name}». Cambia i tratti o il loro ordine nell’editor delle tratte dirette.
+    error-incomplete: Seleziona una linea e entrambe le stazioni di estremità per ogni tratto.
+    error-empty: Aggiungi almeno un tratto di linea.
+    error-station-not-on-line: Una stazione selezionata non appartiene alla linea indicata.
+    error-invalid-direction: La stazione di arrivo non è raggiungibile da quella di partenza nella direzione selezionata.
+    error-disconnected: I tratti di linea adiacenti non condividono la stessa stazione di collegamento.
+    error-same-station: Scegli stazioni di partenza e arrivo diverse.
+    error-invalid-direction-detail: 'Per andare da «{entry}» a «{exit}», seleziona «{direction}».'
+    error-disconnected-detail: 'Per il tratto {current}, seleziona lo stesso record della stazione «{station}», che è l’uscita del tratto {previous}, oppure aggiungi un interscambio esplicito tra le due.'
+  service:
+    title: Servizi
+    local: Locale
+    add-placeholder: Nome del servizio
+    delete-confirm: Eliminare questo servizio? Tutti i dati delle fermate andranno persi.
+  station:
+    title: Stazioni
+    add: Aggiungi stazione
+    add-existing: Aggiungi stazione esistente
+    link-title: Aggiungi una stazione esistente alla linea
+    source-line: Linea di origine
+    select-existing: Seleziona una stazione da aggiungere
+    inherited-info: Informazioni ereditate (sola lettura)
+    edit: Modifica stazione
+    name: Nome della stazione
+    furigana: Lettura (hiragana)
+    en: Nome inglese
+    ko: Nome coreano
+    zh: Nome cinese
+    note: Nota
+    trc: Codice di tre lettere
+    number: Numero della stazione
+    number-source: Linea da usare per il numero della stazione
+    number-source-help: Scegli quale codice di linea usare nell’indicatore del numero di stazione per questa linea.
+    number-source-current-only: Per questa linea è disponibile solo il codice della linea corrente.
+    number-source-current: "Usa la linea corrente [{prefix}] {name}"
+    number-source-parent: "Usa la linea principale [{prefix}] {name}"
+    areas: Indicatori delle zone tariffarie
+    empty: Seleziona una linea per visualizzare le stazioni
+    no-station: Non ci sono ancora stazioni
+    duplicate-number-warning: "Numeri di stazione duplicati su questa linea: {numbers}"
+    delete-confirm: Rimuovere questa stazione dalla linea?
+    select: Seleziona una stazione
+    transfer-title: "Informazioni sui collegamenti — {name}"
+    transfer-manage: Visualizza e gestisci i collegamenti
+    transfer-line-select: Linea di collegamento
+    transfer-select: Stazione di collegamento
+    transfer-empty: Non ci sono collegamenti
+    same-id-lines: Linee che condividono lo stesso ID stazione
+    same-id-lines-help: Queste linee condividono il record di questa stazione e vengono considerate automaticamente collegate. Qui sono di sola lettura.
+    same-id-lines-empty: Nessun’altra linea condivide l’ID di questa stazione
+    explicit-transfers: Collegamenti espliciti tra stazioni
+    explicit-transfers-help: Aggiungi o rimuovi collegamenti tra record di stazioni diversi. Le stazioni aggiunte passano dalle opzioni all’elenco qui sotto e possono anche collegare tratti di tratte dirette.
+  sign:
+    style: Stile
+    direction: Direzione
+    filename-direction-left: Verso sinistra
+    filename-direction-both: Entrambe le direzioni
+    filename-direction-right: Verso destra
+    flip: Inverti direzione
+    prev-station: Stazione precedente
+    next-station: Stazione successiva
+    adjacent-select: Seleziona fino a {count} stazioni
+    adjacent-order: Ordine attuale
+    adjacent-move-up: Sposta in alto
+    adjacent-move-down: Sposta in basso
+    adjacent-swap-order: Inverti ordine
+    jreast: Stile JR East
+    jreastbranch: Stile JR East (con diramazioni)
+    jrcentral: Stile JR Central
+    jrwest: Stile JR West
+    jrwestlarge: Stile JR West (grande)
+    metrolong: Stile Tokyo Metro (piccolo / giapponese)
+    metroforeign: Stile Tokyo Metro (piccolo / lingua straniera)
+    metromedium: Stile Tokyo Metro (medio)
+    toeimedium: Stile metropolitana Toei (medio)
+    toeilarge: Stile metropolitana Toei (grande)
+    metrolong-subtext: Testo secondario
+    metrolong-subtext-furigana: Furigana
+    metrolong-subtext-secondary: Lingua secondaria
+    center-colors: Colori dei quadrati centrali
+    station-number-badges: Indicatori del numero di stazione
+  mode:
+    sign: Cartello di stazione
+    linemap: Mappa della linea (singola/diretta)
+    multiline-linemap: Mappa delle linee (più linee)
+  linemap:
+    section-route: Tratta e intervallo
+    section-layout: Disposizione
+    section-content: Contenuto visualizzato
+    filename-suffix: Mappa della linea
+    export-format: Formato di esportazione
+    format-png: PNG (immagine)
+    format-svg: SVG (vettoriale)
+    format-pdf: PDF (vettoriale)
+    vector-size-note: I formati vettoriali non richiedono dimensioni dell’immagine
+    export-error: Esportazione non riuscita. Prova un altro formato o dimensione dell’immagine.
+    orientation: Orientamento
+    horizontal: Orizzontale
+    vertical: Verticale
+    range-start: Da
+    range-end: A
+    transit-filter: Mostra le linee di interscambio
+    transit-show-names: Mostra i nomi delle linee di collegamento
+    download-text-warning: Salva (il nome secondario potrebbe non essere leggibile)
+    font-size: Dimensione del carattere dei nomi delle stazioni
+    font-size-small: Piccola
+    font-size-medium: Media
+    font-size-large: Grande
+    overlap-warning-title: Rilevata sovrapposizione delle etichette
+    overlap-warning: Alcuni nomi di stazione si sovrappongono. Prova a ridurre la dimensione del carattere.
+    station-number-mode: Visualizzazione del numero di stazione
+    station-number-none: Nessuno
+    station-number-badge: Indicatore
+    station-number-dot: Sostituisci il punto
+    emphasize-connected-station-names: Ingrandisci i nomi delle stazioni di collegamento
+    name-style: Stile del nome
+    name-style-normal: Normale
+    name-style-above: Sopra
+    name-style-below: Sotto
+    station-spacing: Spaziatura tra le stazioni
+    line-width: Spessore della linea
+    primary-lang: Lingua principale
+    secondary-lang: Lingua secondaria
+    show-secondary-lang: Mostra
+    lang-1st: 1° nome
+    lang-2nd: 2° nome
+    lang-3rd: 3° nome
+    lang-4th: 4° nome
+    continuation: Indicatori di continuazione
+    continuation-before: Mostra all’inizio
+    continuation-after: Mostra alla fine
+    swap: Inverti inizio e fine
+    loop-render-mode: Modalità di visualizzazione circolare
+    loop-as-linear: Mostra come linea lineare
+    name-side: Lato dei nomi
+    name-side-left: Sinistra
+    name-side-right: Destra
+    services: Servizi
+    services-placeholder: Tutti i servizi (binario singolo)
+    show-passed-stations: Stazioni attraversate
+    passed-show: Mostra (sbiadite)
+    passed-hide-gap: Nascondi (lascia spazio)
+    passed-hide-trim: Nascondi (accorcia)
+    service-name-style: Stile del nome del servizio
+    service-name-paren: (parentesi)
+    service-name-badge: Indicatore
+
+footer:
+  links:
+    title: Collegamenti
+    description: Sito web e profili social dell’autore
+    website: Sito web
+  development:
+    title: Risorse di sviluppo
+    description: Codice sorgente, segnalazioni di bug e richieste di funzionalità
+    repository: Repository GitHub
+    repository-description: Codice sorgente e versioni
+    issues: Segnalazioni
+    issues-description: Segnalazioni di bug e richieste di funzionalità
+  notice: Questo è un sito creato dai fan. Tutti i marchi appartengono alle rispettive compagnie ferroviarie. Questo sito non è affiliato né approvato da alcuna compagnia ferroviaria. I dati di esempio e i valori iniziali potrebbero essere fittizi.
+
+mtr-import:
+  title: "Importa da MTR"
+  description: "Carica un URL della mappa o incolla il JSON restituito dalla sua API, quindi seleziona le linee da aggiungere."
+  version: "Versione MTR"
+  source-url: "URL della mappa"
+  source-json: "Incolla JSON"
+  url: "URL della mappa o dell’API"
+  dimension: "Indice della dimensione"
+  endpoint: "Apri JSON dell’API"
+  fetch: "Carica linee"
+  json: "JSON dell’API"
+  parse: "Leggi JSON"
+  routes: "Seleziona linee"
+  stations-count: "{count} stazioni"
+  select-all: "Seleziona tutto"
+  select-none: "Deseleziona tutto"
+  company: "Compagnia di destinazione"
+  no-company: "Nessuna compagnia"
+  import: "Importa {count} linee"
+  success: "Aggiunte {routes} linee e {stations} stazioni."
+  note: "Le linee vengono aggiunte separatamente, comprese le direzioni opposte. Le stazioni MTR condivise restano collegate durante questa importazione. I dati esistenti vengono conservati. In seguito puoi modificare numeri e letture delle stazioni."
+  manual-help: "Se il caricamento è bloccato da CORS o dalle restrizioni HTTPS/HTTP, apri il collegamento API e incolla qui il relativo JSON."
+  skipped: "Sono state escluse {count} linee senza fermate o con stazioni intermedie ripetute, che l’app non può rappresentare."
+  error:
+    invalid-json: "JSON non valido. Incolla la risposta API completa."
+    invalid-data: "Questo JSON non corrisponde al formato dell’API della mappa MTR selezionata."
+    no-routes: "Non sono state trovate linee importabili."
+    too-large: "I dati superano il limite di importazione (10 MB)."
+    invalid-url: "Inserisci un URL HTTP o HTTPS della mappa/API senza nome utente o password e un indice di dimensione non negativo."
+    fetch-failed: "Impossibile caricare l’API. Controlla l’URL, la dimensione e la disponibilità del server, oppure incolla il JSON."
+    timeout: "La richiesta API è scaduta. Riprova o incolla il JSON."
+    import-failed: "Impossibile importare le linee. Non è stata aggiunta alcuna linea."

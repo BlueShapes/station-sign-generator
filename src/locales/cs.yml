@@ -61,7 +61,7 @@ input:
     note: Poznámka ke stanici (větší text pod názvem stanice)
     rstation: Pravý název stanice
     rread: Subtext pravé stanice
-    ren: Subtext pravé stanice
+    ren: Pravý alternativní název stanice
     rnum: Správné číslo stanice (primární)
     rnum2: Pravé číslo stanice (sekundární)
     rnum3: Pravé číslo stanice (terciární)

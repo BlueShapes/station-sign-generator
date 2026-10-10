@@ -1,0 +1,472 @@
+$site-name: "Trình tạo biển tên ga và sơ đồ tuyến"
+$og-image-path: "/ogp.png"
+
+meta:
+  title: Trình tạo biển tên ga | Phiên bản Tam giác Xanh (kiểu JR East/West)
+  description: Công cụ miễn phí và hữu ích để tạo biển tên ga đường sắt.
+  og-image-alt: Ảnh biển tên ga mẫu (kiểu JR East)
+  pwa: 
+    name: Trình tạo biển tên ga và sơ đồ tuyến – Phiên bản Tam giác Xanh
+    short-name: Biển tên ga và sơ đồ tuyến
+
+header:
+  title: Trình tạo biển tên ga và sơ đồ tuyến
+  edition: Phiên bản Tam giác Xanh
+  tooltip:
+    lang: Đổi ngôn ngữ
+    share: Chia sẻ công cụ này
+    share-options:
+      twitter: "Twitter (trước đây là X)"
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
+      copy: Sao chép URL
+    copy: Đã sao chép URL vào bộ nhớ tạm.
+    share-message: Tạo biển tên ga và sơ đồ tuyến với {name}!
+
+input:
+  save: Lưu thành ảnh
+  image-size: Kích thước ảnh
+  direct:
+    swaplr: "Đổi bên trái và bên phải"
+    reset: "Đặt lại dữ liệu đã nhập"
+    reset-title: "Đặt lại toàn bộ dữ liệu đã nhập"
+    reset-confirm: "Bạn có chắc muốn đặt lại toàn bộ dữ liệu đã nhập không? Bạn không thể hoàn tác thao tác này."
+    base-color: "Màu công ty"
+    arrow-color: "Màu mũi tên (màu công ty)"
+    line-color: "Màu tuyến"
+    local-lines: "Tuyến"
+    local-lines-prefix: "Tên viết tắt tuyến"
+    local-lines-add: "Thêm tuyến"
+    local-lines-empty: "Thêm tuyến ở phía trên để chọn tên viết tắt tại đây"
+    lstation: "Tên ga bên trái"
+    lread: "Dòng phụ của ga bên trái"
+    len: "Tên thay thế của ga bên trái"
+    lnum: "Mã ga bên trái (chính)"
+    lnum2: "Mã ga bên trái (phụ)"
+    lnum3: "Mã ga bên trái (bậc ba)"
+    station: "Tên ga"
+    read: "Dòng phụ của ga"
+    en: "Tên ga bằng ngôn ngữ thứ hai (tiếng Anh)"
+    ch: "Tên ga bằng ngôn ngữ thứ ba (tiếng Trung)"
+    kp: "Tên ga bằng ngôn ngữ thứ tư (tiếng Hàn)"
+    num: "Mã ga (chính)"
+    num2: "Mã ga (phụ)"
+    num3: "Mã ga (bậc ba)"
+    trc: "Mã ga"
+    note: "Ghi chú ga (chữ lớn bên dưới tên ga)"
+    rstation: "Tên ga bên phải"
+    rread: "Dòng phụ của ga bên phải"
+    ren: "Tên thay thế của ga bên phải"
+    rnum: "Mã ga bên phải (chính)"
+    rnum2: "Mã ga bên phải (phụ)"
+    rnum3: "Mã ga bên phải (bậc ba)"
+    input-left: "Thông tin ga bên trái"
+    input-current: "Thông tin ga hiện tại"
+    input-right: "Thông tin ga bên phải"
+    area: Khu vực giá vé ga
+    area-name: Tên khu vực
+    center-colors: Màu ô vuông ở giữa
+    export-copy: Sao chép JSON
+    export-copy-done: Đã sao chép!
+    export-download: Tải JSON
+    import: Nhập JSON
+    import-modal-title: Nhập dữ liệu JSON
+    import-paste-label: Dán JSON
+    import-paste-placeholder: "Dán JSON đã xuất vào đây..."
+    import-file-label: Tải tệp JSON lên
+    import-submit: Nhập
+    import-error: "Dữ liệu không hợp lệ: {detail}"
+
+common:
+  preview: Xem trước
+  add: Thêm
+  cancel: Hủy
+  confirm: Đặt lại
+  confirm-title: Xác nhận
+  theme-dark: Chuyển sang chế độ tối
+  theme-light: Chuyển sang chế độ sáng
+  loading: Đang tải...
+  loading-fonts: Đang tải phông chữ...
+  edit: Chỉnh sửa
+  delete: Xóa
+  save: Lưu
+  close: Đóng
+
+error:
+  on-save: "Hàm handleSave gặp lỗi. Đây là hành vi hoàn toàn ngoài dự kiến vì canvas luôn được hiển thị."
+  corrupted-cache: "Dữ liệu đã lưu bị hỏng và được đặt lại về mặc định. Bạn có thể tiếp tục sử dụng ứng dụng như bình thường."
+
+tabs:
+  simple: Nhập đơn giản
+  route-input: Từ tuyến
+  route-edit: Sửa tuyến
+  settings: Cài đặt
+
+settings:
+  storage:
+    title: Lưu trữ phông chữ
+    indexeddb: IndexedDB (lưu lâu dài)
+    memory: Chỉ trong bộ nhớ (phiên)
+    memory-warning: Phông chữ tùy chỉnh tải lên trong phiên này sẽ bị mất khi đóng trang.
+  fonts:
+    builtin-title: Phông chữ cài sẵn
+    builtin-desc: Phông chữ cần thiết cho biển tên ga. Không thể xóa.
+    preload: Tải trước
+    user-title: Phông chữ tùy chỉnh
+    upload: Tải phông chữ lên
+    upload-modal-title: Tải phông chữ lên
+    select-file: Chọn tệp phông chữ (.ttf, .otf, .woff, .woff2)
+    display-name: Tên hiển thị
+    family-name: Tên họ phông chữ CSS
+    family-hint: "Dùng trong cấu hình kiểu chữ. Không được có khoảng trắng."
+    upload-submit: Tải lên
+    empty: Chưa tải lên phông chữ tùy chỉnh nào.
+    remove-all: Xóa tất cả
+    remove-all-confirm: Xóa tất cả phông chữ tùy chỉnh? Chúng cũng sẽ bị xóa khỏi IndexedDB và không thể khôi phục.
+    status:
+      idle: Chưa tải
+      loading: Đang tải...
+      loaded: Đã tải
+      error: Lỗi
+  images:
+    title: Ảnh
+    upload: Tải ảnh lên
+    upload-modal-title: Tải ảnh lên
+    select-file: Chọn tệp ảnh
+    display-name: Tên ảnh
+    upload-submit: Tải lên
+    empty: Chưa tải lên ảnh nào.
+    remove-all: Xóa tất cả
+    remove-all-confirm: Xóa tất cả ảnh đã tải lên? Ảnh cũng sẽ bị xóa khỏi IndexedDB và không thể khôi phục.
+
+  custom:
+    title: Kiểu tùy chỉnh
+    description: Các định nghĩa tùy chỉnh được lưu riêng với dữ liệu đường sắt và ga.
+    option-prefix: Tùy chỉnh
+    duplicate: Nhân bản
+    copy-name: "Bản sao {name}"
+    empty: Chưa có định nghĩa tùy chỉnh.
+    template-font: Phông chữ mẫu
+    font-embedded: Đã nhúng dữ liệu nhị phân của phông chữ
+    name: Tên
+    template-label: Mẫu cơ sở
+    font: Phông chữ
+    font-help: Phông chữ đã tải lên sẽ được sao chép vào định nghĩa tùy chỉnh.
+    sign:
+      title: Kiểu biển tên ga
+      create: Tạo kiểu tùy chỉnh
+      edit: Sửa kiểu tùy chỉnh
+    station-badge:
+      title: Huy hiệu mã ga
+      create: Tạo huy hiệu mã ga tùy chỉnh
+    route-badge:
+      title: Huy hiệu tuyến
+      create: Tạo huy hiệu tuyến tùy chỉnh
+    advanced:
+      title: Bố cục nâng cao
+      description: Ghi đè kiểu chữ cho từng phần văn bản không phải số. Để trống sẽ dùng mặc định của mẫu.
+      font-size: Cỡ phông
+      letter-spacing: Khoảng cách chữ
+      y-offset: Độ lệch Y
+    parts:
+      main-primary: Tên ga chính
+      main-furigana: Cách đọc tên chính
+      main-secondary: Tên chính thứ hai
+      main-tertiary: Tên chính thứ ba
+      main-quaternary: Tên chính thứ tư
+      main-note: Ghi chú ga
+      main-area: Khu vực giá vé
+      adjacent-primary: Tên ga liền kề
+      adjacent-furigana: Cách đọc tên ga liền kề
+      adjacent-secondary: Tên phụ của ga liền kề
+    template:
+      station-badge:
+        jreast: Kiểu JR East
+        jrcentral: Kiểu JR Central
+        tokyometro: Kiểu Tokyo Metro / Toei
+      route-badge:
+        rounded-square: Hình vuông bo góc
+        circle: Hình tròn
+route:
+  download-sqlite: Tải SQLite
+  import-sqlite: Nhập SQLite
+  import-sample: Tải dữ liệu mẫu
+  import-error:
+    invalid-file: "Tệp đã chọn không phải cơ sở dữ liệu SQLite hợp lệ."
+    missing-table: "Cơ sở dữ liệu thiếu bảng bắt buộc: {detail}"
+    missing-column: "Cơ sở dữ liệu thiếu cột bắt buộc: {detail}"
+  import-modal:
+    title: Nhập cơ sở dữ liệu
+    description: Đã có cơ sở dữ liệu. Bạn muốn nhập theo cách nào?
+    overwrite-desc: "Ghi đè: Thay thế toàn bộ dữ liệu hiện có bằng dữ liệu đã nhập."
+    merge-desc: "Gộp: Thêm dữ liệu đã nhập vào cơ sở dữ liệu hiện có. Các bản ghi trùng lặp sẽ được cập nhật."
+    overwrite: Ghi đè
+    merge: Gộp
+  no-routes: Không tìm thấy tuyến. Hãy tạo tuyến trong thẻ “Sửa tuyến”.
+  company:
+    route-badge-style: Kiểu huy hiệu tuyến
+    route-badge-style-preview: Xem trước huy hiệu tuyến
+    title: Công ty
+    add: Thêm công ty
+    edit: Sửa công ty
+    name: Tên công ty
+    color: Màu công ty
+    station-number-style: Kiểu mã ga
+    station-number-style-jreast: Kiểu JR East
+    station-number-style-jrcentral: Kiểu JR Central
+    station-number-style-tokyometro: Kiểu Tokyo Metro / Toei Subway
+    station-number-style-preview: Huy hiệu mẫu (dùng màu công ty làm màu tuyến)
+    empty: Chưa có công ty
+    delete-confirm: Xóa công ty này? Các tuyến thuộc công ty và mọi tuyến liên tuyến có chứa những tuyến đó cũng sẽ bị xóa.
+  special-zone:
+    title: Khu vực đặc biệt
+    add: Thêm khu vực
+    edit: Sửa khu vực
+    name: Tên khu vực
+    abbreviation: Tên viết tắt (1 ký tự)
+    is-black: Tô nền đen
+    empty: Chưa có khu vực
+    delete-confirm: Xóa khu vực này? Huy hiệu này sẽ bị gỡ khỏi mọi ga đang dùng.
+  line:
+    title: Tuyến
+    add: Thêm tuyến
+    edit: Sửa tuyến
+    name: Tên tuyến
+    color: Màu tuyến
+    prefix: Tên viết tắt tuyến
+    priority: Độ ưu tiên
+    company: Công ty
+    is-loop: Tuyến vòng
+    empty: Chưa có tuyến
+    select: Chọn tuyến
+    all: Tất cả công ty
+    unassigned-company: Chưa gán công ty
+    delete-confirm: Xóa tuyến này? Mọi tuyến liên tuyến có chứa tuyến này cũng sẽ bị xóa.
+    delete-all: Xóa tất cả tuyến
+    delete-all-confirm: Xóa tất cả tuyến? Các ga được gán, mã ga, loại tàu và mọi tuyến chạy liên tuyến liên quan cũng sẽ bị xóa. Bạn không thể hoàn tác thao tác này.
+    delete-targets: Các tuyến sẽ bị xóa
+    prefix-preview: Xem trước huy hiệu chỉ báo tuyến
+    station-number-preview: Xem trước mã ga (01)
+  through-route:
+    title: Tuyến liên tuyến
+    add: Thêm tuyến chạy liên tuyến
+    edit: Sửa tuyến liên tuyến
+    name: Tên tuyến
+    empty: Chưa có tuyến liên tuyến
+    segments: Các đoạn tuyến
+    segment-number: "Đoạn {number}"
+    add-segment: Thêm đoạn tuyến
+    line: Tuyến
+    entry-station: Ga đầu
+    exit-station: Ga cuối
+    direction: Chiều đoạn
+    forward: Chiều thuận (theo thứ tự ga)
+    reverse: Chiều ngược (theo thứ tự ga ngược lại)
+    guide-title: Quy tắc tạo tuyến hợp lệ
+    guide-intro: Ứng dụng không kiểm tra dịch vụ thực tế. Bạn có thể lưu mọi tuyến tạo thành một đường liên tục, không phân nhánh trong dữ liệu đã đăng ký.
+    guide-section: Trong mỗi đoạn, hãy chọn hai ga khác nhau trên cùng tuyến làm ga đầu và ga cuối.
+    guide-direction: Chiều thuận theo thứ tự ga đã đăng ký; chiều ngược đi theo hướng đối diện. Với tuyến vòng, chiều đi sẽ quyết định đi theo nhánh nào của vòng.
+    guide-connection: Mỗi đoạn tiếp theo phải bắt đầu tại cùng bản ghi ga nơi đoạn trước kết thúc, hoặc tại ga được nối bằng kết nối trung chuyển rõ ràng.
+    delete-confirm: Xóa tuyến liên tuyến này?
+    service-help: Cấu hình loại tàu cho toàn bộ tuyến liên tuyến này. Sau khi lưu, hãy đặt các ga dừng trong trình chỉnh sửa tuyến bên dưới.
+    service-editor-help: Đang sửa loại tàu và các ga dừng cho “{name}”. Hãy đổi các đoạn hoặc thứ tự trong trình chỉnh sửa tuyến liên tuyến.
+    error-incomplete: Hãy chọn tuyến và cả hai ga đầu cuối cho mỗi đoạn.
+    error-empty: Hãy thêm ít nhất một đoạn tuyến.
+    error-station-not-on-line: Ga đã chọn không thuộc tuyến này.
+    error-invalid-direction: Không thể đi từ ga đầu đến ga cuối theo chiều đã chọn.
+    error-disconnected: Các đoạn tuyến liền kề không có cùng ga kết nối.
+    error-same-station: Hãy chọn hai ga khác nhau làm ga đầu và ga cuối.
+    error-invalid-direction-detail: 'Để đi từ “{entry}” đến “{exit}”, hãy chọn “{direction}”.'
+    error-disconnected-detail: 'Ở đoạn {current}, hãy chọn cùng bản ghi ga với “{station}”, là ga cuối của đoạn {previous}, hoặc thêm kết nối trung chuyển rõ ràng giữa hai ga.'
+  service:
+    title: Loại tàu
+    local: Thường
+    add-placeholder: Tên loại tàu
+    delete-confirm: Xóa loại tàu này? Toàn bộ dữ liệu ga dừng sẽ bị mất.
+  station:
+    title: Ga
+    add: Thêm ga
+    add-existing: Thêm từ ga hiện có
+    link-title: Thêm ga hiện có vào tuyến
+    source-line: Tuyến nguồn
+    select-existing: Chọn ga cần thêm
+    inherited-info: Thông tin kế thừa (chỉ đọc)
+    edit: Sửa ga
+    name: Tên ga
+    furigana: Cách đọc (Hiragana)
+    en: Tên tiếng Anh
+    ko: Tên tiếng Hàn
+    zh: Tên tiếng Trung
+    note: Ghi chú
+    trc: Mã gồm ba chữ cái
+    number: Mã ga
+    number-source: Tuyến hiển thị mã ga
+    number-source-help: Chọn mã tuyến sẽ dùng cho huy hiệu mã ga của tuyến này.
+    number-source-current-only: Tuyến này chỉ có mã tuyến hiện tại.
+    number-source-current: "Dùng tuyến hiện tại [{prefix}] {name}"
+    number-source-parent: "Dùng tuyến cha [{prefix}] {name}"
+    areas: Huy hiệu khu vực giá vé
+    empty: Chọn tuyến để xem các ga
+    no-station: Chưa có ga
+    duplicate-number-warning: "Mã ga bị trùng trên tuyến này: {numbers}"
+    delete-confirm: Xóa ga này khỏi tuyến?
+    select: Chọn ga
+    transfer-title: "Thông tin trung chuyển — {name}"
+    transfer-manage: Xem và quản lý thông tin trung chuyển
+    transfer-line-select: Tuyến kết nối
+    transfer-select: Ga kết nối
+    transfer-empty: Không có kết nối trung chuyển
+    same-id-lines: Các tuyến dùng chung ID ga
+    same-id-lines-help: Các tuyến này dùng chung bản ghi ga và được tự động xem là có kết nối trung chuyển. Bạn chỉ có thể xem tại đây.
+    same-id-lines-empty: Không có tuyến nào khác dùng chung ID ga này
+    explicit-transfers: Kết nối trung chuyển rõ ràng giữa các ga
+    explicit-transfers-help: Thêm hoặc xóa kết nối giữa các bản ghi ga khác nhau. Ga được thêm sẽ chuyển từ danh sách lựa chọn xuống danh sách bên dưới và cũng có thể kết nối các đoạn tuyến liên tuyến.
+  sign:
+    style: Kiểu
+    direction: Chiều
+    filename-direction-left: Hướng trái
+    filename-direction-both: Cả hai chiều
+    filename-direction-right: Hướng phải
+    flip: Đảo chiều
+    prev-station: Ga trước
+    next-station: Ga tiếp theo
+    adjacent-select: Chọn tối đa {count} ga
+    adjacent-order: Thứ tự hiện tại
+    adjacent-move-up: Chuyển lên
+    adjacent-move-down: Chuyển xuống
+    adjacent-swap-order: Đảo thứ tự
+    jreast: Kiểu JR East
+    jreastbranch: Kiểu JR East (phân nhánh)
+    jrcentral: Kiểu JR Central
+    jrwest: Kiểu JR West
+    jrwestlarge: Kiểu JR West (cỡ lớn)
+    metrolong: Kiểu Tokyo Metro (cỡ nhỏ / tiếng Nhật)
+    metroforeign: Kiểu Tokyo Metro (cỡ nhỏ / ngoại ngữ)
+    metromedium: Kiểu Tokyo Metro (cỡ vừa)
+    toeimedium: Kiểu Toei Subway (cỡ vừa)
+    toeilarge: Kiểu Toei Subway (cỡ lớn)
+    metrolong-subtext: Dòng phụ
+    metrolong-subtext-furigana: Furigana
+    metrolong-subtext-secondary: Ngôn ngữ phụ
+    center-colors: Màu ô vuông ở giữa
+    station-number-badges: Huy hiệu mã ga
+  mode:
+    sign: Biển tên ga
+    linemap: Sơ đồ tuyến (đơn/liên tuyến)
+    multiline-linemap: Sơ đồ tuyến (nhiều tuyến)
+  linemap:
+    section-route: Tuyến và phạm vi
+    section-layout: Bố cục
+    section-content: Nội dung hiển thị
+    filename-suffix: Sơ đồ tuyến
+    export-format: Định dạng xuất
+    format-png: PNG (ảnh)
+    format-svg: SVG (vector)
+    format-pdf: PDF (vector)
+    vector-size-note: Định dạng vector không cần kích thước ảnh
+    export-error: Xuất không thành công. Hãy thử định dạng hoặc kích thước ảnh khác.
+    orientation: Hướng
+    horizontal: Ngang
+    vertical: Dọc
+    range-start: Từ
+    range-end: Đến
+    transit-filter: Hiển thị các tuyến trung chuyển
+    transit-show-names: Hiển thị tên tuyến trung chuyển
+    download-text-warning: Lưu (tên phụ có thể khó đọc)
+    font-size: Cỡ phông tên ga
+    font-size-small: Nhỏ
+    font-size-medium: Vừa
+    font-size-large: Lớn
+    overlap-warning-title: Phát hiện nhãn chồng lên nhau
+    overlap-warning: Một số tên ga bị chồng lên nhau. Hãy thử giảm cỡ phông.
+    station-number-mode: Hiển thị mã ga
+    station-number-none: Không có
+    station-number-badge: Huy hiệu
+    station-number-dot: Thay bằng chấm
+    emphasize-connected-station-names: Phóng to tên ga kết nối tuyến
+    name-style: Kiểu tên
+    name-style-normal: Bình thường
+    name-style-above: Phía trên
+    name-style-below: Phía dưới
+    station-spacing: Khoảng cách giữa các ga
+    line-width: Độ dày tuyến
+    primary-lang: Ngôn ngữ chính
+    secondary-lang: Ngôn ngữ phụ
+    show-secondary-lang: Hiển thị
+    lang-1st: Tên thứ nhất
+    lang-2nd: Tên thứ hai
+    lang-3rd: Tên thứ ba
+    lang-4th: Tên thứ tư
+    continuation: Dấu hiệu tiếp tục
+    continuation-before: Hiển thị ở đầu
+    continuation-after: Hiển thị ở cuối
+    swap: Đổi điểm đầu và cuối
+    loop-render-mode: Chế độ hiển thị tuyến vòng
+    loop-as-linear: Hiển thị như tuyến thẳng
+    name-side: Vị trí tên
+    name-side-left: Trái
+    name-side-right: Phải
+    services: Loại tàu
+    services-placeholder: Tất cả loại tàu (một đường)
+    show-passed-stations: Ga chạy qua
+    passed-show: Hiển thị (mờ)
+    passed-hide-gap: Ẩn (chừa khoảng trống)
+    passed-hide-trim: Ẩn (thu gọn)
+    service-name-style: Kiểu tên loại tàu
+    service-name-paren: （dấu ngoặc đơn）
+    service-name-badge: Huy hiệu
+
+footer:
+  links:
+    title: Liên kết
+    description: Trang web và hồ sơ mạng xã hội của nhà phát triển
+    website: Trang web
+  development:
+    title: Tài nguyên phát triển
+    description: Mã nguồn, báo lỗi và yêu cầu tính năng
+    repository: Kho GitHub
+    repository-description: Mã nguồn và bản phát hành
+    issues: Vấn đề
+    issues-description: Báo lỗi và yêu cầu tính năng
+  notice: Đây là trang web do người hâm mộ tạo. Mọi nhãn hiệu thuộc về các công ty đường sắt tương ứng. Trang web này không liên kết với hoặc được bất kỳ công ty đường sắt nào xác nhận. Dữ liệu mẫu và giá trị ban đầu có thể là dữ liệu giả.
+
+mtr-import:
+  title: "Nhập từ MTR"
+  description: "Tải URL bản đồ hoặc dán JSON do API trả về, sau đó chọn các tuyến muốn thêm."
+  version: "Phiên bản MTR"
+  source-url: "URL bản đồ"
+  source-json: "Dán JSON"
+  url: "URL bản đồ hoặc API"
+  dimension: "Chỉ số chiều"
+  endpoint: "Mở JSON API"
+  fetch: "Tải tuyến"
+  json: "JSON API"
+  parse: "Đọc JSON"
+  routes: "Chọn tuyến"
+  stations-count: "{count} ga"
+  select-all: "Chọn tất cả"
+  select-none: "Bỏ chọn tất cả"
+  company: "Công ty đích"
+  no-company: "Không có công ty"
+  import: "Nhập {count} tuyến"
+  success: "Đã thêm {routes} tuyến và {stations} ga."
+  note: "Các tuyến được thêm riêng, kể cả chiều ngược lại. Những ga MTR dùng chung vẫn được liên kết trong lần nhập này. Dữ liệu hiện có được giữ nguyên. Có thể chỉnh mã và cách đọc tên ga sau đó."
+  manual-help: "Nếu không tải được do CORS hoặc giới hạn HTTPS/HTTP, hãy mở liên kết API rồi dán JSON vào đây."
+  skipped: "Đã loại {count} tuyến không có điểm dừng hoặc có ga trung gian lặp lại vì ứng dụng không thể biểu diễn các tuyến này."
+  error:
+    invalid-json: "JSON không hợp lệ. Hãy dán toàn bộ phản hồi API."
+    invalid-data: "JSON này không khớp với định dạng API bản đồ MTR đã chọn."
+    no-routes: "Không tìm thấy tuyến nào có thể nhập."
+    too-large: "Dữ liệu vượt quá giới hạn nhập (10 MB)."
+    invalid-url: "Nhập URL bản đồ/API dùng HTTP hoặc HTTPS, không có tên người dùng hay mật khẩu, cùng chỉ số chiều không âm."
+    fetch-failed: "Không thể tải API. Hãy kiểm tra URL, chỉ số chiều và tình trạng máy chủ, hoặc dán JSON."
+    timeout: "Yêu cầu API đã hết thời gian chờ. Hãy thử lại hoặc dán JSON."
+    import-failed: "Không thể nhập các tuyến. Chưa có tuyến nào được thêm."

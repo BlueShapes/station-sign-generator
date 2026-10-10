@@ -61,7 +61,7 @@ input:
     note: Nota Stesen (Teks Lebih Besar Di Bawah Nama Stesen)
     rstation: Nama Stesen Kanan
     rread: Subteks Stesen Kanan
-    ren: Subteks Stesen Kanan
+    ren: Nama Alternatif Stesen Kanan
     rnum: Nombor Stesen Kanan (Utama)
     rnum2: Nombor Stesen Kanan (Menengah)
     rnum3: Nombor Stesen Kanan (Tertier)

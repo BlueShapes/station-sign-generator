@@ -61,7 +61,7 @@ input:
     note: Nota da estação (texto maior abaixo do nome da estação)
     rstation: Nome da estação direita
     rread: Subtexto da estação direita
-    ren: Subtexto da estação direita
+    ren: Nome alternativo da estação direita
     rnum: Número da estação direita (primária)
     rnum2: Número da estação direita (secundária)
     rnum3: Número da estação direita (terciária)

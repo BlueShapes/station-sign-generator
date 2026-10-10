@@ -64,7 +64,7 @@ input:
     note: "Station Note (Larger Text Below Station Name)"
     rstation: "Right Station Name"
     rread: "Right Station Subtext"
-    ren: "Right Station Subtext"
+    ren: "Right Station Alternative Name"
     rnum: "Right Station Number (Primary)"
     rnum2: "Right Station Number (Secondary)"
     rnum3: "Right Station Number (Tertiary)"

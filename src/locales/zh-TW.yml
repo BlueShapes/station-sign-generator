@@ -61,7 +61,7 @@ input:
     note: 車站註（車站名稱下方較大文字）
     rstation: 正確的站名
     rread: 右站潛台詞
-    ren: 右站潛台詞
+    ren: 右站別名
     rnum: 右站號（主要）
     rnum2: 右站號（次要）
     rnum3: 右側車站編號（第三）

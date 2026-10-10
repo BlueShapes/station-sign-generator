@@ -61,7 +61,7 @@ input:
     note: 车站注释（车站名称下方较大文字）
     rstation: 正确的站名
     rread: 右站潜台词
-    ren: 右站潜台词
+    ren: 右站别名
     rnum: 右站号（主要）
     rnum2: 右站号（次要）
     rnum3: 右侧车站编号（第三）

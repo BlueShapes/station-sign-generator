@@ -1,0 +1,472 @@
+$site-name: "Generator Rambu Stasiun & Peta Jalur"
+$og-image-path: "/ogp.png"
+
+meta:
+  title: Generator Rambu Kereta | Edisi Segitiga Biru (gaya JR East/West)
+  description: Alat gratis dan praktis untuk membuat rambu nama stasiun kereta.
+  og-image-alt: Contoh gambar rambu stasiun (gaya JR East)
+  pwa: 
+    name: Generator Rambu Stasiun & Peta Jalur – Edisi Segitiga Biru
+    short-name: Rambu & Peta Jalur
+
+header:
+  title: Generator Rambu Stasiun & Peta Jalur
+  edition: Edisi Segitiga Biru
+  tooltip:
+    lang: Ubah Bahasa
+    share: Bagikan Alat Ini
+    share-options:
+      twitter: "Twitter (sekarang X)"
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
+      copy: Salin URL
+    copy: URL disalin ke papan klip.
+    share-message: Buat rambu stasiun dan peta jalur dengan {name}!
+
+input:
+  save: Simpan sebagai Gambar
+  image-size: Ukuran Gambar
+  direct:
+    swaplr: "Tukar kiri dan kanan"
+    reset: "Atur ulang masukan"
+    reset-title: "Atur Ulang Semua Masukan"
+    reset-confirm: "Yakin ingin mengatur ulang semua masukan? Tindakan ini tidak dapat dibatalkan."
+    base-color: "Warna Perusahaan"
+    arrow-color: "Warna panah (warna perusahaan)"
+    line-color: "Warna Jalur"
+    local-lines: "Jalur"
+    local-lines-prefix: "Singkatan Nama Jalur"
+    local-lines-add: "Tambah Jalur"
+    local-lines-empty: "Tambahkan jalur di atas untuk memilih singkatan di sini"
+    lstation: "Nama Stasiun Kiri"
+    lread: "Teks Tambahan Stasiun Kiri"
+    len: "Nama Alternatif Stasiun Kiri"
+    lnum: "Nomor Stasiun Kiri (Utama)"
+    lnum2: "Nomor Stasiun Kiri (Sekunder)"
+    lnum3: "Nomor Stasiun Kiri (Ketiga)"
+    station: "Nama Stasiun"
+    read: "Teks Tambahan Stasiun"
+    en: "Nama Stasiun Bahasa Kedua (Inggris)"
+    ch: "Nama Stasiun Bahasa Ketiga (Mandarin)"
+    kp: "Nama Stasiun Bahasa Keempat (Korea)"
+    num: "Nomor Stasiun (Utama)"
+    num2: "Nomor Stasiun (Sekunder)"
+    num3: "Nomor Stasiun (Ketiga)"
+    trc: "Kode Stasiun"
+    note: "Catatan Stasiun (Teks Besar di Bawah Nama)"
+    rstation: "Nama Stasiun Kanan"
+    rread: "Teks Tambahan Stasiun Kanan"
+    ren: "Nama Alternatif Stasiun Kanan"
+    rnum: "Nomor Stasiun Kanan (Utama)"
+    rnum2: "Nomor Stasiun Kanan (Sekunder)"
+    rnum3: "Nomor Stasiun Kanan (Ketiga)"
+    input-left: "Info Stasiun Kiri"
+    input-current: "Info Stasiun Ini"
+    input-right: "Info Stasiun Kanan"
+    area: Area Tarif Stasiun
+    area-name: Nama Area
+    center-colors: Warna Kotak Tengah
+    export-copy: Salin JSON
+    export-copy-done: Disalin!
+    export-download: Unduh JSON
+    import: Impor JSON
+    import-modal-title: Impor Data JSON
+    import-paste-label: Tempel JSON
+    import-paste-placeholder: "Tempel JSON yang diekspor di sini..."
+    import-file-label: Unggah file JSON
+    import-submit: Impor
+    import-error: "Data tidak valid: {detail}"
+
+common:
+  preview: Pratinjau
+  add: Tambah
+  cancel: Batal
+  confirm: Atur Ulang
+  confirm-title: Konfirmasi
+  theme-dark: Beralih ke mode gelap
+  theme-light: Beralih ke mode terang
+  loading: Memuat...
+  loading-fonts: Memuat font...
+  edit: Ubah
+  delete: Hapus
+  save: Simpan
+  close: Tutup
+
+error:
+  on-save: "Fungsi handleSave gagal. Hal ini benar-benar tidak terduga karena kanvas selalu dirender."
+  corrupted-cache: "Data tersimpan rusak dan telah diatur ulang ke nilai bawaan. Anda dapat terus menggunakan aplikasi seperti biasa."
+
+tabs:
+  simple: Masukan Sederhana
+  route-input: Dari Rute
+  route-edit: Edit Rute
+  settings: Pengaturan
+
+settings:
+  storage:
+    title: Penyimpanan Font
+    indexeddb: IndexedDB (Permanen)
+    memory: Memori Saja (Sesi)
+    memory-warning: Font kustom yang diunggah dalam sesi ini akan hilang saat halaman ditutup.
+  fonts:
+    builtin-title: Font Bawaan
+    builtin-desc: Font yang diperlukan untuk rambu stasiun. Tidak dapat dihapus.
+    preload: Muat Awal
+    user-title: Font Kustom
+    upload: Unggah Font
+    upload-modal-title: Unggah Font
+    select-file: Pilih file font (.ttf, .otf, .woff, .woff2)
+    display-name: Nama Tampilan
+    family-name: Nama Font CSS
+    family-hint: "Digunakan dalam konfigurasi gaya. Spasi tidak diperbolehkan."
+    upload-submit: Unggah
+    empty: Belum ada font kustom yang diunggah.
+    remove-all: Hapus Semua
+    remove-all-confirm: Hapus semua font kustom? Font juga akan dihapus dari IndexedDB dan tidak dapat dipulihkan.
+    status:
+      idle: Belum dimuat
+      loading: Memuat...
+      loaded: Dimuat
+      error: Kesalahan
+  images:
+    title: Gambar
+    upload: Unggah Gambar
+    upload-modal-title: Unggah Gambar
+    select-file: Pilih file gambar
+    display-name: Nama Gambar
+    upload-submit: Unggah
+    empty: Belum ada gambar yang diunggah.
+    remove-all: Hapus Semua
+    remove-all-confirm: Hapus semua gambar yang diunggah? Gambar juga akan dihapus dari IndexedDB dan tidak dapat dipulihkan.
+
+  custom:
+    title: Gaya Kustom
+    description: Definisi kustom disimpan terpisah dari data perusahaan, jalur, dan stasiun.
+    option-prefix: Kustom
+    duplicate: Duplikat
+    copy-name: "Salinan {name}"
+    empty: Belum ada definisi kustom.
+    template-font: Font templat
+    font-embedded: Data biner font disematkan
+    name: Nama
+    template-label: Templat dasar
+    font: Jenis Huruf
+    font-help: Font yang diunggah akan disalin ke definisi kustom.
+    sign:
+      title: Gaya rambu stasiun
+      create: Buat Gaya Kustom
+      edit: Edit Gaya Kustom
+    station-badge:
+      title: Lencana nomor stasiun
+      create: Buat Lencana Nomor Stasiun Kustom
+    route-badge:
+      title: Lencana Rute
+      create: Buat Lencana Rute Kustom
+    advanced:
+      title: Tata Letak Lanjutan
+      description: Atur tipografi untuk setiap bagian teks selain nomor. Kolom kosong menggunakan nilai bawaan templat.
+      font-size: Ukuran Font
+      letter-spacing: Jarak Huruf
+      y-offset: Offset Y
+    parts:
+      main-primary: Nama Stasiun Utama
+      main-furigana: Pelafalan Utama
+      main-secondary: Nama Utama Kedua
+      main-tertiary: Nama Utama Ketiga
+      main-quaternary: Nama Utama Keempat
+      main-note: Catatan stasiun
+      main-area: Area Tarif
+      adjacent-primary: Nama Stasiun Sebelah
+      adjacent-furigana: Pelafalan Nama Stasiun Sebelah
+      adjacent-secondary: Nama Sekunder Stasiun Sebelah
+    template:
+      station-badge:
+        jreast: Gaya JR East
+        jrcentral: Gaya JR Central
+        tokyometro: Gaya Tokyo Metro / Toei
+      route-badge:
+        rounded-square: Persegi membulat
+        circle: Lingkaran
+route:
+  download-sqlite: Unduh SQLite
+  import-sqlite: Impor SQLite
+  import-sample: Muat Data Contoh
+  import-error:
+    invalid-file: "File yang dipilih bukan basis data SQLite yang valid."
+    missing-table: "Basis data tidak memiliki tabel wajib: {detail}"
+    missing-column: "Basis data tidak memiliki kolom wajib: {detail}"
+  import-modal:
+    title: Impor Basis Data
+    description: Basis data sudah ada. Bagaimana Anda ingin mengimpor?
+    overwrite-desc: "Timpa: Ganti semua data yang ada dengan data impor."
+    merge-desc: "Gabungkan: Tambahkan data impor ke basis data yang ada. Data yang bertentangan akan diperbarui."
+    overwrite: Timpa
+    merge: Gabungkan
+  no-routes: Rute tidak ditemukan. Buat rute di tab "Edit Routes".
+  company:
+    route-badge-style: Gaya Lencana Rute
+    route-badge-style-preview: Pratinjau Lencana Rute
+    title: Perusahaan
+    add: Tambah Perusahaan
+    edit: Edit Perusahaan
+    name: Nama Perusahaan
+    color: Warna Perusahaan
+    station-number-style: Gaya Nomor Stasiun
+    station-number-style-jreast: Gaya JR East
+    station-number-style-jrcentral: Gaya JR Central
+    station-number-style-tokyometro: Gaya Tokyo Metro / Toei Subway
+    station-number-style-preview: Contoh lencana (warna perusahaan digunakan sebagai warna jalur)
+    empty: Belum ada perusahaan
+    delete-confirm: Hapus perusahaan ini? Jalur miliknya dan rute lintas jalur yang memuat jalur tersebut juga akan dihapus.
+  special-zone:
+    title: Zona Khusus
+    add: Tambah Zona
+    edit: Edit Zona
+    name: Nama Zona
+    abbreviation: Singkatan (1 karakter)
+    is-black: Isian hitam
+    empty: Belum ada zona
+    delete-confirm: Hapus zona ini? Lencana pada semua stasiun yang menggunakannya juga akan dihapus.
+  line:
+    title: Jalur
+    add: Tambah Jalur
+    edit: Edit Jalur
+    name: Nama Jalur
+    color: Warna Jalur
+    prefix: Singkatan Nama Jalur
+    priority: Prioritas
+    company: Perusahaan
+    is-loop: Jalur Lingkar (rute melingkar)
+    empty: Belum ada jalur
+    select: Pilih jalur
+    all: Semua Perusahaan
+    unassigned-company: Tanpa perusahaan
+    delete-confirm: Hapus jalur ini? Rute lintas jalur yang memuatnya juga akan dihapus.
+    delete-all: Hapus Semua Jalur
+    delete-all-confirm: Hapus semua jalur? Penetapan stasiun, nomor stasiun, layanan, dan semua rute lintas jalur terkait juga akan dihapus. Tindakan ini tidak dapat dibatalkan.
+    delete-targets: Jalur yang akan dihapus
+    prefix-preview: Pratinjau Lencana Penanda Jalur
+    station-number-preview: Pratinjau nomor stasiun (01)
+  through-route:
+    title: Rute Lintas
+    add: Tambah Rute Lintas
+    edit: Edit Rute Lintas
+    name: Nama Rute
+    empty: Belum ada rute lintas
+    segments: Bagian Jalur
+    segment-number: "Bagian {number}"
+    add-segment: Tambah Bagian Jalur
+    line: Jalur
+    entry-station: Stasiun Masuk
+    exit-station: Stasiun Keluar
+    direction: Arah Bagian
+    forward: Maju (urutan stasiun)
+    reverse: Mundur (urutan stasiun terbalik)
+    guide-title: Aturan untuk rute yang valid
+    guide-intro: Layanan di dunia nyata tidak diperiksa. Anda dapat menyimpan rute apa pun yang membentuk jalur berkesinambungan tanpa percabangan dalam data terdaftar.
+    guide-section: Dalam setiap bagian, pilih dua stasiun berbeda pada jalur yang sama sebagai stasiun masuk dan keluar.
+    guide-direction: Arah maju mengikuti urutan stasiun yang terdaftar; arah balik berjalan sebaliknya. Pada jalur lingkar, arah menentukan sisi lingkar yang dilalui.
+    guide-connection: Setiap bagian berikutnya harus dimulai pada data stasiun yang sama dengan stasiun keluar bagian sebelumnya, atau pada stasiun yang terhubung melalui hubungan transit eksplisit.
+    delete-confirm: Hapus rute lintas jalur ini?
+    service-help: Atur jenis layanan untuk seluruh rute lintas jalur ini. Setelah disimpan, atur pemberhentiannya di editor rute di bawah.
+    service-editor-help: Mengedit jenis layanan dan pemberhentian untuk “{name}”. Ubah bagian atau urutannya di editor rute lintas jalur.
+    error-incomplete: Pilih jalur serta stasiun awal dan akhir untuk setiap bagian.
+    error-empty: Tambahkan setidaknya satu bagian jalur.
+    error-station-not-on-line: Stasiun yang dipilih bukan bagian dari jalurnya.
+    error-invalid-direction: Stasiun keluar tidak dapat dicapai dari stasiun masuk dalam arah yang dipilih.
+    error-disconnected: Bagian jalur yang berdekatan tidak terhubung melalui stasiun yang sama.
+    error-same-station: Pilih stasiun berbeda untuk titik masuk dan keluar.
+    error-invalid-direction-detail: 'Untuk perjalanan dari “{entry}” ke “{exit}”, pilih “{direction}”.'
+    error-disconnected-detail: 'Untuk segmen {current}, pilih data stasiun yang sama dengan “{station}”, stasiun keluar segmen {previous}, atau tambahkan hubungan transit eksplisit di antara keduanya.'
+  service:
+    title: Layanan
+    local: Lokal
+    add-placeholder: Nama layanan
+    delete-confirm: Hapus layanan ini? Semua data pemberhentian akan hilang.
+  station:
+    title: Stasiun
+    add: Tambah Stasiun
+    add-existing: Tambahkan dari Stasiun yang Ada
+    link-title: Tambahkan Stasiun yang Ada ke Jalur
+    source-line: Jalur sumber
+    select-existing: Pilih stasiun untuk ditambahkan
+    inherited-info: Info Warisan (hanya baca)
+    edit: Edit Stasiun
+    name: Nama Stasiun
+    furigana: Pelafalan (Hiragana)
+    en: Nama Inggris
+    ko: Nama Korea
+    zh: Nama Mandarin
+    note: Catatan
+    trc: Kode Tiga Huruf
+    number: Nomor Stasiun
+    number-source: Jalur Tampilan Nomor Stasiun
+    number-source-help: Pilih kode jalur yang akan digunakan pada lencana nomor stasiun jalur ini.
+    number-source-current-only: Hanya kode jalur saat ini yang tersedia untuk jalur ini.
+    number-source-current: "Gunakan jalur ini [{prefix}] {name}"
+    number-source-parent: "Gunakan jalur induk [{prefix}] {name}"
+    areas: Lencana Zona Tarif
+    empty: Pilih jalur untuk melihat stasiun
+    no-station: Belum ada stasiun
+    duplicate-number-warning: "Nomor stasiun duplikat pada jalur ini: {numbers}"
+    delete-confirm: Hapus stasiun ini dari jalur?
+    select: Pilih stasiun
+    transfer-title: "Info transit — {name}"
+    transfer-manage: Lihat dan kelola info transit
+    transfer-line-select: Jalur Penghubung
+    transfer-select: Stasiun Penghubung
+    transfer-empty: Tidak ada hubungan transit
+    same-id-lines: Jalur dengan ID stasiun yang sama
+    same-id-lines-help: Jalur-jalur ini berbagi data stasiun yang sama dan otomatis dianggap terhubung untuk transit. Bagian ini hanya dapat dibaca.
+    same-id-lines-empty: Tidak ada jalur lain dengan ID stasiun ini
+    explicit-transfers: Hubungan Transit Eksplisit Antarstasiun
+    explicit-transfers-help: Tambahkan atau hapus hubungan antar-data stasiun yang berbeda. Stasiun yang ditambahkan akan dipindahkan dari pilihan ke daftar di bawah dan juga dapat menghubungkan bagian rute lintas jalur.
+  sign:
+    style: Gaya
+    direction: Arah
+    filename-direction-left: Menghadap Kiri
+    filename-direction-both: Kedua arah
+    filename-direction-right: Menghadap Kanan
+    flip: Balik Arah
+    prev-station: Stasiun Sebelumnya
+    next-station: Stasiun Berikutnya
+    adjacent-select: Pilih hingga {count} stasiun
+    adjacent-order: Urutan saat ini
+    adjacent-move-up: Pindahkan ke atas
+    adjacent-move-down: Pindahkan ke bawah
+    adjacent-swap-order: Balik urutan
+    jreast: Gaya JR East
+    jreastbranch: Gaya JR East (Bercabang)
+    jrcentral: Gaya JR Central
+    jrwest: Gaya JR West
+    jrwestlarge: Gaya JR West (Besar)
+    metrolong: Gaya Tokyo Metro (Kecil / Bahasa Jepang)
+    metroforeign: Gaya Tokyo Metro (Kecil / Bahasa Asing)
+    metromedium: Gaya Tokyo Metro (Sedang)
+    toeimedium: Gaya Toei Subway (Sedang)
+    toeilarge: Gaya Toei Subway (Besar)
+    metrolong-subtext: Teks Tambahan
+    metrolong-subtext-furigana: Furigana
+    metrolong-subtext-secondary: Bahasa sekunder
+    center-colors: Warna Kotak Tengah
+    station-number-badges: Lencana nomor stasiun
+  mode:
+    sign: Rambu Stasiun
+    linemap: Peta Jalur (Tunggal/Lintas)
+    multiline-linemap: Peta Jalur (Beberapa Jalur)
+  linemap:
+    section-route: Rute dan Rentang
+    section-layout: Tata Letak
+    section-content: Konten yang Ditampilkan
+    filename-suffix: Peta Jalur
+    export-format: Format Ekspor
+    format-png: PNG (Gambar)
+    format-svg: SVG (Vektor)
+    format-pdf: PDF (Vektor)
+    vector-size-note: Format vektor tidak memerlukan ukuran gambar
+    export-error: Ekspor gagal. Coba format atau ukuran gambar lain.
+    orientation: Orientasi
+    horizontal: Mendatar
+    vertical: Vertikal
+    range-start: Dari
+    range-end: Ke
+    transit-filter: Tampilkan Jalur Transit
+    transit-show-names: Tampilkan nama jalur transit
+    download-text-warning: Simpan (nama sekunder mungkin tidak terbaca)
+    font-size: Ukuran Font Nama Stasiun
+    font-size-small: Kecil
+    font-size-medium: Sedang
+    font-size-large: Besar
+    overlap-warning-title: Terdeteksi Label Bertumpuk
+    overlap-warning: Beberapa nama stasiun bertumpuk. Coba kecilkan ukuran font.
+    station-number-mode: Tampilan Nomor Stasiun
+    station-number-none: Tidak ada
+    station-number-badge: Lencana
+    station-number-dot: Ganti Titik
+    emphasize-connected-station-names: Perbesar nama stasiun penghubung rute
+    name-style: Gaya Nama
+    name-style-normal: Biasa
+    name-style-above: Atas
+    name-style-below: Bawah
+    station-spacing: Jarak Antarstasiun
+    line-width: Ketebalan Jalur
+    primary-lang: Bahasa Utama
+    secondary-lang: Bahasa Sekunder
+    show-secondary-lang: Tampilkan
+    lang-1st: Nama ke-1
+    lang-2nd: Nama ke-2
+    lang-3rd: Nama ke-3
+    lang-4th: Nama ke-4
+    continuation: Penanda Kelanjutan
+    continuation-before: Tampilkan di awal
+    continuation-after: Tampilkan di akhir
+    swap: Tukar awal dan akhir
+    loop-render-mode: Mode Tampilan Jalur Lingkar
+    loop-as-linear: Tampilkan sebagai rute lurus
+    name-side: Sisi Nama
+    name-side-left: Kiri
+    name-side-right: Kanan
+    services: Layanan
+    services-placeholder: Semua layanan (satu jalur)
+    show-passed-stations: Stasiun yang Dilewati
+    passed-show: Tampilkan (pudar)
+    passed-hide-gap: Sembunyikan (beri jarak)
+    passed-hide-trim: Sembunyikan (rapatkan)
+    service-name-style: Gaya nama layanan
+    service-name-paren: （tanda kurung）
+    service-name-badge: Lencana
+
+footer:
+  links:
+    title: Tautan
+    description: Situs web dan profil media sosial pembuat
+    website: Situs web
+  development:
+    title: Sumber Daya Pengembangan
+    description: Kode sumber, laporan bug, dan permintaan fitur
+    repository: Repositori GitHub
+    repository-description: Kode sumber dan rilis
+    issues: Isu
+    issues-description: Laporan bug dan permintaan fitur
+  notice: Situs ini dibuat oleh penggemar. Semua merek dagang adalah milik perusahaan kereta api masing-masing. Situs ini tidak berafiliasi atau didukung oleh perusahaan kereta api mana pun. Data contoh dan nilai awal mungkin tidak nyata.
+
+mtr-import:
+  title: "Impor dari MTR"
+  description: "Muat URL peta atau tempel JSON dari API-nya, lalu pilih rute yang ingin ditambahkan."
+  version: "Versi MTR"
+  source-url: "URL Peta"
+  source-json: "Tempel JSON"
+  url: "URL Peta atau API"
+  dimension: "Indeks dimensi"
+  endpoint: "Buka JSON API"
+  fetch: "Muat Rute"
+  json: "JSON API"
+  parse: "Baca JSON"
+  routes: "Pilih rute"
+  stations-count: "{count} stasiun"
+  select-all: "Pilih semua"
+  select-none: "Batalkan pilihan semua"
+  company: "Perusahaan tujuan"
+  no-company: "Tanpa perusahaan"
+  import: "Impor {count} rute"
+  success: "Berhasil menambahkan {routes} rute dan {stations} stasiun."
+  note: "Setiap rute ditambahkan secara terpisah, termasuk arah sebaliknya. Stasiun MTR yang sama tetap terhubung dalam impor ini. Data yang ada dipertahankan. Nomor dan pelafalan stasiun dapat diedit setelahnya."
+  manual-help: "Jika pemuatan terhalang oleh CORS atau pembatasan HTTPS/HTTP, buka tautan API lalu tempel JSON-nya di sini."
+  skipped: "Mengecualikan {count} rute tanpa pemberhentian atau dengan stasiun antara berulang karena aplikasi ini tidak dapat menampilkannya."
+  error:
+    invalid-json: "JSON tidak valid. Tempel seluruh respons API."
+    invalid-data: "Format JSON ini tidak sesuai dengan format API peta MTR yang dipilih."
+    no-routes: "Tidak ditemukan rute yang dapat diimpor."
+    too-large: "Ukuran data melebihi batas impor (10 MB)."
+    invalid-url: "Masukkan URL peta/API HTTP atau HTTPS tanpa nama pengguna atau kata sandi, serta indeks dimensi bernilai nol atau lebih."
+    fetch-failed: "Tidak dapat memuat API. Periksa URL, indeks dimensi, dan ketersediaan server, atau tempel JSON."
+    timeout: "Permintaan API kehabisan waktu. Coba lagi atau tempel JSON."
+    import-failed: "Rute tidak dapat diimpor. Tidak ada rute yang ditambahkan."

@@ -1,0 +1,462 @@
+$site-name: İstasyon Tabelası ve Hat Haritası Oluşturucu
+$og-image-path: /ogp.png
+meta:
+  title: Demiryolu Tabelası Oluşturucu | Mavi Üçgen Sürümü (JR East/West tarzı)
+  description: Demiryolu istasyon adı tabelaları oluşturmak için ücretsiz ve kullanışlı bir araç.
+  og-image-alt: Örnek istasyon tabelası görseli (JR East tarzı)
+  pwa:
+    name: İstasyon Tabelası ve Hat Haritası Oluşturucu – Mavi Üçgen Sürümü
+    short-name: Tabela ve Hat Haritası
+header:
+  title: İstasyon Tabelası ve Hat Haritası Oluşturucu
+  edition: Mavi Üçgen Sürümü
+  tooltip:
+    lang: Dili değiştir
+    share: Bu aracı paylaş
+    share-options:
+      twitter: Twitter (eski adıyla X)
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
+      copy: Bağlantıyı kopyala
+    copy: Bağlantı panoya kopyalandı.
+    share-message: "{name} ile istasyon tabelaları ve hat haritaları oluşturun!"
+input:
+  save: Görsel olarak kaydet
+  image-size: Görsel boyutu
+  direct:
+    swaplr: Sağ ve solu değiştir
+    reset: Girdileri sıfırla
+    reset-title: Tüm girdileri sıfırla
+    reset-confirm: Tüm girdileri sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.
+    base-color: Şirket rengi
+    arrow-color: Ok rengi (şirket rengi)
+    line-color: Hat rengi
+    local-lines: Hatlar
+    local-lines-prefix: Hat adı kısaltması
+    local-lines-add: Hat ekle
+    local-lines-empty: Buradan bir kısaltma seçmek için yukarıya hat ekleyin
+    lstation: Sol istasyon adı
+    lread: Sol istasyon alt metni
+    len: Sol istasyonun alternatif adı
+    lnum: Sol istasyon numarası (birincil)
+    lnum2: Sol istasyon numarası (ikincil)
+    lnum3: Sol istasyon numarası (üçüncül)
+    station: İstasyon adı
+    read: İstasyon alt metni
+    en: İstasyon adı ikinci dilde (İngilizce)
+    ch: İstasyon adı üçüncü dilde (Çince)
+    kp: İstasyon adı dördüncü dilde (Korece)
+    num: İstasyon numarası (birincil)
+    num2: İstasyon numarası (ikincil)
+    num3: İstasyon numarası (üçüncül)
+    trc: İstasyon kodu
+    note: İstasyon notu (istasyon adının altında büyük metin)
+    rstation: Sağ istasyon adı
+    rread: Sağ istasyon alt metni
+    ren: Sağ istasyonun alternatif adı
+    rnum: Sağ istasyon numarası (birincil)
+    rnum2: Sağ istasyon numarası (ikincil)
+    rnum3: Sağ istasyon numarası (üçüncül)
+    input-left: Sol istasyon bilgileri
+    input-current: Geçerli istasyon bilgileri
+    input-right: Sağ istasyon bilgileri
+    area: İstasyon ücret bölgesi
+    area-name: Bölge adı
+    center-colors: Orta kare renkleri
+    export-copy: JSON kopyala
+    export-copy-done: Kopyalandı!
+    export-download: JSON indir
+    import: JSON içe aktar
+    import-modal-title: JSON verilerini içe aktar
+    import-paste-label: JSON yapıştır
+    import-paste-placeholder: Dışa aktarılan JSON verisini buraya yapıştırın...
+    import-file-label: JSON dosyası yükle
+    import-submit: İçe aktar
+    import-error: "Geçersiz veri: {detail}"
+common:
+  preview: Önizleme
+  add: Ekle
+  cancel: İptal
+  confirm: Sıfırla
+  confirm-title: Onayla
+  theme-dark: Koyu moda geç
+  theme-light: Açık moda geç
+  loading: Yükleniyor...
+  loading-fonts: Yazı tipleri yükleniyor...
+  edit: Düzenle
+  delete: Sil
+  save: Kaydet
+  close: Kapat
+error:
+  on-save: handleSave işlevi başarısız oldu. Tuval her zaman görüntülendiğinden bu tamamen beklenmeyen bir durumdur.
+  corrupted-cache: Kaydedilen veriler bozulduğu için varsayılan değerlere sıfırlandı. Uygulamayı normal şekilde kullanmaya devam edebilirsiniz.
+tabs:
+  simple: Basit Giriş
+  route-input: Hattan
+  route-edit: Hatları Düzenle
+  settings: Ayarlar
+settings:
+  storage:
+    title: Yazı Tipi Depolama
+    indexeddb: IndexedDB (Kalıcı)
+    memory: Yalnızca Bellek (Oturumluk)
+    memory-warning: Bu oturumda yüklediğiniz özel yazı tipleri sayfa kapatıldığında silinir.
+  fonts:
+    builtin-title: Önceden Yüklenmiş Yazı Tipleri
+    builtin-desc: İstasyon tabelaları için gerekli yazı tipleri. Kaldırılamaz.
+    preload: Önceden yükle
+    user-title: Özel Yazı Tipleri
+    upload: Yazı Tipi Yükle
+    upload-modal-title: Yazı Tipi Yükle
+    select-file: Yazı tipi dosyası seç (.ttf, .otf, .woff, .woff2)
+    display-name: Görünen ad
+    family-name: CSS yazı tipi ailesinin adı
+    family-hint: Stil ayarlarında kullanılır. Boşluk kullanılamaz.
+    upload-submit: Yükle
+    empty: Henüz özel yazı tipi yüklenmedi.
+    remove-all: Tümünü kaldır
+    remove-all-confirm: Tüm özel yazı tipleri kaldırılsın mı? Bunlar IndexedDB’den de silinir ve bu işlem geri alınamaz.
+    status:
+      idle: Yüklenmedi
+      loading: Yükleniyor...
+      loaded: Yüklendi
+      error: Hata
+  images:
+    title: Görseller
+    upload: Görsel Yükle
+    upload-modal-title: Görsel Yükle
+    select-file: Görsel dosyası seç
+    display-name: Görsel adı
+    upload-submit: Yükle
+    empty: Henüz görsel yüklenmedi.
+    remove-all: Tümünü kaldır
+    remove-all-confirm: Yüklenen tüm görseller kaldırılsın mı? Bunlar IndexedDB’den de silinir ve bu işlem geri alınamaz.
+  custom:
+    title: Özel stiller
+    description: Özel tanımlar demiryolu ve istasyon verilerinden bağımsız olarak saklanır.
+    option-prefix: Özel
+    duplicate: Çoğalt
+    copy-name: "{name} kopyası"
+    empty: Henüz özel tanım yok.
+    template-font: Şablon yazı tipi
+    font-embedded: Yazı tipi ikili verisi gömülü
+    name: Ad
+    template-label: Temel şablon
+    font: Yazı tipi
+    font-help: Yüklenen yazı tipleri özel tanıma kopyalanır.
+    sign:
+      title: İstasyon tabelası stilleri
+      create: Özel stil oluştur
+      edit: Özel stili düzenle
+    station-badge:
+      title: İstasyon numarası rozetleri
+      create: Özel istasyon numarası rozeti oluştur
+    route-badge:
+      title: Hat rozetleri
+      create: Özel hat rozeti oluştur
+    advanced:
+      title: Gelişmiş düzen
+      description: Sayı olmayan her metin parçasının tipografisini değiştirin. Boş değerler şablon varsayılanını kullanır.
+      font-size: Yazı tipi boyutu
+      letter-spacing: Harf aralığı
+      y-offset: Y kaydırması
+    parts:
+      main-primary: Ana istasyon adı
+      main-furigana: Ana okunuş
+      main-secondary: Ana ikincil ad
+      main-tertiary: Ana üçüncül ad
+      main-quaternary: Ana dördüncül ad
+      main-note: İstasyon notu
+      main-area: Ücret bölgesi
+      adjacent-primary: Bitişik istasyon adı
+      adjacent-furigana: Bitişik istasyonun okunuşu
+      adjacent-secondary: Bitişik istasyonun ikincil adı
+    template:
+      station-badge:
+        jreast: JR East tarzı
+        jrcentral: JR Central tarzı
+        tokyometro: Tokyo Metro / Toei tarzı
+      route-badge:
+        rounded-square: Yuvarlatılmış kare
+        circle: Daire
+route:
+  download-sqlite: SQLite indir
+  import-sqlite: SQLite içe aktar
+  import-sample: Örnek verileri yükle
+  import-error:
+    invalid-file: Seçilen dosya geçerli bir SQLite veritabanı değil.
+    missing-table: "Veritabanında gerekli bir tablo eksik: {detail}"
+    missing-column: "Veritabanında gerekli bir sütun eksik: {detail}"
+  import-modal:
+    title: Veritabanını içe aktar
+    description: Zaten bir veritabanı mevcut. Nasıl içe aktarmak istersiniz?
+    overwrite-desc: "Üzerine yaz: Mevcut tüm verileri içe aktarılan verilerle değiştir."
+    merge-desc: "Birleştir: İçe aktarılan verileri mevcut veritabanına ekle. Çakışan kayıtlar güncellenir."
+    overwrite: Üzerine yaz
+    merge: Birleştir
+  no-routes: Hat bulunamadı. “Hatları Düzenle” sekmesinden hat oluşturun.
+  company:
+    route-badge-style: Hat rozeti stili
+    route-badge-style-preview: Hat rozeti önizlemesi
+    title: Şirketler
+    add: Şirket ekle
+    edit: Şirketi düzenle
+    name: Şirket adı
+    color: Şirket rengi
+    station-number-style: İstasyon numarası stili
+    station-number-style-jreast: JR East tarzı
+    station-number-style-jrcentral: JR Central tarzı
+    station-number-style-tokyometro: Tokyo Metro / Toei Subway tarzı
+    station-number-style-preview: Örnek rozet (hat rengi olarak şirket rengi kullanılır)
+    empty: Henüz şirket yok
+    delete-confirm: Bu şirket silinsin mi? Hatları ve bu hatları içeren tüm aktarmalı güzergâhlar da silinir.
+  special-zone:
+    title: Özel Bölgeler
+    add: Bölge ekle
+    edit: Bölgeyi düzenle
+    name: Bölge adı
+    abbreviation: Kısaltma (1 karakter)
+    is-black: Siyah dolgu
+    empty: Henüz bölge yok
+    delete-confirm: Bu bölge silinsin mi? Bölge rozetini kullanan tüm istasyonlardan rozet kaldırılır.
+  line:
+    title: Hatlar
+    add: Hat ekle
+    edit: Hattı düzenle
+    name: Hat adı
+    color: Hat rengi
+    prefix: Hat adı kısaltması
+    priority: Öncelik
+    company: Şirket
+    is-loop: Dairesel hat
+    empty: Henüz hat yok
+    select: Bir hat seçin
+    all: Tüm şirketler
+    unassigned-company: Atanmamış şirket
+    delete-confirm: Bu hat silinsin mi? Hattı içeren tüm aktarmalı güzergâhlar da silinir.
+    delete-all: Tüm hatları sil
+    delete-all-confirm: Tüm hatlar silinsin mi? İstasyon atamaları, istasyon numaraları, sefer türleri ve tüm aktarmalı güzergâhlar da silinir. Bu işlem geri alınamaz.
+    delete-targets: Silinecek hatlar
+    prefix-preview: Hat göstergesi rozeti önizlemesi
+    station-number-preview: İstasyon numarası önizlemesi (01)
+  through-route:
+    title: Aktarmalı Güzergâhlar
+    add: Aktarmalı güzergâh ekle
+    edit: Aktarmalı güzergâhı düzenle
+    name: Güzergâh adı
+    empty: Henüz aktarmalı güzergâh yok
+    segments: Hat bölümleri
+    segment-number: "{number}. bölüm"
+    add-segment: Hat bölümü ekle
+    line: Hat
+    entry-station: Başlangıç istasyonu
+    exit-station: Bitiş istasyonu
+    direction: Bölüm yönü
+    forward: İleri (istasyon sırasına göre)
+    reverse: Geri (istasyon sırasının tersi)
+    guide-title: Geçerli güzergâh kuralları
+    guide-intro: Gerçek dünyadaki seferler denetlenmez. Kayıtlı verilerde dallanmayan, tek ve kesintisiz bir yol oluşturan herhangi bir güzergâhı kaydedebilirsiniz.
+    guide-section: Her bölüm için aynı hattaki farklı iki istasyonu başlangıç ve bitiş olarak seçin.
+    guide-direction: İleri yön kayıtlı istasyon sırasını, geri yön ise tersini izler. Dairesel hatta yön, döngünün hangi tarafının kullanılacağını belirler.
+    guide-connection: Her sonraki bölüm, önceki bölümün bittiği istasyon kaydından veya açıkça aktarma bağlantısı kurulmuş bir istasyondan başlamalıdır.
+    delete-confirm: Bu aktarmalı güzergâh silinsin mi?
+    service-help: Bu aktarmalı güzergâhın tamamı için sefer türlerini ayarlayın. Kaydettikten sonra duraklarını aşağıdaki hat düzenleyicisinde belirleyin.
+    service-editor-help: “{name}” için sefer türleri ve duraklar düzenleniyor. Bölümleri veya sıralarını aktarmalı güzergâh düzenleyicisinde değiştirin.
+    error-incomplete: Her bölüm için bir hat ile başlangıç ve bitiş istasyonlarını seçin.
+    error-empty: En az bir hat bölümü ekleyin.
+    error-station-not-on-line: Seçilen istasyon bu hatta ait değil.
+    error-invalid-direction: Seçilen yönde başlangıç istasyonundan bitiş istasyonuna ulaşılamıyor.
+    error-disconnected: Bitişik hat bölümleri aynı bağlantı istasyonunu paylaşmıyor.
+    error-same-station: Başlangıç ve bitiş için farklı istasyonlar seçin.
+    error-invalid-direction-detail: “{entry}” istasyonundan “{exit}” istasyonuna gitmek için “{direction}” yönünü seçin.
+    error-disconnected-detail: "{current}. bölümde, {previous}. bölümün bitiş istasyonu olan “{station}” ile aynı istasyon kaydını seçin veya aralarında açık bir aktarma bağlantısı ekleyin."
+  service:
+    title: Sefer Türleri
+    local: Yerel
+    add-placeholder: Sefer türü adı
+    delete-confirm: Bu sefer türü silinsin mi? Tüm durak verileri kaybolur.
+  station:
+    title: İstasyonlar
+    add: İstasyon ekle
+    add-existing: Mevcut İstasyondan Ekle
+    link-title: Mevcut İstasyonu Hatta Ekle
+    source-line: Kaynak hat
+    select-existing: Eklenecek bir istasyon seçin
+    inherited-info: Devralınan bilgiler (salt okunur)
+    edit: İstasyonu düzenle
+    name: İstasyon adı
+    furigana: Okunuş (Hiragana)
+    en: İngilizce adı
+    ko: Korece adı
+    zh: Çince adı
+    note: Not
+    trc: Üç harfli kod
+    number: İstasyon numarası
+    number-source: İstasyon numarasının gösterileceği hat
+    number-source-help: Bu hattın istasyon numarası rozetinde kullanılacak hat kodunu seçin.
+    number-source-current-only: Bu hat için yalnızca geçerli hat kodu kullanılabilir.
+    number-source-current: Geçerli hattı kullan [{prefix}] {name}
+    number-source-parent: Üst hattı kullan [{prefix}] {name}
+    areas: Ücret bölgesi rozetleri
+    empty: İstasyonları görmek için bir hat seçin
+    no-station: Henüz istasyon yok
+    duplicate-number-warning: "Bu hatta yinelenen istasyon numaraları var: {numbers}"
+    delete-confirm: Bu istasyon hattan kaldırılsın mı?
+    select: Bir istasyon seçin
+    transfer-title: Aktarma bilgileri — {name}
+    transfer-manage: Aktarma bilgilerini görüntüle ve yönet
+    transfer-line-select: Bağlantılı hat
+    transfer-select: Bağlantılı istasyon
+    transfer-empty: Aktarma bağlantısı yok
+    same-id-lines: Aynı istasyon kimliğini paylaşan hatlar
+    same-id-lines-help: Bu hatlar aynı istasyon kaydını paylaşır ve otomatik olarak aktarma kabul edilir. Buradan düzenlenemez.
+    same-id-lines-empty: Bu istasyon kimliğini paylaşan başka hat yok
+    explicit-transfers: İstasyonlar arasında açık aktarmalar
+    explicit-transfers-help: Farklı istasyon kayıtları arasında bağlantı ekleyin veya kaldırın. Eklenen istasyonlar seçeneklerden aşağıdaki listeye taşınır ve aktarmalı güzergâh bölümlerini de bağlayabilir.
+  sign:
+    style: Stil
+    direction: Yön
+    filename-direction-left: Sola bakan
+    filename-direction-both: Her iki yön
+    filename-direction-right: Sağa bakan
+    flip: Yönü çevir
+    prev-station: Önceki istasyon
+    next-station: Sonraki istasyon
+    adjacent-select: En fazla {count} istasyon seçin
+    adjacent-order: Geçerli sıralama
+    adjacent-move-up: Yukarı taşı
+    adjacent-move-down: Aşağı taşı
+    adjacent-swap-order: Sıralamayı tersine çevir
+    jreast: JR East tarzı
+    jreastbranch: JR East tarzı (dallanmalı)
+    jrcentral: JR Central tarzı
+    jrwest: JR West tarzı
+    jrwestlarge: JR West tarzı (büyük)
+    metrolong: Tokyo Metro tarzı (küçük / Japonca)
+    metroforeign: Tokyo Metro tarzı (küçük / yabancı dil)
+    metromedium: Tokyo Metro tarzı (orta)
+    toeimedium: Toei Metro tarzı (orta)
+    toeilarge: Toei Metro tarzı (büyük)
+    metrolong-subtext: Alt metin
+    metrolong-subtext-furigana: Furigana okunuşu
+    metrolong-subtext-secondary: İkincil dil
+    center-colors: Orta kare renkleri
+    station-number-badges: İstasyon numarası rozetleri
+  mode:
+    sign: İstasyon Tabelası
+    linemap: Hat Haritası (Tek/Aktarmalı)
+    multiline-linemap: Hat Haritası (Birden Fazla Hat)
+  linemap:
+    section-route: Güzergâh ve aralık
+    section-layout: Düzen
+    section-content: Görüntülenen içerik
+    filename-suffix: Hat Haritası
+    export-format: Dışa aktarma biçimi
+    format-png: PNG (Görsel)
+    format-svg: SVG (Vektör)
+    format-pdf: PDF (Vektör)
+    vector-size-note: Vektör biçimleri için görsel boyutu gerekmez
+    export-error: Dışa aktarma başarısız oldu. Başka bir biçim veya görsel boyutu deneyin.
+    orientation: Yönlendirme
+    horizontal: Yatay
+    vertical: Dikey
+    range-start: Başlangıç
+    range-end: Bitiş
+    transit-filter: Aktarma hatlarını göster
+    transit-show-names: Aktarma hatlarının adlarını göster
+    download-text-warning: Kaydet (ikincil ad okunmayabilir)
+    font-size: İstasyon adı yazı tipi boyutu
+    font-size-small: Küçük
+    font-size-medium: Orta
+    font-size-large: Büyük
+    overlap-warning-title: Etiket çakışması algılandı
+    overlap-warning: Bazı istasyon adları çakışıyor. Yazı tipi boyutunu küçültmeyi deneyin.
+    station-number-mode: İstasyon numarası gösterimi
+    station-number-none: Yok
+    station-number-badge: Rozet
+    station-number-dot: Noktanın yerine koy
+    emphasize-connected-station-names: Güzergâh bağlantı istasyonlarının adlarını büyüt
+    name-style: Ad stili
+    name-style-normal: Standart
+    name-style-above: Üstte
+    name-style-below: Altta
+    station-spacing: İstasyon aralığı
+    line-width: Hat kalınlığı
+    primary-lang: Birincil dil
+    secondary-lang: İkincil dil
+    show-secondary-lang: Göster
+    lang-1st: 1. ad
+    lang-2nd: 2. ad
+    lang-3rd: 3. ad
+    lang-4th: 4. ad
+    continuation: Devam göstergeleri
+    continuation-before: Başlangıçta göster
+    continuation-after: Sonda göster
+    swap: Başlangıç ve bitişi değiştir
+    loop-render-mode: Dairesel hat görüntüleme modu
+    loop-as-linear: Doğrusal güzergâh olarak göster
+    name-side: Adın konumu
+    name-side-left: Sol
+    name-side-right: Sağ
+    services: Sefer türleri
+    services-placeholder: Tüm seferler (tek hat)
+    show-passed-stations: Durmadan geçilen istasyonlar
+    passed-show: Göster (soluk)
+    passed-hide-gap: Gizle (boşluk bırak)
+    passed-hide-trim: Gizle (kırparak)
+    service-name-style: Sefer türü adı stili
+    service-name-paren: (parantez içinde)
+    service-name-badge: Rozet
+footer:
+  links:
+    title: Bağlantılar
+    description: Oluşturanın web sitesi ve sosyal medya profilleri
+    website: Web sitesi
+  development:
+    title: Geliştirme kaynakları
+    description: Kaynak kodu, hata bildirimleri ve özellik istekleri
+    repository: GitHub deposu
+    repository-description: Kaynak kodu ve sürümler
+    issues: Sorunlar
+    issues-description: Hata bildirimleri ve özellik istekleri
+  notice: Bu, hayranlar tarafından hazırlanmış bir web sitesidir. Tüm ticari markalar ilgili demiryolu şirketlerinin mülkiyetindedir. Bu site herhangi bir demiryolu şirketiyle bağlantılı değildir ve onlar tarafından desteklenmemektedir. Örnek veriler ve başlangıç değerleri uydurma değerler içerebilir.
+mtr-import:
+  title: MTR’den içe aktar
+  description: Bir harita URL’si yükleyin veya API’nin döndürdüğü JSON’u yapıştırın, ardından eklenecek hatları seçin.
+  version: MTR sürümü
+  source-url: Harita URL’si
+  source-json: JSON yapıştır
+  url: Harita veya API URL’si
+  dimension: Boyut indeksi
+  endpoint: API JSON’unu aç
+  fetch: Hatları yükle
+  json: API JSON’u
+  parse: JSON’u oku
+  routes: Hatları seç
+  stations-count: "{count} istasyon"
+  select-all: Tümünü seç
+  select-none: Tüm seçimi kaldır
+  company: Hedef şirket
+  no-company: Şirket yok
+  import: "{count} hattı içe aktar"
+  success: "{routes} hat ve {stations} istasyon eklendi."
+  note: Ters yönler dâhil olmak üzere hatlar ayrı ayrı eklenir. Ortak MTR istasyonları bu içe aktarma kapsamında bağlantılı kalır. Mevcut veriler korunur. İstasyon numaraları ve okunuşları daha sonra düzenlenebilir.
+  manual-help: CORS veya HTTPS/HTTP kısıtlamaları yüklemeyi engelliyorsa API bağlantısını açıp JSON’u buraya yapıştırın.
+  skipped: Bu uygulama, durağı olmayan veya yinelenen ara istasyonları bulunan {count} hattı gösteremediğinden dışarıda bıraktı.
+  error:
+    invalid-json: Geçersiz JSON. API yanıtının tamamını yapıştırın.
+    invalid-data: Bu JSON, seçilen MTR harita API biçimiyle eşleşmiyor.
+    no-routes: İçe aktarılabilir hat bulunamadı.
+    too-large: Veri, içe aktarma sınırını (10 MB) aşıyor.
+    invalid-url: Kullanıcı adı veya parola içermeyen bir HTTP ya da HTTPS harita/API URL’si ve negatif olmayan bir boyut indeksi girin.
+    fetch-failed: API yüklenemedi. URL’yi, boyutu ve sunucunun kullanılabilirliğini kontrol edin veya JSON yapıştırmayı kullanın.
+    timeout: API isteğinin süresi doldu. Yeniden deneyin veya JSON yapıştırın.
+    import-failed: Hatlar içe aktarılamadı. Hiçbir hat eklenmedi.

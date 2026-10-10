@@ -11,7 +11,14 @@ export const SUPPORTED_LOCALES = [
   { code: "pt-BR", nativeName: "Português (Brasil)", flag: "BR" },
   { code: "pt-PT", nativeName: "Português (Portugal)", flag: "PT" },
   { code: "es", nativeName: "Español", flag: "ES" },
+  { code: "fr", nativeName: "Français", flag: "FR" },
   { code: "de", nativeName: "Deutsch", flag: "DE" },
+  { code: "ar", nativeName: "العربية", flag: "SA", direction: "rtl" },
+  { code: "id", nativeName: "Bahasa Indonesia", flag: "ID" },
+  { code: "ko", nativeName: "한국어", flag: "KR" },
+  { code: "vi", nativeName: "Tiếng Việt", flag: "VN" },
+  { code: "tr", nativeName: "Türkçe", flag: "TR" },
+  { code: "it", nativeName: "Italiano", flag: "IT" },
   { code: "cs", nativeName: "Čeština", flag: "CZ" },
   { code: "pl", nativeName: "Polski", flag: "PL" },
   { code: "ms", nativeName: "Bahasa Melayu", flag: "MY" },
@@ -21,6 +28,11 @@ export const SUPPORTED_LOCALES = [
 export const SUPPORTED_LOCALE_CODES = SUPPORTED_LOCALES.map(
   ({ code }) => code,
 );
+
+export function getLocaleDirection(locale: string): "ltr" | "rtl" {
+  const language = SUPPORTED_LOCALES.find(({ code }) => code === locale);
+  return language && "direction" in language ? language.direction : "ltr";
+}
 
 export function getLocalePath(locale: string): string {
   return locale === DEFAULT_LOCALE ? "/" : `/${locale}/`;

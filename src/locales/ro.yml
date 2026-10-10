@@ -61,7 +61,7 @@ input:
     note: Notă stație (text mai mare sub numele stației)
     rstation: Numele stației din dreapta
     rread: Subtextul stației din dreapta
-    ren: Subtextul stației din dreapta
+    ren: Nume alternativ al stației din dreapta
     rnum: Numărul stației din dreapta (primar)
     rnum2: Numărul stației din dreapta (secundar)
     rnum3: Numărul stației din dreapta (terțiar)

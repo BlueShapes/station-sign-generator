@@ -18,7 +18,8 @@
 
 .routeLine::before {
   position: absolute;
-  inset: 0 0 0 auto;
+  inset-block: 0;
+  inset-inline-end: 0;
   width: 50%;
   content: "";
   background: var(--mantine-color-blue-6);
@@ -29,7 +30,7 @@
 }
 
 .linkSection + .linkSection {
-  border-left: 1px solid var(--mantine-color-default-border);
+  border-inline-start: 1px solid var(--mantine-color-default-border);
 }
 
 .route {
@@ -42,7 +43,7 @@
   position: absolute;
   top: 28px;
   bottom: 28px;
-  left: 19px;
+  inset-inline-start: 19px;
   width: 2px;
   content: "";
   background: var(--route-color);
@@ -64,7 +65,8 @@
   align-items: center;
   width: 100%;
   min-height: 56px;
-  padding: 6px 8px 6px 0;
+  padding-block: 6px;
+  padding-inline: 0 8px;
   border-radius: var(--mantine-radius-md);
   transition:
     background-color 120ms ease,
@@ -136,7 +138,7 @@
 
   .linkSection + .linkSection {
     border-top: 1px solid var(--mantine-color-default-border);
-    border-left: 0;
+    border-inline-start: 0;
   }
 
   .legal {

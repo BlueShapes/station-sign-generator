@@ -9,6 +9,8 @@ import {
   Stack,
   Switch,
   SegmentedControl,
+  DirectionProvider,
+  useDirection,
   Group,
   Text,
   ColorSwatch,
@@ -64,6 +66,7 @@ const DirectInput = memo(function DirectInput({
   signStyle,
 }: DirectInputProps) {
   const t = useTranslations();
+  const { dir } = useDirection();
   const { definitions } = useCustomizations();
   const customStationBadges = definitions.filter(
     (definition) => definition.kind === "station-number-badge",
@@ -173,15 +176,18 @@ const DirectInput = memo(function DirectInput({
               flexWrap: "wrap",
             }}
           >
-            <SegmentedControl
-              value={formData.direction ?? DEFAULT_DIRECTION}
-              onChange={updateDirection}
-              data={[
-                { value: "left", label: <IconArrowLeft size={16} /> },
-                { value: "both", label: <IconArrowsHorizontal size={16} /> },
-                { value: "right", label: <IconArrowRight size={16} /> },
-              ]}
-            />
+            <DirectionProvider initialDirection="ltr" detectDirection={false}>
+              <SegmentedControl
+                dir="ltr"
+                value={formData.direction ?? DEFAULT_DIRECTION}
+                onChange={updateDirection}
+                data={[
+                  { value: "left", label: <IconArrowLeft size={16} /> },
+                  { value: "both", label: <IconArrowsHorizontal size={16} /> },
+                  { value: "right", label: <IconArrowRight size={16} /> },
+                ]}
+              />
+            </DirectionProvider>
             <Button
               variant="outline"
               onClick={handleSwap}
@@ -221,7 +227,13 @@ const DirectInput = memo(function DirectInput({
       </Box>
 
       <Box style={{ width: "100%" }}>
-        <Grid gutter="md" justify="center" style={{ overflow: "hidden" }}>
+        {/* These columns describe physical positions on the sign. */}
+        <Grid
+          gutter="md"
+          justify="center"
+          style={{ overflow: "hidden" }}
+          styles={{ inner: { direction: "ltr" }, col: { direction: dir } }}
+        >
           {/* Left station */}
           <Grid.Col span={{ base: 10, md: 3 }}>
             <Stack gap="md">

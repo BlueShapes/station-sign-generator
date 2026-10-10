@@ -36,6 +36,7 @@ import {
   Stack,
   Text,
   SegmentedControl,
+  DirectionProvider,
   Slider,
   Switch,
   Tooltip,
@@ -2097,18 +2098,21 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 <Text size="sm" fw={500} mb={4}>
                   {t("route.sign.direction")}
                 </Text>
-                <SegmentedControl
-                  value={direction}
-                  onChange={(value) => setDirection(value as Direction)}
-                  data={[
-                    { value: "left", label: <IconArrowLeft size={16} /> },
-                    {
-                      value: "both",
-                      label: <IconArrowsHorizontal size={16} />,
-                    },
-                    { value: "right", label: <IconArrowRight size={16} /> },
-                  ]}
-                />
+                <DirectionProvider initialDirection="ltr" detectDirection={false}>
+                  <SegmentedControl
+                    dir="ltr"
+                    value={direction}
+                    onChange={(value) => setDirection(value as Direction)}
+                    data={[
+                      { value: "left", label: <IconArrowLeft size={16} /> },
+                      {
+                        value: "both",
+                        label: <IconArrowsHorizontal size={16} />,
+                      },
+                      { value: "right", label: <IconArrowRight size={16} /> },
+                    ]}
+                  />
+                </DirectionProvider>
               </Box>
             </Paper>
 
@@ -2443,13 +2447,15 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                   (() => {
                     const { Component: SignComponent } = SIGN_STYLES[signStyle];
                     return (
-                      <SignTextCustomizationProvider definition={resolvedSignStyle.definition}>
-                        <SignComponent
-                          {...signData}
-                          direction={direction}
-                          ref={signRef}
-                        />
-                      </SignTextCustomizationProvider>
+                      <Box dir="ltr">
+                        <SignTextCustomizationProvider definition={resolvedSignStyle.definition}>
+                          <SignComponent
+                            {...signData}
+                            direction={direction}
+                            ref={signRef}
+                          />
+                        </SignTextCustomizationProvider>
+                      </Box>
                     );
                   })()
                 ) : (
@@ -3063,7 +3069,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 </Group>
 
                 {mapFonts.ready ? (
-                  <Box className={`map-preview ${styles.mapPreviewViewport}`}>
+                  <Box dir="ltr" className={`map-preview ${styles.mapPreviewViewport}`}>
                     <LineMapRenderer
                       ref={mapRef}
                       stations={mapDisplayStations}
@@ -3447,7 +3453,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                 </Group>
 
                 {mapFonts.ready ? (
-                  <Box className={`map-preview ${styles.mapPreviewViewport}`}>
+                  <Box dir="ltr" className={`map-preview ${styles.mapPreviewViewport}`}>
                     <MultiLineMapRenderer
                       ref={multiLineMapRef}
                       routes={filteredMultiLineRoutes}

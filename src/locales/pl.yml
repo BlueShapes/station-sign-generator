@@ -61,7 +61,7 @@ input:
     note: Uwaga stacji (większy tekst pod nazwą stacji)
     rstation: Prawa nazwa stacji
     rread: Podtekst prawej stacji
-    ren: Podtekst prawej stacji
+    ren: Prawa alternatywna nazwa stacji
     rnum: Numer prawej stacji (główny)
     rnum2: Numer prawej stacji (drugi)
     rnum3: Numer prawej stacji (trzeci)
