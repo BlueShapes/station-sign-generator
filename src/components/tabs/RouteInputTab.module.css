@@ -45,6 +45,8 @@
 }
 
 .signComposer {
+  /* Station columns correspond to physical left/centre/right sign positions. */
+  direction: ltr;
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 1.18fr) minmax(0, 1fr);
@@ -78,6 +80,10 @@
       color-mix(in srgb, var(--mantine-color-default) 75%, transparent),
       var(--mantine-color-body) 70%
     );
+}
+
+:global(html[dir="rtl"]) .stationCard {
+  direction: rtl;
 }
 
 .currentStationCard {
@@ -192,8 +198,8 @@
 }
 
 .multiLineOrderRow[data-root="true"] {
-  border-left: 4px solid var(--route-accent);
-  padding-left: 5px;
+  border-inline-start: 4px solid var(--route-accent);
+  padding-inline-start: 5px;
 }
 
 .multiLineOrderIndex {
@@ -272,7 +278,7 @@
 }
 
 .emptyPreview > * + * {
-  border-left: 1px dashed var(--mantine-color-default-border);
+  border-inline-start: 1px dashed var(--mantine-color-default-border);
 }
 
 .linemapWorkspace {

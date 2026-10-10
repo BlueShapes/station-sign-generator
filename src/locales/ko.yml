@@ -1,0 +1,472 @@
+$site-name: "역명표·노선도 생성기"
+$og-image-path: "/ogp.png"
+
+meta:
+  title: 역명표 생성기 | 파란 삼각형 에디션(JR 동일본·서일본 스타일)
+  description: 철도 역명표를 만들 수 있는 무료 실용 도구입니다.
+  og-image-alt: 샘플 역명표 이미지(JR 동일본 스타일)
+  pwa: 
+    name: 역명표·노선도 생성기 – 파란 삼각형 에디션
+    short-name: 역명표 및 노선도
+
+header:
+  title: 역명표·노선도 생성기
+  edition: 파란 삼각형 에디션
+  tooltip:
+    lang: 언어 변경
+    share: 이 도구 공유
+    share-options:
+      twitter: "Twitter (현재 X)"
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
+      copy: URL 복사
+    copy: URL을 클립보드에 복사했습니다.
+    share-message: "{name}에서 역명표와 노선도를 만들어 보세요!"
+
+input:
+  save: 이미지로 저장
+  image-size: 이미지 크기
+  direct:
+    swaplr: "왼쪽과 오른쪽 바꾸기"
+    reset: "입력 초기화"
+    reset-title: "모든 입력 초기화"
+    reset-confirm: "모든 입력을 초기화할까요? 이 작업은 되돌릴 수 없습니다."
+    base-color: "운영사 색상"
+    arrow-color: "화살표 색상(운영사 색상)"
+    line-color: "노선 색상"
+    local-lines: "노선"
+    local-lines-prefix: "노선 이름 약칭"
+    local-lines-add: "노선 추가"
+    local-lines-empty: "위에서 노선을 추가하면 여기서 약칭을 선택할 수 있습니다"
+    lstation: "왼쪽 역 이름"
+    lread: "왼쪽 역 보조 문구"
+    len: "왼쪽 역의 대체 이름"
+    lnum: "왼쪽 역번호(기본)"
+    lnum2: "왼쪽 역번호(보조)"
+    lnum3: "왼쪽 역번호(세 번째)"
+    station: "역 이름"
+    read: "역 보조 문구"
+    en: "역 이름 제2언어(영어)"
+    ch: "역 이름 제3언어(중국어)"
+    kp: "역 이름 제4언어(한국어)"
+    num: "역번호(기본)"
+    num2: "역번호(보조)"
+    num3: "역번호(세 번째)"
+    trc: "역 코드"
+    note: "역 메모(역 이름 아래에 크게 표시)"
+    rstation: "오른쪽 역 이름"
+    rread: "오른쪽 역 보조 문구"
+    ren: "오른쪽 역의 대체 이름"
+    rnum: "오른쪽 역번호(기본)"
+    rnum2: "오른쪽 역번호(보조)"
+    rnum3: "오른쪽 역번호(세 번째)"
+    input-left: "왼쪽 역 정보"
+    input-current: "현재 역 정보"
+    input-right: "오른쪽 역 정보"
+    area: 역 운임 구역
+    area-name: 구역 이름
+    center-colors: 중앙 사각형 색상
+    export-copy: JSON 복사
+    export-copy-done: 복사했습니다!
+    export-download: JSON 다운로드
+    import: JSON 가져오기
+    import-modal-title: JSON 데이터 가져오기
+    import-paste-label: JSON 붙여넣기
+    import-paste-placeholder: "내보낸 JSON을 여기에 붙여 넣으세요..."
+    import-file-label: JSON 파일 업로드
+    import-submit: 가져오기
+    import-error: "잘못된 데이터: {detail}"
+
+common:
+  preview: 미리보기
+  add: 추가
+  cancel: 취소
+  confirm: 초기화
+  confirm-title: 확인
+  theme-dark: 다크 모드로 전환
+  theme-light: 라이트 모드로 전환
+  loading: 불러오는 중...
+  loading-fonts: 글꼴을 불러오는 중...
+  edit: 편집
+  delete: 삭제
+  save: 저장
+  close: 닫기
+
+error:
+  on-save: "handleSave 함수가 실패했습니다. 캔버스는 항상 렌더링되므로 예상하지 못한 동작입니다."
+  corrupted-cache: "저장된 데이터가 손상되어 기본값으로 초기화했습니다. 앱을 계속 사용할 수 있습니다."
+
+tabs:
+  simple: 간편 입력
+  route-input: 노선에서
+  route-edit: 경로 편집
+  settings: 설정
+
+settings:
+  storage:
+    title: 글꼴 저장
+    indexeddb: IndexedDB(영구 저장)
+    memory: 메모리에만 저장(세션)
+    memory-warning: 이 세션에서 업로드한 사용자 지정 글꼴은 페이지를 닫으면 사라집니다.
+  fonts:
+    builtin-title: 사전 설치 글꼴
+    builtin-desc: 역명표에 필요한 글꼴입니다. 삭제할 수 없습니다.
+    preload: 미리 불러오기
+    user-title: 사용자 지정 글꼴
+    upload: 글꼴 업로드
+    upload-modal-title: 글꼴 업로드
+    select-file: 글꼴 파일 선택(.ttf, .otf, .woff, .woff2)
+    display-name: 표시 이름
+    family-name: CSS 글꼴 패밀리 이름
+    family-hint: "스타일 설정에 사용됩니다. 공백을 사용할 수 없습니다."
+    upload-submit: 업로드
+    empty: 업로드된 사용자 지정 글꼴이 없습니다.
+    remove-all: 모두 삭제
+    remove-all-confirm: 사용자 지정 글꼴을 모두 삭제할까요? IndexedDB에서도 삭제되며 되돌릴 수 없습니다.
+    status:
+      idle: 불러오지 않음
+      loading: 불러오는 중...
+      loaded: 불러옴
+      error: 오류
+  images:
+    title: 이미지
+    upload: 이미지 업로드
+    upload-modal-title: 이미지 업로드
+    select-file: 이미지 파일 선택
+    display-name: 이미지 이름
+    upload-submit: 업로드
+    empty: 업로드된 이미지가 없습니다.
+    remove-all: 모두 삭제
+    remove-all-confirm: 업로드한 이미지를 모두 삭제할까요? IndexedDB에서도 삭제되며 되돌릴 수 없습니다.
+
+  custom:
+    title: 사용자 지정 스타일
+    description: 사용자 지정 정의는 운영사, 노선, 역 데이터와 별도로 저장됩니다.
+    option-prefix: 사용자 지정
+    duplicate: 복제
+    copy-name: "{name} 복사본"
+    empty: 사용자 지정 정의가 없습니다.
+    template-font: 템플릿 글꼴
+    font-embedded: 글꼴 바이너리 포함
+    name: 이름
+    template-label: 기본 템플릿
+    font: 글꼴
+    font-help: 업로드한 글꼴은 사용자 지정 정의에 복사됩니다.
+    sign:
+      title: 역명표 스타일
+      create: 사용자 지정 스타일 만들기
+      edit: 사용자 지정 스타일 편집
+    station-badge:
+      title: 역번호 배지
+      create: 사용자 지정 역번호 배지 만들기
+    route-badge:
+      title: 경로 배지
+      create: 사용자 지정 경로 배지 만들기
+    advanced:
+      title: 고급 레이아웃
+      description: 숫자가 아닌 각 텍스트 부분의 글꼴 설정을 덮어씁니다. 비워 두면 템플릿 기본값을 사용합니다.
+      font-size: 글꼴 크기
+      letter-spacing: 자간
+      y-offset: Y 오프셋
+    parts:
+      main-primary: 주 역 이름
+      main-furigana: 주 이름 읽기
+      main-secondary: 주 이름 제2언어
+      main-tertiary: 주 이름 제3언어
+      main-quaternary: 주 이름 제4언어
+      main-note: 역 메모
+      main-area: 운임 구역
+      adjacent-primary: 인접역 이름
+      adjacent-furigana: 인접역 읽기
+      adjacent-secondary: 인접역 보조 이름
+    template:
+      station-badge:
+        jreast: JR 동일본 스타일
+        jrcentral: JR 도카이 스타일
+        tokyometro: 도쿄 메트로·도에이 스타일
+      route-badge:
+        rounded-square: 둥근 사각형
+        circle: 원
+route:
+  download-sqlite: SQLite 다운로드
+  import-sqlite: SQLite 가져오기
+  import-sample: 샘플 데이터 불러오기
+  import-error:
+    invalid-file: "선택한 파일은 올바른 SQLite 데이터베이스가 아닙니다."
+    missing-table: "데이터베이스에 필수 테이블이 없습니다: {detail}"
+    missing-column: "데이터베이스에 필수 열이 없습니다: {detail}"
+  import-modal:
+    title: 데이터베이스 가져오기
+    description: 기존 데이터베이스가 있습니다. 어떤 방식으로 가져올까요?
+    overwrite-desc: "덮어쓰기: 기존 데이터를 모두 가져온 데이터로 바꿉니다."
+    merge-desc: "병합: 가져온 데이터를 기존 데이터베이스에 추가합니다. 충돌하는 레코드는 업데이트됩니다."
+    overwrite: 덮어쓰기
+    merge: 병합
+  no-routes: 노선이 없습니다. ‘경로 편집’ 탭에서 노선을 만드세요.
+  company:
+    route-badge-style: 경로 배지 스타일
+    route-badge-style-preview: 경로 배지 미리보기
+    title: 운영사
+    add: 운영사 추가
+    edit: 운영사 편집
+    name: 운영사 이름
+    color: 운영사 색상
+    station-number-style: 역번호 스타일
+    station-number-style-jreast: JR 동일본 스타일
+    station-number-style-jrcentral: JR 도카이 스타일
+    station-number-style-tokyometro: 도쿄 메트로·도에이 지하철 스타일
+    station-number-style-preview: 샘플 배지(운영사 색상을 노선 색상으로 사용)
+    empty: 운영사가 없습니다
+    delete-confirm: 이 운영사를 삭제할까요? 소속 노선과 해당 노선이 포함된 직결 경로도 삭제됩니다.
+  special-zone:
+    title: 특수 구역
+    add: 구역 추가
+    edit: 구역 편집
+    name: 구역 이름
+    abbreviation: 약칭(1자)
+    is-black: 검은색 채우기
+    empty: 구역이 없습니다
+    delete-confirm: 이 구역을 삭제할까요? 사용 중인 모든 역에서 이 배지가 사라집니다.
+  line:
+    title: 노선
+    add: 노선 추가
+    edit: 노선 편집
+    name: 노선 이름
+    color: 노선 색상
+    prefix: 노선 이름 약칭
+    priority: 우선순위
+    company: 운영사
+    is-loop: 순환 노선
+    empty: 노선이 없습니다
+    select: 노선 선택
+    all: 모든 운영사
+    unassigned-company: 미지정 운영사
+    delete-confirm: 이 노선을 삭제할까요? 이 노선이 포함된 직결 경로도 삭제됩니다.
+    delete-all: 모든 노선 삭제
+    delete-all-confirm: 모든 노선을 삭제할까요? 연결된 역 배정, 역번호, 열차 종류와 모든 직결 경로도 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+    delete-targets: 삭제할 노선
+    prefix-preview: 노선 표시 배지 미리보기
+    station-number-preview: 역번호 미리보기(01)
+  through-route:
+    title: 직결 경로
+    add: 직결 경로 추가
+    edit: 직결 경로 편집
+    name: 경로 이름
+    empty: 직결 경로가 없습니다
+    segments: 노선 구간
+    segment-number: "구간 {number}"
+    add-segment: 노선 구간 추가
+    line: 노선
+    entry-station: 출발역
+    exit-station: 도착역
+    direction: 구간 방향
+    forward: 순방향(역 순서)
+    reverse: 역방향(역 순서 반대)
+    guide-title: 올바른 경로의 규칙
+    guide-intro: 실제 운행 여부는 확인하지 않습니다. 등록된 데이터에서 하나로 이어지고 분기되지 않는 경로라면 저장할 수 있습니다.
+    guide-section: 각 구간에서 같은 노선에 있는 서로 다른 두 역을 출발역과 도착역으로 선택하세요.
+    guide-direction: 순방향은 등록된 역 순서를 따르고 역방향은 반대로 진행합니다. 순환 노선에서는 방향에 따라 어느 쪽으로 순환할지가 정해집니다.
+    guide-connection: 다음 구간은 이전 구간의 도착역과 동일한 역 데이터에서 시작하거나, 명시적인 환승 관계로 연결된 역에서 시작해야 합니다.
+    delete-confirm: 이 직결 경로를 삭제할까요?
+    service-help: 이 직결 경로 전체의 열차 종류를 설정하세요. 저장한 뒤 아래 경로 편집기에서 정차역을 지정할 수 있습니다.
+    service-editor-help: “{name}”의 열차 종류와 정차역을 편집 중입니다. 구간이나 순서는 직결 경로 편집기에서 변경하세요.
+    error-incomplete: 모든 구간에서 노선과 양쪽 끝 역을 선택하세요.
+    error-empty: 노선 구간을 하나 이상 추가하세요.
+    error-station-not-on-line: 선택한 역이 해당 노선에 속하지 않습니다.
+    error-invalid-direction: 선택한 방향으로는 출발역에서 도착역까지 갈 수 없습니다.
+    error-disconnected: 인접한 노선 구간의 연결역이 서로 다릅니다.
+    error-same-station: 출발역과 도착역은 서로 다른 역을 선택하세요.
+    error-invalid-direction-detail: '“{entry}”에서 “{exit}”으로 이동하려면 “{direction}”을 선택하세요.'
+    error-disconnected-detail: '구간 {current}의 출발역은 이전 구간 {previous}의 도착역인 “{station}”과 동일한 역 데이터로 선택하거나, 두 역 사이에 환승을 명시적으로 추가하세요.'
+  service:
+    title: 열차 종류
+    local: 일반
+    add-placeholder: 열차 종류 이름
+    delete-confirm: 이 열차 종류를 삭제할까요? 모든 정차 데이터가 사라집니다.
+  station:
+    title: 역
+    add: 역 추가
+    add-existing: 기존 역에서 추가
+    link-title: 기존 역을 노선에 추가
+    source-line: 기준 노선
+    select-existing: 추가할 역 선택
+    inherited-info: 상속된 정보(읽기 전용)
+    edit: 역 편집
+    name: 역 이름
+    furigana: 읽기(히라가나)
+    en: 영어 이름
+    ko: 한국어 이름
+    zh: 중국어 이름
+    note: 메모
+    trc: 세 글자 코드
+    number: 역번호
+    number-source: 역번호 표시 노선
+    number-source-help: 이 노선의 역번호 배지에 사용할 노선 코드를 선택하세요.
+    number-source-current-only: 이 노선에서는 현재 노선 코드만 사용할 수 있습니다.
+    number-source-current: "현재 노선 사용 [{prefix}] {name}"
+    number-source-parent: "상위 노선 사용 [{prefix}] {name}"
+    areas: 운임 구역 배지
+    empty: 역을 보려면 노선을 선택하세요
+    no-station: 역이 없습니다
+    duplicate-number-warning: "이 노선에 중복된 역번호가 있습니다: {numbers}"
+    delete-confirm: 이 역을 노선에서 삭제할까요?
+    select: 역 선택
+    transfer-title: "환승 정보 — {name}"
+    transfer-manage: 환승 정보 보기 및 관리
+    transfer-line-select: 연결 노선
+    transfer-select: 연결역
+    transfer-empty: 환승 연결이 없습니다
+    same-id-lines: 같은 역 ID를 공유하는 노선
+    same-id-lines-help: 이 노선들은 같은 역 데이터를 공유하므로 자동으로 환승 관계로 처리됩니다. 여기서는 읽기만 할 수 있습니다.
+    same-id-lines-empty: 이 역 ID를 공유하는 다른 노선이 없습니다
+    explicit-transfers: 역 간 명시적 환승 연결
+    explicit-transfers-help: 서로 다른 역 데이터 간 연결을 추가하거나 삭제합니다. 추가한 역은 선택 목록에서 아래 목록으로 이동하며 직결 경로의 구간도 연결할 수 있습니다.
+  sign:
+    style: 스타일
+    direction: 방향
+    filename-direction-left: 왼쪽 방향
+    filename-direction-both: 양방향
+    filename-direction-right: 오른쪽 방향
+    flip: 방향 뒤집기
+    prev-station: 이전 역
+    next-station: 다음 역
+    adjacent-select: 역을 최대 {count}개 선택하세요
+    adjacent-order: 현재 순서
+    adjacent-move-up: 위로 이동
+    adjacent-move-down: 아래로 이동
+    adjacent-swap-order: 순서 반전
+    jreast: JR 동일본 스타일
+    jreastbranch: JR 동일본 스타일(분기형)
+    jrcentral: JR 도카이 스타일
+    jrwest: JR 서일본 스타일
+    jrwestlarge: JR 서일본 스타일(대형)
+    metrolong: 도쿄 메트로 스타일(소형·일본어)
+    metroforeign: 도쿄 메트로 스타일(소형·외국어)
+    metromedium: 도쿄 메트로 스타일(중형)
+    toeimedium: 도에이 지하철 스타일(중형)
+    toeilarge: 도에이 지하철 스타일(대형)
+    metrolong-subtext: 보조 문구
+    metrolong-subtext-furigana: 후리가나
+    metrolong-subtext-secondary: 제2언어
+    center-colors: 중앙 사각형 색상
+    station-number-badges: 역번호 배지
+  mode:
+    sign: 역명표
+    linemap: 노선도(단일·직결)
+    multiline-linemap: 노선도(복수 노선)
+  linemap:
+    section-route: 경로 및 범위
+    section-layout: 레이아웃
+    section-content: 표시 내용
+    filename-suffix: 노선도
+    export-format: 내보내기 형식
+    format-png: PNG(이미지)
+    format-svg: SVG(벡터)
+    format-pdf: PDF(벡터)
+    vector-size-note: 벡터 형식은 이미지 크기를 지정할 필요가 없습니다
+    export-error: 내보내기에 실패했습니다. 다른 형식이나 이미지 크기로 다시 시도하세요.
+    orientation: 방향
+    horizontal: 가로
+    vertical: 세로
+    range-start: 출발
+    range-end: 도착
+    transit-filter: 환승 노선 표시
+    transit-show-names: 환승 노선 이름 표시
+    download-text-warning: 저장(보조 이름이 읽기 어려울 수 있음)
+    font-size: 역 이름 글꼴 크기
+    font-size-small: 작게
+    font-size-medium: 중간
+    font-size-large: 크게
+    overlap-warning-title: 이름표 겹침 감지
+    overlap-warning: 일부 역 이름이 겹칩니다. 글꼴 크기를 줄여 보세요.
+    station-number-mode: 역번호 표시
+    station-number-none: 없음
+    station-number-badge: 배지
+    station-number-dot: 점으로 대체
+    emphasize-connected-station-names: 경로 연결역 이름 크게 표시
+    name-style: 이름 스타일
+    name-style-normal: 일반
+    name-style-above: 위
+    name-style-below: 아래
+    station-spacing: 역 간격
+    line-width: 노선 두께
+    primary-lang: 기본 언어
+    secondary-lang: 보조 언어
+    show-secondary-lang: 표시
+    lang-1st: 첫 번째 이름
+    lang-2nd: 두 번째 이름
+    lang-3rd: 세 번째 이름
+    lang-4th: 네 번째 이름
+    continuation: 연장 표시
+    continuation-before: 시작에 표시
+    continuation-after: 끝에 표시
+    swap: 시작과 끝 바꾸기
+    loop-render-mode: 순환 노선 표시 모드
+    loop-as-linear: 직선 경로로 표시
+    name-side: 이름 위치
+    name-side-left: 왼쪽
+    name-side-right: 오른쪽
+    services: 열차 종류
+    services-placeholder: 모든 열차 종류(단일 선로)
+    show-passed-stations: 통과역
+    passed-show: 표시(흐리게)
+    passed-hide-gap: 숨김(간격)
+    passed-hide-trim: 숨김(간격 제거)
+    service-name-style: 열차 종류 이름 스타일
+    service-name-paren: （괄호）
+    service-name-badge: 배지
+
+footer:
+  links:
+    title: 링크
+    description: 제작자 웹사이트 및 소셜 프로필
+    website: 웹사이트
+  development:
+    title: 개발 자료
+    description: 소스 코드, 버그 신고 및 기능 요청
+    repository: GitHub 저장소
+    repository-description: 소스 코드 및 릴리스
+    issues: 이슈
+    issues-description: 버그 신고 및 기능 요청
+  notice: 이 사이트는 팬이 만든 웹사이트입니다. 모든 상표는 각 철도 회사의 소유입니다. 이 사이트는 어느 철도 회사와도 제휴하거나 보증 관계에 있지 않습니다. 샘플 데이터와 초기값에는 실제와 다른 값이 포함될 수 있습니다.
+
+mtr-import:
+  title: "MTR에서 가져오기"
+  description: "지도 URL을 불러오거나 API가 반환한 JSON을 붙여 넣은 뒤 추가할 노선을 선택하세요."
+  version: "MTR 버전"
+  source-url: "지도 URL"
+  source-json: "JSON 붙여넣기"
+  url: "지도 또는 API URL"
+  dimension: "차원 인덱스"
+  endpoint: "API JSON 열기"
+  fetch: "노선 불러오기"
+  json: "API JSON"
+  parse: "JSON 읽기"
+  routes: "노선 선택"
+  stations-count: "역 {count}개"
+  select-all: "모두 선택"
+  select-none: "모두 선택 해제"
+  company: "대상 운영사"
+  no-company: "운영사 없음"
+  import: "노선 {count}개 가져오기"
+  success: "노선 {routes}개와 역 {stations}개를 추가했습니다."
+  note: "반대 방향을 포함해 노선을 각각 추가합니다. 이번 가져오기 안에서 같은 MTR 역은 서로 연결된 상태로 유지됩니다. 기존 데이터는 보존됩니다. 역번호와 읽기는 나중에 편집할 수 있습니다."
+  manual-help: "CORS 또는 HTTPS/HTTP 제한으로 불러올 수 없다면 API 링크를 열고 JSON을 여기에 붙여 넣으세요."
+  skipped: "정차역이 없거나 중간역이 반복되어 앱에서 표현할 수 없는 노선 {count}개를 제외했습니다."
+  error:
+    invalid-json: "JSON 형식이 잘못되었습니다. API 응답 전체를 붙여 넣으세요."
+    invalid-data: "이 JSON은 선택한 MTR 지도 API 형식과 일치하지 않습니다."
+    no-routes: "가져올 수 있는 노선을 찾지 못했습니다."
+    too-large: "데이터가 가져오기 제한(10MB)을 초과했습니다."
+    invalid-url: "사용자 이름이나 비밀번호가 포함되지 않은 HTTP 또는 HTTPS 지도/API URL과 0 이상의 차원 인덱스를 입력하세요."
+    fetch-failed: "API를 불러오지 못했습니다. URL, 차원 인덱스, 서버 상태를 확인하거나 JSON을 붙여 넣으세요."
+    timeout: "API 요청 시간이 초과되었습니다. 다시 시도하거나 JSON을 붙여 넣으세요."
+    import-failed: "노선을 가져오지 못했습니다. 추가된 노선은 없습니다."

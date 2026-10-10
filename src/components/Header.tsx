@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { IconShare, IconSun, IconMoon } from "@tabler/icons-react";
 import { IconTrain } from "@tabler/icons-react";
-import { BR, CN, CZ, DE, ES, GB, HK, IN, JP, MY, PL, PT, RO, RU, TW } from "country-flag-icons/react/3x2";
+import { BR, CN, CZ, DE, ES, FR, GB, HK, ID, IN, IT, JP, KR, MY, PL, PT, RO, RU, SA, TR, TW, VN } from "country-flag-icons/react/3x2";
 import { createElement, type ReactElement, useEffect, useState } from "react";
 import { BsTwitter, BsCopy } from "react-icons/bs";
 import { FaFacebook, FaTelegramPlane, FaVk, FaWhatsapp } from "react-icons/fa";
@@ -20,7 +20,7 @@ import { APP_VERSION } from "@/config";
 import { getShareServices, type ShareService } from "@/config/shareServices";
 import { SUPPORTED_LOCALES } from "@/i18n/locales";
 
-const FLAG_COMPONENTS = { BR, CN, CZ, DE, ES, GB, HK, IN, JP, MY, PL, PT, RO, RU, TW };
+const FLAG_COMPONENTS = { BR, CN, CZ, DE, ES, FR, GB, HK, ID, IN, IT, JP, KR, MY, PL, PT, RO, RU, SA, TR, TW, VN };
 
 interface HeaderProps {
   locale: string;
@@ -229,7 +229,7 @@ const Header = ({ locale, onSwitchLocale }: HeaderProps) => {
                     }}
                     leftSection={<Flag locale={language.code} width="2em" />}
                   >
-                    {language.nativeName}
+                    <bdi>{language.nativeName}</bdi>
                   </Menu.Item>
                 ))}
               </Menu.Dropdown>

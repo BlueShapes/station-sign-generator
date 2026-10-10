@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import {
   DEFAULT_LOCALE,
   SUPPORTED_LOCALE_CODES,
+  getLocaleDirection,
   getLocalePath,
 } from "../../i18n/locales";
 import { getLocalizedSiteMetadata } from "../../i18n/siteMetadata";
@@ -22,6 +23,7 @@ export const GET: APIRoute = ({ params }) => {
     short_name: metadata.pwaShortName,
     description: metadata.description,
     lang: locale,
+    dir: getLocaleDirection(locale),
     start_url: getLocalePath(locale),
     scope: "/",
     icons: [

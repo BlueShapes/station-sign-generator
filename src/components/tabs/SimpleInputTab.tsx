@@ -537,7 +537,7 @@ export default function SimpleInputTab() {
         <IconEye size="1.6em" />
         {t("common.preview")}
       </Title>
-      <Box pos="relative">
+      <Box pos="relative" dir="ltr">
         {heldPreview && (
           <img
             src={heldPreview.src}

@@ -61,7 +61,7 @@ input:
     note: Nota de estación (texto más grande debajo del nombre de la estación)
     rstation: Nombre de la estación derecha
     rread: Subtexto de la estación derecha
-    ren: Subtexto de la estación derecha
+    ren: Nombre alternativo de la estación derecha
     rnum: Número de estación derecha (principal)
     rnum2: Número de estación derecha (secundaria)
     rnum3: Número de estación derecha (terciaria)
@@ -428,3 +428,36 @@ footer:
     issues: Problemas
     issues-description: Informes de errores y solicitudes de funciones
   notice: Este es un sitio web creado por fans. Todas las marcas comerciales son propiedad de sus respectivas compañías ferroviarias. Este sitio no está afiliado ni respaldado por ninguna compañía ferroviaria. Los datos de muestra y los valores iniciales pueden contener valores falsos.
+
+mtr-import:
+  title: "Importar desde MTR"
+  description: "Carga una URL de mapa o pega el JSON que devuelve su API y selecciona las rutas que quieras añadir."
+  version: "Versión de MTR"
+  source-url: "URL del mapa"
+  source-json: "Pegar JSON"
+  url: "URL del mapa o de la API"
+  dimension: "Índice de dimensión"
+  endpoint: "Abrir JSON de la API"
+  fetch: "Cargar rutas"
+  json: "JSON de la API"
+  parse: "Leer JSON"
+  routes: "Seleccionar rutas"
+  stations-count: "{count} estaciones"
+  select-all: "Seleccionar todas"
+  select-none: "Deseleccionar todas"
+  company: "Compañía de destino"
+  no-company: "Sin compañía"
+  import: "Importar {count} rutas"
+  success: "Se han añadido {routes} rutas y {stations} estaciones."
+  note: "Las rutas se añaden por separado, incluidas las de sentido contrario. Las estaciones MTR compartidas mantienen su vínculo dentro de esta importación. Se conservan los datos existentes. Los números de estación y las pronunciaciones se pueden editar después."
+  manual-help: "Si las restricciones de CORS o HTTPS/HTTP impiden la carga, abre el enlace de la API y pega su JSON aquí."
+  skipped: "Se han excluido {count} rutas sin paradas o con estaciones intermedias repetidas, que esta aplicación no puede representar."
+  error:
+    invalid-json: "JSON no válido. Pega la respuesta completa de la API."
+    invalid-data: "Este JSON no coincide con el formato seleccionado de la API del mapa de MTR."
+    no-routes: "No se han encontrado rutas que se puedan importar."
+    too-large: "Los datos superan el límite de importación (10 MB)."
+    invalid-url: "Introduce una URL de mapa/API HTTP o HTTPS sin nombre de usuario ni contraseña y un índice de dimensión mayor o igual que 0."
+    fetch-failed: "No se ha podido cargar la API. Comprueba la URL, la dimensión y la disponibilidad del servidor, o pega el JSON."
+    timeout: "La solicitud a la API ha agotado el tiempo de espera. Inténtalo de nuevo o pega el JSON."
+    import-failed: "No se han podido importar las rutas. No se ha añadido ninguna ruta."

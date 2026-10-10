@@ -1,4 +1,5 @@
 import {
+  getLocaleDirection,
   getLocalePath,
   getManifestPath,
   getOpenGraphLocale,
@@ -21,6 +22,7 @@ export function syncDocumentMetadata(locale: string, messages: Messages): void {
   const ogImageUrl = new URL(metadata.ogImagePath, window.location.origin).href;
 
   document.documentElement.lang = locale;
+  document.documentElement.dir = getLocaleDirection(locale);
   document.title = metadata.title;
 
   setMetaContent('meta[name="description"]', metadata.description);

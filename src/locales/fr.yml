@@ -1,0 +1,472 @@
+$site-name: "Générateur de panneaux de gare et de plans de lignes"
+$og-image-path: "/ogp.png"
+
+meta:
+  title: Générateur de panneaux ferroviaires | Édition Triangle bleu (styles JR East/West)
+  description: Un outil gratuit et pratique pour créer des panneaux de nom de gare.
+  og-image-alt: Exemple de panneau de gare (style JR East)
+  pwa:
+    name: Générateur de panneaux de gare et de plans de lignes – Édition Triangle bleu
+    short-name: Panneaux et plans
+
+header:
+  title: Générateur de panneaux de gare et de plans de lignes
+  edition: Édition Triangle bleu
+  tooltip:
+    lang: Changer de langue
+    share: Partager cet outil
+    share-options:
+      twitter: "Twitter (anciennement X)"
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
+      copy: Copier le lien
+    copy: Lien copié dans le presse-papiers.
+    share-message: Créez des panneaux de gare et des plans de lignes avec {name} !
+
+input:
+  save: Enregistrer en image
+  image-size: Taille de l’image
+  direct:
+    swaplr: "Inverser la gauche et la droite"
+    reset: "Réinitialiser les champs"
+    reset-title: "Réinitialiser tous les champs"
+    reset-confirm: "Voulez-vous vraiment réinitialiser tous les champs ? Cette action est irréversible."
+    base-color: "Couleur de la compagnie"
+    arrow-color: "Couleur de la flèche (couleur de la compagnie)"
+    line-color: "Couleur de la ligne"
+    local-lines: "Lignes"
+    local-lines-prefix: "Abréviation du nom de ligne"
+    local-lines-add: "Ajouter une ligne"
+    local-lines-empty: "Ajoutez des lignes ci-dessus pour choisir une abréviation ici"
+    lstation: "Nom de la gare de gauche"
+    lread: "Sous-texte de la gare de gauche"
+    len: "Autre nom de la gare de gauche"
+    lnum: "Numéro de la gare de gauche (principal)"
+    lnum2: "Numéro de la gare de gauche (secondaire)"
+    lnum3: "Numéro de la gare de gauche (tertiaire)"
+    station: "Nom de la gare"
+    read: "Sous-texte de la gare"
+    en: "Nom de la gare dans la deuxième langue (anglais)"
+    ch: "Nom de la gare dans la troisième langue (chinois)"
+    kp: "Nom de la gare dans la quatrième langue (coréen)"
+    num: "Numéro de la gare (principal)"
+    num2: "Numéro de la gare (secondaire)"
+    num3: "Numéro de la gare (tertiaire)"
+    trc: "Code de la gare"
+    note: "Note sur la gare (texte agrandi sous son nom)"
+    rstation: "Nom de la gare de droite"
+    rread: "Sous-texte de la gare de droite"
+    ren: "Autre nom de la gare de droite"
+    rnum: "Numéro de la gare de droite (principal)"
+    rnum2: "Numéro de la gare de droite (secondaire)"
+    rnum3: "Numéro de la gare de droite (tertiaire)"
+    input-left: "Informations sur la gare de gauche"
+    input-current: "Informations sur la gare actuelle"
+    input-right: "Informations sur la gare de droite"
+    area: Zone tarifaire de la gare
+    area-name: Nom de la zone
+    center-colors: Couleurs des carrés centraux
+    export-copy: Copier le JSON
+    export-copy-done: Copié !
+    export-download: Télécharger le JSON
+    import: Importer le JSON
+    import-modal-title: Importer des données JSON
+    import-paste-label: Coller le JSON
+    import-paste-placeholder: "Collez ici le JSON exporté..."
+    import-file-label: Importer un fichier JSON
+    import-submit: Importer
+    import-error: "Données non valides : {detail}"
+
+common:
+  preview: Aperçu
+  add: Ajouter
+  cancel: Annuler
+  confirm: Réinitialiser
+  confirm-title: Confirmer
+  theme-dark: Passer en mode sombre
+  theme-light: Passer en mode clair
+  loading: Chargement...
+  loading-fonts: Chargement des polices...
+  edit: Modifier
+  delete: Supprimer
+  save: Enregistrer
+  close: Fermer
+
+error:
+  on-save: "La fonction handleSave a échoué. C’est totalement inattendu, car le canevas est toujours rendu."
+  corrupted-cache: "Les données enregistrées étaient endommagées et ont été réinitialisées. Vous pouvez continuer à utiliser l’application normalement."
+
+tabs:
+  simple: Saisie simple
+  route-input: Depuis une ligne
+  route-edit: Modifier les lignes
+  settings: Paramètres
+
+settings:
+  storage:
+    title: Stockage des polices
+    indexeddb: IndexedDB (persistant)
+    memory: Mémoire uniquement (session)
+    memory-warning: Les polices personnalisées importées pendant cette session seront perdues à la fermeture de la page.
+  fonts:
+    builtin-title: Polices préinstallées
+    builtin-desc: Polices nécessaires aux panneaux de gare. Elles ne peuvent pas être supprimées.
+    preload: Précharger
+    user-title: Polices personnalisées
+    upload: Importer une police
+    upload-modal-title: Importer une police
+    select-file: Choisir un fichier de police (.ttf, .otf, .woff, .woff2)
+    display-name: Nom affiché
+    family-name: Nom de famille CSS de la police
+    family-hint: "Utilisé dans la configuration du style. Les espaces sont interdits."
+    upload-submit: Importer
+    empty: Aucune police personnalisée importée pour le moment.
+    remove-all: Tout supprimer
+    remove-all-confirm: Supprimer toutes les polices personnalisées ? Elles seront également effacées d’IndexedDB et cette action est irréversible.
+    status:
+      idle: Non chargée
+      loading: Chargement...
+      loaded: Chargée
+      error: Erreur
+  images:
+    title: Images
+    upload: Importer une image
+    upload-modal-title: Importer une image
+    select-file: Choisir un fichier image
+    display-name: Nom de l’image
+    upload-submit: Importer
+    empty: Aucune image importée pour le moment.
+    remove-all: Tout supprimer
+    remove-all-confirm: Supprimer toutes les images importées ? Elles seront également effacées d’IndexedDB et cette action est irréversible.
+
+  custom:
+    title: Styles personnalisés
+    description: Les définitions personnalisées sont stockées séparément des données des compagnies, des lignes et des gares.
+    option-prefix: Personnalisé
+    duplicate: Dupliquer
+    copy-name: "Copie de {name}"
+    empty: Aucune définition personnalisée pour le moment.
+    template-font: Police du modèle
+    font-embedded: Binaire de police intégré
+    name: Nom
+    template-label: Modèle de base
+    font: Police
+    font-help: Les polices importées sont copiées dans la définition personnalisée.
+    sign:
+      title: Styles de panneaux de gare
+      create: Créer un style personnalisé
+      edit: Modifier le style personnalisé
+    station-badge:
+      title: Badges de numéro de gare
+      create: Créer un badge de numéro de gare personnalisé
+    route-badge:
+      title: Badges de ligne
+      create: Créer un badge de ligne personnalisé
+    advanced:
+      title: Mise en page avancée
+      description: Remplacez la typographie de chaque élément textuel autre qu’un numéro. Les champs vides conservent les valeurs du modèle.
+      font-size: Taille de police
+      letter-spacing: Espacement des lettres
+      y-offset: Décalage vertical
+    parts:
+      main-primary: Nom principal de la gare
+      main-furigana: Lecture principale
+      main-secondary: Nom secondaire principal
+      main-tertiary: Nom tertiaire principal
+      main-quaternary: Nom quaternaire principal
+      main-note: Note sur la gare
+      main-area: Zone tarifaire
+      adjacent-primary: Nom de la gare voisine
+      adjacent-furigana: Lecture du nom de la gare voisine
+      adjacent-secondary: Nom secondaire de la gare voisine
+    template:
+      station-badge:
+        jreast: Style JR East
+        jrcentral: Style JR Central
+        tokyometro: Style Tokyo Metro / Toei
+      route-badge:
+        rounded-square: Carré arrondi
+        circle: Cercle
+route:
+  download-sqlite: Télécharger SQLite
+  import-sqlite: Importer SQLite
+  import-sample: Charger les données d’exemple
+  import-error:
+    invalid-file: "Le fichier sélectionné n’est pas une base de données SQLite valide."
+    missing-table: "Une table requise est absente de la base de données : {detail}"
+    missing-column: "Une colonne requise est absente de la base de données : {detail}"
+  import-modal:
+    title: Importer une base de données
+    description: Une base de données existe déjà. Comment souhaitez-vous importer les données ?
+    overwrite-desc: "Remplacer : remplacer toutes les données existantes par celles importées."
+    merge-desc: "Fusionner : ajouter les données importées à la base existante. Les enregistrements en conflit seront mis à jour."
+    overwrite: Remplacer
+    merge: Fusionner
+  no-routes: Aucune ligne trouvée. Créez des lignes dans l’onglet « Modifier les lignes ».
+  company:
+    route-badge-style: Style du badge de ligne
+    route-badge-style-preview: Aperçu du badge de ligne
+    title: Compagnies
+    add: Ajouter une compagnie
+    edit: Modifier la compagnie
+    name: Nom de la compagnie
+    color: Couleur de la compagnie
+    station-number-style: Style des numéros de gare
+    station-number-style-jreast: Style JR East
+    station-number-style-jrcentral: Style JR Central
+    station-number-style-tokyometro: Style Tokyo Metro / métro Toei
+    station-number-style-preview: Badge d’exemple (la couleur de la compagnie sert de couleur de ligne)
+    empty: Aucune compagnie pour le moment
+    delete-confirm: Supprimer cette compagnie ? Ses lignes et les itinéraires directs qui les contiennent seront également supprimés.
+  special-zone:
+    title: Zones spéciales
+    add: Ajouter une zone
+    edit: Modifier la zone
+    name: Nom de la zone
+    abbreviation: Abréviation (1 caractère)
+    is-black: Fond noir
+    empty: Aucune zone pour le moment
+    delete-confirm: Supprimer cette zone ? Toutes les gares qui l’utilisent perdront ce badge.
+  line:
+    title: Lignes
+    add: Ajouter une ligne
+    edit: Modifier la ligne
+    name: Nom de la ligne
+    color: Couleur de la ligne
+    prefix: Abréviation du nom de ligne
+    priority: Priorité
+    company: Compagnie
+    is-loop: Ligne circulaire
+    empty: Aucune ligne pour le moment
+    select: Sélectionner une ligne
+    all: Toutes les compagnies
+    unassigned-company: Compagnie non attribuée
+    delete-confirm: Supprimer cette ligne ? Les itinéraires directs qui la contiennent seront également supprimés.
+    delete-all: Supprimer toutes les lignes
+    delete-all-confirm: Supprimer toutes les lignes ? Les affectations de gares, numéros de gare, services et itinéraires directs associés seront également supprimés. Cette action est irréversible.
+    delete-targets: Lignes à supprimer
+    prefix-preview: Aperçu du badge indicateur de ligne
+    station-number-preview: Aperçu du numéro de gare (01)
+  through-route:
+    title: Itinéraires directs
+    add: Ajouter un itinéraire direct
+    edit: Modifier l’itinéraire direct
+    name: Nom de l’itinéraire
+    empty: Aucun itinéraire direct pour le moment
+    segments: Sections de ligne
+    segment-number: "Section {number}"
+    add-segment: Ajouter une section de ligne
+    line: Ligne
+    entry-station: Gare de départ
+    exit-station: Gare d’arrivée
+    direction: Sens de la section
+    forward: Sens normal (ordre des gares)
+    reverse: Sens inverse (ordre opposé des gares)
+    guide-title: Règles de validité d’un itinéraire
+    guide-intro: Les services réels ne sont pas vérifiés. Tout itinéraire formant un trajet continu sans embranchement dans les données enregistrées peut être sauvegardé.
+    guide-section: Pour chaque section, choisissez deux gares différentes de la même ligne comme gares de départ et d’arrivée.
+    guide-direction: Le sens normal suit l’ordre des gares enregistré ; le sens inverse le parcourt à l’envers. Sur une ligne circulaire, le sens détermine le côté emprunté.
+    guide-connection: Chaque section doit commencer à la même gare que celle où se termine la précédente, ou à une gare reliée par une correspondance explicite.
+    delete-confirm: Supprimer cet itinéraire direct ?
+    service-help: Configurez les types de service pour tout cet itinéraire direct. Après l’enregistrement, définissez leurs arrêts dans l’éditeur d’itinéraire ci-dessous.
+    service-editor-help: Modification des types de service et des arrêts de « {name} ». Modifiez les sections ou leur ordre dans l’éditeur d’itinéraires directs.
+    error-incomplete: Sélectionnez une ligne et les deux gares de chaque section.
+    error-empty: Ajoutez au moins une section de ligne.
+    error-station-not-on-line: Une gare sélectionnée ne fait pas partie de sa ligne.
+    error-invalid-direction: La gare d’arrivée n’est pas accessible depuis la gare de départ dans le sens choisi.
+    error-disconnected: Les sections de ligne adjacentes ne partagent pas la même gare de correspondance.
+    error-same-station: Choisissez des gares de départ et d’arrivée différentes.
+    error-invalid-direction-detail: 'Pour aller de « {entry} » à « {exit} », sélectionnez « {direction} ».'
+    error-disconnected-detail: 'Pour la section {current}, choisissez le même enregistrement de gare que « {station} », la gare d’arrivée de la section {previous}, ou ajoutez une correspondance explicite entre les deux.'
+  service:
+    title: Services
+    local: Omnibus
+    add-placeholder: Nom du service
+    delete-confirm: Supprimer ce service ? Toutes les données d’arrêts seront perdues.
+  station:
+    title: Gares
+    add: Ajouter une gare
+    add-existing: Ajouter une gare existante
+    link-title: Ajouter une gare existante à une ligne
+    source-line: Ligne d’origine
+    select-existing: Sélectionner une gare à ajouter
+    inherited-info: Informations héritées (lecture seule)
+    edit: Modifier la gare
+    name: Nom de la gare
+    furigana: Lecture (hiragana)
+    en: Nom anglais
+    ko: Nom coréen
+    zh: Nom chinois
+    note: Note
+    trc: Code à trois lettres
+    number: Numéro de la gare
+    number-source: Ligne utilisée pour le numéro de gare
+    number-source-help: Choisissez le code de ligne à utiliser sur le badge de numéro de gare de cette ligne.
+    number-source-current-only: Seul le code de la ligne actuelle est disponible pour cette ligne.
+    number-source-current: "Utiliser la ligne actuelle [{prefix}] {name}"
+    number-source-parent: "Utiliser la ligne parente [{prefix}] {name}"
+    areas: Badges de zone tarifaire
+    empty: Sélectionnez une ligne pour afficher les gares
+    no-station: Aucune gare pour le moment
+    duplicate-number-warning: "Numéros de gare en double sur cette ligne : {numbers}"
+    delete-confirm: Retirer cette gare de la ligne ?
+    select: Sélectionner une gare
+    transfer-title: "Informations de correspondance — {name}"
+    transfer-manage: Afficher et gérer les correspondances
+    transfer-line-select: Ligne de correspondance
+    transfer-select: Gare de correspondance
+    transfer-empty: Aucune correspondance
+    same-id-lines: Lignes partageant le même identifiant de gare
+    same-id-lines-help: Ces lignes partagent cet enregistrement de gare et sont automatiquement considérées comme en correspondance. Elles ne peuvent pas être modifiées ici.
+    same-id-lines-empty: Aucune autre ligne ne partage cet identifiant de gare
+    explicit-transfers: Correspondances explicites entre gares
+    explicit-transfers-help: Ajoutez ou supprimez des correspondances entre différents enregistrements de gare. Les gares ajoutées passent de la liste de choix à la liste ci-dessous et peuvent aussi relier des sections d’itinéraires directs.
+  sign:
+    style: Style
+    direction: Sens
+    filename-direction-left: Vers la gauche
+    filename-direction-both: Deux sens
+    filename-direction-right: Vers la droite
+    flip: Inverser le sens
+    prev-station: Gare précédente
+    next-station: Gare suivante
+    adjacent-select: Sélectionner jusqu’à {count} gares
+    adjacent-order: Ordre actuel
+    adjacent-move-up: Déplacer vers le haut
+    adjacent-move-down: Déplacer vers le bas
+    adjacent-swap-order: Inverser l’ordre
+    jreast: Style JR East
+    jreastbranch: Style JR East (avec embranchement)
+    jrcentral: Style JR Central
+    jrwest: Style JR West
+    jrwestlarge: Style JR West (grand)
+    metrolong: Style Tokyo Metro (petit / japonais)
+    metroforeign: Style Tokyo Metro (petit / langue étrangère)
+    metromedium: Style Tokyo Metro (moyen)
+    toeimedium: Style métro Toei (moyen)
+    toeilarge: Style métro Toei (grand)
+    metrolong-subtext: Sous-texte
+    metrolong-subtext-furigana: Furigana
+    metrolong-subtext-secondary: Langue secondaire
+    center-colors: Couleurs des carrés centraux
+    station-number-badges: Badges de numéro de gare
+  mode:
+    sign: Panneau de gare
+    linemap: Plan de ligne (simple/direct)
+    multiline-linemap: Plan de lignes (plusieurs lignes)
+  linemap:
+    section-route: Itinéraire et portée
+    section-layout: Mise en page
+    section-content: Contenu affiché
+    filename-suffix: Plan de ligne
+    export-format: Format d’exportation
+    format-png: PNG (image)
+    format-svg: SVG (vectoriel)
+    format-pdf: PDF (vectoriel)
+    vector-size-note: Les formats vectoriels ne nécessitent pas de taille d’image
+    export-error: Échec de l’exportation. Essayez un autre format ou une autre taille d’image.
+    orientation: Orientation
+    horizontal: Horizontale
+    vertical: Verticale
+    range-start: De
+    range-end: À
+    transit-filter: Afficher les lignes en correspondance
+    transit-show-names: Afficher les noms des lignes en correspondance
+    download-text-warning: Enregistrer (le nom secondaire peut être illisible)
+    font-size: Taille de police des noms de gare
+    font-size-small: Petite
+    font-size-medium: Moyenne
+    font-size-large: Grande
+    overlap-warning-title: Chevauchement de libellés détecté
+    overlap-warning: Certains noms de gare se chevauchent. Essayez de réduire la taille de police.
+    station-number-mode: Affichage du numéro de gare
+    station-number-none: Aucun
+    station-number-badge: Badge
+    station-number-dot: Remplacer le point
+    emphasize-connected-station-names: Agrandir les noms des gares de correspondance
+    name-style: Style du nom
+    name-style-normal: Normal
+    name-style-above: Au-dessus
+    name-style-below: En dessous
+    station-spacing: Espacement des gares
+    line-width: Épaisseur de la ligne
+    primary-lang: Langue principale
+    secondary-lang: Langue secondaire
+    show-secondary-lang: Afficher
+    lang-1st: 1er nom
+    lang-2nd: 2e nom
+    lang-3rd: 3e nom
+    lang-4th: 4e nom
+    continuation: Indicateurs de prolongement
+    continuation-before: Afficher au début
+    continuation-after: Afficher à la fin
+    swap: Inverser le début et la fin
+    loop-render-mode: Affichage de la ligne circulaire
+    loop-as-linear: Afficher comme une ligne droite
+    name-side: Côté des noms
+    name-side-left: Gauche
+    name-side-right: Droite
+    services: Services
+    services-placeholder: Tous les services (voie unique)
+    show-passed-stations: Gares traversées
+    passed-show: Afficher (estompées)
+    passed-hide-gap: Masquer (laisser un espace)
+    passed-hide-trim: Masquer (raccourcir)
+    service-name-style: Style du nom de service
+    service-name-paren: (parenthèses)
+    service-name-badge: Badge
+
+footer:
+  links:
+    title: Liens
+    description: Site web et profils sociaux du créateur
+    website: Site web
+  development:
+    title: Ressources de développement
+    description: Code source, signalement de bugs et demandes de fonctionnalités
+    repository: Dépôt GitHub
+    repository-description: Code source et versions
+    issues: Problèmes
+    issues-description: Signalement de bugs et demandes de fonctionnalités
+  notice: Ce site est créé par des passionnés. Toutes les marques appartiennent à leurs compagnies ferroviaires respectives. Ce site n’est affilié à aucune compagnie ferroviaire et n’est approuvé par aucune d’elles. Les données d’exemple et les valeurs initiales peuvent être fictives.
+
+mtr-import:
+  title: "Importer depuis MTR"
+  description: "Chargez une URL de carte ou collez le JSON renvoyé par son API, puis sélectionnez les lignes à ajouter."
+  version: "Version de MTR"
+  source-url: "URL de la carte"
+  source-json: "Coller le JSON"
+  url: "URL de la carte ou de l’API"
+  dimension: "Index de dimension"
+  endpoint: "Ouvrir le JSON de l’API"
+  fetch: "Charger les lignes"
+  json: "JSON de l’API"
+  parse: "Lire le JSON"
+  routes: "Sélectionner les lignes"
+  stations-count: "{count} gares"
+  select-all: "Tout sélectionner"
+  select-none: "Tout désélectionner"
+  company: "Compagnie de destination"
+  no-company: "Aucune compagnie"
+  import: "Importer {count} lignes"
+  success: "{routes} lignes et {stations} gares ajoutées."
+  note: "Les lignes sont ajoutées séparément, y compris dans les deux sens. Les gares MTR communes restent liées pendant cet import. Les données existantes sont conservées. Vous pourrez modifier les numéros et les lectures des gares ensuite."
+  manual-help: "Si le chargement est bloqué par CORS ou par les restrictions HTTPS/HTTP, ouvrez le lien de l’API et collez son JSON ici."
+  skipped: "{count} lignes sans arrêt ou avec des gares intermédiaires répétées ont été exclues, car l’application ne peut pas les représenter."
+  error:
+    invalid-json: "JSON non valide. Collez la réponse complète de l’API."
+    invalid-data: "Ce JSON ne correspond pas au format de l’API de la carte MTR sélectionnée."
+    no-routes: "Aucune ligne importable n’a été trouvée."
+    too-large: "Les données dépassent la limite d’importation (10 Mo)."
+    invalid-url: "Saisissez une URL de carte ou d’API HTTP ou HTTPS sans nom d’utilisateur ni mot de passe, ainsi qu’un index de dimension positif ou nul."
+    fetch-failed: "Impossible de charger l’API. Vérifiez l’URL, la dimension et la disponibilité du serveur, ou collez le JSON."
+    timeout: "La requête vers l’API a expiré. Réessayez ou collez le JSON."
+    import-failed: "Impossible d’importer les lignes. Aucune ligne n’a été ajoutée."

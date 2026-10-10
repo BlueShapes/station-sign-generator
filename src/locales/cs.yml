@@ -61,7 +61,7 @@ input:
     note: Poznámka ke stanici (větší text pod názvem stanice)
     rstation: Pravý název stanice
     rread: Subtext pravé stanice
-    ren: Subtext pravé stanice
+    ren: Pravý alternativní název stanice
     rnum: Správné číslo stanice (primární)
     rnum2: Pravé číslo stanice (sekundární)
     rnum3: Pravé číslo stanice (terciární)
@@ -428,3 +428,36 @@ footer:
     issues: Problémy
     issues-description: Hlášení chyb a požadavky na funkce
   notice: Toto je fanouškovská stránka. Všechny ochranné známky jsou majetkem příslušných železničních společností. Tato stránka není přidružena ani podporována žádnou železniční společností. Ukázková data a počáteční hodnoty mohou obsahovat falešné hodnoty.
+
+mtr-import:
+  title: "Importovat z MTR"
+  description: "Načtěte URL mapy nebo vložte JSON vrácený jejím API a vyberte trasy, které chcete přidat."
+  version: "Verze MTR"
+  source-url: "URL mapy"
+  source-json: "Vložit JSON"
+  url: "URL mapy nebo API"
+  dimension: "Index dimenze"
+  endpoint: "Otevřít JSON z API"
+  fetch: "Načíst trasy"
+  json: "JSON z API"
+  parse: "Přečíst JSON"
+  routes: "Vybrat trasy"
+  stations-count: "Počet stanic: {count}"
+  select-all: "Vybrat vše"
+  select-none: "Zrušit výběr"
+  company: "Cílová společnost"
+  no-company: "Bez společnosti"
+  import: "Importovat trasy ({count})"
+  success: "Přidáno tras: {routes}; stanic: {stations}."
+  note: "Trasy se přidávají samostatně, včetně tras v opačném směru. Sdílené stanice MTR zůstávají v rámci tohoto importu propojené. Stávající data se zachovají. Čísla stanic a údaje o výslovnosti lze později upravit."
+  manual-help: "Pokud načítání blokují omezení CORS nebo HTTPS/HTTP, otevřete odkaz na API a vložte sem jeho JSON."
+  skipped: "Vyloučeny trasy bez zastávek nebo s opakovanými mezilehlými stanicemi, které tato aplikace nedokáže zobrazit. Počet vyloučených tras: {count}."
+  error:
+    invalid-json: "Neplatný JSON. Vložte úplnou odpověď API."
+    invalid-data: "Tento JSON neodpovídá vybranému formátu mapového API MTR."
+    no-routes: "Nebyly nalezeny žádné trasy, které lze importovat."
+    too-large: "Data překračují limit importu (10 MB)."
+    invalid-url: "Zadejte HTTP nebo HTTPS URL mapy/API bez uživatelského jména a hesla a index dimenze větší nebo rovný 0."
+    fetch-failed: "API se nepodařilo načíst. Zkontrolujte URL, dimenzi a dostupnost serveru nebo vložte JSON."
+    timeout: "Vypršel časový limit požadavku na API. Zkuste to znovu nebo vložte JSON."
+    import-failed: "Trasy se nepodařilo importovat. Nebyly přidány žádné trasy."

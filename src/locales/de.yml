@@ -437,3 +437,36 @@ footer:
     issues: Issues
     issues-description: Fehlerberichte und Funktionswünsche
   notice: Dies ist eine von Fans erstellte Website. Alle Marken gehören den jeweiligen Eisenbahnunternehmen. Diese Website ist mit keinem Eisenbahnunternehmen verbunden. Beispieldaten und Anfangswerte können erfundene Angaben enthalten.
+
+mtr-import:
+  title: "Aus MTR importieren"
+  description: "Eine Karten-URL laden oder die JSON-Antwort der API einfügen und anschließend die hinzuzufügenden Routen auswählen."
+  version: "MTR-Version"
+  source-url: "Karten-URL"
+  source-json: "JSON einfügen"
+  url: "Karten- oder API-URL"
+  dimension: "Dimensionsindex"
+  endpoint: "API-JSON öffnen"
+  fetch: "Routen laden"
+  json: "API-JSON"
+  parse: "JSON lesen"
+  routes: "Routen auswählen"
+  stations-count: "{count} Stationen"
+  select-all: "Alle auswählen"
+  select-none: "Auswahl aufheben"
+  company: "Zielunternehmen"
+  no-company: "Kein Unternehmen"
+  import: "{count} Routen importieren"
+  success: "{routes} Routen und {stations} Stationen hinzugefügt."
+  note: "Routen werden einzeln hinzugefügt, auch solche in Gegenrichtung. Gemeinsame MTR-Stationen bleiben innerhalb dieses Imports verknüpft. Vorhandene Daten bleiben erhalten. Stationsnummern und Ausspracheangaben können danach bearbeitet werden."
+  manual-help: "Falls CORS oder HTTPS/HTTP-Einschränkungen das Laden verhindern, den API-Link öffnen und die JSON-Antwort hier einfügen."
+  skipped: "{count} Routen ohne Haltestellen oder mit wiederholten Zwischenstationen wurden ausgeschlossen, da diese App sie nicht darstellen kann."
+  error:
+    invalid-json: "Ungültiges JSON. Die vollständige API-Antwort einfügen."
+    invalid-data: "Dieses JSON entspricht nicht dem ausgewählten MTR-Karten-API-Format."
+    no-routes: "Keine importierbaren Routen gefunden."
+    too-large: "Die Daten überschreiten die Importgrenze (10 MB)."
+    invalid-url: "Eine HTTP- oder HTTPS-Karten-/API-URL ohne Benutzernamen oder Passwort und einen Dimensionsindex größer oder gleich 0 eingeben."
+    fetch-failed: "Die API konnte nicht geladen werden. URL, Dimension und Serververfügbarkeit prüfen oder JSON einfügen."
+    timeout: "Zeitüberschreitung bei der API-Anfrage. Erneut versuchen oder JSON einfügen."
+    import-failed: "Die Routen konnten nicht importiert werden. Es wurden keine Routen hinzugefügt."

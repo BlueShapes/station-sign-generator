@@ -61,7 +61,7 @@ input:
     note: 車站註（車站名稱下方較大文字）
     rstation: 正確的站名
     rread: 右站潛台詞
-    ren: 右站潛台詞
+    ren: 右站別名
     rnum: 右站號（主要）
     rnum2: 右站號（次要）
     rnum3: 右方車站編號（第三）
@@ -428,3 +428,36 @@ footer:
     issues: 問題
     issues-description: 錯誤報告和功能請求
   notice: 這是一個粉絲製作的網站。所有商標均為其各自鐵路公司的財產。本網站不隸屬於任何鐵路公司，也不受任何鐵路公司認可。樣本資料和初始值可能包含假值。
+
+mtr-import:
+  title: "從MTR匯入"
+  description: "載入地圖網址或貼上API傳回的JSON，再選擇要新增的路綫。"
+  version: "MTR版本"
+  source-url: "地圖網址"
+  source-json: "貼上JSON"
+  url: "地圖或API網址"
+  dimension: "維度編號"
+  endpoint: "開啟API的JSON"
+  fetch: "載入路綫"
+  json: "API的JSON"
+  parse: "讀取JSON"
+  routes: "選擇路綫"
+  stations-count: "{count}個車站"
+  select-all: "全選"
+  select-none: "取消全選"
+  company: "匯入至公司"
+  no-company: "不屬於任何公司"
+  import: "匯入{count}條路綫"
+  success: "已新增{routes}條路綫及{stations}個車站。"
+  note: "各條路綫會分別新增，包括相反方向的路綫。本次匯入中共用的MTR車站會保持關聯。現有資料會保留。車站編號及讀音可在匯入後編輯。"
+  manual-help: "如載入因CORS或HTTPS/HTTP限制而被阻擋，請開啟API連結，並在此貼上其JSON。"
+  skipped: "本應用程式無法表示沒有停站或中途車站重複的路綫，已排除{count}條路綫。"
+  error:
+    invalid-json: "JSON無效。請貼上完整的API回應。"
+    invalid-data: "此JSON與所選MTR地圖API的格式不符。"
+    no-routes: "找不到可匯入的路綫。"
+    too-large: "資料超出匯入上限（10 MB）。"
+    invalid-url: "請輸入不含使用者名稱或密碼的HTTP或HTTPS地圖／API網址，以及大於或等於0的維度編號。"
+    fetch-failed: "無法載入API。請檢查網址、維度及伺服器是否正常運作，或改用貼上JSON。"
+    timeout: "API請求逾時。請重試或貼上JSON。"
+    import-failed: "無法匯入路綫，未有新增任何路綫。"

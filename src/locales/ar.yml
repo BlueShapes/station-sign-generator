@@ -1,0 +1,462 @@
+$site-name: منشئ لافتات المحطات وخرائط الخطوط
+$og-image-path: /ogp.png
+meta:
+  title: منشئ لافتات السكك الحديدية | إصدار المثلث الأزرق (بنمط JR East/West)
+  description: أداة مجانية ومفيدة لإنشاء لافتات أسماء محطات السكك الحديدية.
+  og-image-alt: صورة نموذجية للافتة محطة (بنمط JR East)
+  pwa:
+    name: منشئ لافتات المحطات وخرائط الخطوط – إصدار المثلث الأزرق
+    short-name: لافتات وخرائط الخطوط
+header:
+  title: منشئ لافتات المحطات وخرائط الخطوط
+  edition: إصدار المثلث الأزرق
+  tooltip:
+    lang: تغيير اللغة
+    share: مشاركة هذه الأداة
+    share-options:
+      twitter: Twitter (المعروف سابقًا باسم X)
+      x: X
+      discord: Discord
+      misskey: Misskey
+      mastodon: Mastodon
+      reddit: Reddit
+      line: LINE
+      facebook: Facebook
+      whatsapp: WhatsApp
+      telegram: Telegram
+      vk: VK
+      copy: نسخ الرابط
+    copy: تم نسخ الرابط إلى الحافظة.
+    share-message: أنشئ لافتات المحطات وخرائط الخطوط باستخدام {name}!
+input:
+  save: حفظ كصورة
+  image-size: حجم الصورة
+  direct:
+    swaplr: تبديل اليمين واليسار
+    reset: إعادة ضبط المدخلات
+    reset-title: إعادة ضبط جميع المدخلات
+    reset-confirm: هل تريد بالتأكيد إعادة ضبط جميع المدخلات؟ لا يمكن التراجع عن هذا الإجراء.
+    base-color: لون الشركة
+    arrow-color: لون السهم (لون الشركة)
+    line-color: لون الخط
+    local-lines: الخطوط
+    local-lines-prefix: اختصار اسم الخط
+    local-lines-add: إضافة خط
+    local-lines-empty: أضف خطوطًا أعلاه لاختيار اختصار هنا
+    lstation: اسم المحطة اليسرى
+    lread: النص الفرعي للمحطة اليسرى
+    len: الاسم البديل للمحطة اليسرى
+    lnum: رقم المحطة اليسرى (أساسي)
+    lnum2: رقم المحطة اليسرى (ثانوي)
+    lnum3: رقم المحطة اليسرى (ثالثي)
+    station: اسم المحطة
+    read: النص الفرعي للمحطة
+    en: اسم المحطة باللغة الثانية (الإنجليزية)
+    ch: اسم المحطة باللغة الثالثة (الصينية)
+    kp: اسم المحطة باللغة الرابعة (الكورية)
+    num: رقم المحطة (أساسي)
+    num2: رقم المحطة (ثانوي)
+    num3: رقم المحطة (ثالثي)
+    trc: رمز المحطة
+    note: ملاحظة المحطة (نص أكبر أسفل اسم المحطة)
+    rstation: اسم المحطة اليمنى
+    rread: النص الفرعي للمحطة اليمنى
+    ren: الاسم البديل للمحطة اليمنى
+    rnum: رقم المحطة اليمنى (أساسي)
+    rnum2: رقم المحطة اليمنى (ثانوي)
+    rnum3: رقم المحطة اليمنى (ثالثي)
+    input-left: معلومات المحطة اليسرى
+    input-current: معلومات المحطة الحالية
+    input-right: معلومات المحطة اليمنى
+    area: منطقة أجرة المحطة
+    area-name: اسم المنطقة
+    center-colors: ألوان المربع الأوسط
+    export-copy: نسخ JSON
+    export-copy-done: تم النسخ!
+    export-download: تنزيل JSON
+    import: استيراد JSON
+    import-modal-title: استيراد بيانات JSON
+    import-paste-label: لصق JSON
+    import-paste-placeholder: الصق JSON المُصدّر هنا...
+    import-file-label: تحميل ملف JSON
+    import-submit: استيراد
+    import-error: "بيانات غير صالحة: {detail}"
+common:
+  preview: معاينة
+  add: إضافة
+  cancel: إلغاء
+  confirm: إعادة ضبط
+  confirm-title: تأكيد
+  theme-dark: التبديل إلى الوضع الداكن
+  theme-light: التبديل إلى الوضع الفاتح
+  loading: جارٍ التحميل...
+  loading-fonts: جارٍ تحميل الخطوط...
+  edit: تعديل
+  delete: حذف
+  save: حفظ
+  close: إغلاق
+error:
+  on-save: فشلت الدالة handleSave. هذا سلوك غير متوقع تمامًا، إذ يتم دائمًا عرض لوحة الرسم.
+  corrupted-cache: تلفت البيانات المحفوظة وأُعيد ضبطها إلى القيم الافتراضية. يمكنك متابعة استخدام التطبيق بشكل طبيعي.
+tabs:
+  simple: إدخال بسيط
+  route-input: من خط
+  route-edit: تعديل الخطوط
+  settings: الإعدادات
+settings:
+  storage:
+    title: تخزين الخطوط
+    indexeddb: IndexedDB (دائم)
+    memory: الذاكرة فقط (للجلسة)
+    memory-warning: ستُفقد الخطوط المخصصة التي تُحمّلها في هذه الجلسة عند إغلاق الصفحة.
+  fonts:
+    builtin-title: الخطوط المثبتة مسبقًا
+    builtin-desc: خطوط مطلوبة للافتات المحطات. لا يمكن حذفها.
+    preload: تحميل مسبق
+    user-title: الخطوط المخصصة
+    upload: تحميل خط
+    upload-modal-title: تحميل خط
+    select-file: اختر ملف خط (.ttf أو .otf أو .woff أو .woff2)
+    display-name: اسم العرض
+    family-name: اسم عائلة الخط في CSS
+    family-hint: يُستخدم في إعدادات الأنماط. لا يُسمح بالمسافات.
+    upload-submit: تحميل
+    empty: لم يتم تحميل أي خطوط مخصصة بعد.
+    remove-all: إزالة الكل
+    remove-all-confirm: هل تريد إزالة جميع الخطوط المخصصة؟ سيؤدي ذلك أيضًا إلى حذفها من IndexedDB، ولا يمكن التراجع عنه.
+    status:
+      idle: لم يُحمّل
+      loading: جارٍ التحميل...
+      loaded: مُحمّل
+      error: خطأ
+  images:
+    title: الصور
+    upload: تحميل صورة
+    upload-modal-title: تحميل صورة
+    select-file: اختر ملف صورة
+    display-name: اسم الصورة
+    upload-submit: تحميل
+    empty: لم يتم تحميل أي صور بعد.
+    remove-all: إزالة الكل
+    remove-all-confirm: هل تريد إزالة جميع الصور المُحمّلة؟ سيؤدي ذلك أيضًا إلى حذفها من IndexedDB، ولا يمكن التراجع عنه.
+  custom:
+    title: أنماط مخصصة
+    description: تُخزّن التعريفات المخصصة بشكل مستقل عن بيانات السكك الحديدية والمحطات.
+    option-prefix: مخصص
+    duplicate: تكرار
+    copy-name: نسخة من {name}
+    empty: لا توجد تعريفات مخصصة بعد.
+    template-font: خط القالب
+    font-embedded: الخط مضمن كبيانات ثنائية
+    name: الاسم
+    template-label: القالب الأساسي
+    font: الخط
+    font-help: تُنسخ الخطوط المُحمّلة إلى التعريف المخصص.
+    sign:
+      title: أنماط لافتات المحطات
+      create: إنشاء نمط مخصص
+      edit: تعديل نمط مخصص
+    station-badge:
+      title: شارات أرقام المحطات
+      create: إنشاء شارة مخصصة لرقم محطة
+    route-badge:
+      title: شارات الخطوط
+      create: إنشاء شارة خط مخصصة
+    advanced:
+      title: تخطيط متقدم
+      description: تجاوز أسلوب الطباعة لكل جزء نصي غير رقمي. تترك القيم الفارغة إعداد القالب الافتراضي.
+      font-size: حجم الخط
+      letter-spacing: تباعد الأحرف
+      y-offset: إزاحة Y
+    parts:
+      main-primary: اسم المحطة الرئيسي
+      main-furigana: القراءة الرئيسية
+      main-secondary: الاسم الثانوي الرئيسي
+      main-tertiary: الاسم الثالثي الرئيسي
+      main-quaternary: الاسم الرباعي الرئيسي
+      main-note: ملاحظة المحطة
+      main-area: منطقة الأجرة
+      adjacent-primary: اسم المحطة المجاورة
+      adjacent-furigana: قراءة اسم المحطة المجاورة
+      adjacent-secondary: الاسم الثانوي للمحطة المجاورة
+    template:
+      station-badge:
+        jreast: بنمط JR East
+        jrcentral: بنمط JR Central
+        tokyometro: بنمط Tokyo Metro / Toei
+      route-badge:
+        rounded-square: مربع بزوايا مستديرة
+        circle: دائرة
+route:
+  download-sqlite: تنزيل SQLite
+  import-sqlite: استيراد SQLite
+  import-sample: تحميل بيانات نموذجية
+  import-error:
+    invalid-file: الملف المحدد ليس قاعدة بيانات SQLite صالحة.
+    missing-table: "قاعدة البيانات تفتقد جدولًا مطلوبًا: {detail}"
+    missing-column: "قاعدة البيانات تفتقد عمودًا مطلوبًا: {detail}"
+  import-modal:
+    title: استيراد قاعدة البيانات
+    description: توجد قاعدة بيانات بالفعل. كيف تريد استيراد البيانات؟
+    overwrite-desc: "استبدال: استبدال جميع البيانات الحالية بالبيانات المستوردة."
+    merge-desc: "دمج: إضافة البيانات المستوردة إلى قاعدة البيانات الحالية. ستُحدّث السجلات المتعارضة."
+    overwrite: استبدال
+    merge: دمج
+  no-routes: لم يتم العثور على خطوط. أنشئ خطوطًا في علامة التبويب «تعديل الخطوط».
+  company:
+    route-badge-style: نمط شارة الخط
+    route-badge-style-preview: معاينة شارة الخط
+    title: الشركات
+    add: إضافة شركة
+    edit: تعديل الشركة
+    name: اسم الشركة
+    color: لون الشركة
+    station-number-style: نمط رقم المحطة
+    station-number-style-jreast: بنمط JR East
+    station-number-style-jrcentral: بنمط JR Central
+    station-number-style-tokyometro: بنمط Tokyo Metro / Toei Subway
+    station-number-style-preview: شارة نموذجية (لون الشركة مستخدم كلون للخط)
+    empty: لا توجد شركات بعد
+    delete-confirm: هل تريد حذف هذه الشركة؟ ستُحذف أيضًا خطوطها وأي مسارات مباشرة تتضمنها.
+  special-zone:
+    title: المناطق الخاصة
+    add: إضافة منطقة
+    edit: تعديل المنطقة
+    name: اسم المنطقة
+    abbreviation: الاختصار (حرف واحد)
+    is-black: تعبئة سوداء
+    empty: لا توجد مناطق بعد
+    delete-confirm: هل تريد حذف هذه المنطقة؟ ستفقد جميع المحطات التي تستخدمها هذه الشارة.
+  line:
+    title: الخطوط
+    add: إضافة خط
+    edit: تعديل الخط
+    name: اسم الخط
+    color: لون الخط
+    prefix: اختصار اسم الخط
+    priority: الأولوية
+    company: الشركة
+    is-loop: خط دائري (مسار حلقي)
+    empty: لا توجد خطوط بعد
+    select: اختر خطًا
+    all: جميع الشركات
+    unassigned-company: شركة غير محددة
+    delete-confirm: هل تريد حذف هذا الخط؟ ستُحذف أيضًا أي مسارات مباشرة تتضمنه.
+    delete-all: حذف جميع الخطوط
+    delete-all-confirm: هل تريد حذف جميع الخطوط؟ ستُحذف أيضًا ارتباطات المحطات وأرقامها والخدمات وجميع المسارات المباشرة. لا يمكن التراجع عن ذلك.
+    delete-targets: الخطوط المراد حذفها
+    prefix-preview: معاينة شارة مؤشر الخط
+    station-number-preview: معاينة رقم المحطة (01)
+  through-route:
+    title: المسارات المباشرة
+    add: إضافة مسار مباشر
+    edit: تعديل المسار المباشر
+    name: اسم المسار
+    empty: لا توجد مسارات مباشرة بعد
+    segments: مقاطع الخط
+    segment-number: المقطع {number}
+    add-segment: إضافة مقطع خط
+    line: الخط
+    entry-station: محطة الدخول
+    exit-station: محطة الخروج
+    direction: اتجاه المقطع
+    forward: للأمام (ترتيب المحطات)
+    reverse: للخلف (عكس ترتيب المحطات)
+    guide-title: قواعد المسار الصالح
+    guide-intro: لا يتم التحقق من خدمات النقل في الواقع. يمكنك حفظ أي مسار يشكل طريقًا متصلًا واحدًا بلا تفرعات ضمن البيانات المسجلة.
+    guide-section: في كل مقطع، اختر محطتين مختلفتين على الخط نفسه لتكونا محطة الدخول ومحطة الخروج.
+    guide-direction: يتبع اتجاه الأمام ترتيب المحطات المسجل، ويتجه الخلف بعكسه. في الخط الدائري يحدد الاتجاه أي جانب من الحلقة يُستخدم.
+    guide-connection: يجب أن يبدأ كل مقطع لاحق من سجل المحطة نفسه الذي انتهى عنده المقطع السابق، أو من محطة مرتبطة به عبر تحويلة صريحة.
+    delete-confirm: هل تريد حذف هذا المسار المباشر؟
+    service-help: اضبط أنواع الخدمات لهذا المسار المباشر بالكامل. بعد الحفظ، عيّن محطاتها في محرر الخط أدناه.
+    service-editor-help: يتم تعديل أنواع الخدمات ومحطاتها لـ “{name}”. غيّر المقاطع أو ترتيبها من محرر المسارات المباشرة.
+    error-incomplete: اختر خطًا ومحطتي البداية والنهاية لكل مقطع.
+    error-empty: أضف مقطع خط واحدًا على الأقل.
+    error-station-not-on-line: المحطة المحددة لا تنتمي إلى خطها.
+    error-invalid-direction: لا يمكن الوصول إلى محطة الخروج من محطة الدخول في الاتجاه المحدد.
+    error-disconnected: لا تشترك مقاطع الخط المتجاورة في محطة الاتصال نفسها.
+    error-same-station: اختر محطتين مختلفتين للدخول والخروج.
+    error-invalid-direction-detail: للسفر من “{entry}” إلى “{exit}”، اختر “{direction}”.
+    error-disconnected-detail: في المقطع {current}، اختر سجل المحطة نفسه لـ “{station}”، محطة خروج المقطع {previous}، أو أضف تحويلة صريحة بينهما.
+  service:
+    title: الخدمات
+    local: محلي
+    add-placeholder: اسم الخدمة
+    delete-confirm: هل تريد حذف هذه الخدمة؟ ستُفقد جميع بيانات التوقف.
+  station:
+    title: المحطات
+    add: إضافة محطة
+    add-existing: الإضافة من محطة موجودة
+    link-title: إضافة محطة موجودة إلى الخط
+    source-line: الخط المصدر
+    select-existing: اختر محطة لإضافتها
+    inherited-info: معلومات موروثة (للقراءة فقط)
+    edit: تعديل المحطة
+    name: اسم المحطة
+    furigana: القراءة (هيراغانا)
+    en: الاسم بالإنجليزية
+    ko: الاسم بالكورية
+    zh: الاسم بالصينية
+    note: ملاحظة
+    trc: رمز من ثلاثة أحرف
+    number: رقم المحطة
+    number-source: خط عرض رقم المحطة
+    number-source-help: اختر رمز الخط الذي سيُستخدم في شارة رقم المحطة لهذا الخط.
+    number-source-current-only: لا يتوفر لهذا الخط سوى رمز الخط الحالي.
+    number-source-current: استخدم الخط الحالي [{prefix}] {name}
+    number-source-parent: استخدم الخط الرئيسي [{prefix}] {name}
+    areas: شارات مناطق الأجرة
+    empty: اختر خطًا لعرض المحطات
+    no-station: لا توجد محطات بعد
+    duplicate-number-warning: "أرقام محطات مكررة في هذا الخط: {numbers}"
+    delete-confirm: هل تريد إزالة هذه المحطة من الخط؟
+    select: اختر محطة
+    transfer-title: معلومات التحويل — {name}
+    transfer-manage: عرض معلومات التحويل وإدارتها
+    transfer-line-select: خط الاتصال
+    transfer-select: محطة الاتصال
+    transfer-empty: لا توجد تحويلات
+    same-id-lines: الخطوط التي تشترك في معرّف المحطة نفسه
+    same-id-lines-help: تتشارك هذه الخطوط سجل المحطة نفسه وتُعامل تلقائيًا كتحويلات. لا يمكن تعديلها هنا.
+    same-id-lines-empty: لا يوجد خط آخر يشارك معرّف المحطة هذا
+    explicit-transfers: تحويلات صريحة بين المحطات
+    explicit-transfers-help: أضف روابط بين سجلات محطات مختلفة أو أزلها. تنتقل المحطات المضافة من الخيارات إلى القائمة أدناه، ويمكنها أيضًا ربط مقاطع المسار المباشر.
+  sign:
+    style: النمط
+    direction: الاتجاه
+    filename-direction-left: باتجاه اليسار
+    filename-direction-both: الاتجاهان
+    filename-direction-right: باتجاه اليمين
+    flip: قلب الاتجاه
+    prev-station: المحطة السابقة
+    next-station: المحطة التالية
+    adjacent-select: اختر ما يصل إلى {count} محطة
+    adjacent-order: الترتيب الحالي
+    adjacent-move-up: تحريك لأعلى
+    adjacent-move-down: تحريك لأسفل
+    adjacent-swap-order: عكس الترتيب
+    jreast: بنمط JR East
+    jreastbranch: بنمط JR East (متفرع)
+    jrcentral: بنمط JR Central
+    jrwest: بنمط JR West
+    jrwestlarge: بنمط JR West (كبير)
+    metrolong: بنمط Tokyo Metro (صغير / ياباني)
+    metroforeign: بنمط Tokyo Metro (صغير / لغة أجنبية)
+    metromedium: بنمط Tokyo Metro (متوسط)
+    toeimedium: بنمط مترو Toei (متوسط)
+    toeilarge: بنمط مترو Toei (كبير)
+    metrolong-subtext: نص فرعي
+    metrolong-subtext-furigana: فوريغانا (دليل النطق الياباني)
+    metrolong-subtext-secondary: اللغة الثانوية
+    center-colors: ألوان المربع الأوسط
+    station-number-badges: شارات أرقام المحطات
+  mode:
+    sign: لافتة محطة
+    linemap: خريطة خط (مفرد/مباشر)
+    multiline-linemap: خريطة خطوط (عدة خطوط)
+  linemap:
+    section-route: المسار والنطاق
+    section-layout: التخطيط
+    section-content: المحتوى المعروض
+    filename-suffix: خريطة خط
+    export-format: تنسيق التصدير
+    format-png: PNG (صورة)
+    format-svg: SVG (متجه)
+    format-pdf: PDF (متجه)
+    vector-size-note: لا تتطلب تنسيقات المتجهات تحديد حجم الصورة
+    export-error: فشل التصدير. جرّب تنسيقًا أو حجم صورة آخر.
+    orientation: الاتجاه
+    horizontal: أفقي
+    vertical: عمودي
+    range-start: من
+    range-end: إلى
+    transit-filter: إظهار خطوط التحويل
+    transit-show-names: إظهار أسماء خطوط التحويل
+    download-text-warning: حفظ (قد يتعذر قراءة الاسم الثانوي)
+    font-size: حجم خط اسم المحطة
+    font-size-small: صغير
+    font-size-medium: متوسط
+    font-size-large: كبير
+    overlap-warning-title: تم اكتشاف تداخل التسميات
+    overlap-warning: تتداخل بعض أسماء المحطات. جرّب تقليل حجم الخط.
+    station-number-mode: عرض رقم المحطة
+    station-number-none: بلا
+    station-number-badge: شارة
+    station-number-dot: استبدال النقطة
+    emphasize-connected-station-names: تكبير أسماء محطات الاتصال بالمسار
+    name-style: نمط الاسم
+    name-style-normal: عادي
+    name-style-above: أعلى
+    name-style-below: أسفل
+    station-spacing: المسافة بين المحطات
+    line-width: سُمك الخط
+    primary-lang: اللغة الأساسية
+    secondary-lang: اللغة الثانوية
+    show-secondary-lang: إظهار
+    lang-1st: الاسم الأول
+    lang-2nd: الاسم الثاني
+    lang-3rd: الاسم الثالث
+    lang-4th: الاسم الرابع
+    continuation: مؤشرات الاستمرار
+    continuation-before: إظهار عند البداية
+    continuation-after: إظهار عند النهاية
+    swap: تبديل البداية والنهاية
+    loop-render-mode: طريقة عرض الخط الدائري
+    loop-as-linear: عرضه كمسار خطي
+    name-side: موضع الاسم
+    name-side-left: اليسار
+    name-side-right: اليمين
+    services: الخدمات
+    services-placeholder: كل الخدمات (مسار واحد)
+    show-passed-stations: المحطات التي تم تجاوزها
+    passed-show: إظهار (باهت)
+    passed-hide-gap: إخفاء (مع فجوة)
+    passed-hide-trim: إخفاء (مع قص)
+    service-name-style: نمط اسم الخدمة
+    service-name-paren: (بين قوسين)
+    service-name-badge: شارة
+footer:
+  links:
+    title: روابط
+    description: موقع المنشئ وحساباته على شبكات التواصل الاجتماعي
+    website: الموقع الإلكتروني
+  development:
+    title: موارد التطوير
+    description: شفرة المصدر وتقارير الأخطاء وطلبات الميزات
+    repository: مستودع GitHub
+    repository-description: شفرة المصدر والإصدارات
+    issues: المشكلات
+    issues-description: تقارير الأخطاء وطلبات الميزات
+  notice: هذا موقع من صنع المعجبين. جميع العلامات التجارية ملك لشركات السكك الحديدية المعنية. هذا الموقع غير تابع لأي شركة سكك حديدية ولا يحظى بتأييدها. قد تحتوي البيانات النموذجية والقيم الأولية على قيم وهمية.
+mtr-import:
+  title: استيراد من MTR
+  description: حمّل رابط خريطة أو الصق JSON الذي تعيده واجهتها البرمجية، ثم اختر الخطوط المراد إضافتها.
+  version: إصدار MTR
+  source-url: رابط الخريطة
+  source-json: لصق JSON
+  url: رابط الخريطة أو الواجهة البرمجية
+  dimension: فهرس البُعد
+  endpoint: فتح JSON للواجهة البرمجية
+  fetch: تحميل الخطوط
+  json: JSON للواجهة البرمجية
+  parse: قراءة JSON
+  routes: اختيار الخطوط
+  stations-count: "{count} محطة"
+  select-all: تحديد الكل
+  select-none: إلغاء تحديد الكل
+  company: الشركة الوجهة
+  no-company: لا توجد شركة
+  import: استيراد {count} خط
+  success: تمت إضافة {routes} خطًا و{stations} محطة.
+  note: تُضاف الخطوط بشكل منفصل، بما فيها الاتجاهات المعاكسة. وتبقى محطات MTR المشتركة مرتبطة ضمن عملية الاستيراد هذه. تُحفظ البيانات الحالية. يمكن تعديل أرقام المحطات وقراءاتها لاحقًا.
+  manual-help: إذا تعذر التحميل بسبب قيود CORS أو HTTPS/HTTP، فافتح رابط الواجهة البرمجية والصق JSON هنا.
+  skipped: استُبعد {count} خطًا بلا محطات أو بمحطات وسيطة مكررة، لأن التطبيق لا يستطيع تمثيلها.
+  error:
+    invalid-json: JSON غير صالح. الصق استجابة الواجهة البرمجية كاملة.
+    invalid-data: لا يتوافق JSON هذا مع تنسيق واجهة API لخريطة MTR المحددة.
+    no-routes: لم يتم العثور على خطوط قابلة للاستيراد.
+    too-large: تتجاوز البيانات حد الاستيراد (10 MB).
+    invalid-url: أدخل رابط خريطة أو API باستخدام HTTP أو HTTPS دون اسم مستخدم أو كلمة مرور، وفهرس بُعد غير سالب.
+    fetch-failed: تعذر تحميل API. تحقق من الرابط والبُعد وتوفر الخادم، أو الصق JSON.
+    timeout: انتهت مهلة طلب API. حاول مرة أخرى أو الصق JSON.
+    import-failed: تعذر استيراد الخطوط. لم تتم إضافة أي خط.

@@ -212,7 +212,7 @@ export async function getDatabase(): Promise<Database> {
   return db;
 }
 
-export function persistDatabase(database: Database): void {
+export function persistDatabase(database: Database, throwOnFailure = false): void {
   try {
     const binary = database.export();
     const base64 = btoa(
@@ -222,6 +222,7 @@ export function persistDatabase(database: Database): void {
     );
     localStorage.setItem(STORAGE_KEY, base64);
   } catch (e) {
+    if (throwOnFailure) throw e;
     console.error("Failed to persist database to localStorage:", e);
   }
 }

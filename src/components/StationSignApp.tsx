@@ -3,6 +3,8 @@ import "@mantine/core/styles.css";
 import { useState, useEffect } from "react";
 import {
   MantineProvider,
+  DirectionProvider,
+  useDirection,
   createTheme,
   localStorageColorSchemeManager,
   Loader,
@@ -32,7 +34,7 @@ import SimpleInputTab from "@/components/tabs/SimpleInputTab";
 import RouteInputTab from "@/components/tabs/RouteInputTab";
 import EditRoutesTab from "@/components/tabs/EditRoutesTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
-import { getLocaleFromPathname, getLocalePath } from "@/i18n/locales";
+import { getLocaleDirection, getLocaleFromPathname, getLocalePath } from "@/i18n/locales";
 import { syncDocumentMetadata } from "@/i18n/syncDocumentMetadata";
 import { loadTranslations } from "@/i18n/translations";
 import {
@@ -64,6 +66,13 @@ function AppContent({
   onSwitchLocale: (l: string) => void;
 }) {
   const t = useTranslations();
+  const { dir, setDirection } = useDirection();
+  const direction = getLocaleDirection(locale);
+
+  useEffect(() => {
+    if (dir !== direction) setDirection(direction);
+  }, [dir, direction, setDirection]);
+
   const { db, loading: dbLoading, persist } = useRouteDb();
 
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -168,16 +177,21 @@ export default function StationSignApp({
 
   return (
     <TranslationProvider messages={messages} locale={currentLocale}>
-      <MantineProvider
-        theme={theme}
-        colorSchemeManager={colorSchemeManager}
-        defaultColorScheme="auto"
+      <DirectionProvider
+        initialDirection={getLocaleDirection(locale)}
+        detectDirection={false}
       >
-        <AppContent
-          locale={currentLocale}
-          onSwitchLocale={handleSwitchLocale}
-        />
-      </MantineProvider>
+        <MantineProvider
+          theme={theme}
+          colorSchemeManager={colorSchemeManager}
+          defaultColorScheme="auto"
+        >
+          <AppContent
+            locale={currentLocale}
+            onSwitchLocale={handleSwitchLocale}
+          />
+        </MantineProvider>
+      </DirectionProvider>
     </TranslationProvider>
   );
 }

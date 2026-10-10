@@ -61,7 +61,7 @@ input:
     note: 车站注释（车站名称下方较大文字）
     rstation: 正确的站名
     rread: 右站潜台词
-    ren: 右站潜台词
+    ren: 右站别名
     rnum: 右站号（主要）
     rnum2: 右站号（次要）
     rnum3: 右侧车站编号（第三）
@@ -428,3 +428,36 @@ footer:
     issues: 问题
     issues-description: 错误报告和功能请求
   notice: 这是一个粉丝制作的网站。所有商标均为其各自铁路公司的财产。本网站不隶属于任何铁路公司，也不受任何铁路公司认可。样本数据和初始值可能包含假值。
+
+mtr-import:
+  title: "从MTR导入"
+  description: "加载地图网址或粘贴API返回的JSON，再选择要添加的线路。"
+  version: "MTR版本"
+  source-url: "地图网址"
+  source-json: "粘贴JSON"
+  url: "地图或API网址"
+  dimension: "维度编号"
+  endpoint: "打开API的JSON"
+  fetch: "加载线路"
+  json: "API的JSON"
+  parse: "读取JSON"
+  routes: "选择线路"
+  stations-count: "{count}个车站"
+  select-all: "全选"
+  select-none: "取消全选"
+  company: "导入到公司"
+  no-company: "无所属公司"
+  import: "导入{count}条线路"
+  success: "已添加{routes}条线路和{stations}个车站。"
+  note: "各条线路会分别添加，包括反方向的线路。本次导入中共用的MTR车站会保持关联。现有数据会保留。车站编号和读音可在导入后编辑。"
+  manual-help: "如果加载因CORS或HTTPS/HTTP限制而被阻止，请打开API链接，并在此粘贴其JSON。"
+  skipped: "此应用无法表示没有停靠站或中途车站重复的线路，已排除{count}条线路。"
+  error:
+    invalid-json: "JSON无效。请粘贴完整的API响应。"
+    invalid-data: "此JSON与所选MTR地图API的格式不符。"
+    no-routes: "未找到可导入的线路。"
+    too-large: "数据超过导入上限（10 MB）。"
+    invalid-url: "请输入不含用户名或密码的HTTP或HTTPS地图／API网址，以及大于或等于0的维度编号。"
+    fetch-failed: "无法加载API。请检查网址、维度及服务器是否正常运行，或改用粘贴JSON。"
+    timeout: "API请求超时。请重试或粘贴JSON。"
+    import-failed: "无法导入线路，未添加任何线路。"
