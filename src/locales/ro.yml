@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: Fonturi preinstalate
     builtin-desc: Fonturi necesare pentru indicatoarele de stație. Nu poate fi eliminat.
+    recommended-title: "Font Noto Sans recomandat"
+    recommended-description: "Pentru {language}, recomandăm {font}. Încărcarea este opțională; fontul va fi disponibil și în stilurile personalizate."
+    recommended-load: "Încarcă fontul"
+    recommended-error: "Fontul nu a putut fi încărcat. Verifică conexiunea și încearcă din nou."
     preload: Preîncărcare
     user-title: Fonturi personalizate
     upload: Încărcați font

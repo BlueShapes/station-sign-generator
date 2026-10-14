@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: 預先安裝字體
     builtin-desc: 車站標誌所需的字體。無法移除。
+    recommended-title: "推薦的 Noto Sans 字體"
+    recommended-description: "{language}建議使用{font}。載入為選用功能；字體也可在自訂樣式中使用。"
+    recommended-load: "載入字體"
+    recommended-error: "無法載入字體。請檢查網路連線後再試。"
     preload: 預載
     user-title: 自訂字體
     upload: 上傳字體

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, memo } from "react";
 import {
+  Accordion,
   Button,
   TextInput,
   ActionIcon,
@@ -49,12 +50,17 @@ import { useTranslations } from "@/i18n/useTranslation";
 import { sanitizeDirectInputData } from "@/lib/textInputSafety";
 import { DEFAULT_DIRECTION } from "@/db/seed";
 import { useCustomizations } from "@/customization/store";
+import type { SimpleInputTypography } from "@/customization/simpleInputTypography";
+import SignTextLayoutEditor, {
+  type SignFontOption,
+} from "@/components/inputs/SignTextLayoutEditor";
 
 const DEBOUNCE_MS = 400;
 
 interface DirectInputProps {
   initialData: DirectInputStationProps;
   onUpdate: (data: DirectInputStationProps) => void;
+  fontOptions: readonly SignFontOption[];
   onReset?: () => void;
   signStyle?: string;
 }
@@ -62,6 +68,7 @@ interface DirectInputProps {
 const DirectInput = memo(function DirectInput({
   initialData,
   onUpdate,
+  fontOptions,
   onReset,
   signStyle,
 }: DirectInputProps) {
@@ -1149,6 +1156,54 @@ const DirectInput = memo(function DirectInput({
             </Stack>
           </Grid.Col>
         </Grid>
+      </Box>
+
+      <Box px="md" style={{ width: "100%" }}>
+        <Accordion variant="contained">
+          <Accordion.Item value="typography">
+            <Accordion.Control>
+              {t("settings.custom.advanced.title")}
+            </Accordion.Control>
+            <Accordion.Panel>
+              <Stack gap="md">
+                <Select
+                  label={t("settings.custom.font")}
+                  placeholder={t("settings.custom.template-font")}
+                  value={
+                    fontOptions.find(
+                      ({ family }) =>
+                        family === formData.typography?.fontFamily,
+                    )?.value ?? null
+                  }
+                  data={fontOptions.map(({ value, label }) => ({
+                    value,
+                    label,
+                  }))}
+                  clearable
+                  searchable
+                  onChange={(value) =>
+                    updateField("typography", {
+                      ...formData.typography,
+                      fontFamily: fontOptions.find(
+                        (font) => font.value === value,
+                      )?.family,
+                    } satisfies SimpleInputTypography)
+                  }
+                />
+                <SignTextLayoutEditor
+                  fonts={fontOptions}
+                  layout={formData.typography?.layout ?? {}}
+                  onChange={(layout) =>
+                    updateField("typography", {
+                      ...formData.typography,
+                      layout,
+                    } satisfies SimpleInputTypography)
+                  }
+                />
+              </Stack>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
       </Box>
     </>
   );

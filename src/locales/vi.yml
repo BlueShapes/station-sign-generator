@@ -119,6 +119,10 @@ settings:
   fonts:
     builtin-title: Phông chữ cài sẵn
     builtin-desc: Phông chữ cần thiết cho biển tên ga. Không thể xóa.
+    recommended-title: "Phông chữ Noto Sans được đề xuất"
+    recommended-description: "Chúng tôi đề xuất {font} cho {language}. Tải phông chữ là tùy chọn; phông chữ cũng sẽ có trong các kiểu tùy chỉnh."
+    recommended-load: "Tải phông chữ"
+    recommended-error: "Không thể tải phông chữ. Hãy kiểm tra kết nối và thử lại."
     preload: Tải trước
     user-title: Phông chữ tùy chỉnh
     upload: Tải phông chữ lên

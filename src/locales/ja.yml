@@ -119,6 +119,10 @@ settings:
   fonts:
     builtin-title: プリインストールフォント
     builtin-desc: 駅名標に使用する必須フォントです。削除できません。
+    recommended-title: "おすすめのNoto Sansフォント"
+    recommended-description: "{language}には{font}がおすすめです。読み込みは任意で、カスタムスタイルでも使用できます。"
+    recommended-load: "フォントを読み込む"
+    recommended-error: "フォントを読み込めませんでした。通信状況を確認して再度お試しください。"
     preload: 先読み
     user-title: カスタムフォント
     upload: フォントをアップロード

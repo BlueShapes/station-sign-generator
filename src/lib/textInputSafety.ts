@@ -1,4 +1,5 @@
 import type DirectInputStationProps from "@/components/signs/DirectInputStationProps";
+import { normalizeSimpleInputTypography } from "@/customization/simpleInputTypography";
 
 export const TEXT_INPUT_MAX_LENGTH = 100;
 export const DIRECT_INPUT_JSON_MAX_LENGTH = 100_000;
@@ -108,6 +109,7 @@ export function sanitizeDirectInputData(
 
   return {
     ...data,
+    typography: normalizeSimpleInputTypography(data.typography),
     primaryName: truncateTextInput(data.primaryName),
     primaryNameFurigana: truncateTextInput(data.primaryNameFurigana),
     secondaryName: truncateTextInput(data.secondaryName),

@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: Font yang diprapasang
     builtin-desc: Fon yang diperlukan untuk tanda stesen. Tidak boleh dikeluarkan.
+    recommended-title: "Fon Noto Sans yang disyorkan"
+    recommended-description: "Untuk {language}, kami mengesyorkan {font}. Pemuatan fon adalah pilihan; fon ini juga akan tersedia dalam gaya tersuai."
+    recommended-load: "Muatkan fon"
+    recommended-error: "Fon tidak dapat dimuatkan. Semak sambungan anda dan cuba lagi."
     preload: Pramuat
     user-title: Fon Tersuai
     upload: Muat Naik Fon

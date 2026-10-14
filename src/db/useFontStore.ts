@@ -1,19 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, createElement, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { BUILTIN_FONTS, loadBuiltinFont } from '@/lib/fontCatalog';
+import type { BuiltinFontDef } from '@/lib/fontCatalog';
+
+export { BUILTIN_FONTS } from '@/lib/fontCatalog';
+export type { BuiltinFontDef } from '@/lib/fontCatalog';
 
 export type StorageMode = 'indexeddb' | 'memory';
 export type FontStatus = 'idle' | 'loading' | 'loaded' | 'error';
-
-export interface BuiltinFontDef {
-  id: string;
-  name: string;
-  family: string;
-  spec: string;
-  sizeApprox: number;
-  license?: {
-    name: string;
-    url: string;
-  };
-}
 
 export interface UserFontEntry {
   id: string;
@@ -26,36 +19,6 @@ export interface UserFontEntry {
   mimeType: string;
 }
 
-export const BUILTIN_FONTS: BuiltinFontDef[] = [
-  { id: 'noto-sans-jp', name: 'Noto Sans JP', family: 'NotoSansJP', spec: '900 1em NotoSansJP', sizeApprox: 9_600_000 },
-  {
-    id: 'noto-sans-sc',
-    name: 'Noto Sans SC',
-    family: 'NotoSansSC',
-    spec: '400 1em NotoSansSC',
-    sizeApprox: 17_772_300,
-    license: {
-      name: 'SIL Open Font License 1.1',
-      url: new URL('../fonts/NotoSansSC-OFL.txt', import.meta.url).href,
-    },
-  },
-  { id: 'noto-sans-tc', name: 'Noto Sans TC', family: 'NotoSansTC', spec: '1em NotoSansTC', sizeApprox: 11_900_000 },
-  { id: 'noto-sans-kr', name: 'Noto Sans KR', family: 'NotoSansKR', spec: '1em NotoSansKR', sizeApprox: 10_400_000 },
-  {
-    id: 'zen-maru-gothic',
-    name: 'Zen Maru Gothic',
-    family: 'ZenMaruGothic',
-    spec: '700 1em ZenMaruGothic',
-    sizeApprox: 3_779_008,
-    license: {
-      name: 'SIL Open Font License 1.1',
-      url: new URL('../fonts/ZenMaruGothic-OFL.txt', import.meta.url).href,
-    },
-  },
-  { id: 'overused-grotesk', name: 'Overused Grotesk', family: 'OverusedGrotesk', spec: '1em OverusedGrotesk', sizeApprox: 217_000 },
-  { id: 'hind-semibold', name: 'Hind SemiBold', family: 'HindSemiBold', spec: '600 1em HindSemiBold', sizeApprox: 274_000 },
-  { id: 'jost-trispace-hybrid', name: 'Jost Trispace Hybrid', family: 'JostTrispaceHybrid', spec: '600 1em JostTrispaceHybrid', sizeApprox: 8_124 },
-];
 
 // ── IndexedDB helpers ────────────────────────────────────────────────────────
 
@@ -72,6 +35,31 @@ interface StoredFontRecord {
   size: number;
   addedAt: number;
   mimeType?: string;
+}
+
+function normalizeFontFamily(family: string): string {
+  return family.replace(/["']/g, '').trim().toLowerCase();
+}
+
+function getRegisteredFontStatus(font: BuiltinFontDef, fontSet: FontFaceSet): FontStatus {
+  const faces = Array.from(fontSet).filter(
+    (face) => normalizeFontFamily(face.family) === normalizeFontFamily(font.family),
+  );
+
+  if (faces.some((face) => face.status === 'loading')) return 'loading';
+  if (faces.some((face) => face.status === 'loaded')) return 'loaded';
+  if (faces.length > 0 && faces.every((face) => face.status === 'error')) return 'error';
+  return 'idle';
+}
+
+function getInitialBuiltinStatus(): Record<string, FontStatus> {
+  if (typeof document === 'undefined') {
+    return Object.fromEntries(BUILTIN_FONTS.map((font) => [font.id, 'idle' as FontStatus]));
+  }
+
+  return Object.fromEntries(
+    BUILTIN_FONTS.map((font) => [font.id, getRegisteredFontStatus(font, document.fonts)]),
+  );
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -126,7 +114,7 @@ function idbClear(db: IDBDatabase): Promise<void> {
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useFontStore() {
+function useFontStoreState() {
   const [storageMode, setStorageModeState] = useState<StorageMode>(() => {
     try {
       return (localStorage.getItem(STORAGE_MODE_KEY) as StorageMode) ?? 'indexeddb';
@@ -135,18 +123,49 @@ export function useFontStore() {
     }
   });
 
-  const [builtinStatus, setBuiltinStatus] = useState<Record<string, FontStatus>>(() => {
-    if (typeof document === 'undefined') {
-      return Object.fromEntries(BUILTIN_FONTS.map((f) => [f.id, 'idle' as FontStatus]));
-    }
-    return Object.fromEntries(
-      BUILTIN_FONTS.map((f) => [f.id, document.fonts.check(f.spec) ? ('loaded' as FontStatus) : ('idle' as FontStatus)])
-    );
-  });
+  const [builtinStatus, setBuiltinStatus] = useState<Record<string, FontStatus>>(getInitialBuiltinStatus);
 
   const [userFonts, setUserFonts] = useState<UserFontEntry[]>([]);
   const [userFontStatus, setUserFontStatus] = useState<Record<string, FontStatus>>({});
+  const [userFontsLoading, setUserFontsLoading] = useState(storageMode === 'indexeddb');
   const dbRef = useRef<IDBDatabase | null>(null);
+  const builtinLoadPromisesRef = useRef(new Map<string, Promise<void>>());
+
+  const handleBuiltinFontEvent = useCallback((event: Event) => {
+    const faces = (event as Event & { fontfaces?: FontFace[] }).fontfaces;
+    if (!faces?.length) return;
+    const affectedFamilies = new Set(faces.map((face) => normalizeFontFamily(face.family)));
+
+    setBuiltinStatus((previous) => {
+      let next = previous;
+      for (const font of BUILTIN_FONTS) {
+        if (builtinLoadPromisesRef.current.has(font.id)) continue;
+        if (!affectedFamilies.has(normalizeFontFamily(font.family))) continue;
+
+        // Read every registered face for this family. A replacement face may
+        // have loaded successfully while an older CSS face remains in error.
+        const status = getRegisteredFontStatus(font, document.fonts);
+        // Failed optional faces are removed so a retry can create a fresh face.
+        // Their delayed events must not clear the error before the user retries.
+        if (status === 'idle' && previous[font.id] === 'error') continue;
+        if (status !== previous[font.id]) {
+          if (next === previous) next = { ...previous };
+          next[font.id] = status;
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.fonts.addEventListener('loadingdone', handleBuiltinFontEvent);
+    document.fonts.addEventListener('loadingerror', handleBuiltinFontEvent);
+    return () => {
+      document.fonts.removeEventListener('loadingdone', handleBuiltinFontEvent);
+      document.fonts.removeEventListener('loadingerror', handleBuiltinFontEvent);
+    };
+  }, [handleBuiltinFontEvent]);
 
   const registerFontFace = useCallback(async (family: string, data: ArrayBuffer) => {
     const face = new FontFace(family, data);
@@ -156,12 +175,25 @@ export function useFontStore() {
 
   // Load persisted user fonts from IndexedDB when in indexeddb mode
   useEffect(() => {
-    if (storageMode !== 'indexeddb') return;
+    if (storageMode !== 'indexeddb') {
+      setUserFontsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    let connection: IDBDatabase | null = null;
+    setUserFontsLoading(true);
 
     openDB()
       .then(async (db) => {
+        if (cancelled) {
+          db.close();
+          return;
+        }
+        connection = db;
         dbRef.current = db;
         const records = await idbGetAll(db);
+        if (cancelled) return;
 
         const entries: UserFontEntry[] = records.map((r) => ({
           id: r.id,
@@ -176,13 +208,25 @@ export function useFontStore() {
         setUserFonts(entries);
         setUserFontStatus(Object.fromEntries(entries.map((e) => [e.id, 'loading' as FontStatus])));
 
-        for (const rec of records) {
-          registerFontFace(rec.family, rec.data)
-            .then(() => setUserFontStatus((p) => ({ ...p, [rec.id]: 'loaded' })))
-            .catch(() => setUserFontStatus((p) => ({ ...p, [rec.id]: 'error' })));
-        }
+        await Promise.allSettled(records.map(async (rec) => {
+          try {
+            await registerFontFace(rec.family, rec.data);
+            if (!cancelled) setUserFontStatus((p) => ({ ...p, [rec.id]: 'loaded' }));
+          } catch {
+            if (!cancelled) setUserFontStatus((p) => ({ ...p, [rec.id]: 'error' }));
+          }
+        }));
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => {
+        if (!cancelled) setUserFontsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      connection?.close();
+      if (dbRef.current === connection) dbRef.current = null;
+    };
   }, [storageMode, registerFontFace]);
 
   const setStorageMode = useCallback((mode: StorageMode) => {
@@ -195,17 +239,25 @@ export function useFontStore() {
     setStorageModeState(mode);
   }, []);
 
-  const preloadBuiltinFont = useCallback(async (id: string) => {
+  const preloadBuiltinFont = useCallback((id: string): Promise<void> => {
     const font = BUILTIN_FONTS.find((f) => f.id === id);
-    if (!font) return;
+    if (!font || typeof document === 'undefined') return Promise.resolve();
+
+    const existingLoad = builtinLoadPromisesRef.current.get(id);
+    if (existingLoad) return existingLoad;
+
+    if (!font.sourceUrl && getRegisteredFontStatus(font, document.fonts) === 'loaded') {
+      setBuiltinStatus((previous) => ({ ...previous, [id]: 'loaded' }));
+      return Promise.resolve();
+    }
 
     setBuiltinStatus((p) => ({ ...p, [id]: 'loading' }));
-    try {
-      await document.fonts.load(font.spec);
-      setBuiltinStatus((p) => ({ ...p, [id]: 'loaded' }));
-    } catch {
-      setBuiltinStatus((p) => ({ ...p, [id]: 'error' }));
-    }
+    const load = loadBuiltinFont(font, document.fonts)
+      .then(() => setBuiltinStatus((p) => ({ ...p, [id]: 'loaded' })))
+      .catch(() => setBuiltinStatus((p) => ({ ...p, [id]: 'error' })))
+      .finally(() => builtinLoadPromisesRef.current.delete(id));
+    builtinLoadPromisesRef.current.set(id, load);
+    return load;
   }, []);
 
   const uploadFont = useCallback(async (file: File, name: string, family: string) => {
@@ -283,9 +335,24 @@ export function useFontStore() {
     builtinStatus,
     userFonts,
     userFontStatus,
+    userFontsLoading,
     preloadBuiltinFont,
     uploadFont,
     deleteUserFont,
     removeAllUserFonts,
   };
+}
+
+const FontStoreContext = createContext<ReturnType<typeof useFontStoreState> | null>(null);
+
+/** Keep uploaded/session-only fonts available while switching input/settings tabs. */
+export function FontStoreProvider({ children }: { children: ReactNode }) {
+  const store = useFontStoreState();
+  return createElement(FontStoreContext.Provider, { value: store }, children);
+}
+
+export function useFontStore() {
+  const store = useContext(FontStoreContext);
+  if (!store) throw new Error('useFontStore must be used inside FontStoreProvider');
+  return store;
 }

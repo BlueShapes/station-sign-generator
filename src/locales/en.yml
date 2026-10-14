@@ -119,6 +119,10 @@ settings:
   fonts:
     builtin-title: Pre-installed Fonts
     builtin-desc: Required fonts for station signs. Cannot be removed.
+    recommended-title: "Recommended Noto Sans font"
+    recommended-description: "For {language}, we recommend {font}. Loading is optional; the font will also be available in custom styles."
+    recommended-load: "Load font"
+    recommended-error: "Could not load the font. Check your connection and try again."
     preload: Preload
     user-title: Custom Fonts
     upload: Upload Font

@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: फ़ॉन्ट्स पहले से स्थापित
     builtin-desc: स्टेशन चिह्नों के लिए आवश्यक फ़ॉन्ट. हटाया नहीं जा सकता.
+    recommended-title: "अनुशंसित Noto Sans फ़ॉन्ट"
+    recommended-description: "{language} के लिए, हम {font} का सुझाव देते हैं। फ़ॉन्ट लोड करना वैकल्पिक है; यह कस्टम शैलियों में भी उपलब्ध रहेगा।"
+    recommended-load: "फ़ॉन्ट लोड करें"
+    recommended-error: "फ़ॉन्ट लोड नहीं हो सका। अपना इंटरनेट कनेक्शन जाँचें और फिर कोशिश करें।"
     preload: प्रीलोड
     user-title: कस्टम फ़ॉन्ट्स
     upload: फ़ॉन्ट अपलोड करें

@@ -119,6 +119,10 @@ settings:
   fonts:
     builtin-title: 사전 설치 글꼴
     builtin-desc: 역명표에 필요한 글꼴입니다. 삭제할 수 없습니다.
+    recommended-title: "추천 Noto Sans 글꼴"
+    recommended-description: "{language}에는 {font}을(를) 권장합니다. 글꼴을 불러오는 것은 선택 사항이며, 사용자 지정 스타일에서도 사용할 수 있습니다."
+    recommended-load: "글꼴 불러오기"
+    recommended-error: "글꼴을 불러오지 못했습니다. 인터넷 연결을 확인한 후 다시 시도하세요."
     preload: 미리 불러오기
     user-title: 사용자 지정 글꼴
     upload: 글꼴 업로드

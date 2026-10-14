@@ -6,7 +6,6 @@ import {
   Divider,
   Group,
   Modal,
-  NumberInput,
   Paper,
   Select,
   Stack,
@@ -18,7 +17,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconCopy, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import {
   BASE_SIGN_STYLE_IDS,
-  CUSTOM_TEXT_PARTS,
   ROUTE_BADGE_TEMPLATE_IDS,
   STATION_NUMBER_BADGE_TEMPLATE_IDS,
   createCustomDefinition,
@@ -36,6 +34,7 @@ import { useCustomizations } from "@/customization/store";
 import type { BuiltinFontDef, UserFontEntry } from "@/db/useFontStore";
 import { useTranslations } from "@/i18n/useTranslation";
 import CustomStylePreview from "./CustomStylePreview";
+import SignTextLayoutEditor from "@/components/inputs/SignTextLayoutEditor";
 
 type FontChoice = {
   value: string;
@@ -385,79 +384,11 @@ export default function CustomStyleSettings({
                     <Text size="sm" c="dimmed">
                       {t("settings.custom.advanced.description")}
                     </Text>
-                    {CUSTOM_TEXT_PARTS.map((part) => (
-                      <Paper key={part} withBorder p="sm">
-                        <Stack gap="xs">
-                          <Text size="sm" fw={600}>
-                            {t(`settings.custom.parts.${part}`)}
-                          </Text>
-                          <Select
-                            label={t("settings.custom.font")}
-                            value={
-                              fonts.find(({ family }) =>
-                                family === layout[part]?.fontFamily,
-                              )?.value ?? null
-                            }
-                            data={fonts}
-                            clearable
-                            searchable
-                            onChange={(value) =>
-                              setLayout((current) => ({
-                                ...current,
-                                [part]: {
-                                  ...current[part],
-                                  fontFamily: fonts.find(
-                                    (font) => font.value === value,
-                                  )?.family,
-                                },
-                              }))
-                            }
-                          />
-                          <Group grow align="start">
-                            <NumberInput
-                              label={t("settings.custom.advanced.font-size")}
-                              min={1}
-                              value={layout[part]?.fontSize ?? ""}
-                              onChange={(value) =>
-                                setLayout((current) => ({
-                                  ...current,
-                                  [part]: {
-                                    ...current[part],
-                                    fontSize: typeof value === "number" ? value : undefined,
-                                  },
-                                }))
-                              }
-                            />
-                            <NumberInput
-                              label={t("settings.custom.advanced.letter-spacing")}
-                              value={layout[part]?.letterSpacing ?? ""}
-                              onChange={(value) =>
-                                setLayout((current) => ({
-                                  ...current,
-                                  [part]: {
-                                    ...current[part],
-                                    letterSpacing: typeof value === "number" ? value : undefined,
-                                  },
-                                }))
-                              }
-                            />
-                            <NumberInput
-                              label={t("settings.custom.advanced.y-offset")}
-                              value={layout[part]?.yOffset ?? ""}
-                              onChange={(value) =>
-                                setLayout((current) => ({
-                                  ...current,
-                                  [part]: {
-                                    ...current[part],
-                                    yOffset: typeof value === "number" ? value : undefined,
-                                  },
-                                }))
-                              }
-                            />
-                          </Group>
-                        </Stack>
-                      </Paper>
-                    ))}
+                    <SignTextLayoutEditor
+                      fonts={fonts}
+                      layout={layout}
+                      onChange={setLayout}
+                    />
                   </Stack>
                 </Accordion.Panel>
               </Accordion.Item>
