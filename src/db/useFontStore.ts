@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, createElement, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { BUILTIN_FONTS, loadBuiltinFont } from '@/lib/fontCatalog';
 import type { BuiltinFontDef } from '@/lib/fontCatalog';
 
@@ -114,7 +114,7 @@ function idbClear(db: IDBDatabase): Promise<void> {
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useFontStore() {
+function useFontStoreState() {
   const [storageMode, setStorageModeState] = useState<StorageMode>(() => {
     try {
       return (localStorage.getItem(STORAGE_MODE_KEY) as StorageMode) ?? 'indexeddb';
@@ -127,6 +127,7 @@ export function useFontStore() {
 
   const [userFonts, setUserFonts] = useState<UserFontEntry[]>([]);
   const [userFontStatus, setUserFontStatus] = useState<Record<string, FontStatus>>({});
+  const [userFontsLoading, setUserFontsLoading] = useState(storageMode === 'indexeddb');
   const dbRef = useRef<IDBDatabase | null>(null);
   const builtinLoadPromisesRef = useRef(new Map<string, Promise<void>>());
 
@@ -144,6 +145,9 @@ export function useFontStore() {
         // Read every registered face for this family. A replacement face may
         // have loaded successfully while an older CSS face remains in error.
         const status = getRegisteredFontStatus(font, document.fonts);
+        // Failed optional faces are removed so a retry can create a fresh face.
+        // Their delayed events must not clear the error before the user retries.
+        if (status === 'idle' && previous[font.id] === 'error') continue;
         if (status !== previous[font.id]) {
           if (next === previous) next = { ...previous };
           next[font.id] = status;
@@ -171,12 +175,25 @@ export function useFontStore() {
 
   // Load persisted user fonts from IndexedDB when in indexeddb mode
   useEffect(() => {
-    if (storageMode !== 'indexeddb') return;
+    if (storageMode !== 'indexeddb') {
+      setUserFontsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    let connection: IDBDatabase | null = null;
+    setUserFontsLoading(true);
 
     openDB()
       .then(async (db) => {
+        if (cancelled) {
+          db.close();
+          return;
+        }
+        connection = db;
         dbRef.current = db;
         const records = await idbGetAll(db);
+        if (cancelled) return;
 
         const entries: UserFontEntry[] = records.map((r) => ({
           id: r.id,
@@ -191,13 +208,25 @@ export function useFontStore() {
         setUserFonts(entries);
         setUserFontStatus(Object.fromEntries(entries.map((e) => [e.id, 'loading' as FontStatus])));
 
-        for (const rec of records) {
-          registerFontFace(rec.family, rec.data)
-            .then(() => setUserFontStatus((p) => ({ ...p, [rec.id]: 'loaded' })))
-            .catch(() => setUserFontStatus((p) => ({ ...p, [rec.id]: 'error' })));
-        }
+        await Promise.allSettled(records.map(async (rec) => {
+          try {
+            await registerFontFace(rec.family, rec.data);
+            if (!cancelled) setUserFontStatus((p) => ({ ...p, [rec.id]: 'loaded' }));
+          } catch {
+            if (!cancelled) setUserFontStatus((p) => ({ ...p, [rec.id]: 'error' }));
+          }
+        }));
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => {
+        if (!cancelled) setUserFontsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      connection?.close();
+      if (dbRef.current === connection) dbRef.current = null;
+    };
   }, [storageMode, registerFontFace]);
 
   const setStorageMode = useCallback((mode: StorageMode) => {
@@ -306,9 +335,24 @@ export function useFontStore() {
     builtinStatus,
     userFonts,
     userFontStatus,
+    userFontsLoading,
     preloadBuiltinFont,
     uploadFont,
     deleteUserFont,
     removeAllUserFonts,
   };
+}
+
+const FontStoreContext = createContext<ReturnType<typeof useFontStoreState> | null>(null);
+
+/** Keep uploaded/session-only fonts available while switching input/settings tabs. */
+export function FontStoreProvider({ children }: { children: ReactNode }) {
+  const store = useFontStoreState();
+  return createElement(FontStoreContext.Provider, { value: store }, children);
+}
+
+export function useFontStore() {
+  const store = useContext(FontStoreContext);
+  if (!store) throw new Error('useFontStore must be used inside FontStoreProvider');
+  return store;
 }

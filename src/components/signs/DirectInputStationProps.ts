@@ -1,5 +1,6 @@
 import { type RefObject } from "react";
 import Konva from "konva";
+import type { SimpleInputTypography } from "@/customization/simpleInputTypography";
 
 export type LocalLine = {
   id: string;
@@ -77,6 +78,8 @@ interface DirectInputStationProps {
   ratio: number;
   direction?: Direction;
   subTextMode?: MetroLongSubTextMode;
+  /** Local non-number text overrides, independent of saved custom styles. */
+  typography?: SimpleInputTypography;
   /** Render JR East arrows as independently branching company-colored paths. */
   branchMode?: boolean;
   /** Internal HMR key used to regenerate a branch preview after layout edits. */

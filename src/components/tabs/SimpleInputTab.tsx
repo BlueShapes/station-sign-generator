@@ -3,6 +3,7 @@ import {
   useEffect,
   useRef,
   useCallback,
+  useMemo,
   type ChangeEvent,
 } from "react";
 import {
@@ -81,6 +82,11 @@ import CanvasFontLoading from "@/components/CanvasFontLoading";
 import { getCustomDefinitionFontSpecs, resolveCustomSelection, type CustomSignDefinition } from "@/customization/model";
 import { useCustomizations } from "@/customization/store";
 import { SignTextCustomizationProvider } from "@/components/signs/CustomSignText";
+import { useFontStore } from "@/db/useFontStore";
+import {
+  resolveSimpleInputTextDefinition,
+} from "@/customization/simpleInputTypography";
+import type { SignFontOption } from "@/components/inputs/SignTextLayoutEditor";
 
 type SignStyle =
   | "jreast"
@@ -210,7 +216,8 @@ export default function SimpleInputTab() {
   const ref = useRef<Konva.Stage>(null);
   const t = useTranslations();
   const locale = useLocale();
-  const { definitions } = useCustomizations();
+  const { definitions, loading: customizationsLoading } = useCustomizations();
+  const { builtinFonts, userFonts, userFontStatus, userFontsLoading } = useFontStore();
   const customSignDefinitions = definitions.filter(
     (definition): definition is CustomSignDefinition => definition.kind === "sign",
   );
@@ -321,6 +328,28 @@ export default function SimpleInputTab() {
   const baseStyle = (SIGN_STYLES[resolvedStyle.templateId as SignStyle]
     ? resolvedStyle.templateId
     : "jreast") as SignStyle;
+  const textDefinition = useMemo(
+    () => resolveSimpleInputTextDefinition(baseStyle, resolvedStyle.definition, previewData.typography),
+    [baseStyle, resolvedStyle.definition, previewData.typography],
+  );
+  const fontOptions = useMemo<SignFontOption[]>(() => {
+    const options: SignFontOption[] = [
+      ...builtinFonts.map((font) => ({ value: `builtin:${font.id}`, label: font.name, family: font.family })),
+      ...userFonts.map((font) => ({ value: `user:${font.id}`, label: font.name, family: font.family })),
+    ];
+    const addFamily = (family: string | undefined, label = family) => {
+      if (family && !options.some((font) => font.family === family)) {
+        options.push({ value: `family:${family}`, label: label ?? family, family });
+      }
+    };
+    for (const definition of definitions) {
+      if (definition.font) addFamily(definition.font.family, definition.font.name);
+      definition.fonts?.forEach((font) => addFamily(font.family, font.name));
+    }
+    addFamily(textDefinition?.fontFamily);
+    Object.values(textDefinition?.layout ?? {}).forEach((part) => addFamily(part?.fontFamily));
+    return options;
+  }, [builtinFonts, userFonts, definitions, textDefinition]);
   const [heldPreview, setHeldPreview] = useState<HeldPreview | null>(null);
   const heldPreviewRef = useRef<HeldPreview | null>(null);
 
@@ -366,9 +395,18 @@ export default function SimpleInputTab() {
         ? "jreast"
         : undefined,
     ),
-    ...getCustomDefinitionFontSpecs(resolvedStyle.definition),
+    ...getCustomDefinitionFontSpecs(textDefinition),
   ];
-  const signFonts = useCanvasFonts(signFontSpecs);
+  const selectedFontSpecs = getCustomDefinitionFontSpecs(textDefinition);
+  const selectedFontIsLoading = userFonts.some((font) =>
+    userFontStatus[font.id] === "loading" && selectedFontSpecs.includes(`400 1em ${font.family}`),
+  );
+  const fontRegistryReady = !userFontsLoading && !customizationsLoading && !selectedFontIsLoading;
+  const canvasFonts = useCanvasFonts(signFontSpecs, fontRegistryReady);
+  const signFonts = {
+    ready: fontRegistryReady && canvasFonts.ready,
+    showLoader: !fontRegistryReady || canvasFonts.showLoader,
+  };
 
   const { height: currentCanvasHeight, scale: currentBaseScale } =
     SIGN_STYLES[baseStyle];
@@ -560,7 +598,7 @@ export default function SimpleInputTab() {
           }
         >
           {signFonts.ready ? (
-            <SignTextCustomizationProvider definition={resolvedStyle.definition}>
+            <SignTextCustomizationProvider definition={textDefinition}>
               <SignComponent {...previewData} ref={ref} />
             </SignTextCustomizationProvider>
           ) : (
@@ -610,6 +648,7 @@ export default function SimpleInputTab() {
         onUpdate={handleUpdate}
         onReset={handleReset}
         signStyle={baseStyle}
+        fontOptions={fontOptions}
       />
       <Box style={{ width: "100%", padding: "25px" }}>
         <Group gap="sm" wrap="wrap">
