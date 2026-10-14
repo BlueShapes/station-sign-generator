@@ -151,3 +151,38 @@ test("fits the shared controls on a narrow Arabic screen", async ({ page }) => {
   await part.scrollIntoViewIfNeeded();
   await page.screenshot({ path: "test-results/simple-input-typography-ar.png" });
 });
+
+test("keeps advanced layout spacing correct after viewport changes", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveClass(/theme-ready/);
+  const control = page.getByRole("button", { name: advancedTitle, exact: true });
+  const topGap = await control.evaluate((element) => {
+    const container = element.closest(".mantine-Accordion-root")!.parentElement!;
+    return container.getBoundingClientRect().top - container.previousElementSibling!.getBoundingClientRect().bottom;
+  });
+  expect.soft(topGap, "space above the advanced layout container").toBeGreaterThanOrEqual(24);
+  await openAdvanced(page);
+  const panel = page.getByRole("region", { name: advancedTitle, exact: true });
+  const lastPart = panel.getByRole("group", { name: ja.settings.custom.parts["adjacent-secondary"], exact: true });
+  const bottomGap = async () => {
+    const panelBounds = (await panel.boundingBox())!;
+    const partBounds = (await lastPart.boundingBox())!;
+    return Math.round(panelBounds.y + panelBounds.height - partBounds.y - partBounds.height);
+  };
+  for (const width of [390, 1352, 768, 390, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect.poll(bottomGap, { message: `panel follows its content at ${width}px` }).toBeGreaterThanOrEqual(0);
+    await expect.poll(bottomGap, { message: `no excess space below the final part at ${width}px` }).toBeLessThanOrEqual(24);
+  }
+  await lastPart.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "test-results/simple-input-layout-resize-wide.png" });
+  await control.click();
+  await expect(panel).toBeHidden();
+  await openAdvanced(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(bottomGap).toBeGreaterThanOrEqual(0);
+  await expect.poll(bottomGap).toBeLessThanOrEqual(24);
+  await lastPart.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "test-results/simple-input-layout-resize-narrow.png" });
+});

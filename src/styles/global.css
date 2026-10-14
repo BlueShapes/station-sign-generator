@@ -35,7 +35,7 @@ body {
   border-bottom: 1px solid var(--mantine-color-default-border);
 }
 
-/* Theme transition — applied only after initial load via .theme-ready class */
+/* Theme transitions defer to inline component animations, including Collapse height. */
 html.theme-ready,
 html.theme-ready *,
 html.theme-ready *::before,
@@ -44,7 +44,7 @@ html.theme-ready *::after {
     background-color 0.2s ease,
     color 0.2s ease,
     border-color 0.2s ease,
-    box-shadow 0.2s ease !important;
+    box-shadow 0.2s ease;
 }
 
 /* ==================== Bottom Navigation (narrow screens) ==================== */

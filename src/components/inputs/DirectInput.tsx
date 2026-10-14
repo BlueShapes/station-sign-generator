@@ -1158,7 +1158,7 @@ const DirectInput = memo(function DirectInput({
         </Grid>
       </Box>
 
-      <Box px="md" style={{ width: "100%" }}>
+      <Box px="md" mt="xl" style={{ width: "100%" }}>
         <Accordion variant="contained">
           <Accordion.Item value="typography">
             <Accordion.Control>
