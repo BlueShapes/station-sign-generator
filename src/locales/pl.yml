@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: Wstępnie zainstalowane czcionki
     builtin-desc: Wymagane czcionki dla znaków stacji. Nie można usunąć.
+    recommended-title: "Zalecana czcionka Noto Sans"
+    recommended-description: "Dla języka {language} zalecamy czcionkę {font}. Jej wczytanie jest opcjonalne; będzie też dostępna w stylach niestandardowych."
+    recommended-load: "Wczytaj czcionkę"
+    recommended-error: "Nie udało się wczytać czcionki. Sprawdź połączenie i spróbuj ponownie."
     preload: Wstępnie załaduj
     user-title: Niestandardowe czcionki
     upload: Prześlij czcionkę

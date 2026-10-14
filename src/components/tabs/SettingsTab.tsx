@@ -33,6 +33,7 @@ import { useFontStore, type FontStatus } from '@/db/useFontStore';
 import { useImageStore } from '@/db/useImageStore';
 import { useTranslations } from '@/i18n/useTranslation';
 import CustomStyleSettings from '@/components/settings/CustomStyleSettings';
+import RecommendedNotoFont from '@/components/settings/RecommendedNotoFont';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -73,6 +74,7 @@ export default function SettingsTab() {
     preloadBuiltinFont, uploadFont, deleteUserFont, removeAllUserFonts,
   } = useFontStore();
   const { images, uploadImage, deleteImage, removeAllImages } = useImageStore(storageMode);
+  const requiredBuiltinFonts = builtinFonts.filter((font) => !font.optional);
 
   // ── Font upload modal ──
   const [fontUploadOpen, { open: openFontUpload, close: closeFontUpload }] = useDisclosure(false);
@@ -164,7 +166,9 @@ export default function SettingsTab() {
           <Text size="sm" c="dimmed">{t('settings.fonts.builtin-desc')}</Text>
         </Stack>
 
-        {builtinFonts.map((font) => (
+        <RecommendedNotoFont status={builtinStatus} onLoad={preloadBuiltinFont} />
+
+        {requiredBuiltinFonts.map((font) => (
           <Paper key={font.id} withBorder p="sm" radius="sm">
             <Group justify="space-between" wrap="nowrap" gap="sm">
               <Stack gap={2}>

@@ -119,6 +119,10 @@ settings:
   fonts:
     builtin-title: Polices préinstallées
     builtin-desc: Polices nécessaires aux panneaux de gare. Elles ne peuvent pas être supprimées.
+    recommended-title: "Police Noto Sans recommandée"
+    recommended-description: "Pour {language}, nous recommandons {font}. Le chargement est facultatif ; la police sera également disponible dans les styles personnalisés."
+    recommended-load: "Charger la police"
+    recommended-error: "Impossible de charger la police. Vérifiez votre connexion et réessayez."
     preload: Précharger
     user-title: Polices personnalisées
     upload: Importer une police

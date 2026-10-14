@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: 预装字体
     builtin-desc: 车站标志所需的字体。无法移除。
+    recommended-title: "推荐的 Noto Sans 字体"
+    recommended-description: "对于{language}，我们推荐使用{font}。加载字体是可选的；字体也可用于自定义样式。"
+    recommended-load: "加载字体"
+    recommended-error: "无法加载字体。请检查网络连接后重试。"
     preload: 预载
     user-title: 自定义字体
     upload: 上传字体

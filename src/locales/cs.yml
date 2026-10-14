@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: Předinstalovaná písma
     builtin-desc: Požadované fonty pro staniční značky. Nelze odstranit.
+    recommended-title: "Doporučené písmo Noto Sans"
+    recommended-description: "Pro jazyk {language} doporučujeme {font}. Načtení je volitelné; písmo bude dostupné i ve vlastních stylech."
+    recommended-load: "Načíst písmo"
+    recommended-error: "Písmo se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu."
     preload: Předpětí
     user-title: Vlastní písma
     upload: Nahrát písmo

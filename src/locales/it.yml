@@ -119,6 +119,10 @@ settings:
   fonts:
     builtin-title: Caratteri preinstallati
     builtin-desc: Caratteri necessari per i cartelli di stazione. Non possono essere rimossi.
+    recommended-title: "Font Noto Sans consigliato"
+    recommended-description: "Per {language}, consigliamo {font}. Il caricamento è facoltativo; il font sarà disponibile anche negli stili personalizzati."
+    recommended-load: "Carica il font"
+    recommended-error: "Impossibile caricare il font. Controlla la connessione e riprova."
     preload: Precarica
     user-title: Caratteri personalizzati
     upload: Carica carattere

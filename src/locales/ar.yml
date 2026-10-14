@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: الخطوط المثبتة مسبقًا
     builtin-desc: خطوط مطلوبة للافتات المحطات. لا يمكن حذفها.
+    recommended-title: "خط Noto Sans الموصى به"
+    recommended-description: "نوصي باستخدام {font} للغة {language}. تحميل الخط اختياري؛ وسيكون متاحًا أيضًا ضمن الأنماط المخصصة."
+    recommended-load: "تحميل الخط"
+    recommended-error: "تعذّر تحميل الخط. تحقّق من اتصالك بالإنترنت وحاول مرة أخرى."
     preload: تحميل مسبق
     user-title: الخطوط المخصصة
     upload: تحميل خط

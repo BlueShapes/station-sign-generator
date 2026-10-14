@@ -119,6 +119,10 @@ settings:
   fonts:
     builtin-title: Font Bawaan
     builtin-desc: Font yang diperlukan untuk rambu stasiun. Tidak dapat dihapus.
+    recommended-title: "Font Noto Sans yang direkomendasikan"
+    recommended-description: "Untuk {language}, kami merekomendasikan {font}. Memuat font bersifat opsional; font ini juga akan tersedia di gaya kustom."
+    recommended-load: "Muat font"
+    recommended-error: "Font tidak dapat dimuat. Periksa koneksi Anda dan coba lagi."
     preload: Muat Awal
     user-title: Font Kustom
     upload: Unggah Font

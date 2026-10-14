@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: Önceden Yüklenmiş Yazı Tipleri
     builtin-desc: İstasyon tabelaları için gerekli yazı tipleri. Kaldırılamaz.
+    recommended-title: "Önerilen Noto Sans yazı tipi"
+    recommended-description: "{language} için {font} öneriyoruz. Yüklemek isteğe bağlıdır; yazı tipi özel stillerde de kullanılabilir."
+    recommended-load: "Yazı tipini yükle"
+    recommended-error: "Yazı tipi yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin."
     preload: Önceden yükle
     user-title: Özel Yazı Tipleri
     upload: Yazı Tipi Yükle

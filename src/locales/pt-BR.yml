@@ -112,6 +112,10 @@ settings:
   fonts:
     builtin-title: Fontes pré-instaladas
     builtin-desc: Fontes necessárias para sinais de estação. Não pode ser removido.
+    recommended-title: "Fonte Noto Sans recomendada"
+    recommended-description: "Para {language}, recomendamos {font}. O carregamento é opcional; a fonte também ficará disponível nos estilos personalizados."
+    recommended-load: "Carregar fonte"
+    recommended-error: "Não foi possível carregar a fonte. Verifique sua conexão e tente novamente."
     preload: Pré-carregar
     user-title: Fontes personalizadas
     upload: Carregar fonte

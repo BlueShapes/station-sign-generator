@@ -119,6 +119,10 @@ settings:
   fonts:
     builtin-title: Vorinstallierte Schriftarten
     builtin-desc: Erforderliche Schriftarten für Bahnhofsschilder. Sie können nicht entfernt werden.
+    recommended-title: "Empfohlene Noto-Sans-Schrift"
+    recommended-description: "Für {language} empfehlen wir {font}. Das Laden ist optional; die Schrift steht auch in benutzerdefinierten Stilen zur Verfügung."
+    recommended-load: "Schrift laden"
+    recommended-error: "Die Schrift konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut."
     preload: Vorladen
     user-title: Benutzerdefinierte Schriftarten
     upload: Schriftart hochladen
