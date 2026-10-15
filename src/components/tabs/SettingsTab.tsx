@@ -73,7 +73,7 @@ export default function SettingsTab() {
     userFonts, userFontStatus,
     preloadBuiltinFont, uploadFont, deleteUserFont, removeAllUserFonts,
   } = useFontStore();
-  const { images, uploadImage, deleteImage, removeAllImages } = useImageStore(storageMode);
+  const { images, loading: imagesLoading, error: imageStoreError, uploadImage, deleteImage, removeAllImages } = useImageStore();
   const requiredBuiltinFonts = builtinFonts.filter((font) => !font.optional);
 
   // ── Font upload modal ──
@@ -91,6 +91,8 @@ export default function SettingsTab() {
   const [selectedImg, setSelectedImg] = useState<File | null>(null);
   const [imgName, setImgName] = useState('');
   const [imgUploading, setImgUploading] = useState(false);
+  const [imgUploadError, setImgUploadError] = useState<string | null>(null);
+  const [imgOperationError, setImgOperationError] = useState<string | null>(null);
   const imgFileRef = useRef<HTMLInputElement>(null);
 
   // ── Font handlers ──
@@ -120,20 +122,47 @@ export default function SettingsTab() {
   const handleImgFileSelect = (file: File) => {
     setSelectedImg(file);
     setImgName(file.name.replace(/\.[^.]+$/, ''));
+    setImgUploadError(null);
   };
 
   const handleImgUploadSubmit = async () => {
     if (!selectedImg || !imgName) return;
     setImgUploading(true);
-    await uploadImage(selectedImg, imgName);
-    setImgUploading(false);
-    handleCloseImgUpload();
+    setImgUploadError(null);
+    try {
+      await uploadImage(selectedImg, imgName);
+      handleCloseImgUpload();
+    } catch {
+      setImgUploadError(t('sign-images.upload-error'));
+    } finally {
+      setImgUploading(false);
+    }
   };
 
   const handleCloseImgUpload = () => {
     closeImgUpload();
     setSelectedImg(null);
     setImgName('');
+    setImgUploadError(null);
+  };
+
+  const handleDeleteImage = async (id: string) => {
+    try {
+      await deleteImage(id);
+      setImgOperationError(null);
+    } catch {
+      setImgOperationError(t('sign-images.save-error'));
+    }
+  };
+
+  const handleRemoveAllImages = async () => {
+    try {
+      await removeAllImages();
+      setImgOperationError(null);
+      closeImgRemoveAll();
+    } catch {
+      setImgOperationError(t('sign-images.save-error'));
+    }
   };
 
   return (
@@ -262,13 +291,26 @@ export default function SettingsTab() {
                 {t('settings.images.remove-all')}
               </Button>
             )}
-            <Button size="xs" leftSection={<IconUpload size={14} />} onClick={openImgUpload}>
+            <Button size="xs" leftSection={<IconUpload size={14} />} onClick={openImgUpload} disabled={imagesLoading}>
               {t('settings.images.upload')}
             </Button>
           </Group>
         </Group>
 
-        {images.length === 0 ? (
+        {imageStoreError && (
+          <Alert icon={<IconAlertTriangle size={16} />} color="orange" variant="light">
+            {t('sign-images.upload-error')}
+          </Alert>
+        )}
+        {imgOperationError && (
+          <Alert icon={<IconAlertTriangle size={16} />} color="red" variant="light">
+            {imgOperationError}
+          </Alert>
+        )}
+
+        {imagesLoading ? (
+          <Group justify="center" py="md"><Loader size="sm" /></Group>
+        ) : images.length === 0 ? (
           <Text size="sm" c="dimmed">{t('settings.images.empty')}</Text>
         ) : (
           <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="xs">
@@ -284,7 +326,7 @@ export default function SettingsTab() {
                   <Group justify="space-between" wrap="nowrap" gap={4}>
                     <Text size="xs" fw={500} truncate style={{ flex: 1 }}>{img.name}</Text>
                     <ActionIcon color="red" variant="subtle" size="xs"
-                      onClick={() => deleteImage(img.id)} aria-label={t('common.delete')}>
+                      onClick={() => handleDeleteImage(img.id)} aria-label={t('common.delete')}>
                       <IconTrash size={12} />
                     </ActionIcon>
                   </Group>
@@ -360,6 +402,11 @@ export default function SettingsTab() {
           )}
           <TextInput label={t('settings.images.display-name')} value={imgName}
             onChange={(e) => setImgName(e.currentTarget.value)} required />
+          {imgUploadError && (
+            <Alert icon={<IconAlertTriangle size={16} />} color="red" variant="light">
+              {imgUploadError}
+            </Alert>
+          )}
           <Group justify="flex-end" mt="xs">
             <Button variant="default" onClick={handleCloseImgUpload}>{t('common.cancel')}</Button>
             <Button disabled={!selectedImg || !imgName} loading={imgUploading}
@@ -374,9 +421,14 @@ export default function SettingsTab() {
       <Modal opened={imgRemoveAllOpen} onClose={closeImgRemoveAll} title={t('settings.images.remove-all')}>
         <Stack>
           <Text size="sm">{t('settings.images.remove-all-confirm')}</Text>
+          {imgOperationError && (
+            <Alert icon={<IconAlertTriangle size={16} />} color="red" variant="light">
+              {imgOperationError}
+            </Alert>
+          )}
           <Group justify="flex-end" mt="xs">
             <Button variant="default" onClick={closeImgRemoveAll}>{t('common.cancel')}</Button>
-            <Button color="red" onClick={async () => { await removeAllImages(); closeImgRemoveAll(); }}>
+            <Button color="red" onClick={handleRemoveAllImages}>
               {t('common.delete')}
             </Button>
           </Group>

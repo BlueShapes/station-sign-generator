@@ -36,6 +36,7 @@ import { getSubwayMediumArrowPoints } from "./arrowGeometry";
 import JrCentralStationNumberBadge from "./JrCentralStationNumberBadge";
 import CustomSignText from "./CustomSignText";
 import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
+import { SignImageLayer, useSignImages } from "./SignImages";
 
 export type SubwaySignVariant = "metroMedium" | "toeiMedium" | "toeiLarge";
 
@@ -78,6 +79,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
     const lineColor = localLines?.[0]?.color ?? baseColor ?? "#0b74ba";
     const [stageKey, setStageKey] = useState(0);
     const [canvasImage, setCanvasImage] = useState("");
+    const signImages = useSignImages(props.images);
 
     useEffect(() => {
       let cancelled = false;
@@ -106,7 +108,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
         return () => clearTimeout(timer);
       }
       render();
-    }, [props, ref, stageKey]);
+    }, [props, ref, signImages.images, signImages.ready, stageKey]);
 
     const measureText = (
       text: string,
@@ -847,6 +849,7 @@ const SubwaySign = forwardRef<Konva.Stage, SubwaySignProps>(
                 ? renderMetroMedium()
                 : renderToei(variant === "toeiLarge")}
             </Layer>
+            <SignImageLayer images={signImages.images} ready={signImages.ready} />
           </Stage>
         </StageWrapper>
       </>

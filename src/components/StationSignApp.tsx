@@ -43,6 +43,7 @@ import {
 } from "@/lib/textInputSafety";
 import { CustomizationProvider } from "@/customization/store";
 import { FontStoreProvider } from "@/db/useFontStore";
+import { ImageStoreProvider } from "@/db/useImageStore";
 
 const theme = createTheme({
   components: {
@@ -112,6 +113,7 @@ function AppContent({
       <div style={{ height: "64px" }} />
       <FontStoreProvider>
       <CustomizationProvider>
+      <ImageStoreProvider>
       <Box style={{ width: "100%" }}>
         <Tabs defaultValue="simple" keepMounted={false} className="ssg-tabs">
           <Tabs.List>
@@ -146,6 +148,7 @@ function AppContent({
           </Tabs.Panel>
         </Tabs>
       </Box>
+      </ImageStoreProvider>
       </CustomizationProvider>
       </FontStoreProvider>
     </>

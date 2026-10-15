@@ -54,6 +54,8 @@ import type { SimpleInputTypography } from "@/customization/simpleInputTypograph
 import SignTextLayoutEditor, {
   type SignFontOption,
 } from "@/components/inputs/SignTextLayoutEditor";
+import SignImageEditor from "@/components/inputs/SignImageEditor";
+import type { SignImagePlacement } from "@/customization/signImages";
 
 const DEBOUNCE_MS = 400;
 
@@ -63,6 +65,7 @@ interface DirectInputProps {
   fontOptions: readonly SignFontOption[];
   onReset?: () => void;
   signStyle?: string;
+  styleImages?: readonly SignImagePlacement[];
 }
 
 const DirectInput = memo(function DirectInput({
@@ -71,6 +74,7 @@ const DirectInput = memo(function DirectInput({
   fontOptions,
   onReset,
   signStyle,
+  styleImages,
 }: DirectInputProps) {
   const t = useTranslations();
   const { dir } = useDirection();
@@ -118,6 +122,12 @@ const DirectInput = memo(function DirectInput({
     };
     setFormData(updated);
     onUpdateRef.current(updated);
+  };
+
+  const updateImages = (images: SignImagePlacement[] | undefined) => {
+    const next = sanitizeDirectInputData({ ...formData, images });
+    setFormData(next);
+    onUpdateRef.current(next);
   };
 
   const handleSwap = () => {
@@ -1158,7 +1168,14 @@ const DirectInput = memo(function DirectInput({
         </Grid>
       </Box>
 
-      <Box px="md" style={{ width: "100%" }}>
+      <Box px="md" mt="xl" style={{ width: "100%" }}>
+        <SignImageEditor
+          value={formData.images ?? styleImages ?? []}
+          onChange={updateImages}
+          onReset={formData.images !== undefined ? () => updateImages(undefined) : undefined}
+        />
+      </Box>
+      <Box px="md" mt="xl" style={{ width: "100%" }}>
         <Accordion variant="contained">
           <Accordion.Item value="typography">
             <Accordion.Control>

@@ -87,6 +87,7 @@ import {
   resolveSimpleInputTextDefinition,
 } from "@/customization/simpleInputTypography";
 import type { SignFontOption } from "@/components/inputs/SignTextLayoutEditor";
+import { waitForSignImages } from "@/components/signs/SignImages";
 
 type SignStyle =
   | "jreast"
@@ -426,32 +427,44 @@ export default function SimpleInputTab() {
     setSaveSizeList(result);
   }, [currentCanvasWidth, currentCanvasHeight]);
 
+  const [savingImage, setSavingImage] = useState(false);
+  const [imageSaveError, setImageSaveError] = useState(false);
   const handleSave = async () => {
-    if (ref.current) {
-      await waitForCanvasFonts(signFontSpecs).catch(() => undefined);
-      const uri = ref.current.toDataURL({
-        pixelRatio: saveSize / currentBaseScale,
-      });
-      const link = document.createElement("a");
-      const data = latestDataRef.current;
-      const filename = getLocalizedRailwayName(
-        locale,
-        DEFAULT_COMPANY_LANGUAGES,
-        [
-          data.primaryName,
-          data.secondaryName,
-          data.tertiaryName,
-          data.quaternaryName,
-        ],
-        "station",
-      );
-      link.download = `${filename}.png`;
-      link.href = uri;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      console.error(t("error.on-save"));
+    setSavingImage(true);
+    setImageSaveError(false);
+    try {
+      if (ref.current) {
+        await waitForCanvasFonts(signFontSpecs).catch(() => undefined);
+        await waitForSignImages(() => ref.current);
+        if (!ref.current) throw new Error("Preview unavailable");
+        const uri = ref.current.toDataURL({
+          pixelRatio: saveSize / currentBaseScale,
+        });
+        const link = document.createElement("a");
+        const data = latestDataRef.current;
+        const filename = getLocalizedRailwayName(
+          locale,
+          DEFAULT_COMPANY_LANGUAGES,
+          [
+            data.primaryName,
+            data.secondaryName,
+            data.tertiaryName,
+            data.quaternaryName,
+          ],
+          "station",
+        );
+        link.download = `${filename}.png`;
+        link.href = uri;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        setImageSaveError(true);
+      }
+    } catch {
+      setImageSaveError(true);
+    } finally {
+      setSavingImage(false);
     }
   };
 
@@ -575,6 +588,7 @@ export default function SimpleInputTab() {
         <IconEye size="1.6em" />
         {t("common.preview")}
       </Title>
+      {imageSaveError && <Alert color="red">{t("sign-images.save-error")}</Alert>}
       <Box pos="relative" dir="ltr">
         {heldPreview && (
           <img
@@ -633,6 +647,7 @@ export default function SimpleInputTab() {
               size="lg"
               variant="filled"
               onClick={handleSave}
+              loading={savingImage}
               disabled={!signFonts.ready}
               style={{ fontWeight: 700 }}
               leftSection={<IconDownload />}
@@ -643,6 +658,7 @@ export default function SimpleInputTab() {
         </Grid>
       </Box>
       <DirectInput
+        styleImages={resolvedStyle.definition?.images}
         key={directInputKey}
         initialData={directInputInitialData}
         onUpdate={handleUpdate}

@@ -35,6 +35,8 @@ import type { BuiltinFontDef, UserFontEntry } from "@/db/useFontStore";
 import { useTranslations } from "@/i18n/useTranslation";
 import CustomStylePreview from "./CustomStylePreview";
 import SignTextLayoutEditor from "@/components/inputs/SignTextLayoutEditor";
+import SignImageEditor from "@/components/inputs/SignImageEditor";
+import type { SignImagePlacement } from "@/customization/signImages";
 
 type FontChoice = {
   value: string;
@@ -65,6 +67,7 @@ export default function CustomStyleSettings({
   const [templateId, setTemplateId] = useState<string>("jreast");
   const [fontValue, setFontValue] = useState<string | null>(null);
   const [layout, setLayout] = useState<CustomSignLayout>({});
+  const [images, setImages] = useState<SignImagePlacement[]>([]);
   const [saving, setSaving] = useState(false);
   const [editingDefinition, setEditingDefinition] =
     useState<CustomSignDefinition | null>(null);
@@ -106,6 +109,7 @@ export default function CustomStyleSettings({
     setName("");
     setFontValue(null);
     setLayout({});
+    setImages([]);
     setTemplateId(
       nextKind === "sign"
         ? "jreast"
@@ -136,6 +140,7 @@ export default function CustomStyleSettings({
         (definition.fontFamily ? `embedded:${definition.fontFamily}` : null),
     );
     setLayout(structuredClone(definition.layout));
+    setImages(structuredClone(definition.images ?? []));
     open();
   };
 
@@ -209,6 +214,7 @@ export default function CustomStyleSettings({
           }
         : undefined,
       layout,
+      images,
       fonts: embeddedFonts,
     };
     const createdDefinition =
@@ -241,6 +247,7 @@ export default function CustomStyleSettings({
             font: createdDefinition.font,
             fonts: createdDefinition.fonts,
             layout: createdDefinition.layout,
+            images: createdDefinition.images,
           })
         : createdDefinition;
     setSaving(true);
@@ -371,7 +378,10 @@ export default function CustomStyleSettings({
             templateId={templateId}
             fontFamily={selectedFont?.family}
             layout={layout}
+            images={images}
           />
+
+          {kind === "sign" && <SignImageEditor value={images} onChange={setImages} />}
 
           {kind === "sign" && (
             <Accordion variant="contained">

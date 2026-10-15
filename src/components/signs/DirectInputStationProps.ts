@@ -1,6 +1,7 @@
 import { type RefObject } from "react";
 import Konva from "konva";
 import type { SimpleInputTypography } from "@/customization/simpleInputTypography";
+import type { SignImagePlacement } from "@/customization/signImages";
 
 export type LocalLine = {
   id: string;
@@ -80,6 +81,8 @@ interface DirectInputStationProps {
   subTextMode?: MetroLongSubTextMode;
   /** Local non-number text overrides, independent of saved custom styles. */
   typography?: SimpleInputTypography;
+  /** Undefined inherits the style; [] explicitly hides its images. */
+  images?: SignImagePlacement[];
   /** Render JR East arrows as independently branching company-colored paths. */
   branchMode?: boolean;
   /** Internal HMR key used to regenerate a branch preview after layout edits. */
