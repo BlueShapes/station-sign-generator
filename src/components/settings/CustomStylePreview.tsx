@@ -41,6 +41,7 @@ import {
 } from "@/lib/fonts";
 import { useCanvasFonts } from "@/lib/useCanvasFonts";
 import { useTranslations } from "@/i18n/useTranslation";
+import type { SignImagePlacement } from "@/customization/signImages";
 
 const SIGN_COMPONENTS: Record<BaseSignStyleId, typeof JrEastSign> = {
   jreast: JrEastSign,
@@ -64,6 +65,7 @@ function createPreviewDefinition({
   templateId,
   fontFamily,
   layout,
+  images,
 }: CustomStylePreviewProps): CustomDefinition {
   if (kind === "sign") {
     const resolvedTemplate = includesString(BASE_SIGN_STYLE_IDS, templateId)
@@ -72,6 +74,7 @@ function createPreviewDefinition({
     return createCustomDefinition("sign", "Preview", resolvedTemplate, {
       fontFamily,
       layout,
+      images,
     });
   }
   if (kind === "station-number-badge") {
@@ -101,13 +104,14 @@ type CustomStylePreviewProps = {
   templateId: string;
   fontFamily?: string;
   layout: CustomSignLayout;
+  images?: SignImagePlacement[];
 };
 
 export default function CustomStylePreview(props: CustomStylePreviewProps) {
   const t = useTranslations();
   const definition = useMemo(
     () => createPreviewDefinition(props),
-    [props.kind, props.templateId, props.fontFamily, props.layout],
+    [props.kind, props.templateId, props.fontFamily, props.layout, props.images],
   );
   const baseFontSpecs =
     definition.kind === "sign"

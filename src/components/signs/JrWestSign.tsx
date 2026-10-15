@@ -9,6 +9,7 @@ import styled from "styled-components";
 import spacedStationName from "@/functions/spaceStationName";
 import { getJrWestArrowPoints } from "./arrowGeometry";
 import CustomSignText from "./CustomSignText";
+import { SignImageLayer, useSignImages } from "./SignImages";
 
 export const height = 140;
 export const scale = 3;
@@ -40,6 +41,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
 
     const [stageKey, setStageKey] = useState(0);
     const [canvasImage, setCanvasImage] = useState("");
+    const signImages = useSignImages(props.images);
 
     const reversedStationArea = stationAreas
       ? [...stationAreas].reverse()
@@ -72,7 +74,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
         return () => clearTimeout(t);
       }
       render();
-    }, [props, stageKey]);
+    }, [props, signImages.images, signImages.ready, stageKey]);
 
     const renderStation = (s: AdjacentStationProps, secX: number) => {
       const isRight = secX !== 0;
@@ -280,6 +282,7 @@ const JrWestSign = forwardRef<Konva.Stage, StationProps>(
               {renderSide(leftStations, true)}
               {renderSide(rightStations, false)}
             </Layer>
+            <SignImageLayer images={signImages.images} ready={signImages.ready} />
           </Stage>
         </StageWrapper>
       </>

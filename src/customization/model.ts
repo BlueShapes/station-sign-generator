@@ -1,3 +1,5 @@
+import { normalizeSignImages, type SignImagePlacement } from "./signImages";
+
 export const BASE_SIGN_STYLE_IDS = [
   "jreast",
   "jreastbranch",
@@ -72,6 +74,7 @@ export interface CustomSignDefinition extends CustomDefinitionBase {
   kind: "sign";
   templateId: BaseSignStyleId;
   layout: CustomSignLayout;
+  images?: SignImagePlacement[];
 }
 
 export interface CustomStationNumberBadgeDefinition
@@ -97,6 +100,7 @@ type CreateOptions = {
   font?: EmbeddedFont;
   fonts?: EmbeddedFont[];
   layout?: CustomSignLayout;
+  images?: SignImagePlacement[];
 };
 
 type UpdateCustomSignDraft = {
@@ -106,6 +110,7 @@ type UpdateCustomSignDraft = {
   font?: EmbeddedFont;
   fonts?: EmbeddedFont[];
   layout: CustomSignLayout;
+  images?: SignImagePlacement[];
 };
 
 function copyEmbeddedFont(font: EmbeddedFont | undefined): EmbeddedFont | undefined {
@@ -194,6 +199,7 @@ export function createCustomDefinition(
       kind,
       templateId: templateId as BaseSignStyleId,
       layout: normalizeSignLayout(options.layout ?? {}),
+      images: normalizeSignImages(options.images),
     };
   }
   if (kind === "station-number-badge") {
@@ -219,6 +225,7 @@ export function duplicateCustomSignDefinition(
     font: copyEmbeddedFont(source.font),
     fonts: copyEmbeddedFonts(source.fonts),
     layout: structuredClone(source.layout),
+    images: source.images,
   });
 }
 
@@ -234,6 +241,7 @@ export function updateCustomSignDefinition(
     font: copyEmbeddedFont(draft.font),
     fonts: copyEmbeddedFonts(draft.fonts),
     layout: normalizeSignLayout(structuredClone(draft.layout)),
+    images: normalizeSignImages(draft.images),
     updatedAt: Date.now(),
   };
 }

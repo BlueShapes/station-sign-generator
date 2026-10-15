@@ -19,6 +19,7 @@ import { getMetroSmallArrowPoints } from "./arrowGeometry";
 import JrCentralStationNumberBadge from "./JrCentralStationNumberBadge";
 import { resolveSubwayStationNumberAppearance } from "./subwayStationNumberAppearance";
 import CustomSignText from "./CustomSignText";
+import { SignImageLayer, useSignImages } from "./SignImages";
 
 export const height = 105;
 export const scale = 3;
@@ -52,6 +53,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
       subTextMode ?? (primaryNameFurigana ? "furigana" : "secondary");
     const [stageKey, setStageKey] = useState(0);
     const [canvasImage, setCanvasImage] = useState("");
+    const signImages = useSignImages(props.images);
 
     useEffect(() => {
       let cancelled = false;
@@ -80,7 +82,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
         return () => clearTimeout(t);
       }
       render();
-    }, [props, stageKey]);
+    }, [props, signImages.images, signImages.ready, stageKey]);
 
     const measureText = (
       text: string,
@@ -560,6 +562,7 @@ const MetroLongSignBase = forwardRef<Konva.Stage, StationProps>(
                 )}
               </Group>
             </Layer>
+            <SignImageLayer images={signImages.images} ready={signImages.ready} />
           </Stage>
         </StageWrapper>
       </>

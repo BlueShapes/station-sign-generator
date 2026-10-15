@@ -464,3 +464,21 @@ mtr-import:
     fetch-failed: API yüklenemedi. URL’yi, boyutu ve sunucunun kullanılabilirliğini kontrol edin veya JSON yapıştırmayı kullanın.
     timeout: API isteğinin süresi doldu. Yeniden deneyin veya JSON yapıştırın.
     import-failed: Hatlar içe aktarılamadı. Hiçbir hat eklenmedi.
+
+sign-images:
+  title: "Görsel ayarları"
+  help: "Ayarlarda yüklenen görselleri yerleştirin. Boyutlar ve konumlar tabela koordinatlarını kullanır; sol üst köşe (0, 0) değerindedir. Görseller kendi merkezleri etrafında döner."
+  empty: "Önce Ayarlarda görsel yükleyin."
+  item: "Görsel {number}"
+  image: "Görsel"
+  width: "Genişlik"
+  height: "Yükseklik"
+  x: "X konumu"
+  y: "Y konumu"
+  rotation: "Döndürme (derece)"
+  opacity: "Opaklık (%)"
+  add: "Görsel ekle"
+  reset: "Stil ayarlarını geri yükle"
+  missing: "Görsel bulunamadı"
+  upload-error: "Görsel önbelleğe alınamadı. Dosya geçersiz veya yerel depolama dolu olabilir."
+  save-error: "Görsel veya ayarları kaydedilemedi. Görselin yüklenmesini ve boş depolama alanını kontrol edin."

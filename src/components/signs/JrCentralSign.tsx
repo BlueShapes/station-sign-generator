@@ -25,6 +25,7 @@ import {
   resolveJrCentralColors,
 } from "./jrCentralSignLayout";
 import CustomSignText from "./CustomSignText";
+import { SignImageLayer, useSignImages } from "./SignImages";
 
 export const height = JR_CENTRAL_SIGN_HEIGHT;
 export const scale = 3;
@@ -175,6 +176,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
 
     const [stageKey, setStageKey] = useState(0);
     const [canvasImage, setCanvasImage] = useState("");
+    const signImages = useSignImages(props.images);
 
     useEffect(() => {
       let cancelled = false;
@@ -196,7 +198,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
       if (ref && "current" in ref && ref.current) {
         setCanvasImage(ref.current.toDataURL());
       }
-    }, [props, ref, stageKey]);
+    }, [props, ref, signImages.images, signImages.ready, stageKey]);
 
     const renderAdjacentStation = (
       labels: { japanese: string; english: string },
@@ -398,6 +400,7 @@ const JrCentralSign = forwardRef<Konva.Stage, StationProps>(
                 fill="#111923"
               />
             </Layer>
+            <SignImageLayer images={signImages.images} ready={signImages.ready} />
           </Stage>
         </StageWrapper>
       </>

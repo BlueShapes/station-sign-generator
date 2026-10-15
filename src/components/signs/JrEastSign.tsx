@@ -25,6 +25,7 @@ import {
   JR_EAST_BRANCH_LAYOUT,
 } from "./jrEastBranchLayout";
 import CustomSignText from "./CustomSignText";
+import { SignImageLayer, useSignImages } from "./SignImages";
 
 export const height = 140;
 export const scale = 3;
@@ -335,6 +336,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
     const yOffsetWithNote = note ? (threeLetterCode ? -14 : -9) : 0;
 
     const [canvasImage, setCanvasImage] = useState("");
+    const signImages = useSignImages(props.images);
     useEffect(() => {
       if (stageKey < 1) {
         setCanvasImage("");
@@ -351,7 +353,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
       } else {
         renderFunction();
       }
-    }, [props, stageKey, branchLayoutRenderKey]);
+    }, [props, signImages.images, signImages.ready, stageKey, branchLayoutRenderKey]);
 
     return (
       <>
@@ -1449,6 +1451,7 @@ const JrEastSign = forwardRef<Konva.Stage, StationProps>(
                 );
               })}
             </Layer>
+            <SignImageLayer images={signImages.images} ready={signImages.ready} />
           </Stage>
           {/*<img src="temp\nottest.jpg" width={720} />*/}
         </StageWrapper>

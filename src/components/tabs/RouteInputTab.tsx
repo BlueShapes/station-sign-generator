@@ -20,6 +20,10 @@ import {
   type CSSProperties,
 } from "react";
 import type { Database } from "sql.js";
+import SignImageEditor from "@/components/inputs/SignImageEditor";
+import { routeSignImageKey } from "@/customization/signImages";
+import { useRouteSignImages } from "@/customization/useRouteSignImages";
+import { waitForSignImages } from "@/components/signs/SignImages";
 import {
   Alert,
   ActionIcon,
@@ -558,6 +562,9 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
   const [selectedStationNumberLineIds, setSelectedStationNumberLineIds] =
     useState<string[]>([]);
   const [signStyleSelection, setSignStyleSelection] = useState<string>("jreast");
+  const stationImages = useRouteSignImages(routeSignImageKey(
+    selectedLineId ?? "", selectedStationId ?? "", signStyleSelection,
+  ));
   const resolvedSignStyle = resolveCustomSelection(
     signStyleSelection,
     customSignDefinitions,
@@ -1878,39 +1885,51 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
     ? t("route.linemap.download-text-warning")
     : null;
 
+  const [savingSignImage, setSavingSignImage] = useState(false);
+  const [signImageSaveError, setSignImageSaveError] = useState(false);
   const handleSaveSign = async () => {
     if (!signData || !selectedBaseLine) return;
-    if (signRef.current) {
-      await waitForCanvasFonts(signFontSpecs).catch(() => undefined);
-      const { scale: baseScale } = SIGN_STYLES[signStyle];
-      const uri = signRef.current.toDataURL({
-        pixelRatio: saveSize / baseScale,
-      });
-      const link = document.createElement("a");
-      const filename = getRouteSignFilename({
-        locale,
-        languages: getCompanyLanguages(mapCompany),
-        lineNames: [
-          selectedBaseLine.name,
-          selectedBaseLine.secondary_name,
-          selectedBaseLine.tertiary_name,
-          selectedBaseLine.quaternary_name,
-        ],
-        stationNames: [
-          signData.primaryName,
-          signData.secondaryName,
-          signData.tertiaryName,
-          signData.quaternaryName,
-        ],
-        directionLabel: t(`route.sign.filename-direction-${direction}`),
-      });
-      link.download = `${filename}.png`;
-      link.href = uri;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      console.error(t("error.on-save"));
+    setSavingSignImage(true);
+    setSignImageSaveError(false);
+    try {
+      if (signRef.current) {
+        await waitForCanvasFonts(signFontSpecs).catch(() => undefined);
+        await waitForSignImages(() => signRef.current);
+        if (!signRef.current) throw new Error("Preview unavailable");
+        const { scale: baseScale } = SIGN_STYLES[signStyle];
+        const uri = signRef.current.toDataURL({
+          pixelRatio: saveSize / baseScale,
+        });
+        const link = document.createElement("a");
+        const filename = getRouteSignFilename({
+          locale,
+          languages: getCompanyLanguages(mapCompany),
+          lineNames: [
+            selectedBaseLine.name,
+            selectedBaseLine.secondary_name,
+            selectedBaseLine.tertiary_name,
+            selectedBaseLine.quaternary_name,
+          ],
+          stationNames: [
+            signData.primaryName,
+            signData.secondaryName,
+            signData.tertiaryName,
+            signData.quaternaryName,
+          ],
+          directionLabel: t(`route.sign.filename-direction-${direction}`),
+        });
+        link.download = `${filename}.png`;
+        link.href = uri;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        setSignImageSaveError(true);
+      }
+    } catch {
+      setSignImageSaveError(true);
+    } finally {
+      setSavingSignImage(false);
     }
   };
 
@@ -2427,6 +2446,13 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
             </Paper>
 
             {/* Sign preview */}
+            {(stationImages.error || signImageSaveError) && <Alert color="red">{t("sign-images.save-error")}</Alert>}
+            <SignImageEditor
+              value={stationImages.images ?? resolvedSignStyle.definition?.images ?? []}
+              onChange={stationImages.setImages}
+              onReset={stationImages.images !== undefined ? () => stationImages.setImages(undefined) : undefined}
+              disabled={!signData}
+            />
             <Paper withBorder radius="xl" className={styles.previewPanel}>
               <Group justify="space-between" align="center" mb="md">
                 <Title order={2} className={styles.previewTitle}>
@@ -2451,6 +2477,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                         <SignTextCustomizationProvider definition={resolvedSignStyle.definition}>
                           <SignComponent
                             {...signData}
+                            images={stationImages.images}
                             direction={direction}
                             ref={signRef}
                           />
@@ -2484,6 +2511,7 @@ export default function RouteInputTab({ db, loading }: RouteInputTabProps) {
                       size="lg"
                       variant="filled"
                       onClick={handleSaveSign}
+                      loading={savingSignImage}
                       disabled={!signFonts.ready}
                       fullWidth
                       style={{ fontWeight: 700 }}
